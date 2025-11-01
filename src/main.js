@@ -1,6 +1,8 @@
 console.log('Dandelion content script loaded!');
 
 const radioClickedSet = new Set();
+const observer = new MutationObserver(() => throttledManipulate());
+let throttleTimeout = null;
 
 function manipulateRadioButtons () {
   const allRadioButtons = document.querySelectorAll('input[type="radio"]');
@@ -19,7 +21,6 @@ function manipulateRadioButtons () {
 }
 
 // Throttle agar tidak terlalu sering dijalankan
-let throttleTimeout = null;
 function throttledManipulate () {
   if (throttleTimeout) return;
   throttleTimeout = setTimeout(() => {
@@ -28,5 +29,17 @@ function throttledManipulate () {
   }, 200);
 }
 
-const observer = new MutationObserver(() => throttledManipulate());
-observer.observe(document.body, { childList: true, subtree: true });
+document.addEventListener('click', (event) => {
+  // stop and dump
+  if (event.target && event.target.id === 'btnBacktoHome1') {
+    console.log('Dandelion: Done we disconected observer server.');
+    observer.disconnect();
+  }
+
+  // start
+  if (event.target && event.target.id === 'nextGenBtn') {
+    console.log('Dandelion: Done we disconected observer server.');
+    observer.observe(document.body, { childList: true, subtree: true });
+    throttledManipulate();
+  }
+});
