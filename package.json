@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "build": "rimraf dist && copyfiles -u 1 src/**/* dist"
+    "build": "rimraf dist && copyfiles -u 1 src/**/* dist | copyfiles -u 1 icons/* dist/icons"
   },
   "keywords": [],
   "author": "SonyPradana",
