@@ -1,16 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Dandelion - Auto fill form",
+  "name": "Dandelion - Clean ux you might like",
   "version": "0.0.1",
-  "description": "Speeds up the process of filling out your forms.",
-  "host_permissions": [
-     "https://*/skrining*"
-  ],
+  "description": "with full awareness to say no 🙏.",
+  "host_permissions": [],
   "content_scripts": [
     {
-      "matches": [
-        "https://*/skrining*"
-      ],
+      "matches": [],
       "js": [
         "main.js"
       ]
