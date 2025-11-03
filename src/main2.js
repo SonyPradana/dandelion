@@ -1,7 +1,13 @@
 tambahTombol();
 
 function tambahTombol () {
+  const id = 'dandelion-auto-fill';
+  if (document.querySelector(`#${id}`)) {
+    return;
+  }
+
   const tombol = document.createElement('button');
+  tombol.id = id;
   tombol.innerHTML = '💩';
   tombol.style.cssText = `
     position: fixed;
@@ -37,9 +43,15 @@ function fillTidakRadioButtons () {
   allMatchingLabels.forEach(labelSpan => {
     const parentLabel = labelSpan.closest('label.sd-selectbase__label');
     if (parentLabel) {
-      const radioInput = parentLabel.querySelector('input[type="radio"]');
-      if (radioInput && !radioInput.checked) {
-        radioInput.click();
+      const fieldset = parentLabel.closest('fieldset.sd-selectbase');
+      if (fieldset) {
+        const anyChecked = fieldset.querySelector('input[type="radio"]:checked');
+        if (!anyChecked) {
+          const radioInput = parentLabel.querySelector('input[type="radio"]');
+          if (radioInput && !radioInput.checked) {
+            radioInput.click();
+          }
+        }
       }
     }
   });
