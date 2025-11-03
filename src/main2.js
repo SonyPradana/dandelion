@@ -45,13 +45,10 @@ function fillTidakRadioButtons () {
     if (parentLabel) {
       const fieldset = parentLabel.closest('fieldset.sd-selectbase');
       if (fieldset) {
-        const anyChecked = fieldset.querySelector('input[type="radio"]:checked');
-        if (!anyChecked) {
-          const radioInput = parentLabel.querySelector('input[type="radio"]');
-          if (radioInput && !radioInput.checked) {
-            radioInput.click();
-          }
-        }
+        const radioInput = parentLabel.querySelector('input[type="radio"]');
+        if (radioInput && !radioInput.checked) {
+          radioInput.click();
+      }
       }
     }
   });
