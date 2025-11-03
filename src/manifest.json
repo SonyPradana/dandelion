@@ -1,13 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Dandelion - Auto fill form",
-  "version": "1.0",
+  "version": "0.0.1",
   "description": "Speeds up the process of filling out your forms.",
   "host_permissions": [
+     "https://*/skrining*"
   ],
   "content_scripts": [
     {
       "matches": [
+        "https://*/skrining*"
       ],
       "js": [
         "main.js"
