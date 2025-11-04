@@ -7,6 +7,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
+        browser: true,
       },
     },
   },

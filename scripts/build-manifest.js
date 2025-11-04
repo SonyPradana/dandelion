@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
@@ -38,7 +37,6 @@ try {
   fs.writeFileSync(distManifestPath, JSON.stringify(manifest, null, 2));
 
   console.log(`manifest.json built successfully and placed in ${distDir}`);
-
 } catch (error) {
   console.error('Failed to build manifest.json:', error);
   process.exit(1);
