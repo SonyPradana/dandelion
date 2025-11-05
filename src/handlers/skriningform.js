@@ -1,5 +1,10 @@
 import { button } from '../components/button';
 
+/**
+ * ⚠️ Legal / UX Notice:
+ * This button only trigger local form filling.
+ * The use must consciously press the button to perform the action.
+ */
 export function initializeSkriningForm () {
   const tombol = button('dandelion-auto-fill');
 
@@ -11,10 +16,14 @@ export function initializeSkriningForm () {
   function fillTidakRadioButtons () {
     const allMatchingLabels = Array.from(document.querySelectorAll('span.sd-item__control-label')).filter(span => {
       const childViewerSpan = span.querySelector('span.sv-string-viewer');
-      return childViewerSpan &&
-      (childViewerSpan.textContent.trim() === 'Tidak' ||
-      childViewerSpan.textContent.trim() === 'Tidak sama sekali' ||
-      childViewerSpan.textContent.trim() === 'Belum');
+
+      return childViewerSpan && (
+        childViewerSpan.textContent.trim() === 'Normal' ||
+        childViewerSpan.textContent.trim() === 'Belum' ||
+        childViewerSpan.textContent.trim() === 'Tidak' ||
+        childViewerSpan.textContent.trim() === 'Tidak sama sekali' ||
+        childViewerSpan.textContent.trim() === 'Belum'
+      );
     });
 
     allMatchingLabels.forEach(labelSpan => {

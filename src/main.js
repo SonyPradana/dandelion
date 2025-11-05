@@ -6,9 +6,9 @@ initializeForm();
 function initializeForm () {
   const currentURL = window.location.href;
 
-  if (currentURL.includes('form.')) {
+  if (currentURL.includes(process.env.SITE_SURVEY)) {
     initializeSkriningForm();
-  } else if (currentURL.includes('webskrining.')) {
+  } else if (currentURL.includes(process.env.SITE_SKRINING)) {
     initializeSkrining();
   }
 }

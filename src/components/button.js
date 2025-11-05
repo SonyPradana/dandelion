@@ -10,7 +10,7 @@ export function button (id) {
 
   const tombol = document.createElement('button');
   tombol.id = id;
-  tombol.innerHTML = '💩';
+  tombol.innerHTML = '🙈';
   tombol.style.cssText = `
       position: fixed;
       top: 10px;
