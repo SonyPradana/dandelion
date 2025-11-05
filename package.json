@@ -1,11 +1,11 @@
 {
   "name": "dandelion",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "build": "rimraf dist && copyfiles -u 1 src/**/* dist && copyfiles -u 1 icons/* dist/icons && copyfiles -u 3 node_modules/webextension-polyfill/dist/browser-polyfill.js dist && node scripts/build-manifest.js"
+    "build": "rimraf dist && rollup -c && copyfiles -u 1 src/view/* dist && copyfiles -u 1 icons/* dist/icons && node scripts/build-manifest.js"
   },
   "keywords": [],
   "author": "SonyPradana",
@@ -16,7 +16,8 @@
     "eslint": "^9.38.0",
     "globals": "^16.4.0",
     "neostandard": "^0.12.2",
-    "rimraf": "^6.1.0"
+    "rimraf": "^6.1.0",
+    "rollup": "^4.52.5"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"

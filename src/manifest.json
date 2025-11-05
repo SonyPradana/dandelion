@@ -1,8 +1,16 @@
 {
   "manifest_version": 3,
-  "name": "Dandelion - Auto fill form",
-  "version": "1.0",
-  "description": "Speeds up the process of filling out your forms.",
+  "name": "Dandelion - Clean ux you might like",
+  "version": "0.0.1",
+  "description": "with full awareness to say no 🙏.",
+  "permissions": ["storage"],
+  "host_permissions": [],
+  "content_scripts": [
+    {
+      "matches": [],
+      "js": ["main.js"]
+    }
+  ],
   "action": {
     "default_popup": "view/popup.html",
     "default_icon": {
@@ -11,19 +19,6 @@
       "128": "icons/icon128.png"
     }
   },
-  "permissions": [
-    "storage"
-  ],
-  "content_scripts": [
-    {
-      "matches": [
-      ],
-      "js": [
-        "browser-polyfill.js",
-        "main.js"
-      ]
-    }
-  ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
