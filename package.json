@@ -1,11 +1,11 @@
 {
   "name": "dandelion",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "build": "rimraf dist && copyfiles -u 1 src/**/* dist | copyfiles -u 1 icons/* dist/icons"
+    "build": "rimraf dist && rollup -c && copyfiles -u 1 src/manifest.json dist/ && copyfiles -u 1 icons/* dist/icons"
   },
   "keywords": [],
   "author": "SonyPradana",
@@ -15,6 +15,7 @@
     "eslint": "^9.38.0",
     "globals": "^16.4.0",
     "neostandard": "^0.12.2",
-    "rimraf": "^6.1.0"
+    "rimraf": "^6.1.0",
+    "rollup": "^4.52.5"
   }
 }
