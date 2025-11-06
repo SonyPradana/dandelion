@@ -33,6 +33,39 @@
             flex-direction: column;
         }
 
+        .tab-nav {
+            display: flex;
+            border-bottom: 1px solid #eee;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: #f8f9fa;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -47,15 +80,8 @@
             font-weight: 600;
         }
 
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
         .content {
             padding: 30px;
-            overflow-y: auto;
-            flex: 1;
         }
 
         .content::-webkit-scrollbar {
@@ -165,17 +191,28 @@
             user-select: none;
         }
 
-        .footer {
-            padding: 20px 30px;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 12px;
-            background: #f8f9fa;
-            border-radius: 0 0 12px 12px;
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
         }
 
         .btn {
-            flex: 1;
+            width: 100%;
             padding: 14px 24px;
             border: none;
             border-radius: 8px;
@@ -183,106 +220,92 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-        }
-
-        .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
-        .btn-primary:hover:not(:disabled) {
+        .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-secondary {
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-        }
-
-        .btn-secondary:hover {
-            background: #f8f9fa;
-        }
-
-        @media (max-width: 600px) {
-            .header h1 {
-                font-size: 20px;
-            }
-
-            .content {
-                padding: 20px;
-            }
-
-            .footer {
-                flex-direction: column-reverse;
-            }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
+        <div class="tab-nav">
+            <button class="tab-button active" data-tab="agreement">Persetujuan</button>
+            <button class="tab-button" data-tab="config">Konfigurasi</button>
         </div>
 
-        <div class="content">
-            <div class="highlight">
-                <strong>PERSETUJUAN PENGGUNAAN:</strong> Dengan menggunakan Tool ini, Anda menyetujui seluruh ketentuan berikut.
+        <div id="agreement" class="tab-content active">
+            <div class="header">
+                <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
             </div>
-
-            <div class="section">
-                <h2>1. FUNGSI TOOL</h2>
-                <p>Tool ini <strong>HANYA</strong> mengisi otomatis pilihan "Tidak", "Tidak sama sekali", atau "Belum" pada formulir skrining di browser Anda. Tool bekerja secara lokal dan memerlukan klik manual untuk diaktifkan.</p>
-            </div>
-
-            <div class="section">
-                <h2>2. APA YANG TIDAK DILAKUKAN TOOL</h2>
-                <p>Tool ini <strong>TIDAK</strong>:</p>
-                <ul>
-                    <li>Mengirim data ke server manapun</li>
-                    <li>Mengakses atau menyimpan data pribadi/pasien</li>
-                    <li>Memodifikasi sistem aplikasi</li>
-                    <li>Submit formulir secara otomatis</li>
-                </ul>
-            </div>
-
-            <div class="section">
-                <h2>3. TANGGUNG JAWAB PENGGUNA</h2>
-                <p>Anda <strong>WAJIB</strong>:</p>
-                <ul>
-                    <li>Memverifikasi ulang seluruh jawaban sebelum submit</li>
-                    <li>Bertanggung jawab penuh atas keakuratan data</li>
-                    <li>Mematuhi kebijakan aplikasi/website dan ketentuan hukum yang berlaku</li>
-                </ul>
-            </div>
-
-            <div class="section">
-                <h2>4. BATASAN TANGGUNG JAWAB</h2>
-                <p>Pengembang <strong>TIDAK bertanggung jawab</strong> atas:</p>
-                <ul>
-                    <li>Kesalahan pengisian data</li>
-                    <li>Konsekuensi medis atau hukum dari penggunaan Tool</li>
-                    <li>Gangguan atau error yang mungkin terjadi</li>
-                </ul>
-            </div>
-
-            <div class="section">
-                <h2>5. PRIVASI</h2>
-                <p>Tool ini <strong>TIDAK mengumpulkan, menyimpan, atau mengirim</strong> data apapun. Semua operasi dilakukan lokal di browser Anda.</p>
-            </div>
-
-            <div class="checkbox-group">
-                <h3 style="margin-bottom: 16px; font-size: 15px; color: #333;">KONFIRMASI</h3>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="agree-checkbox">
-                    <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
+            <div class="content">
+                <div class="highlight">
+                    <strong>PERSETUJUAN PENGGUNAAN:</strong> Dengan menggunakan Tool ini, Anda menyetujui seluruh ketentuan berikut.
                 </div>
+                <div class="section">
+                    <h2>1. FUNGSI TOOL</h2>
+                    <p>Tool ini <strong>HANYA</strong> mengisi otomatis pilihan "Tidak", "Tidak sama sekali", atau "Belum" pada formulir skrining di browser Anda. Tool bekerja secara lokal dan memerlukan klik manual untuk diaktifkan.</p>
+                </div>
+                <div class="section">
+                    <h2>2. APA YANG TIDAK DILAKUKAN TOOL</h2>
+                    <p>Tool ini <strong>TIDAK</strong>:</p>
+                    <ul>
+                        <li>Mengirim data ke server manapun</li>
+                        <li>Mengakses atau menyimpan data pribadi/pasien</li>
+                        <li>Memodifikasi sistem aplikasi</li>
+                        <li>Submit formulir secara otomatis</li>
+                    </ul>
+                </div>
+                <div class="section">
+                    <h2>3. TANGGUNG JAWAB PENGGUNA</h2>
+                    <p>Anda <strong>WAJIB</strong>:</p>
+                    <ul>
+                        <li>Memverifikasi ulang seluruh jawaban sebelum submit</li>
+                        <li>Bertanggung jawab penuh atas keakuratan data</li>
+                        <li>Mematuhi kebijakan aplikasi/website dan ketentuan hukum yang berlaku</li>
+                    </ul>
+                </div>
+                <div class="section">
+                    <h2>4. BATASAN TANGGUNG JAWAB</h2>
+                    <p>Pengembang <strong>TIDAK bertanggung jawab</strong> atas:</p>
+                    <ul>
+                        <li>Kesalahan pengisian data</li>
+                        <li>Konsekuensi medis atau hukum dari penggunaan Tool</li>
+                        <li>Gangguan atau error yang mungkin terjadi</li>
+                    </ul>
+                </div>
+                <div class="section">
+                    <h2>5. PRIVASI</h2>
+                    <p>Tool ini <strong>TIDAK mengumpulkan, menyimpan, atau mengirim</strong> data apapun. Semua operasi dilakukan lokal di browser Anda.</p>
+                </div>
+                <div class="checkbox-group">
+                    <h3 style="margin-bottom: 16px; font-size: 15px; color: #333;">KONFIRMASI</h3>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="agree-checkbox">
+                        <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="config" class="tab-content">
+            <div class="header">
+                <h1>Konfigurasi</h1>
+            </div>
+            <div class="content">
+                <div class="form-group">
+                    <label for="form-input">Form</label>
+                    <input type="text" id="form-input" placeholder="Masukkan selector untuk Form">
+                </div>
+                <div class="form-group">
+                    <label for="survey-input">Survey</label>
+                    <input type="text" id="survey-input" placeholder="Masukkan selector untuk Survey">
+                </div>
+                <button id="save-config-btn" class="btn">Simpan</button>
             </div>
         </div>
     </div>

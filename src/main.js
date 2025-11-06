@@ -1,6 +1,6 @@
 import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkrining } from './handlers/skrining.js';
-import { getAgreement } from './configuration.js';
+import { getAgreement, getConfig } from './configuration.js';
 
 getAgreement().then((agreed) => {
   if (agreed) {
@@ -10,11 +10,13 @@ getAgreement().then((agreed) => {
 });
 
 function initializeForm () {
-  const currentURL = window.location.href;
+  getConfig().then((config) => {
+    const currentURL = window.location.href;
 
-  if (currentURL.includes('form.')) {
-    initializeSkriningForm();
-  } else if (currentURL.includes('webskrining.')) {
-    initializeSkrining();
-  }
+    if (currentURL.includes(config.survey)) {
+      initializeSkriningForm();
+    } else if (currentURL.includes(config.form)) {
+      initializeSkrining();
+    }
+  });
 }
