@@ -1,26 +1,15 @@
-import browser from 'webextension-polyfill';
+import { getAgreement, setAgreement } from '../configuration';
 
-const agreeCheckbox = document.getElementById('agree-checkbox');
-const continueBtn = document.getElementById('continue-btn');
+document.addEventListener('DOMContentLoaded', () => {
+  const agreeCheckbox = document.getElementById('agree-checkbox');
 
-browser.storage.local.get('termsAgreed').then((result) => {
-  if (result.termsAgreed) {
-    agreeCheckbox.checked = true;
-    continueBtn.disabled = false;
-  }
-});
+  // Set initial checkbox state
+  getAgreement().then((agreed) => {
+    agreeCheckbox.checked = agreed;
+  });
 
-agreeCheckbox.addEventListener('change', () => {
-  continueBtn.disabled = !agreeCheckbox.checked;
-});
-
-continueBtn.addEventListener('click', () => {
-  if (agreeCheckbox.checked) {
-    browser.storage.local.set({ termsAgreed: true }).then(() => {
-      console.log(
-        'Terms have been agreed to and saved to browser.storage.local.'
-      );
-      window.close();
-    });
-  }
+  // Listen for changes on the checkbox
+  agreeCheckbox.addEventListener('change', () => {
+    setAgreement(agreeCheckbox.checked);
+  });
 });
