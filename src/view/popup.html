@@ -1,95 +1,292 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Syarat dan Ketentuan</title>
-        <style>
-            body {
-                font-family:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                    Helvetica, Arial, sans-serif;
-                line-height: 1.6;
-                color: #333;
-                width: 350px; /* Adjust width for a popup */
-                margin: 0;
-                padding: 1rem;
-                box-sizing: border-box;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syarat dan Ketentuan Penggunaan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 350px;
+            height: 550px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px 12px 0 0;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .content::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        .section p {
+            color: #555;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .section ul li {
+            padding: 4px 0 4px 24px;
+            position: relative;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .section ul li::before {
+            content: '•';
+            position: absolute;
+            left: 8px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .checkbox-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 12px;
+            margin-top: 2px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-item label {
+            font-size: 14px;
+            color: #333;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .footer {
+            padding: 20px 30px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 12px;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f8f9fa;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 20px;
             }
-            .container {
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                padding: 1.5rem;
-                background-color: #f9f9f9;
+
+            .content {
+                padding: 20px;
             }
-            h1 {
-                text-align: center;
-                margin-bottom: 1rem;
-                font-size: 1.5rem;
+
+            .footer {
+                flex-direction: column-reverse;
             }
-            .terms {
-                height: 150px; /* Smaller height for popup */
-                overflow-y: scroll;
-                border: 1px solid #ccc;
-                padding: 0.8rem;
-                background-color: #fff;
-                margin-bottom: 1rem;
-                font-size: 0.9rem;
-            }
-            .agreement {
-                display: flex;
-                align-items: center;
-                margin-bottom: 1rem;
-            }
-            #agree-checkbox {
-                margin-right: 0.5rem;
-            }
-            button {
-                display: block;
-                width: 100%;
-                padding: 0.6rem;
-                border: none;
-                border-radius: 4px;
-                font-size: 0.9rem;
-                font-weight: bold;
-                cursor: pointer;
-                transition: background-color 0.2s;
-            }
-            button:disabled {
-                background-color: #ccc;
-                cursor: not-allowed;
-            }
-            button:enabled {
-                background-color: #007bff;
-                color: white;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>Syarat dan Ketentuan</h1>
-            <div class="terms">
-                <p>
-                    1. Dengan menggunakan ekstensi ini ("Dandelion"), Anda
-                    menyetujui syarat dan ketentuan berikut. Jika Anda tidak
-                    setuju, mohon jangan gunakan ekstensi ini.
-                </p>
-                <p>2. Extension hanya membantu pengisian form secara lokal.</p>
-                <p>3. Extension tidak mengakses atau menyimpan data pribadi.</p>
-                <p>
-                    4. Penggunaan untuk data pasien nyata sepenuhnya tanggung
-                    jawab Anda
-                </p>
-            </div>
-            <div class="agreement">
-                <input type="checkbox" id="agree-checkbox" />
-                <label for="agree-checkbox"
-                    >Saya telah membaca dan menyetujui syarat dan
-                    ketentuan.</label
-                >
-            </div>
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
         </div>
 
-        <script src="../view/popup.js"></script>
-    </body>
+        <div class="content">
+            <div class="highlight">
+                <strong>PERSETUJUAN PENGGUNAAN:</strong> Dengan menggunakan Tool ini, Anda menyetujui seluruh ketentuan berikut.
+            </div>
+
+            <div class="section">
+                <h2>1. FUNGSI TOOL</h2>
+                <p>Tool ini <strong>HANYA</strong> mengisi otomatis pilihan "Tidak", "Tidak sama sekali", atau "Belum" pada formulir skrining di browser Anda. Tool bekerja secara lokal dan memerlukan klik manual untuk diaktifkan.</p>
+            </div>
+
+            <div class="section">
+                <h2>2. APA YANG TIDAK DILAKUKAN TOOL</h2>
+                <p>Tool ini <strong>TIDAK</strong>:</p>
+                <ul>
+                    <li>Mengirim data ke server manapun</li>
+                    <li>Mengakses atau menyimpan data pribadi/pasien</li>
+                    <li>Memodifikasi sistem aplikasi</li>
+                    <li>Submit formulir secara otomatis</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>3. TANGGUNG JAWAB PENGGUNA</h2>
+                <p>Anda <strong>WAJIB</strong>:</p>
+                <ul>
+                    <li>Memverifikasi ulang seluruh jawaban sebelum submit</li>
+                    <li>Bertanggung jawab penuh atas keakuratan data</li>
+                    <li>Mematuhi kebijakan aplikasi/website dan ketentuan hukum yang berlaku</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>4. BATASAN TANGGUNG JAWAB</h2>
+                <p>Pengembang <strong>TIDAK bertanggung jawab</strong> atas:</p>
+                <ul>
+                    <li>Kesalahan pengisian data</li>
+                    <li>Konsekuensi medis atau hukum dari penggunaan Tool</li>
+                    <li>Gangguan atau error yang mungkin terjadi</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>5. PRIVASI</h2>
+                <p>Tool ini <strong>TIDAK mengumpulkan, menyimpan, atau mengirim</strong> data apapun. Semua operasi dilakukan lokal di browser Anda.</p>
+            </div>
+
+            <div class="checkbox-group">
+                <h3 style="margin-bottom: 16px; font-size: 15px; color: #333;">KONFIRMASI</h3>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="agree-checkbox">
+                    <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../view/popup.js"></script>
+</body>
 </html>
