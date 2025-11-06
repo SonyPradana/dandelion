@@ -1,84 +1,96 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syarat dan Ketentuan</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            width: 350px; /* Adjust width for a popup */
-            margin: 0;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-        .container {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 1.5rem;
-            background-color: #f9f9f9;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        .terms {
-            height: 150px; /* Smaller height for popup */
-            overflow-y: scroll;
-            border: 1px solid #ccc;
-            padding: 0.8rem;
-            background-color: #fff;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-        }
-        .agreement {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-        #agree-checkbox {
-            margin-right: 0.5rem;
-        }
-        button {
-            display: block;
-            width: 100%;
-            padding: 0.6rem;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        button:enabled {
-            background-color: #007bff;
-            color: white;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Syarat dan Ketentuan</h1>
-        <div class="terms">
-            <p>1. Dengan menggunakan ekstensi ini ("Dandelion"), Anda menyetujui syarat dan ketentuan berikut. Jika Anda tidak setuju, mohon jangan gunakan ekstensi ini.</p>
-            <p>2. Extension hanya membantu pengisian form secara lokal.</p>
-            <p>3. Extension tidak mengakses atau menyimpan data pribadi.</p>
-            <p>4. Penggunaan untuk data pasien nyata sepenuhnya tanggung jawab Anda</p>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Syarat dan Ketentuan</title>
+        <style>
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Helvetica, Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                width: 350px; /* Adjust width for a popup */
+                margin: 0;
+                padding: 1rem;
+                box-sizing: border-box;
+            }
+            .container {
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 1.5rem;
+                background-color: #f9f9f9;
+            }
+            h1 {
+                text-align: center;
+                margin-bottom: 1rem;
+                font-size: 1.5rem;
+            }
+            .terms {
+                height: 150px; /* Smaller height for popup */
+                overflow-y: scroll;
+                border: 1px solid #ccc;
+                padding: 0.8rem;
+                background-color: #fff;
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+            }
+            .agreement {
+                display: flex;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+            #agree-checkbox {
+                margin-right: 0.5rem;
+            }
+            button {
+                display: block;
+                width: 100%;
+                padding: 0.6rem;
+                border: none;
+                border-radius: 4px;
+                font-size: 0.9rem;
+                font-weight: bold;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            button:disabled {
+                background-color: #ccc;
+                cursor: not-allowed;
+            }
+            button:enabled {
+                background-color: #007bff;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Syarat dan Ketentuan</h1>
+            <div class="terms">
+                <p>
+                    1. Dengan menggunakan ekstensi ini ("Dandelion"), Anda
+                    menyetujui syarat dan ketentuan berikut. Jika Anda tidak
+                    setuju, mohon jangan gunakan ekstensi ini.
+                </p>
+                <p>2. Extension hanya membantu pengisian form secara lokal.</p>
+                <p>3. Extension tidak mengakses atau menyimpan data pribadi.</p>
+                <p>
+                    4. Penggunaan untuk data pasien nyata sepenuhnya tanggung
+                    jawab Anda
+                </p>
+            </div>
+            <div class="agreement">
+                <input type="checkbox" id="agree-checkbox" />
+                <label for="agree-checkbox"
+                    >Saya telah membaca dan menyetujui syarat dan
+                    ketentuan.</label
+                >
+            </div>
+            <button id="continue-btn" disabled>Lanjutkan</button>
         </div>
-        <div class="agreement">
-            <input type="checkbox" id="agree-checkbox">
-            <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
-        </div>
-        <button id="continue-btn" disabled>Lanjutkan</button>
-    </div>
-    <script src="browser-polyfill.js"></script>
-    <script src="popup.js"></script>
-</body>
+
+        <script src="../view/popup.js"></script>
+    </body>
 </html>

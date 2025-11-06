@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 const agreeCheckbox = document.getElementById('agree-checkbox');
 const continueBtn = document.getElementById('continue-btn');
 
@@ -15,7 +17,9 @@ agreeCheckbox.addEventListener('change', () => {
 continueBtn.addEventListener('click', () => {
   if (agreeCheckbox.checked) {
     browser.storage.local.set({ termsAgreed: true }).then(() => {
-      console.log('Terms have been agreed to and saved to browser.storage.local.');
+      console.log(
+        'Terms have been agreed to and saved to browser.storage.local.'
+      );
       window.close();
     });
   }
