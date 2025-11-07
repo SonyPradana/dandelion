@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "build": "rimraf dist && rollup -c && copyfiles -u 1 src/view/popup.html dist/ && copyfiles -u 1 icons/* dist/icons && node scripts/build-manifest.js"
+    "clean": "rimraf dist",
+    "copy:static": "copyfiles -u 1 src/view/{popup.html,popup.css} dist/ && copyfiles -u 1 icons/* dist/icons",
+    "rollup": "rollup -c",
+    "manifest": "node scripts/build-manifest.js",
+    "build": "pnpm clean && pnpm rollup && pnpm copy:static && pnpm manifest",
+    "start:firefox": "pnpm build && web-ext run --source-dir dist"
   },
   "keywords": [],
   "author": "SonyPradana",
@@ -19,7 +24,8 @@
     "globals": "^16.4.0",
     "neostandard": "^0.12.2",
     "rimraf": "^6.1.0",
-    "rollup": "^4.52.5"
+    "rollup": "^4.52.5",
+    "web-ext": "^9.1.0"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
