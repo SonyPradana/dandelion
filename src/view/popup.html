@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syarat dan Ketentuan Penggunaan</title>
+    <link rel="stylesheet" href="./popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="tab-nav">
+            <button class="tab-button active" data-tab="agreement">Persetujuan</button>
+            <button class="tab-button" data-tab="config">Konfigurasi</button>
+        </div>
+
+        <div id="agreement" class="tab-content active">
+            <div class="header">
+                <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
+            </div>
+            <div class="content">
+                <div class="highlight">
+                    <strong>PERSETUJUAN PENGGUNAAN:</strong> Dengan menggunakan Tool ini, Anda menyetujui seluruh ketentuan berikut.
+                </div>
+                <div class="section">
+                    <h2>1. FUNGSI TOOL</h2>
+                    <p>Tool ini <strong>HANYA</strong> mengisi otomatis pilihan "Tidak", "Tidak sama sekali", "Normal" atau "Belum" pada formulir di browser Anda. Tool bekerja secara lokal dan memerlukan klik manual untuk diaktifkan.</p>
+                </div>
+                <div class="section">
+                    <h2>2. APA YANG TIDAK DILAKUKAN TOOL</h2>
+                    <p>Tool ini <strong>TIDAK</strong>:</p>
+                    <ul>
+                        <li>Mengirim data ke server manapun</li>
+                        <li>Mengakses atau menyimpan data pribadi/pasien</li>
+                        <li>Memodifikasi sistem aplikasi</li>
+                        <li>Submit formulir secara otomatis</li>
+                    </ul>
+                </div>
+                <div class="section">
+                    <h2>3. TANGGUNG JAWAB PENGGUNA</h2>
+                    <p>Anda <strong>WAJIB</strong>:</p>
+                    <ul>
+                        <li>Memverifikasi ulang seluruh jawaban sebelum submit</li>
+                        <li>Bertanggung jawab penuh atas keakuratan data</li>
+                        <li>Mematuhi kebijakan aplikasi/website dan ketentuan hukum yang berlaku</li>
+                    </ul>
+                </div>
+                <div class="section">
+                    <h2>4. BATASAN TANGGUNG JAWAB</h2>
+                    <p>Pengembang <strong>TIDAK bertanggung jawab</strong> atas:</p>
+                    <ul>
+                        <li>Kesalahan pengisian data</li>
+                        <li>Konsekuensi atau hukum dari penggunaan Tool</li>
+                        <li>Gangguan atau error yang mungkin terjadi</li>
+                    </ul>
+                </div>
+                <div class="section">
+                    <h2>5. PRIVASI</h2>
+                    <p>Tool ini <strong>TIDAK mengumpulkan, menyimpan, atau mengirim</strong> data apapun. Semua operasi dilakukan lokal di browser Anda.</p>
+                </div>
+                <div class="checkbox-group">
+                    <h3 style="margin-bottom: 16px; font-size: 15px; color: #333;">KONFIRMASI</h3>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="agree-checkbox">
+                        <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="config" class="tab-content">
+            <div class="header">
+                <h1>Konfigurasi</h1>
+            </div>
+            <div class="content">
+                <div class="form-group">
+                    <label for="form-input">Form</label>
+                    <input type="text" id="form-input" placeholder="Masukkan selector untuk Form">
+                </div>
+                <div class="form-group">
+                    <label for="survey-input">Survey</label>
+                    <input type="text" id="survey-input" placeholder="Masukkan selector untuk Survey">
+                </div>
+                <button id="save-config-btn" class="btn">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../view/popup.js"></script>
+</body>
+</html>

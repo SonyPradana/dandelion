@@ -1,14 +1,22 @@
 import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkrining } from './handlers/skrining.js';
+import { getAgreement, getConfig } from './configuration.js';
 
-initializeForm();
+getAgreement().then((agreed) => {
+  if (agreed) {
+    console.log('Dandelion is active.');
+    initializeForm();
+  }
+});
 
 function initializeForm () {
-  const currentURL = window.location.href;
+  getConfig().then((config) => {
+    const currentURL = window.location.href;
 
-  if (currentURL.includes(process.env.SITE_SURVEY)) {
-    initializeSkriningForm();
-  } else if (currentURL.includes(process.env.SITE_SKRINING)) {
-    initializeSkrining();
-  }
+    if (currentURL.includes(config.survey)) {
+      initializeSkriningForm();
+    } else if (currentURL.includes(config.form)) {
+      initializeSkrining();
+    }
+  });
 }

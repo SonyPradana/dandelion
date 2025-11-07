@@ -1,9 +1,13 @@
+# environment
+.env
+
 # Dependencies
 /node_modules
 /.pnpm-store
 
 # Build artifacts
 /dist
+/artifacts
 
 # Logs
 *.log
