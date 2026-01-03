@@ -18,6 +18,8 @@ export function initializeSkriningForm () {
       const childViewerSpan = span.querySelector('span.sv-string-viewer');
 
       return childViewerSpan && (
+        childViewerSpan.textContent.trim() === 'Menikah' ||
+        childViewerSpan.textContent.trim() === 'Non disabilitas' ||
         childViewerSpan.textContent.trim() === 'Normal' ||
         childViewerSpan.textContent.trim() === 'Belum' ||
         childViewerSpan.textContent.trim() === 'Tidak' ||
