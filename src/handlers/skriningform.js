@@ -9,7 +9,10 @@ export function initializeSkriningForm () {
   const tombol = button('dandelion-auto-fill');
 
   if (tombol) {
-    tombol.addEventListener('click', () => fillTidakRadioButtons());
+    tombol.addEventListener('click', () => {
+      fillTidakRadioButtons();
+      fillSpecificDropdownsByText();
+    });
     document.body.appendChild(tombol);
   }
 
@@ -36,6 +39,31 @@ export function initializeSkriningForm () {
           radioInput.click();
         }
       }
+    });
+  }
+
+  function fillSpecificDropdownsByText () {
+    const dropdownInputs = Array.from(document.querySelectorAll('.sd-dropdown[role="combobox"]'));
+
+    dropdownInputs.forEach(dropdownInput => {
+      dropdownInput.click();
+
+      setTimeout(() => {
+        const allOptions = Array.from(document.querySelectorAll('.sv-popup__container .sv-string-viewer'));
+
+        const targetOptionElement = allOptions.find(span =>
+          span.textContent.trim() === 'Mandiri' ||
+          span.textContent.trim() === 'Tidak' ||
+          span.textContent.trim() === 'Normal' ||
+          span.textContent.trim() === 'SADANIS'
+        );
+
+        if (targetOptionElement) {
+          targetOptionElement.closest('.sd-list__item').click();
+        } else {
+          dropdownInput.click(); // Close if no matching option was found
+        }
+      }, 100);
     });
   }
 }
