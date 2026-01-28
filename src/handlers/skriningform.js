@@ -10,25 +10,23 @@ export function initializeSkriningForm () {
 
   if (tombol) {
     tombol.addEventListener('click', () => {
-      fillTidakRadioButtons();
-      fillSpecificDropdownsByText();
+      fillRadioButtons();
+      fillDropdowns();
     });
     document.body.appendChild(tombol);
   }
 
-  function fillTidakRadioButtons () {
+  function fillRadioButtons () {
     const allMatchingLabels = Array.from(document.querySelectorAll('span.sd-item__control-label')).filter(span => {
       const childViewerSpan = span.querySelector('span.sv-string-viewer');
+      if (!childViewerSpan) return false;
 
-      return childViewerSpan && (
-        childViewerSpan.textContent.trim() === 'Menikah' ||
-        childViewerSpan.textContent.trim() === 'Non disabilitas' ||
-        childViewerSpan.textContent.trim() === 'Normal' ||
-        childViewerSpan.textContent.trim() === 'Belum' ||
-        childViewerSpan.textContent.trim() === 'Tidak' ||
-        childViewerSpan.textContent.trim() === 'Tidak sama sekali' ||
-        childViewerSpan.textContent.trim() === 'Belum'
-      );
+      const text = childViewerSpan.textContent.trim();
+
+      const exactMatches = ['Menikah', 'Non disabilitas', 'Normal', 'Belum', 'Tidak'];
+      if (exactMatches.includes(text)) return true;
+
+      return /^(Tidak)[\s\u00A0]/.test(text);
     });
 
     allMatchingLabels.forEach(labelSpan => {
@@ -42,7 +40,7 @@ export function initializeSkriningForm () {
     });
   }
 
-  function fillSpecificDropdownsByText () {
+  function fillDropdowns () {
     const dropdownInputs = Array.from(document.querySelectorAll('.sd-dropdown[role="combobox"]'));
 
     dropdownInputs.forEach(dropdownInput => {
