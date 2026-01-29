@@ -13,10 +13,10 @@ export async function initializeSkriningForm () {
     tombol.addEventListener('click', async () => {
       const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
-      // const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
+      const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
 
       fillRadioButtons(radioButtonKeywords);
-      fillDropdowns();
+      fillDropdowns(dropdownKeywords);
     });
     document.body.appendChild(tombol);
   }
@@ -47,28 +47,37 @@ export async function initializeSkriningForm () {
     });
   }
 
-  function fillDropdowns () {
-    const dropdownInputs = Array.from(document.querySelectorAll('.sd-dropdown[role="combobox"]'));
+  /**
+    * @param {string[]} config - List of radioInput konfuguration
+    */
+  async function fillDropdowns (config) {
+    const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
 
-    dropdownInputs.forEach(dropdownInput => {
-      dropdownInput.click();
+    for (let i = 0; i < chevronButtons.length; i++) {
+      const chevronButton = chevronButtons[i];
 
-      setTimeout(() => {
-        const allOptions = Array.from(document.querySelectorAll('.sv-popup__container .sv-string-viewer'));
+      chevronButton.click();
 
-        const targetOptionElement = allOptions.find(span =>
-          span.textContent.trim() === 'Mandiri' ||
-          span.textContent.trim() === 'Tidak' ||
-          span.textContent.trim() === 'Normal' ||
-          span.textContent.trim() === 'SADANIS'
-        );
+      await new Promise(resolve => setTimeout(resolve, 300));
 
-        if (targetOptionElement) {
-          targetOptionElement.closest('.sd-list__item').click();
-        } else {
-          dropdownInput.click(); // Close if no matching option was found
-        }
-      }, 100);
-    });
+      const visibleOptions = Array.from(document.querySelectorAll('.sv-popup--dropdown .sv-string-viewer'))
+        .filter(option => {
+          const popup = option.closest('.sv-popup');
+          return popup && popup.style.display !== 'none';
+        });
+
+      const targetOptionElement = visibleOptions.find(span => {
+        const text = span.textContent.trim();
+        return config.includes(text);
+      });
+
+      if (targetOptionElement) {
+        targetOptionElement.closest('.sv-list__item').click();
+        await new Promise(resolve => setTimeout(resolve, 200));
+      } else {
+        chevronButton.click(); // Close drop down
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+    }
   }
 }
