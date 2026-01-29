@@ -23,7 +23,7 @@
                 </div>
                 <div class="section">
                     <h2>1. FUNGSI TOOL</h2>
-                    <p>Tool ini <strong>HANYA</strong> mengisi otomatis pilihan "Tidak", "Tidak sama sekali", "Normal" atau "Belum" pada formulir di browser Anda. Tool bekerja secara lokal dan memerlukan klik manual untuk diaktifkan.</p>
+                    <p>Tool ini <strong>HANYA</strong> mengisi otomatis pilihan yang sudah Anda tentukan sebelumnya pada formulir di browser Anda. Tool bekerja secara lokal dan memerlukan klik manual untuk diaktifkan.</p>
                 </div>
                 <div class="section">
                     <h2>2. APA YANG TIDAK DILAKUKAN TOOL</h2>
@@ -73,12 +73,27 @@
             </div>
             <div class="content">
                 <div class="form-group">
+                    <label for="profile-select">Pilih Profile</label>
+                    <select id="profile-select">
+                        <option value="profile1" default>Profile 1</option>
+                        <option value="profile2">Profile 2</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label for="form-input">Form</label>
                     <input type="text" id="form-input" placeholder="Masukkan selector untuk Form">
                 </div>
                 <div class="form-group">
                     <label for="survey-input">Survey</label>
                     <input type="text" id="survey-input" placeholder="Masukkan selector untuk Survey">
+                </div>
+                <div class="form-group">
+                    <label for="radio-button-keywords-input">Radio Button Keywords</label>
+                    <input type="text" id="radio-button-keywords-input" placeholder="Value pisahkan dengan ;">
+                </div>
+                <div class="form-group">
+                    <label for="dropdown-keywords-input">Dropdown Keywords</label>
+                    <input type="text" id="dropdown-keywords-input" placeholder="Value pisahkan dengan ;">
                 </div>
                 <button id="save-config-btn" class="btn">Simpan</button>
             </div>

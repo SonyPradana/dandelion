@@ -1,30 +1,37 @@
 import { button } from '../components/button';
+import { getActiveConfig } from '../configuration';
 
 /**
  * ⚠️ Legal / UX Notice:
  * This button only trigger local form filling.
  * The use must consciously press the button to perform the action.
  */
-export function initializeSkriningForm () {
+export async function initializeSkriningForm () {
   const tombol = button('dandelion-auto-fill');
 
   if (tombol) {
-    tombol.addEventListener('click', () => {
-      fillRadioButtons();
+    tombol.addEventListener('click', async () => {
+      const config = await getActiveConfig();
+      const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
+      // const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
+
+      fillRadioButtons(radioButtonKeywords);
       fillDropdowns();
     });
     document.body.appendChild(tombol);
   }
 
-  function fillRadioButtons () {
+  /**
+    * @param {string[]} config - List of radioInput konfuguration
+    */
+  function fillRadioButtons (config) {
     const allMatchingLabels = Array.from(document.querySelectorAll('span.sd-item__control-label')).filter(span => {
       const childViewerSpan = span.querySelector('span.sv-string-viewer');
       if (!childViewerSpan) return false;
 
       const text = childViewerSpan.textContent.trim();
 
-      const exactMatches = ['Menikah', 'Non disabilitas', 'Normal', 'Belum', 'Tidak'];
-      if (exactMatches.includes(text)) return true;
+      if (config.includes(text)) return true;
 
       return /^(Tidak)[\s\u00A0]/.test(text);
     });

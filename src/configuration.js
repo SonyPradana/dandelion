@@ -1,5 +1,21 @@
 import browser from 'webextension-polyfill';
 
+const DEFAULT_CONFIG = {
+  formSelector: '',
+  surveySelector: '',
+  activeProfile: 'profile1',
+  profiles: {
+    profile1: {
+      radioButtonKeywords: '',
+      dropdownKeywords: ''
+    },
+    profile2: {
+      radioButtonKeywords: '',
+      dropdownKeywords: ''
+    }
+  }
+};
+
 /**
  * @returns {Promise<boolean>}
  */
@@ -18,24 +34,48 @@ export function setAgreement (value) {
 }
 
 /**
- * @returns {Promise<{form: string, survey: string}>}
+ * Gets the full configuration object, including all profiles.
+ * @returns {Promise<typeof DEFAULT_CONFIG>}
  */
-export function getConfig () {
-  return browser.storage.local.get(['formSelector', 'surveySelector']).then((result) => {
+export function getFullConfig () {
+  return browser.storage.local.get(Object.keys(DEFAULT_CONFIG)).then((result) => {
+    // Deep merge with defaults to ensure all keys are present
+    const profiles = {
+      ...DEFAULT_CONFIG.profiles,
+      ...(result.profiles || {})
+    };
+    profiles.profile1 = { ...DEFAULT_CONFIG.profiles.profile1, ...(profiles.profile1 || {}) };
+    profiles.profile2 = { ...DEFAULT_CONFIG.profiles.profile2, ...(profiles.profile2 || {}) };
+
     return {
-      form: result?.formSelector ?? '',
-      survey: result?.surveySelector ?? '',
+      formSelector: result.formSelector ?? DEFAULT_CONFIG.formSelector,
+      surveySelector: result.surveySelector ?? DEFAULT_CONFIG.surveySelector,
+      activeProfile: result.activeProfile ?? DEFAULT_CONFIG.activeProfile,
+      profiles
     };
   });
 }
 
 /**
- * @param {{form: string, survey: string}} config
+ * Gets the configuration for the currently active profile.
+ * @returns {Promise<{form: string, survey: string, radioButtonKeywords: string, dropdownKeywords: string}>}
+ */
+export function getActiveConfig () {
+  return getFullConfig().then(config => {
+    const activeProfileSettings = config.profiles[config.activeProfile];
+    return {
+      form: config.formSelector,
+      survey: config.surveySelector,
+      ...activeProfileSettings
+    };
+  });
+}
+
+/**
+ * Saves the full configuration object.
+ * @param {typeof DEFAULT_CONFIG} config
  * @returns {void}
  */
 export function setConfig (config) {
-  browser.storage.local.set({
-    formSelector: config.form,
-    surveySelector: config.survey
-  });
+  browser.storage.local.set(config);
 }

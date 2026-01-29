@@ -1,7 +1,8 @@
-import { getAgreement, setAgreement, getConfig, setConfig } from '../configuration';
+import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
+  let loadedConfig = null;
 
   // --- Agreement Tab Logic ---
   getAgreement().then((agreed) => {
@@ -24,17 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => {
       const tabName = button.dataset.tab;
 
-      // Update button active state
       tabButtons.forEach((btn) => btn.classList.remove('active'));
       button.classList.add('active');
 
-      // Update content active state
       tabContents.forEach((content) => {
-        if (content.id === tabName) {
-          content.classList.add('active');
-        } else {
-          content.classList.remove('active');
-        }
+        content.id === tabName ? content.classList.add('active') : content.classList.remove('active');
       });
     });
   });
@@ -43,24 +38,51 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveConfigBtn = document.getElementById('save-config-btn');
   const formInput = document.getElementById('form-input');
   const surveyInput = document.getElementById('survey-input');
+  const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
+  const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
+  const profileSelect = document.getElementById('profile-select');
 
-  // Load initial config
-  getConfig().then((config) => {
-    if (formInput) {
-      formInput.value = config.form;
-    }
-    if (surveyInput) {
-      surveyInput.value = config.survey;
-    }
+  /**
+   * Updates the form inputs based on the selected profile in the loaded config.
+   * @param {string} selectedProfile - The key of the profile to load ('profile1' or 'profile2').
+   */
+  function updateFormForProfile (selectedProfile) {
+    if (!loadedConfig) return;
+
+    const profileSettings = loadedConfig.profiles[selectedProfile];
+    formInput.value = loadedConfig.formSelector;
+    surveyInput.value = loadedConfig.surveySelector;
+    radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
+    dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
+
+    // Update select box selection
+    profileSelect.value = selectedProfile;
+  }
+
+  // Load initial config and set up profile switching
+  getFullConfig().then((config) => {
+    loadedConfig = config;
+    updateFormForProfile(config.activeProfile);
+
+    profileSelect.addEventListener('change', (event) => updateFormForProfile(event.target.value));
   });
 
+  // Save button logic
   if (saveConfigBtn) {
     saveConfigBtn.addEventListener('click', () => {
-      const formValue = formInput.value;
-      const surveyValue = surveyInput.value;
+      if (!loadedConfig) return;
 
-      setConfig({ form: formValue, survey: surveyValue });
-      // Optional: Add a visual confirmation that settings are saved
+      const selectedProfile = profileSelect.value;
+
+      // Update the loadedConfig object with current form values
+      loadedConfig.activeProfile = selectedProfile;
+      loadedConfig.formSelector = formInput.value;
+      loadedConfig.surveySelector = surveyInput.value;
+      loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
+      loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
+
+      setConfig(loadedConfig);
+
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
         saveConfigBtn.textContent = 'Simpan';
