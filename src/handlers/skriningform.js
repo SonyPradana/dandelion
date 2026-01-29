@@ -13,7 +13,7 @@ export async function initializeSkriningForm () {
     tombol.addEventListener('click', async () => {
       const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
-      const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
+      // const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
 
       fillRadioButtons(radioButtonKeywords);
       fillDropdowns();
