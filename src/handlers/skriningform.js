@@ -49,12 +49,22 @@ export async function initializeSkriningForm () {
 
   /**
     * @param {string[]} config - List of radioInput konfuguration
+    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
     */
-  async function fillDropdowns (config) {
+  async function fillDropdowns (config, skipList = []) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
 
     for (let i = 0; i < chevronButtons.length; i++) {
       const chevronButton = chevronButtons[i];
+
+      const questionElement = chevronButton.closest('[data-name]');
+
+      if (questionElement) {
+        const dataName = questionElement.getAttribute('data-name');
+        if (skipList.includes(dataName)) {
+          continue; // Skip dropdown (exclude list)
+        }
+      }
 
       chevronButton.click();
 
