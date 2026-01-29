@@ -1,6 +1,6 @@
 import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkrining } from './handlers/skrining.js';
-import { getAgreement, getConfig } from './configuration.js';
+import { getAgreement, getActiveConfig } from './configuration.js';
 
 getAgreement().then((agreed) => {
   if (agreed) {
@@ -10,7 +10,7 @@ getAgreement().then((agreed) => {
 });
 
 function initializeForm () {
-  getConfig().then((config) => {
+  getActiveConfig().then((config) => {
     const currentURL = window.location.href;
 
     if (currentURL.includes(config.survey)) {

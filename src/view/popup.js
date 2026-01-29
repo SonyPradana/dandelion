@@ -1,7 +1,8 @@
-import { getAgreement, setAgreement, getConfig, setConfig } from '../configuration';
+import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
+  let loadedConfig = null;
 
   // --- Agreement Tab Logic ---
   getAgreement().then((agreed) => {
@@ -24,17 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => {
       const tabName = button.dataset.tab;
 
-      // Update button active state
       tabButtons.forEach((btn) => btn.classList.remove('active'));
       button.classList.add('active');
 
-      // Update content active state
       tabContents.forEach((content) => {
-        if (content.id === tabName) {
-          content.classList.add('active');
-        } else {
-          content.classList.remove('active');
-        }
+        content.id === tabName ? content.classList.add('active') : content.classList.remove('active');
       });
     });
   });
@@ -45,32 +40,55 @@ document.addEventListener('DOMContentLoaded', () => {
   const surveyInput = document.getElementById('survey-input');
   const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
   const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
+  const profile1Radio = document.getElementById('profile-1-radio');
+  const profile2Radio = document.getElementById('profile-2-radio');
 
-  // Load initial config
-  getConfig().then((config) => {
-    if (formInput) {
-      formInput.value = config.form;
+  /**
+   * Updates the form inputs based on the selected profile in the loaded config.
+   * @param {string} selectedProfile - The key of the profile to load ('profile1' or 'profile2').
+   */
+  function updateFormForProfile (selectedProfile) {
+    if (!loadedConfig) return;
+
+    const profileSettings = loadedConfig.profiles[selectedProfile];
+    formInput.value = loadedConfig.formSelector;
+    surveyInput.value = loadedConfig.surveySelector;
+    radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
+    dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
+
+    // Update radio button selection
+    if (selectedProfile === 'profile1') {
+      profile1Radio.checked = true;
+    } else {
+      profile2Radio.checked = true;
     }
-    if (surveyInput) {
-      surveyInput.value = config.survey;
-    }
-    if (radioButtonKeywordsInput) {
-      radioButtonKeywordsInput.value = config.radioButtonKeywords;
-    }
-    if (dropdownKeywordsInput) {
-      dropdownKeywordsInput.value = config.dropdownKeywords;
-    }
+  }
+
+  // Load initial config and set up profile switching
+  getFullConfig().then((config) => {
+    loadedConfig = config;
+    updateFormForProfile(config.activeProfile);
+
+    profile1Radio.addEventListener('change', () => updateFormForProfile('profile1'));
+    profile2Radio.addEventListener('change', () => updateFormForProfile('profile2'));
   });
 
+  // Save button logic
   if (saveConfigBtn) {
     saveConfigBtn.addEventListener('click', () => {
-      const formValue = formInput.value;
-      const surveyValue = surveyInput.value;
-      const radioButtonKeywordsValue = radioButtonKeywordsInput.value;
-      const dropdownKeywordsValue = dropdownKeywordsInput.value;
+      if (!loadedConfig) return;
 
-      setConfig({ form: formValue, survey: surveyValue, radioButtonKeywords: radioButtonKeywordsValue, dropdownKeywords: dropdownKeywordsValue });
-      // Optional: Add a visual confirmation that settings are saved
+      const selectedProfile = profile1Radio.checked ? 'profile1' : 'profile2';
+
+      // Update the loadedConfig object with current form values
+      loadedConfig.activeProfile = selectedProfile;
+      loadedConfig.formSelector = formInput.value;
+      loadedConfig.surveySelector = surveyInput.value;
+      loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
+      loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
+
+      setConfig(loadedConfig);
+
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
         saveConfigBtn.textContent = 'Simpan';

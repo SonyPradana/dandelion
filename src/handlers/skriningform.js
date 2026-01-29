@@ -1,5 +1,5 @@
 import { button } from '../components/button';
-import { getConfig } from '../configuration';
+import { getActiveConfig } from '../configuration';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -8,7 +8,7 @@ import { getConfig } from '../configuration';
  */
 export async function initializeSkriningForm () {
   const tombol = button('dandelion-auto-fill');
-  const config = await getConfig();
+  const config = await getActiveConfig();
   const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
 
   if (tombol) {
