@@ -43,6 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveConfigBtn = document.getElementById('save-config-btn');
   const formInput = document.getElementById('form-input');
   const surveyInput = document.getElementById('survey-input');
+  const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
+  const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
 
   // Load initial config
   getConfig().then((config) => {
@@ -52,14 +54,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (surveyInput) {
       surveyInput.value = config.survey;
     }
+    if (radioButtonKeywordsInput) {
+      radioButtonKeywordsInput.value = config.radioButtonKeywords;
+    }
+    if (dropdownKeywordsInput) {
+      dropdownKeywordsInput.value = config.dropdownKeywords;
+    }
   });
 
   if (saveConfigBtn) {
     saveConfigBtn.addEventListener('click', () => {
       const formValue = formInput.value;
       const surveyValue = surveyInput.value;
+      const radioButtonKeywordsValue = radioButtonKeywordsInput.value;
+      const dropdownKeywordsValue = dropdownKeywordsInput.value;
 
-      setConfig({ form: formValue, survey: surveyValue });
+      setConfig({ form: formValue, survey: surveyValue, radioButtonKeywords: radioButtonKeywordsValue, dropdownKeywords: dropdownKeywordsValue });
       // Optional: Add a visual confirmation that settings are saved
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {

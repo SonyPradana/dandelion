@@ -18,24 +18,28 @@ export function setAgreement (value) {
 }
 
 /**
- * @returns {Promise<{form: string, survey: string}>}
+ * @returns {Promise<{form: string, survey: string, radioButtonKeywords: string, dropdownKeywords: string}>}
  */
 export function getConfig () {
-  return browser.storage.local.get(['formSelector', 'surveySelector']).then((result) => {
+  return browser.storage.local.get(['formSelector', 'surveySelector', 'radioButtonKeywordsSelector', 'dropdownKeywordsSelector']).then((result) => {
     return {
       form: result?.formSelector ?? '',
       survey: result?.surveySelector ?? '',
+      radioButtonKeywords: result?.radioButtonKeywordsSelector ?? '',
+      dropdownKeywords: result?.dropdownKeywordsSelector ?? '',
     };
   });
 }
 
 /**
- * @param {{form: string, survey: string}} config
+ * @param {{form: string, survey: string, radioButtonKeywords: string, dropdownKeywords: string}} config
  * @returns {void}
  */
 export function setConfig (config) {
   browser.storage.local.set({
     formSelector: config.form,
-    surveySelector: config.survey
+    surveySelector: config.survey,
+    radioButtonKeywordsSelector: config.radioButtonKeywords,
+    dropdownKeywordsSelector: config.dropdownKeywords
   });
 }
