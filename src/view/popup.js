@@ -40,8 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const surveyInput = document.getElementById('survey-input');
   const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
   const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
-  const profile1Radio = document.getElementById('profile-1-radio');
-  const profile2Radio = document.getElementById('profile-2-radio');
+  const profileSelect = document.getElementById('profile-select');
 
   /**
    * Updates the form inputs based on the selected profile in the loaded config.
@@ -56,12 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
     dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
 
-    // Update radio button selection
-    if (selectedProfile === 'profile1') {
-      profile1Radio.checked = true;
-    } else {
-      profile2Radio.checked = true;
-    }
+    // Update select box selection
+    profileSelect.value = selectedProfile;
   }
 
   // Load initial config and set up profile switching
@@ -69,8 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadedConfig = config;
     updateFormForProfile(config.activeProfile);
 
-    profile1Radio.addEventListener('change', () => updateFormForProfile('profile1'));
-    profile2Radio.addEventListener('change', () => updateFormForProfile('profile2'));
+    profileSelect.addEventListener('change', (event) => updateFormForProfile(event.target.value));
   });
 
   // Save button logic
@@ -78,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
 
-      const selectedProfile = profile1Radio.checked ? 'profile1' : 'profile2';
+      const selectedProfile = profileSelect.value;
 
       // Update the loadedConfig object with current form values
       loadedConfig.activeProfile = selectedProfile;
