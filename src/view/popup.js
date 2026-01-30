@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
   const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
   const profileSelect = document.getElementById('profile-select');
+  const excludesInput = document.getElementById('excludes');
 
   /**
    * Updates the form inputs based on the selected profile in the loaded config.
@@ -54,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     surveyInput.value = loadedConfig.surveySelector;
     radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
     dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
+    excludesInput.value = profileSelect.excludes;
 
     // Update select box selection
     profileSelect.value = selectedProfile;
@@ -80,6 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loadedConfig.surveySelector = surveyInput.value;
       loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
       loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
+      loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
 
       setConfig(loadedConfig);
 

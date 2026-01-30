@@ -14,9 +14,10 @@ export async function initializeSkriningForm () {
       const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
+      const excludes = (config.excludes && config.excludes.split(';')) || [];
 
       fillRadioButtons(radioButtonKeywords);
-      fillDropdowns(dropdownKeywords);
+      fillDropdowns(dropdownKeywords, excludes);
     });
     document.body.appendChild(tombol);
   }

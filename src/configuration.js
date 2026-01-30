@@ -7,11 +7,13 @@ const DEFAULT_CONFIG = {
   profiles: {
     profile1: {
       radioButtonKeywords: '',
-      dropdownKeywords: ''
+      dropdownKeywords: '',
+      excludes: '',
     },
     profile2: {
       radioButtonKeywords: '',
-      dropdownKeywords: ''
+      dropdownKeywords: '',
+      excludes: '',
     }
   }
 };
