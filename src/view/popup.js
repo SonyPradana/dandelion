@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     surveyInput.value = loadedConfig.surveySelector;
     radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
     dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
-    excludesInput.value = profileSelect.excludes;
+    excludesInput.value = profileSettings.excludes;
 
     // Update select box selection
     profileSelect.value = selectedProfile;
