@@ -17,6 +17,8 @@ export async function initializeSkriningForm () {
 
       fillRadioButtons(radioButtonKeywords);
       fillDropdowns(dropdownKeywords);
+
+      document.activeElement.blur();
     });
     document.body.appendChild(tombol);
   }
