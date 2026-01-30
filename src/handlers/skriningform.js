@@ -16,7 +16,7 @@ export async function initializeSkriningForm () {
       const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
       const excludes = (config.excludes && config.excludes.split(';')) || [];
 
-      fillRadioButtons(radioButtonKeywords);
+      fillRadioButtons(radioButtonKeywords, excludes);
       fillDropdowns(dropdownKeywords, excludes);
     });
     document.body.appendChild(tombol);
@@ -24,8 +24,9 @@ export async function initializeSkriningForm () {
 
   /**
     * @param {string[]} config - List of radioInput konfuguration
+    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
     */
-  function fillRadioButtons (config) {
+  function fillRadioButtons (config, skipList = []) {
     const allMatchingLabels = Array.from(document.querySelectorAll('span.sd-item__control-label')).filter(span => {
       const childViewerSpan = span.querySelector('span.sv-string-viewer');
       if (!childViewerSpan) return false;
@@ -40,6 +41,14 @@ export async function initializeSkriningForm () {
     allMatchingLabels.forEach(labelSpan => {
       const parentLabel = labelSpan.closest('label.sd-selectbase__label');
       if (parentLabel) {
+        const questionElement = parentLabel.closest('[data-name]');
+        if (questionElement) {
+          const dataName = questionElement.getAttribute('data-name');
+          if (skipList.includes(dataName)) {
+            return;
+          }
+        }
+
         const radioInput = parentLabel.querySelector('input[type="radio"]');
         if (radioInput && !radioInput.checked) {
           radioInput.click();
