@@ -3,7 +3,7 @@
   "name": "Dandelion - Clean ux you might like",
   "version": "0.0.1",
   "description": "with full awareness to say no 🙏.",
-  "permissions": ["storage"],
+  "permissions": ["storage", "downloads"],
   "host_permissions": [],
   "content_scripts": [
     {
