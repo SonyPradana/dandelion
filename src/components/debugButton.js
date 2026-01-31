@@ -5,14 +5,14 @@
 export function debugButton () {
   const debugToggle = document.createElement('button');
   debugToggle.id = 'dandelion-debug-toggle';
-  debugToggle.innerHTML = '👁️';
+  debugToggle.innerHTML = '🐞';
   debugToggle.style.cssText = `
       position: fixed;
-      top: 70px; /* Positioned below the monkey button */
+      top: 64px; /* Positioned below the monkey button */
       right: 10px;
       z-index: 9998;
       padding: 5px 10px; /* Smaller padding */
-      background: #99A5FF;
+      background: rgb(243 243 243 / 80%);
       color: white;
       border: none;
       border-radius: 5px;
