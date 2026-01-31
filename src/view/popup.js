@@ -42,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
   const profileSelect = document.getElementById('profile-select');
   const excludesInput = document.getElementById('excludes');
+  const showDebugInfoCheckbox = document.getElementById('show-debug-info-checkbox');
 
   /**
    * Updates the form inputs based on the selected profile in the loaded config.
@@ -56,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
     dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
     excludesInput.value = profileSettings.excludes;
+    showDebugInfoCheckbox.checked = loadedConfig.showDebugInfo || false; // Default to false if not set
 
     // Update select box selection
     profileSelect.value = selectedProfile;
@@ -83,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
       loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
       loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
       loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
+      loadedConfig.showDebugInfo = showDebugInfoCheckbox.checked;
 
       setConfig(loadedConfig);
 

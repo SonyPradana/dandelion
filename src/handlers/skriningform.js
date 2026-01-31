@@ -1,5 +1,6 @@
 import { button } from '../components/button';
 import { getActiveConfig } from '../configuration';
+import { debugMarker } from '../components/marker';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -7,11 +8,14 @@ import { getActiveConfig } from '../configuration';
  * The use must consciously press the button to perform the action.
  */
 export async function initializeSkriningForm () {
+  const config = await getActiveConfig();
+
+  showDebugInformation(config.showDebugInfo);
+
   const tombol = button('dandelion-auto-fill');
 
   if (tombol) {
     tombol.addEventListener('click', async () => {
-      const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
       const excludes = (config.excludes && config.excludes.split(';')) || [];
@@ -98,6 +102,37 @@ export async function initializeSkriningForm () {
         chevronButton.click(); // Close drop down
         await new Promise(resolve => setTimeout(resolve, 150));
       }
+    }
+  }
+
+  /**
+    * @param {boolean} enable - Toggle show or hide debug markers.
+    */
+  function showDebugInformation (enable) {
+    const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
+
+    if (enable) {
+      const elementsWithDataName = document.querySelectorAll('[data-name]');
+
+      elementsWithDataName.forEach(element => {
+        // Prevent adding duplicate markers
+        if (element.querySelector(`.${DEBUG_MARKER_CLASS}`)) {
+          return;
+        }
+
+        const dataName = element.getAttribute('data-name');
+        const marker = debugMarker(dataName);
+
+        // Ensure the parent is positioned to contain the absolute marker
+        if (window.getComputedStyle(element).position === 'static') {
+          element.style.position = 'relative';
+        }
+
+        element.appendChild(marker);
+      });
+    } else {
+      const markers = document.querySelectorAll(`.${DEBUG_MARKER_CLASS}`);
+      markers.forEach(marker => marker.remove());
     }
   }
 }
