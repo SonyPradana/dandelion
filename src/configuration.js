@@ -15,8 +15,7 @@ const DEFAULT_CONFIG = {
       dropdownKeywords: '',
       excludes: '',
     }
-  },
-  showDebugInfo: false,
+  }
 };
 
 /**
@@ -54,8 +53,7 @@ export function getFullConfig () {
       formSelector: result.formSelector ?? DEFAULT_CONFIG.formSelector,
       surveySelector: result.surveySelector ?? DEFAULT_CONFIG.surveySelector,
       activeProfile: result.activeProfile ?? DEFAULT_CONFIG.activeProfile,
-      profiles,
-      showDebugInfo: result.showDebugInfo ?? DEFAULT_CONFIG.showDebugInfo,
+      profiles
     };
   });
 }
@@ -70,8 +68,7 @@ export function getActiveConfig () {
     return {
       form: config.formSelector,
       survey: config.surveySelector,
-      ...activeProfileSettings,
-      showDebugInfo: config.showDebugInfo,
+      ...activeProfileSettings
     };
   });
 }

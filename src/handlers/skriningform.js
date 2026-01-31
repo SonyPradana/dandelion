@@ -1,6 +1,7 @@
 import { button } from '../components/button';
 import { getActiveConfig } from '../configuration';
 import { debugMarker } from '../components/marker';
+import { debugButton } from '../components/debugButton';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -9,10 +10,17 @@ import { debugMarker } from '../components/marker';
  */
 export async function initializeSkriningForm () {
   const config = await getActiveConfig();
-
-  showDebugInformation(config.showDebugInfo);
+  let isDebugEnabled = false; // Initial state is off
 
   const tombol = button('dandelion-auto-fill');
+  const debugToggle = debugButton();
+
+  debugToggle.addEventListener('click', () => {
+    isDebugEnabled = !isDebugEnabled;
+    showDebugInformation(isDebugEnabled);
+  });
+
+  document.body.appendChild(debugToggle);
 
   if (tombol) {
     tombol.addEventListener('click', async () => {
