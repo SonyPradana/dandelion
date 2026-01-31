@@ -8,7 +8,7 @@ async function getExcludesForActiveProfile () {
   const fullConfig = await getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
   const excludesString = fullConfig.profiles[activeProfileName]?.excludes || '';
-  // Filter(Boolean) removes any empty strings that might result from split (e.g., if string is ";item1" or "item1;")
+
   return excludesString.split(';').filter(Boolean);
 }
 
@@ -20,10 +20,11 @@ async function getExcludesForActiveProfile () {
 async function saveExcludesForActiveProfile (excludesArray) {
   const fullConfig = await getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
-  // Ensure the active profile exists before trying to set its excludes
+
   if (!fullConfig.profiles[activeProfileName]) {
     fullConfig.profiles[activeProfileName] = {};
   }
+
   fullConfig.profiles[activeProfileName].excludes = excludesArray.join(';');
   await setConfig(fullConfig);
 }
@@ -35,13 +36,12 @@ async function saveExcludesForActiveProfile (excludesArray) {
  */
 export async function isExcluded (dataName) {
   const excludesList = await getExcludesForActiveProfile();
+
   return excludesList.includes(dataName);
 }
 
 /**
  * Toggles the exclusion status of a data-name in the active profile.
- * If the data-name is currently excluded, it will be removed.
- * If it's not excluded, it will be added.
  * @param {string} dataName - The data-name to toggle.
  * @returns {Promise<boolean>} True if the data-name is now excluded, false if it's now included.
  */
@@ -49,15 +49,16 @@ export async function toggleExclude (dataName) {
   const excludesList = await getExcludesForActiveProfile();
   const index = excludesList.indexOf(dataName);
 
+  // It exists, so remove it
   if (index > -1) {
-    // It exists, so remove it
     excludesList.splice(index, 1);
     await saveExcludesForActiveProfile(excludesList);
-    return false; // Now included
+
+    return false;
   } else {
-    // It doesn't exist, so add it
     excludesList.push(dataName);
     await saveExcludesForActiveProfile(excludesList);
-    return true; // Now excluded
+
+    return true;
   }
 }
