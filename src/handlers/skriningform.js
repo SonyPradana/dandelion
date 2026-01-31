@@ -9,7 +9,6 @@ import { debugButton } from '../components/debugButton';
  * The use must consciously press the button to perform the action.
  */
 export async function initializeSkriningForm () {
-  const config = await getActiveConfig();
   let isDebugEnabled = false; // Initial state is off
 
   const tombol = button('dandelion-auto-fill');
@@ -24,6 +23,7 @@ export async function initializeSkriningForm () {
 
   if (tombol) {
     tombol.addEventListener('click', async () => {
+      const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
       const excludes = (config.excludes && config.excludes.split(';')) || [];
