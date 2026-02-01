@@ -92,4 +92,59 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1500);
     });
   }
+
+  // --- Import/Export Logic ---
+  const exportLink = document.getElementById('export-link');
+  const importLink = document.getElementById('import-link');
+  const importFileInput = document.getElementById('import-file-input');
+
+  exportLink.addEventListener('click', (event) => {
+    event.preventDefault();
+    getFullConfig().then(config => {
+      const configStr = JSON.stringify(config, null, 2);
+      const blob = new Blob([configStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dandelion-config.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  });
+
+  importLink.addEventListener('click', (event) => {
+    event.preventDefault();
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const importedConfig = JSON.parse(e.target.result);
+
+        // Basic validation
+        if (!importedConfig.profiles || !importedConfig.activeProfile) {
+          throw new Error('Invalid config file format.');
+        }
+
+        // Save and reload
+        setConfig(importedConfig);
+        loadedConfig = importedConfig;
+        updateFormForProfile(importedConfig.activeProfile);
+      } catch (error) {
+      } finally {
+        // Reset file input
+        importFileInput.value = '';
+      }
+    };
+    reader.readAsText(file);
+  });
 });

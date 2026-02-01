@@ -234,3 +234,21 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
+
+/* Action links for import/export */
+.action-links {
+    margin-top: 15px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.action-links a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 13px;
+}
+
+.action-links a:hover {
+    text-decoration: underline;
+}
