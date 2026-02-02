@@ -68,43 +68,45 @@
         </div>
 
         <div id="config" class="tab-content">
-            <div class="header">
-                <h1>Konfigurasi</h1>
-            </div>
-            <div class="content">
-                <div class="form-group">
-                    <label for="profile-select">Pilih Profile</label>
-                    <select id="profile-select">
-                        <option value="profile1" default>Profile 1</option>
-                        <option value="profile2">Profile 2</option>
-                    </select>
+            <div id="config-wrapper">
+                <div class="header">
+                    <h1>Konfigurasi</h1>
                 </div>
-                <div class="form-group">
-                    <label for="form-input">Form</label>
-                    <input type="text" id="form-input" placeholder="Masukkan selector untuk Form">
+                <div class="content">
+                    <div class="form-group">
+                        <label for="profile-select">Pilih Profile</label>
+                        <select id="profile-select">
+                            <option value="profile1" default>Profile 1</option>
+                            <option value="profile2">Profile 2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="form-input">Form</label>
+                        <input type="text" id="form-input" placeholder="Masukkan selector untuk Form">
+                    </div>
+                    <div class="form-group">
+                        <label for="survey-input">Survey</label>
+                        <input type="text" id="survey-input" placeholder="Masukkan selector untuk Survey">
+                    </div>
+                    <div class="form-group">
+                        <label for="radio-button-keywords-input">Radio Button Keywords</label>
+                        <input type="text" id="radio-button-keywords-input" placeholder="Value pisahkan dengan ;">
+                    </div>
+                    <div class="form-group">
+                        <label for="dropdown-keywords-input">Dropdown Keywords</label>
+                        <input type="text" id="dropdown-keywords-input" placeholder="Value pisahkan dengan ;">
+                    </div>
+                    <div class="form-group">
+                        <label for="excludes">Excludes data</label>
+                        <input type="text" id="excludes" placeholder="Excludes or skips surver">
+                    </div>
+                    <button id="save-config-btn" class="btn">Simpan</button>
+                    <div class="action-links">
+                        <a href="#" id="export-link">Export</a>
+                        <a href="#" id="import-link">Import</a>
+                    </div>
+                    <input type="file" id="import-file-input" style="display: none;" accept=".json">
                 </div>
-                <div class="form-group">
-                    <label for="survey-input">Survey</label>
-                    <input type="text" id="survey-input" placeholder="Masukkan selector untuk Survey">
-                </div>
-                <div class="form-group">
-                    <label for="radio-button-keywords-input">Radio Button Keywords</label>
-                    <input type="text" id="radio-button-keywords-input" placeholder="Value pisahkan dengan ;">
-                </div>
-                <div class="form-group">
-                    <label for="dropdown-keywords-input">Dropdown Keywords</label>
-                    <input type="text" id="dropdown-keywords-input" placeholder="Value pisahkan dengan ;">
-                </div>
-                 <div class="form-group">
-                    <label for="excludes">Excludes data</label>
-                    <input type="text" id="excludes" placeholder="Excludes or skips surver">
-                </div>
-                <button id="save-config-btn" class="btn">Simpan</button>
-                <div class="action-links">
-                    <a href="#" id="export-link">Export</a>
-                    <a href="#" id="import-link">Import</a>
-                </div>
-                <input type="file" id="import-file-input" style="display: none;" accept=".json">
             </div>
         </div>
     </div>

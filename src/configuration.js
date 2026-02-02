@@ -22,7 +22,7 @@ const DEFAULT_CONFIG = {
  * @returns {Promise<boolean>}
  */
 export function getAgreement () {
-  return browser.storage.local
+  return browser.storage.session
     .get('termsAgreed')
     .then((result) => result?.termsAgreed ?? false);
 }
@@ -32,7 +32,7 @@ export function getAgreement () {
  * @returns {void}
  */
 export function setAgreement (value) {
-  browser.storage.local.set({ termsAgreed: value });
+  browser.storage.session.set({ termsAgreed: value });
 }
 
 /**
