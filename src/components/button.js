@@ -16,15 +16,15 @@ export function button (id) {
       top: 10px;
       right: 10px;
       z-index: 9999;
-      padding: 10px 20px;
-      background: #FDFF99;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 16px;
+      padding: 0.75rem 1rem;
+      background: rgb(255, 223, 0); /* Dandelion yellow */
+      color: #333; /* Dark text for contrast */
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      font-size: 1rem;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      transition: transform 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      transition: all 0.2s ease-in-out;
     `;
 
   tombol.addEventListener('mousedown', () => {
