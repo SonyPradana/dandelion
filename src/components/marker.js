@@ -21,7 +21,6 @@ function initializeStyles () {
       font-size: 0.625rem;
       font-family: monospace;
       border: 1px solid rgba(0, 0, 0, 0.1);
-      z-index: 9990;
       white-space: nowrap;
       display: flex;
       align-items: center;
