@@ -3,7 +3,6 @@ import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configu
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');
-  const configTabButton = document.querySelector('[data-tab="config"]');
   let loadedConfig = null;
 
   /**
@@ -12,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function updateConfigState (isAgreed) {
     configWrapper.classList.toggle('disabled', !isAgreed);
-    configTabButton.disabled = !isAgreed;
 
     // Also disable all form elements inside the config wrapper
     const formElements = configWrapper.querySelectorAll('input, select, button, a');
