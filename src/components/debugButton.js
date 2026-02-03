@@ -8,18 +8,20 @@ export function debugButton () {
   debugToggle.innerHTML = '🐞';
   debugToggle.style.cssText = `
       position: fixed;
-      top: 64px; /* Positioned below the monkey button */
-      right: 10px;
+      top: 4.5rem;
+      right: 0.75rem;
       z-index: 9998;
-      padding: 5px 10px; /* Smaller padding */
-      background: rgb(243 243 243 / 80%);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 14px; /* Smaller font */
+      padding: 0.3rem 0.75rem;
+      background: rgba(255, 255, 255, 0.8);
+      color: #171717;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      font-size: 0.875rem;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      transition: transform 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.2s ease-in-out;
     `;
 
   debugToggle.addEventListener('mousedown', () => {
