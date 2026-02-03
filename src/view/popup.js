@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateConfigState (isAgreed) {
     configWrapper.classList.toggle('disabled', !isAgreed);
 
-    // Also disable all form elements inside the config wrapper
     const formElements = configWrapper.querySelectorAll('input, select, button, a');
     formElements.forEach(element => {
       element.disabled = !isAgreed;
