@@ -2,18 +2,35 @@ import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configu
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
+  const configWrapper = document.getElementById('config-wrapper');
   let loadedConfig = null;
+
+  /**
+   * Toggles the enabled/disabled state of the configuration tab and its contents.
+   * @param {boolean} isAgreed - Whether the user has agreed to the terms.
+   */
+  function updateConfigState (isAgreed) {
+    configWrapper.classList.toggle('disabled', !isAgreed);
+
+    const formElements = configWrapper.querySelectorAll('input, select, button, a');
+    formElements.forEach(element => {
+      element.disabled = !isAgreed;
+    });
+  }
 
   // --- Agreement Tab Logic ---
   getAgreement().then((agreed) => {
     if (agreeCheckbox) {
       agreeCheckbox.checked = agreed;
     }
+    updateConfigState(agreed);
   });
 
   if (agreeCheckbox) {
     agreeCheckbox.addEventListener('change', () => {
-      setAgreement(agreeCheckbox.checked);
+      const isAgreed = agreeCheckbox.checked;
+      setAgreement(isAgreed);
+      updateConfigState(isAgreed);
     });
   }
 
@@ -23,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   tabButtons.forEach((button) => {
     button.addEventListener('click', () => {
+      if (button.disabled) return;
       const tabName = button.dataset.tab;
 
       tabButtons.forEach((btn) => btn.classList.remove('active'));
