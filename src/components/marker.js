@@ -13,29 +13,39 @@ function initializeStyles () {
   styleSheet.textContent = `
     .${DEBUG_MARKER_CLASS} {
       position: absolute;
-      top: -10px;
+      top: -0.75rem;
       left: 0;
-      background-color: rgba(253, 255, 153, 0.9);
+      background-color: rgba(253, 255, 153, 0.95);
       color: #171717;
       padding: 0.125rem 0.3125rem;
-      font-size: 0.625rem;
-      font-family: monospace;
+      font-size: 0.6875rem;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+      font-weight: 500;
+      line-height: 1.2;
       border: 1px solid rgba(0, 0, 0, 0.1);
       white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       border-radius: 4px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: all 0.2s cubic-bazier(0.4, 0, 0.2, 1);
+    }
+
+    .${DEBUG_MARKER_CLASS}:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .${EXCLUDE_TOGGLE_CLASS} {
       cursor: pointer;
-      font-weight: bold;
+      font-size: 0.6875rem;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+      font-weight: 500;
+      line-height: 1.2;
       background-color: transparent;
-      color: #666;
+      color: #525252;
       padding: 0 4px;
       border-radius: 3px;
       flex-shrink: 0;
@@ -43,7 +53,7 @@ function initializeStyles () {
     }
 
     .${EXCLUDE_TOGGLE_CLASS}:hover {
-      background-color: rgba(0, 0, 0, 0.1);
+      background-color: rgba(0, 0, 0, 0.12);
     }
 
     .${EXCLUDE_TOGGLE_CLASS}:focus {
