@@ -11,26 +11,27 @@ function initializeStyles () {
 
   const styleSheet = document.createElement('style');
   styleSheet.textContent = `
-        .${DEBUG_MARKER_CLASS} {
-          position: absolute;
-          top: -10px;
-          left: 0;
-          background-color: rgba(255, 223, 0, 0.9); /* Translucent Dandelion yellow */
-          color: #333; /* Dark text for contrast */
-          padding: 0.125rem 0.3125rem;
-          font-size: 0.625rem;
-          font-family: monospace;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          z-index: 9990;
-          white-space: nowrap;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          border-radius: 4px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          backdrop-filter: blur(4px);
-          -webkit-backdrop-filter: blur(4px);
-        } 
+    .${DEBUG_MARKER_CLASS} {
+      position: absolute;
+      top: -10px;
+      left: 0;
+      background-color: rgba(253, 255, 153, 0.9);
+      color: #171717;
+      padding: 0.125rem 0.3125rem;
+      font-size: 0.625rem;
+      font-family: monospace;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      z-index: 9990;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
     .${EXCLUDE_TOGGLE_CLASS} {
       cursor: pointer;
       font-weight: bold;

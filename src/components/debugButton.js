@@ -8,12 +8,12 @@ export function debugButton () {
   debugToggle.innerHTML = '🐞';
   debugToggle.style.cssText = `
       position: fixed;
-      top: 64px;
-      right: 10px;
+      top: 4.5rem;
+      right: 0.75rem;
       z-index: 9998;
-      padding: 0.5rem 0.75rem;
-      background: rgba(255, 255, 255, 0.8); /* Translucent white */
-      color: #333; /* Dark text for contrast */
+      padding: 0.25rem 0.75rem;
+      background: rgba(255, 255, 255, 0.8);
+      color: #171717;
       border: 1px solid rgba(0, 0, 0, 0.1);
       border-radius: 8px;
       font-size: 0.875rem;

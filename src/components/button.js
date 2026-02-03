@@ -13,12 +13,12 @@ export function button (id) {
   tombol.innerHTML = '🙈';
   tombol.style.cssText = `
       position: fixed;
-      top: 10px;
-      right: 10px;
+      top: 0.75rem;
+      right: 0.75rem;
       z-index: 9999;
-      padding: 0.75rem 1rem;
-      background: rgb(255, 223, 0); /* Dandelion yellow */
-      color: #333; /* Dark text for contrast */
+      padding: 0.75rem 1.25rem;
+      background: rgb(253, 255, 153);
+      color: #171717;
       border: 1px solid rgba(0, 0, 0, 0.1);
       border-radius: 8px;
       font-size: 1rem;
