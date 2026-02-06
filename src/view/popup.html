@@ -88,14 +88,31 @@
                         <label for="survey-input">Survey</label>
                         <input type="text" id="survey-input" placeholder="Masukkan selector untuk Survey">
                     </div>
+                    
+                    <!-- Radio Button Keywords List Component -->
                     <div class="form-group">
-                        <label for="radio-button-keywords-input">Radio Button Keywords</label>
-                        <input type="text" id="radio-button-keywords-input" placeholder="Value pisahkan dengan ;">
+                        <label>Radio Button Keywords</label>
+                        <div class="keyword-list-container">
+                            <div class="keyword-list" id="radio-button-keywords-list"></div>
+                            <div class="keyword-input-container">
+                                <input type="text" id="radio-button-keywords-input" placeholder="Tambah keyword...">
+                                <button type="button" class="btn-add" id="radio-button-keywords-add">+</button>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Dropdown Keywords List Component -->
                     <div class="form-group">
-                        <label for="dropdown-keywords-input">Dropdown Keywords</label>
-                        <input type="text" id="dropdown-keywords-input" placeholder="Value pisahkan dengan ;">
+                        <label>Dropdown Keywords</label>
+                        <div class="keyword-list-container">
+                            <div class="keyword-list" id="dropdown-keywords-list"></div>
+                            <div class="keyword-input-container">
+                                <input type="text" id="dropdown-keywords-input" placeholder="Tambah keyword...">
+                                <button type="button" class="btn-add" id="dropdown-keywords-add">+</button>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="form-group">
                         <label for="excludes">Excludes data</label>
                         <input type="text" id="excludes" placeholder="Excludes or skips surver">
