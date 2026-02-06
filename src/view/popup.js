@@ -3,23 +3,24 @@ import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configu
 /**
  * KeywordList Component
  * A reusable component for managing a list of keywords with drag-and-drop functionality
- * and two-way binding to a semicolon-separated string value.
+ * and two-way binding to a semicolon-separated string value in a textbox.
  */
 class KeywordList {
-  constructor(listElementId, inputElementId, addButtonId) {
+  constructor (sourceTextboxId, listElementId, inputElementId, addButtonId) {
+    this.sourceTextbox = document.getElementById(sourceTextboxId);
     this.listElement = document.getElementById(listElementId);
     this.inputElement = document.getElementById(inputElementId);
     this.addButton = document.getElementById(addButtonId);
     this.items = [];
     this.draggedItem = null;
-    
+
     this.init();
   }
 
-  init() {
+  init () {
     // Add item on button click
     this.addButton.addEventListener('click', () => this.addItem());
-    
+
     // Add item on Enter key
     this.inputElement.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
@@ -27,40 +28,25 @@ class KeywordList {
         this.addItem();
       }
     });
+
+    // Listen to source textbox changes (external updates)
+    this.sourceTextbox.addEventListener('input', () => {
+      this.loadFromTextbox();
+    });
+
+    // Initial load from textbox
+    this.loadFromTextbox();
   }
 
   /**
-   * Adds a new item to the list
+   * Load items from source textbox
    */
-  addItem() {
-    const value = this.inputElement.value.trimStart(); // trim left spaces
-    
-    // Validate: must be single line
-    if (!value || value.includes('\n')) {
-      return;
-    }
-    
-    this.items.push(value);
-    this.inputElement.value = '';
-    this.render();
-  }
-
-  /**
-   * Removes an item from the list by index
-   */
-  removeItem(index) {
-    this.items.splice(index, 1);
-    this.render();
-  }
-
-  /**
-   * Sets the list items from a semicolon-separated string
-   */
-  setValue(stringValue) {
-    if (!stringValue) {
+  loadFromTextbox () {
+    const value = this.sourceTextbox.value;
+    if (!value) {
       this.items = [];
     } else {
-      this.items = stringValue
+      this.items = value
         .split(';')
         .map(item => item.trimStart())
         .filter(item => item.length > 0);
@@ -69,34 +55,62 @@ class KeywordList {
   }
 
   /**
-   * Gets the list items as a semicolon-separated string
+   * Update source textbox with current items
    */
-  getValue() {
-    return this.items.join(';');
+  updateTextbox () {
+    this.sourceTextbox.value = this.items.join(';');
+    // Trigger input event so other listeners can react
+    this.sourceTextbox.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  /**
+   * Adds a new item to the list
+   */
+  addItem () {
+    const value = this.inputElement.value.trimStart(); // trim left spaces
+
+    // Validate: must be single line
+    if (!value || value.includes('\n')) {
+      return;
+    }
+
+    this.items.push(value);
+    this.inputElement.value = '';
+    this.render();
+    this.updateTextbox();
+  }
+
+  /**
+   * Removes an item from the list by index
+   */
+  removeItem (index) {
+    this.items.splice(index, 1);
+    this.render();
+    this.updateTextbox();
   }
 
   /**
    * Renders the list items
    */
-  render() {
+  render () {
     this.listElement.innerHTML = '';
-    
+
     this.items.forEach((item, index) => {
       const itemDiv = document.createElement('div');
       itemDiv.className = 'keyword-item';
       itemDiv.draggable = true;
       itemDiv.dataset.index = index;
-      
+
       // Drag handle
       const dragHandle = document.createElement('div');
       dragHandle.className = 'drag-handle';
       dragHandle.innerHTML = '<span></span><span></span><span></span>';
-      
+
       // Keyword text
       const textSpan = document.createElement('span');
       textSpan.className = 'keyword-text';
       textSpan.textContent = item;
-      
+
       // Remove button
       const removeBtn = document.createElement('button');
       removeBtn.className = 'btn-remove';
@@ -106,18 +120,18 @@ class KeywordList {
         e.stopPropagation();
         this.removeItem(index);
       });
-      
+
       itemDiv.appendChild(dragHandle);
       itemDiv.appendChild(textSpan);
       itemDiv.appendChild(removeBtn);
-      
+
       // Drag events
       itemDiv.addEventListener('dragstart', (e) => this.handleDragStart(e));
       itemDiv.addEventListener('dragover', (e) => this.handleDragOver(e));
       itemDiv.addEventListener('drop', (e) => this.handleDrop(e));
       itemDiv.addEventListener('dragend', (e) => this.handleDragEnd(e));
       itemDiv.addEventListener('dragleave', (e) => this.handleDragLeave(e));
-      
+
       this.listElement.appendChild(itemDiv);
     });
   }
@@ -125,57 +139,58 @@ class KeywordList {
   /**
    * Drag and drop event handlers
    */
-  handleDragStart(e) {
+  handleDragStart (e) {
     this.draggedItem = e.currentTarget;
     e.currentTarget.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
   }
 
-  handleDragOver(e) {
+  handleDragOver (e) {
     if (e.preventDefault) {
       e.preventDefault();
     }
     e.dataTransfer.dropEffect = 'move';
-    
+
     const draggedOverItem = e.currentTarget;
     if (draggedOverItem !== this.draggedItem) {
       draggedOverItem.classList.add('drag-over');
     }
-    
+
     return false;
   }
 
-  handleDrop(e) {
+  handleDrop (e) {
     if (e.stopPropagation) {
       e.stopPropagation();
     }
-    
+
     const draggedOverItem = e.currentTarget;
-    
+
     if (this.draggedItem !== draggedOverItem) {
       const draggedIndex = parseInt(this.draggedItem.dataset.index);
       const targetIndex = parseInt(draggedOverItem.dataset.index);
-      
+
       // Reorder items array
       const [movedItem] = this.items.splice(draggedIndex, 1);
       this.items.splice(targetIndex, 0, movedItem);
-      
+
       this.render();
+      this.updateTextbox();
     }
-    
+
     return false;
   }
 
-  handleDragEnd(e) {
+  handleDragEnd (e) {
     e.currentTarget.classList.remove('dragging');
-    
+
     // Remove all drag-over classes
     const allItems = this.listElement.querySelectorAll('.keyword-item');
     allItems.forEach(item => item.classList.remove('drag-over'));
   }
 
-  handleDragLeave(e) {
+  handleDragLeave (e) {
     e.currentTarget.classList.remove('drag-over');
   }
 }
@@ -187,15 +202,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize KeywordList components
   const radioButtonKeywordsList = new KeywordList(
-    'radio-button-keywords-list',
-    'radio-button-keywords-input',
-    'radio-button-keywords-add'
+    'radio-button-keywords-input',      // source textbox
+    'radio-button-keywords-list',       // list container
+    'radio-button-keywords-add-input',  // add input
+    'radio-button-keywords-add'         // add button
   );
 
   const dropdownKeywordsList = new KeywordList(
-    'dropdown-keywords-list',
-    'dropdown-keywords-input',
-    'dropdown-keywords-add'
+    'dropdown-keywords-input',          // source textbox
+    'dropdown-keywords-list',           // list container
+    'dropdown-keywords-add-input',      // add input
+    'dropdown-keywords-add'             // add button
   );
 
   /**
@@ -249,6 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveConfigBtn = document.getElementById('save-config-btn');
   const formInput = document.getElementById('form-input');
   const surveyInput = document.getElementById('survey-input');
+  const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
+  const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
   const profileSelect = document.getElementById('profile-select');
   const excludesInput = document.getElementById('excludes');
 
@@ -262,11 +281,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileSettings = loadedConfig.profiles[selectedProfile];
     formInput.value = loadedConfig.formSelector;
     surveyInput.value = loadedConfig.surveySelector;
-    
-    // Set values to KeywordList components (two-way binding: string -> list)
-    radioButtonKeywordsList.setValue(profileSettings.radioButtonKeywords);
-    dropdownKeywordsList.setValue(profileSettings.dropdownKeywords);
-    
+
+    // Set values to textboxes (KeywordList components will auto-sync via event listener)
+    radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
+    dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
+
+    // Trigger input event to sync with KeywordList components
+    radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
+    dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
+
     excludesInput.value = profileSettings.excludes;
 
     // Update select box selection
@@ -292,11 +315,11 @@ document.addEventListener('DOMContentLoaded', () => {
       loadedConfig.activeProfile = selectedProfile;
       loadedConfig.formSelector = formInput.value;
       loadedConfig.surveySelector = surveyInput.value;
-      
-      // Get values from KeywordList components (two-way binding: list -> string)
-      loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsList.getValue();
-      loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsList.getValue();
-      
+
+      // Get values from textboxes (already synced by KeywordList components)
+      loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
+      loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
+
       loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
 
       setConfig(loadedConfig);
