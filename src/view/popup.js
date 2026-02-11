@@ -1,9 +1,27 @@
 import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
+import { KeywordList } from './components/KeywordList.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');
   let loadedConfig = null;
+
+  // Initialize KeywordList components
+  const radioButtonKeywordsList = new KeywordList(
+    'radio-button-keywords-input',      // source textbox
+    'radio-button-keywords-list',       // list container
+    'radio-button-keywords-add-input',  // add input
+    'radio-button-keywords-add'         // add button
+  );
+
+  const dropdownKeywordsList = new KeywordList(
+    'dropdown-keywords-input',          // source textbox
+    'dropdown-keywords-list',           // list container
+    'dropdown-keywords-add-input',      // add input
+    'dropdown-keywords-add'             // add button
+  );
+
+  window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList };
 
   /**
    * Toggles the enabled/disabled state of the configuration tab and its contents.
@@ -71,8 +89,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileSettings = loadedConfig.profiles[selectedProfile];
     formInput.value = loadedConfig.formSelector;
     surveyInput.value = loadedConfig.surveySelector;
+
+    // Set values to textboxes (KeywordList components will auto-sync via event listener)
     radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
     dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
+
+    // Trigger input event to sync with KeywordList components
+    radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
+    dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
+
     excludesInput.value = profileSettings.excludes;
 
     // Update select box selection
@@ -98,8 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
       loadedConfig.activeProfile = selectedProfile;
       loadedConfig.formSelector = formInput.value;
       loadedConfig.surveySelector = surveyInput.value;
+
+      // Get values from textboxes (already synced by KeywordList components)
       loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
       loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
+
       loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
 
       setConfig(loadedConfig);

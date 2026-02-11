@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "clean": "rimraf dist",
-    "copy:static": "copyfiles -u 1 src/view/{popup.html,popup.css} dist/ && copyfiles -u 1 icons/* dist/icons",
+    "copy:static": "copyfiles -u 1 src/view/{popup.html,popup.css,/components/KeywordList.css} dist/ && copyfiles -u 1 icons/* dist/icons",
     "rollup": "rollup -c",
     "manifest": "node scripts/build-manifest.js",
     "build": "pnpm clean && pnpm rollup && pnpm copy:static && pnpm manifest",
