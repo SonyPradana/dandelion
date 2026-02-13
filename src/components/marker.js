@@ -58,7 +58,6 @@ export function debugMarker (identifier) {
 
   if (identifier.includes('|freetext')) {
     createPinToggle(identifier).then(function (pinToggle) {
-      // Prepend pinToggle when the promise resolves
       marker.insertBefore(pinToggle, excludeToggle);
     });
   }
