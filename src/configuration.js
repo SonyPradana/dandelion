@@ -9,11 +9,13 @@ const DEFAULT_CONFIG = {
       radioButtonKeywords: '',
       dropdownKeywords: '',
       excludes: '',
+      pinneds: {},
     },
     profile2: {
       radioButtonKeywords: '',
       dropdownKeywords: '',
       excludes: '',
+      pinneds: {},
     }
   }
 };
