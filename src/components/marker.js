@@ -1,4 +1,5 @@
 import { createExcludeToggle } from './ExcludeToggle.js';
+import { createPinToggle } from './pinToggle.js';
 
 const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
 
@@ -50,7 +51,16 @@ export function debugMarker (identifier) {
 
   const marker = document.createElement('div');
   marker.className = DEBUG_MARKER_CLASS;
-  marker.textContent = identifier;
+
+  // Create a text node for the identifier to prevent clashes with child elements
+  const textNode = document.createTextNode(identifier);
+  marker.appendChild(textNode);
+
+  if (identifier.includes('|freetext')) {
+    createPinToggle(identifier).then(function (pinToggle) {
+      marker.insertBefore(pinToggle, excludeToggle);
+    });
+  }
 
   const excludeToggle = createExcludeToggle(identifier);
   marker.appendChild(excludeToggle);
