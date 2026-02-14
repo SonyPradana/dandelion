@@ -1,15 +1,13 @@
-import { getFullConfig, setConfig } from '../configuration.js';
+import { getActiveConfig, getFullConfig, setConfig } from '../configuration.js';
 
 /**
  * Retrieves all pinned items from the active profile's configuration.
  * @returns {Promise<Object>} A promise that resolves with the pinned items object.
  */
 export async function getPinnedItems () {
-  const config = await getFullConfig();
-  const activeProfile = config.profiles[config.activeProfile];
-  // Ensure we always work with an object
-  return typeof activeProfile.pinneds === 'object' && activeProfile.pinneds !== null
-    ? activeProfile.pinneds
+  const config = await getActiveConfig();
+  return typeof config.pinneds === 'object' && config.pinneds !== null
+    ? config.pinneds
     : {};
 }
 
@@ -20,7 +18,12 @@ export async function getPinnedItems () {
  */
 export async function savePinnedItems (items) {
   const config = await getFullConfig();
-  config.profiles[config.activeProfile].pinneds = items;
+  const activeProfile = config.activeProfile;
+
+  if (config.profiles && config.profiles[activeProfile]) {
+    config.profiles[activeProfile].pinneds = items;
+  }
+
   await setConfig(config);
 }
 
