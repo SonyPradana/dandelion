@@ -1,5 +1,6 @@
 import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
 import { KeywordList } from './components/KeywordList.js';
+import { KeyValueList } from './components/KeyValueList.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   );
 
   window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList };
+  let pinnedValuesList = null;
 
   /**
    * Toggles the enabled/disabled state of the configuration tab and its contents.
@@ -100,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     excludesInput.value = profileSettings.excludes;
 
+    if (pinnedValuesList) {
+      pinnedValuesList.setData(profileSettings.pinneds || {});
+    }
+
     // Update select box selection
     profileSelect.value = selectedProfile;
   }
@@ -107,6 +113,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load initial config and set up profile switching
   getFullConfig().then((config) => {
     loadedConfig = config;
+
+    // Initialize KeyValueList component with onChange callback
+    const activeProfileSettings = config.profiles[config.activeProfile];
+    pinnedValuesList = new KeyValueList(
+      'pinned-values-container',
+      activeProfileSettings.pinneds || {},
+      (newPinneds) => {
+        // Auto-update loadedConfig when pinneds change
+        if (loadedConfig) {
+          const selectedProfile = profileSelect.value;
+          loadedConfig.profiles[selectedProfile].pinneds = newPinneds;
+        }
+      }
+    );
+
     updateFormForProfile(config.activeProfile);
 
     profileSelect.addEventListener('change', (event) => updateFormForProfile(event.target.value));
@@ -129,6 +150,11 @@ document.addEventListener('DOMContentLoaded', () => {
       loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
 
       loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
+
+      // Get pinneds from KeyValueList (already auto-synced via onChange callback)
+      if (pinnedValuesList) {
+        loadedConfig.profiles[selectedProfile].pinneds = pinnedValuesList.getData();
+      }
 
       setConfig(loadedConfig);
 

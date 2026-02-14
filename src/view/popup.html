@@ -6,6 +6,7 @@
     <title>Syarat dan Ketentuan Penggunaan</title>
     <link rel="stylesheet" href="./popup.css">
     <link rel="stylesheet" href="./components/KeywordList.css">
+    <link rel="stylesheet" href="./components/KeyValueList.css">
 </head>
 <body>
     <div class="container">
@@ -136,6 +137,13 @@
                         <label for="excludes">Excludes data</label>
                         <input type="text" id="excludes" placeholder="Excludes or skips surver">
                     </div>
+
+                    <!-- Pinned Values -->
+                    <div class="form-group">
+                        <label>Pinned Values</label>
+                        <div id="pinned-values-container"></div>
+                    </div>
+
                     <button id="save-config-btn" class="btn">Simpan</button>
                     <div class="action-links">
                         <a href="#" id="export-link">Export</a>
