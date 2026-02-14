@@ -90,13 +90,12 @@ export class KeyValueList {
   addItem (key, value) {
     const trimmedKey = key.trim();
 
-    // Validate: key must not be empty
     if (!trimmedKey) {
       return false;
     }
 
     // Validate: key must be unique
-    if (this.data.hasOwnProperty(trimmedKey)) {
+    if (Object.prototype.hasOwnProperty.call(this.data, trimmedKey)) {
       alert('Key already exists!');
       return false;
     }
@@ -129,7 +128,7 @@ export class KeyValueList {
    * @returns {void}
    */
   updateValue (key, newValue) {
-    if (this.data.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(this.data, key)) {
       this.data[key] = newValue;
       this.notifyChange();
     }
@@ -181,7 +180,6 @@ export class KeyValueList {
     const keys = Object.keys(this.data);
 
     if (keys.length === 0) {
-      // Empty state
       const emptyState = document.createElement('div');
       emptyState.className = 'kv-empty-state';
       emptyState.textContent = 'Belum ada data. Tambahkan key-value baru di bawah.';
@@ -214,11 +212,19 @@ export class KeyValueList {
     const row = document.createElement('div');
     row.className = 'kv-item-row';
 
-    // Key column (readonly)
+    // Key column (readonly, clickable to expand)
     const keyDiv = document.createElement('div');
     keyDiv.className = 'kv-item-key';
     keyDiv.textContent = key;
-    keyDiv.title = key; // Tooltip for long keys
+    keyDiv.dataset.fullKey = key; // Store full key
+
+    // Toggle expand/collapse on click
+    keyDiv.addEventListener('click', (e) => {
+      if (window.getSelection().toString()) {
+        return;
+      }
+      keyDiv.classList.toggle('expanded');
+    });
 
     // Value column (editable textarea)
     const valueDiv = document.createElement('div');
@@ -251,9 +257,7 @@ export class KeyValueList {
     deleteBtn.type = 'button';
     deleteBtn.title = 'Remove this item';
     deleteBtn.addEventListener('click', () => {
-      if (confirm(`Remove key "${key}"?`)) {
-        this.removeItem(key);
-      }
+      this.removeItem(key);
     });
 
     actionDiv.appendChild(deleteBtn);
@@ -318,7 +322,6 @@ export class KeyValueList {
       const value = valueTextarea.value;
 
       if (this.addItem(key, value)) {
-        // Clear inputs on success
         keyInput.value = '';
         valueTextarea.value = '';
         valueTextarea.rows = 1;

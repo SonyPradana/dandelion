@@ -73,7 +73,7 @@
     box-shadow: 0 2px 4px rgba(102, 126, 234, 0.1);
 }
 
-/* Key Column (readonly) */
+/* Key Column (readonly, clickable to expand) */
 .kv-item-key {
     font-size: 12px;
     color: #555;
@@ -82,15 +82,36 @@
     background: #f5f5f5;
     border-radius: 4px;
     font-family: 'Courier New', monospace;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
     line-height: 1.4;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    user-select: text;
 }
 
-/* Value Column (editable) */
+.kv-item-key:hover {
+    background: #ebebeb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.kv-item-key:not(.expanded) {
+    max-height: 2.8em;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.kv-item-key.expanded {
+    max-height: none;
+    background: #e8f4ff;
+    border: 1px dashed #667eea;
+}
+
+.kv-item-key:hover::after {
+    opacity: 0.5;
+}
+
 .kv-item-value {
     display: flex;
     align-items: flex-start;
