@@ -32,7 +32,7 @@
 /* Items Container */
 .kv-list-items {
     min-height: 60px;
-    max-height: 300px;
+    max-height: 200px;
     overflow-y: auto;
     margin-bottom: 8px;
 }
@@ -49,6 +49,10 @@
 .kv-list-items::-webkit-scrollbar-thumb {
     background: #667eea;
     border-radius: 3px;
+}
+
+.kv-list-items::-webkit-scrollbar-thumb:hover {
+    background: #5568d3;
 }
 
 /* Item Row */
