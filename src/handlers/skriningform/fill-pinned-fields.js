@@ -5,8 +5,8 @@
  * @param {Object} pinneds - Object containing data-name as key and value to fill
  * @example
  * pinneds = {
- *   "LPM001-diagnosis|text": "Ya",
- *   "LPM002-reason|freetext": "Tidak ada alasan"
+ *   "LPM001-quest|text": "Ya",
+ *   "LPM002-quest|freetext": "Tidak ada"
  * }
  */
 export function fillPinnedFields (pinneds) {
