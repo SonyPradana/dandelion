@@ -1,5 +1,5 @@
-import { createExcludeToggle } from './ExcludeToggle.js';
-import { createPinToggle } from './pinToggle.js';
+import { createExcludeToggle } from './excludeToggle';
+import { createPinToggle } from './pinToggle';
 
 const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
 
@@ -56,10 +56,17 @@ export function debugMarker (identifier) {
   const textNode = document.createTextNode(identifier);
   marker.appendChild(textNode);
 
-  if (identifier.includes('|freetext')) {
-    createPinToggle(identifier).then(function (pinToggle) {
-      marker.insertBefore(pinToggle, excludeToggle);
-    });
+  const questionElement = document.querySelector(`[data-name="${identifier}"]`);
+
+  if (questionElement) {
+    const hasTextInput = questionElement.querySelector('textarea, input[type="text"]') !== null;
+    const hasRadio = questionElement.querySelector('input[type="radio"]') !== null;
+
+    if (hasTextInput || hasRadio) {
+      createPinToggle(identifier).then(function (pinToggle) {
+        marker.insertBefore(pinToggle, excludeToggle);
+      });
+    }
   }
 
   const excludeToggle = createExcludeToggle(identifier);
