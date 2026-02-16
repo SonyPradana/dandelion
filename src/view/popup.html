@@ -133,16 +133,21 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="excludes">Excludes data</label>
-                        <input type="text" id="excludes" placeholder="Excludes or skips surver">
-                    </div>
-
-                    <!-- Pinned Values -->
-                    <div class="form-group">
-                        <label>Pinned Values</label>
-                        <div id="pinned-values-container"></div>
-                    </div>
+                    <details class="collapsible-details">
+                        <summary class="collapsible-summary">Konfigurasi Lanjutan</summary>
+                        <div class="collapsible-content-native">
+                            <div class="form-group">
+                                <label for="excludes">Excludes data</label>
+                                <input type="text" id="excludes" placeholder="Excludes or skips surver">
+                            </div>
+        
+                            <!-- Pinned Values -->
+                            <div class="form-group">
+                                <label>Pinned Values</label>
+                                <div id="pinned-values-container"></div>
+                            </div>
+                        </div>
+                    </details>
 
                     <button id="save-config-btn" class="btn">Simpan</button>
                     <div class="action-links">

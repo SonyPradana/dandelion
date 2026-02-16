@@ -273,3 +273,54 @@ body {
     backdrop-filter: blur(2px);
     z-index: 1;
 }
+
+/* New styles for <details> and <summary> */
+.collapsible-details {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    background: #f0f2f5;
+    border: 1px solid #e5e7eb;
+}
+
+.collapsible-details[open] {
+    background: #fff;
+}
+
+.collapsible-details[open] .collapsible-summary {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.collapsible-summary {
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    list-style: none; /* Remove default marker */
+}
+
+.collapsible-summary::-webkit-details-marker {
+    display: none; /* Hide default marker for Webkit */
+}
+
+.collapsible-summary::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #4b5563;
+    transition: transform 0.3s ease;
+    transform-origin: center;
+}
+
+.collapsible-details[open] > .collapsible-summary::after {
+    transform: rotate(180deg);
+}
+
+.collapsible-content-native {
+    padding: 20px 15px 10px;
+}
