@@ -96,7 +96,7 @@ export class KeyValueList {
 
     // Validate: key must be unique
     if (Object.prototype.hasOwnProperty.call(this.data, trimmedKey)) {
-      alert('Key already exists!');
+      alert('Kunci sudah ada!');
       return false;
     }
 
@@ -166,8 +166,8 @@ export class KeyValueList {
     const header = document.createElement('div');
     header.className = 'kv-list-header';
     header.innerHTML = `
-      <div class="kv-header-key">Key</div>
-      <div class="kv-header-value">Value</div>
+      <div class="kv-header-key">Kunci</div>
+      <div class="kv-header-value">Nilai</div>
       <div class="kv-header-action"></div>
     `;
     wrapper.appendChild(header);
@@ -234,7 +234,7 @@ export class KeyValueList {
     textarea.className = 'kv-textarea';
     textarea.value = value;
     textarea.rows = 1;
-    textarea.placeholder = 'Enter value...';
+    textarea.placeholder = 'Masukkan nilai...';
 
     // Auto-resize textarea based on content
     this.autoResizeTextarea(textarea);
@@ -255,7 +255,7 @@ export class KeyValueList {
     deleteBtn.className = 'kv-btn-remove';
     deleteBtn.textContent = '×';
     deleteBtn.type = 'button';
-    deleteBtn.title = 'Remove this item';
+    deleteBtn.title = 'Hapus item ini';
     deleteBtn.addEventListener('click', () => {
       this.removeItem(key);
     });
@@ -286,7 +286,7 @@ export class KeyValueList {
     const keyInput = document.createElement('input');
     keyInput.type = 'text';
     keyInput.className = 'kv-input-key';
-    keyInput.placeholder = 'Enter new key...';
+    keyInput.placeholder = 'Masukkan kunci baru...';
 
     keyDiv.appendChild(keyInput);
 
@@ -297,7 +297,7 @@ export class KeyValueList {
     const valueTextarea = document.createElement('textarea');
     valueTextarea.className = 'kv-textarea';
     valueTextarea.rows = 1;
-    valueTextarea.placeholder = 'Enter value...';
+    valueTextarea.placeholder = 'Masukkan nilai...';
 
     // Auto-resize textarea
     this.autoResizeTextarea(valueTextarea);
@@ -315,7 +315,7 @@ export class KeyValueList {
     addBtn.className = 'kv-btn-add';
     addBtn.textContent = '+';
     addBtn.type = 'button';
-    addBtn.title = 'Add new item';
+    addBtn.title = 'Tambah item baru';
 
     const handleAdd = () => {
       const key = keyInput.value;
