@@ -2,6 +2,7 @@ import { button } from '../components/button';
 import { getActiveConfig } from '../configuration';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
+import { fillPinnedFields } from './skriningform/fill-pinned-fields';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -26,35 +27,17 @@ export async function initializeSkriningForm () {
       const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
-      const excludes = (config.excludes && config.excludes.split(';')) || [];
       const pinneds = config.pinneds || {};
+      const excludes = [
+        ...((config.excludes && config.excludes.split(';')) || []),
+        ...Object.keys(pinneds)
+      ];
 
-      fillPinnedInput(pinneds);
+      fillPinnedFields(pinneds);
       fillRadioButtons(radioButtonKeywords, excludes);
       fillDropdowns(dropdownKeywords, excludes);
     });
     document.body.appendChild(tombol);
-  }
-
-  /**
-   * Finds all pinned input items and populates the corresponding
-   * textareas or inputs on the page with their stored values.
-   * @param {Object} pinnedItems - The object containing pinned item keys and values.
-   */
-  function fillPinnedInput (pinnedItems) {
-    for (const key in pinnedItems) {
-      if (Object.prototype.hasOwnProperty.call(pinnedItems, key)) {
-        const value = pinnedItems[key];
-        const questionElement = document.querySelector(`[data-name="${key}"]`);
-        if (questionElement) {
-          const inputElement = questionElement.querySelector('textarea, input[type="text"]');
-          if (inputElement && inputElement.value !== value) {
-            inputElement.value = value;
-            inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-          }
-        }
-      }
-    }
   }
 
   /**

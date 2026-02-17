@@ -1,8 +1,8 @@
-import { createExcludeToggle } from './ExcludeToggle.js';
-import { createPinToggle } from './pinToggle.js';
+import { createExcludeToggle } from './excludeToggle';
+import { createPinToggle } from './pinToggle';
+import { detectFieldType } from '../handlers/skriningform/fill-pinned-fields';
 
 const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
-
 let stylesInitialized = false;
 
 function initializeStyles () {
@@ -52,12 +52,14 @@ export function debugMarker (identifier) {
   const marker = document.createElement('div');
   marker.className = DEBUG_MARKER_CLASS;
 
-  // Create a text node for the identifier to prevent clashes with child elements
   const textNode = document.createTextNode(identifier);
   marker.appendChild(textNode);
 
-  if (identifier.includes('|freetext')) {
-    createPinToggle(identifier).then(function (pinToggle) {
+  const questionElement = document.querySelector(`[data-name="${identifier}"]`);
+  const field = questionElement ? detectFieldType(questionElement) : null;
+
+  if (field) {
+    createPinToggle(identifier, field.getValue).then(function (pinToggle) {
       marker.insertBefore(pinToggle, excludeToggle);
     });
   }

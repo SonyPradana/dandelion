@@ -45,25 +45,24 @@ function initializeStyles () {
 
 /**
  * Updates the pin toggle button state.
+ *
  * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {boolean} isPinned - Whether the item is pinned.
+ * @param {boolean} pinned - Whether the item is pinned.
  */
-function updateToggleState (toggleElement, isPinned) {
+function updateToggleState (toggleElement, pinned) {
   toggleElement.textContent = '📌';
-  toggleElement.classList.toggle('active', isPinned);
-  toggleElement.setAttribute(
-    'aria-label',
-    isPinned ? 'Unpin this freetext' : 'Pin this freetext'
-  );
+  toggleElement.classList.toggle('active', pinned);
+  toggleElement.setAttribute('aria-label', pinned ? 'Unpin this field' : 'Pin this field');
 }
 
 /**
  * Handles the toggle pin action.
+ *
  * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {string} identifier - The identifier for the item to toggle.
- * @param {HTMLElement} inputElement - The associated input element.
+ * @param {string} identifier - The data-name identifier.
+ * @param {Function} getValue - Callback to get current field value.
  */
-async function handleToggle (toggleElement, identifier, inputElement) {
+async function handleToggle (toggleElement, identifier, getValue) {
   toggleElement.classList.add('loading');
 
   try {
@@ -71,11 +70,12 @@ async function handleToggle (toggleElement, identifier, inputElement) {
     const nowPinned = !currentPinned;
 
     if (nowPinned) {
-      await addPinnedItem(identifier, inputElement.value);
-      inputElement.addEventListener('input', updateStorageOnInput);
+      const currentValue = getValue();
+      if (currentValue !== null) {
+        await addPinnedItem(identifier, currentValue);
+      }
     } else {
       await removePinnedItem(identifier);
-      inputElement.removeEventListener('input', updateStorageOnInput);
     }
 
     updateToggleState(toggleElement, nowPinned);
@@ -89,22 +89,14 @@ async function handleToggle (toggleElement, identifier, inputElement) {
 }
 
 /**
- * Updates storage when input changes.
- * @param {Event} event - The input event.
- */
-function updateStorageOnInput (event) {
-  const identifier = event.target.closest('[data-name]')?.getAttribute('data-name');
-  if (identifier) {
-    addPinnedItem(identifier, event.target.value);
-  }
-}
-
-/**
- * Creates a toggle button to pin freetext content.
+ * Creates a toggle button to pin a field value.
+ * Does not query the DOM directly - relies on getValue callback provided by the caller.
+ *
  * @param {string} identifier - The data-name for the element.
+ * @param {Function} getValue - Callback that returns the current field value.
  * @returns {Promise<HTMLSpanElement>} The created pin toggle element.
  */
-export async function createPinToggle (identifier) {
+export async function createPinToggle (identifier, getValue) {
   initializeStyles();
 
   const pinToggle = document.createElement('span');
@@ -112,21 +104,9 @@ export async function createPinToggle (identifier) {
   pinToggle.setAttribute('role', 'button');
   pinToggle.setAttribute('tabindex', '0');
 
-  // Find the associated textarea/input
-  const questionElement = document.querySelector(`[data-name="${identifier}"]`);
-  const inputElement = questionElement ? questionElement.querySelector('textarea, input[type="text"]') : null;
-
-  if (!inputElement) {
-    pinToggle.style.display = 'none';
-    return pinToggle;
-  }
-
   isPinned(identifier)
     .then(pinned => {
       updateToggleState(pinToggle, pinned);
-      if (pinned) {
-        inputElement.addEventListener('input', updateStorageOnInput);
-      }
     })
     .catch(error => {
       console.error('Failed to check pin state:', error);
@@ -136,14 +116,14 @@ export async function createPinToggle (identifier) {
 
   pinToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    handleToggle(pinToggle, identifier, inputElement);
+    handleToggle(pinToggle, identifier, getValue);
   });
 
   pinToggle.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
-      handleToggle(pinToggle, identifier, inputElement);
+      handleToggle(pinToggle, identifier, getValue);
     }
   });
 
