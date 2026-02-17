@@ -51,18 +51,18 @@ export function debugMarker (identifier) {
 
   const marker = document.createElement('div');
   marker.className = DEBUG_MARKER_CLASS;
-
-  // Create a text node for the identifier to prevent clashes with child elements
   const textNode = document.createTextNode(identifier);
   marker.appendChild(textNode);
 
   const questionElement = document.querySelector(`[data-name="${identifier}"]`);
 
   if (questionElement) {
-    const hasTextInput = questionElement.querySelector('textarea, input[type="text"]') !== null;
+    const hasTextarea = questionElement.querySelector('textarea') !== null;
+    const textInput = questionElement.querySelector('input[type="text"]');
+    const hasTextInput = textInput !== null && !textInput.classList.contains('sd-dropdown__filter-string-input');
     const hasRadio = questionElement.querySelector('input[type="radio"]') !== null;
 
-    if (hasTextInput || hasRadio) {
+    if (hasTextarea || hasTextInput || hasRadio) {
       createPinToggle(identifier).then(function (pinToggle) {
         marker.insertBefore(pinToggle, excludeToggle);
       });
