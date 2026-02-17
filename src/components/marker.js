@@ -1,8 +1,8 @@
 import { createExcludeToggle } from './excludeToggle';
 import { createPinToggle } from './pinToggle';
+import { detectFieldType } from '../handlers/skriningform/fill-pinned-fields';
 
 const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
-
 let stylesInitialized = false;
 
 function initializeStyles () {
@@ -51,22 +51,17 @@ export function debugMarker (identifier) {
 
   const marker = document.createElement('div');
   marker.className = DEBUG_MARKER_CLASS;
+
   const textNode = document.createTextNode(identifier);
   marker.appendChild(textNode);
 
   const questionElement = document.querySelector(`[data-name="${identifier}"]`);
+  const field = questionElement ? detectFieldType(questionElement) : null;
 
-  if (questionElement) {
-    const hasTextarea = questionElement.querySelector('textarea') !== null;
-    const textInput = questionElement.querySelector('input[type="text"]');
-    const hasTextInput = textInput !== null && !textInput.classList.contains('sd-dropdown__filter-string-input');
-    const hasRadio = questionElement.querySelector('input[type="radio"]') !== null;
-
-    if (hasTextarea || hasTextInput || hasRadio) {
-      createPinToggle(identifier).then(function (pinToggle) {
-        marker.insertBefore(pinToggle, excludeToggle);
-      });
-    }
+  if (field) {
+    createPinToggle(identifier, field.getValue).then(function (pinToggle) {
+      marker.insertBefore(pinToggle, excludeToggle);
+    });
   }
 
   const excludeToggle = createExcludeToggle(identifier);

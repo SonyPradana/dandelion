@@ -44,75 +44,25 @@ function initializeStyles () {
 }
 
 /**
- * Get the current value from a field (textarea, text input, or radio button)
- * @param {HTMLElement} questionElement - The question element container
- * @returns {string|null} The current value or null if not found
- */
-function getCurrentValue (questionElement) {
-  const textInput = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
-  if (textInput) {
-    return textInput.value;
-  }
-
-  const checkedRadio = questionElement.querySelector('input[type="radio"]:checked');
-  if (checkedRadio) {
-    const label = checkedRadio.closest('label.sd-selectbase__label');
-    if (label) {
-      const labelText = label.querySelector('span.sd-item__control-label span.sv-string-viewer');
-      if (labelText) {
-        return labelText.textContent.trim();
-      }
-    }
-  }
-
-  return null;
-}
-
-/**
- * Detect field type and return appropriate element
- * @param {HTMLElement} questionElement - The question element container
- * @returns {Object|null} Object with type and element, or null if not supported
- */
-function detectFieldType (questionElement) {
-  // Check for textarea or text input
-  const textInput = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
-  if (textInput) {
-    return { type: 'text', element: questionElement };
-  }
-
-  // Check for radio button
-  const radioInputs = questionElement.querySelectorAll('input[type="radio"]');
-  if (radioInputs.length > 0) {
-    return { type: 'radio', element: questionElement };
-  }
-
-  return null;
-}
-
-/**
  * Updates the pin toggle button state.
+ *
  * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {boolean} isPinned - Whether the item is pinned.
- * @param {string} fieldType - The type of field ('text' or 'radio')
+ * @param {boolean} pinned - Whether the item is pinned.
  */
-function updateToggleState (toggleElement, isPinned, fieldType = 'text') {
+function updateToggleState (toggleElement, pinned) {
   toggleElement.textContent = '📌';
-  toggleElement.classList.toggle('active', isPinned);
-
-  const fieldLabel = fieldType === 'radio' ? 'radio button' : 'freetext';
-  toggleElement.setAttribute(
-    'aria-label',
-    isPinned ? `Unpin this ${fieldLabel}` : `Pin this ${fieldLabel}`
-  );
+  toggleElement.classList.toggle('active', pinned);
+  toggleElement.setAttribute('aria-label', pinned ? 'Unpin this field' : 'Pin this field');
 }
 
 /**
  * Handles the toggle pin action.
+ *
  * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {string} identifier - The identifier for the item to toggle.
- * @param {Object} field - The field object with type and element.
+ * @param {string} identifier - The data-name identifier.
+ * @param {Function} getValue - Callback to get current field value.
  */
-async function handleToggle (toggleElement, identifier, field) {
+async function handleToggle (toggleElement, identifier, getValue) {
   toggleElement.classList.add('loading');
 
   try {
@@ -120,17 +70,15 @@ async function handleToggle (toggleElement, identifier, field) {
     const nowPinned = !currentPinned;
 
     if (nowPinned) {
-      // Pin: save current value as snapshot
-      const currentValue = getCurrentValue(field.element);
+      const currentValue = getValue();
       if (currentValue !== null) {
         await addPinnedItem(identifier, currentValue);
       }
     } else {
-      // Unpin: remove from storage
       await removePinnedItem(identifier);
     }
 
-    updateToggleState(toggleElement, nowPinned, field.type);
+    updateToggleState(toggleElement, nowPinned);
   } catch (error) {
     console.error('Failed to toggle pin:', error);
     toggleElement.textContent = '⚠️';
@@ -141,11 +89,14 @@ async function handleToggle (toggleElement, identifier, field) {
 }
 
 /**
- * Creates a toggle button to pin field content (textarea, text input, or radio button).
+ * Creates a toggle button to pin a field value.
+ * Does not query the DOM directly - relies on getValue callback provided by the caller.
+ *
  * @param {string} identifier - The data-name for the element.
+ * @param {Function} getValue - Callback that returns the current field value.
  * @returns {Promise<HTMLSpanElement>} The created pin toggle element.
  */
-export async function createPinToggle (identifier) {
+export async function createPinToggle (identifier, getValue) {
   initializeStyles();
 
   const pinToggle = document.createElement('span');
@@ -153,17 +104,9 @@ export async function createPinToggle (identifier) {
   pinToggle.setAttribute('role', 'button');
   pinToggle.setAttribute('tabindex', '0');
 
-  const questionElement = document.querySelector(`[data-name="${identifier}"]`);
-  const field = questionElement ? detectFieldType(questionElement) : null;
-
-  if (!field) {
-    pinToggle.style.display = 'none';
-    return pinToggle;
-  }
-
   isPinned(identifier)
     .then(pinned => {
-      updateToggleState(pinToggle, pinned, field.type);
+      updateToggleState(pinToggle, pinned);
     })
     .catch(error => {
       console.error('Failed to check pin state:', error);
@@ -173,14 +116,14 @@ export async function createPinToggle (identifier) {
 
   pinToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    handleToggle(pinToggle, identifier, field);
+    handleToggle(pinToggle, identifier, getValue);
   });
 
   pinToggle.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
-      handleToggle(pinToggle, identifier, field);
+      handleToggle(pinToggle, identifier, getValue);
     }
   });
 

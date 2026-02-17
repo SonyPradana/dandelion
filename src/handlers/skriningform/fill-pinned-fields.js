@@ -17,9 +17,13 @@ export function fillPinnedFields (pinneds) {
 
       if (!questionElement) continue;
 
-      if (hasTextarea(questionElement)) {
+      const field = detectFieldType(questionElement);
+
+      if (!field) continue;
+
+      if (field.type === 'text') {
         fillTextarea(questionElement, value);
-      } else if (hasRadioButton(questionElement)) {
+      } else if (field.type === 'radio') {
         fillRadioButton(questionElement, value);
       }
     }
@@ -27,23 +31,41 @@ export function fillPinnedFields (pinneds) {
 }
 
 /**
- * Check if element contains textarea or text input
+ * Detect field type and return type with getValue callback.
+ * This is the single source of truth for DOM field detection.
  *
- * @param {HTMLElement} element - The question element
- * @returns {boolean}
+ * @param {HTMLElement} questionElement - The question element container
+ * @returns {{ type: string, getValue: Function }|null} Field object or null if not supported
  */
-function hasTextarea (element) {
-  return element.querySelector('textarea, input[type="text"]') !== null;
-}
+export function detectFieldType (questionElement) {
+  // Check for textarea
+  const textInput = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
+  if (textInput) {
+    return {
+      type: 'text',
+      getValue: () => textInput.value
+    };
+  }
 
-/**
- * Check if element contains radio button inputs
- *
- * @param {HTMLElement} element - The question element
- * @returns {boolean}
- */
-function hasRadioButton (element) {
-  return element.querySelector('input[type="radio"]') !== null;
+  // Check for radio button
+  const radioInputs = questionElement.querySelectorAll('input[type="radio"]');
+  if (radioInputs.length > 0) {
+    return {
+      type: 'radio',
+      getValue: () => {
+        const checkedRadio = questionElement.querySelector('input[type="radio"]:checked');
+        if (!checkedRadio) return null;
+
+        const label = checkedRadio.closest('label.sd-selectbase__label');
+        if (!label) return null;
+
+        const labelText = label.querySelector('span.sd-item__control-label span.sv-string-viewer');
+        return labelText ? labelText.textContent.trim() : null;
+      }
+    };
+  }
+
+  return null;
 }
 
 /**
@@ -53,7 +75,7 @@ function hasRadioButton (element) {
  * @param {string} value - The value to fill
  */
 function fillTextarea (questionElement, value) {
-  const inputElement = questionElement.querySelector('textarea, input[type="text"]');
+  const inputElement = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
 
   if (inputElement && inputElement.value !== value) {
     inputElement.value = value;
@@ -87,3 +109,4 @@ function fillRadioButton (questionElement, targetLabel) {
     }
   }
 }
+
