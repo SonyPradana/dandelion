@@ -27,12 +27,15 @@ export async function initializeSkriningForm () {
       const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
-      const excludes = (config.excludes && config.excludes.split(';')) || [];
       const pinneds = config.pinneds || {};
+      const excludes = [
+        ...((config.excludes && config.excludes.split(';')) || []),
+        ...Object.keys(pinneds)
+      ];
 
+      fillPinnedFields(pinneds);
       fillRadioButtons(radioButtonKeywords, excludes);
       fillDropdowns(dropdownKeywords, excludes);
-      fillPinnedFields(pinneds);
     });
     document.body.appendChild(tombol);
   }
