@@ -44,26 +44,126 @@ function initializeStyles () {
 }
 
 /**
+ * Get the current value from a field (textarea, text input, or radio button)
+ * @param {HTMLElement} questionElement - The question element container
+ * @returns {string|null} The current value or null if not found
+ */
+function getCurrentValue (questionElement) {
+  const textInput = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
+  if (textInput) {
+    return textInput.value;
+  }
+
+  const checkedRadio = questionElement.querySelector('input[type="radio"]:checked');
+  if (checkedRadio) {
+    const label = checkedRadio.closest('label.sd-selectbase__label');
+    if (label) {
+      const labelText = label.querySelector('span.sd-item__control-label span.sv-string-viewer');
+      if (labelText) {
+        return labelText.textContent.trim();
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Detect field type and return appropriate input element
+ * @param {HTMLElement} questionElement - The question element container
+ * @returns {Object|null} Object with type and element, or null if not supported
+ */
+function detectFieldType (questionElement) {
+  const textInput = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
+  if (textInput) {
+    return { type: 'text', element: textInput };
+  }
+
+  const radioInputs = questionElement.querySelectorAll('input[type="radio"]');
+  if (radioInputs.length > 0) {
+    return { type: 'radio', element: questionElement };
+  }
+
+  return null;
+}
+
+/**
  * Updates the pin toggle button state.
  * @param {HTMLElement} toggleElement - The toggle button element.
  * @param {boolean} isPinned - Whether the item is pinned.
+ * @param {string} fieldType - The type of field ('text' or 'radio')
  */
-function updateToggleState (toggleElement, isPinned) {
+function updateToggleState (toggleElement, isPinned, fieldType = 'text') {
   toggleElement.textContent = '📌';
   toggleElement.classList.toggle('active', isPinned);
+
+  const fieldLabel = fieldType === 'radio' ? 'radio button' : 'freetext';
   toggleElement.setAttribute(
     'aria-label',
-    isPinned ? 'Unpin this freetext' : 'Pin this freetext'
+    isPinned ? `Unpin this ${fieldLabel}` : `Pin this ${fieldLabel}`
   );
 }
 
 /**
+ * Set up listener for text input changes
+ *
+ * @param {HTMLElement} inputElement - The input element
+ * @param {string} identifier - The data-name identifier
+ */
+function setupTextInputListener (inputElement, identifier) {
+  const updateStorage = () => {
+    addPinnedItem(identifier, inputElement.value);
+  };
+
+  inputElement.addEventListener('input', updateStorage);
+
+  return () => {
+    inputElement.removeEventListener('input', updateStorage);
+  };
+}
+
+/**
+ * Set up listener for radio button changes
+ *
+ * @param {HTMLElement} questionElement - The question element container
+ * @param {string} identifier - The data-name identifier
+ */
+function setupRadioListener (questionElement, identifier) {
+  const radioInputs = questionElement.querySelectorAll('input[type="radio"]');
+
+  const updateStorage = (event) => {
+    const radio = event.target;
+    if (radio.checked) {
+      const label = radio.closest('label.sd-selectbase__label');
+      if (label) {
+        const labelText = label.querySelector('span.sd-item__control-label span.sv-string-viewer');
+        if (labelText) {
+          addPinnedItem(identifier, labelText.textContent.trim());
+        }
+      }
+    }
+  };
+
+  radioInputs.forEach(radio => {
+    radio.addEventListener('change', updateStorage);
+  });
+
+  return () => {
+    radioInputs.forEach(radio => {
+      radio.removeEventListener('change', updateStorage);
+    });
+  };
+}
+
+/**
  * Handles the toggle pin action.
+ *
  * @param {HTMLElement} toggleElement - The toggle button element.
  * @param {string} identifier - The identifier for the item to toggle.
- * @param {HTMLElement} inputElement - The associated input element.
+ * @param {Object} field - The field object with type and element.
+ * @param {Function|null} cleanupListener - Function to cleanup existing listener.
  */
-async function handleToggle (toggleElement, identifier, inputElement) {
+async function handleToggle (toggleElement, identifier, field, cleanupListener) {
   toggleElement.classList.add('loading');
 
   try {
@@ -71,14 +171,26 @@ async function handleToggle (toggleElement, identifier, inputElement) {
     const nowPinned = !currentPinned;
 
     if (nowPinned) {
-      await addPinnedItem(identifier, inputElement.value);
-      inputElement.addEventListener('input', updateStorageOnInput);
+      const currentValue = getCurrentValue(field.element.closest ? field.element.closest('[data-name]') : field.element.parentElement.closest('[data-name]'));
+      if (currentValue) {
+        await addPinnedItem(identifier, currentValue);
+      }
+
+      if (field.type === 'text') {
+        field.cleanup = setupTextInputListener(field.element, identifier);
+      } else if (field.type === 'radio') {
+        field.cleanup = setupRadioListener(field.element, identifier);
+      }
     } else {
       await removePinnedItem(identifier);
-      inputElement.removeEventListener('input', updateStorageOnInput);
+
+      if (field.cleanup) {
+        field.cleanup();
+        field.cleanup = null;
+      }
     }
 
-    updateToggleState(toggleElement, nowPinned);
+    updateToggleState(toggleElement, nowPinned, field.type);
   } catch (error) {
     console.error('Failed to toggle pin:', error);
     toggleElement.textContent = '⚠️';
@@ -89,18 +201,8 @@ async function handleToggle (toggleElement, identifier, inputElement) {
 }
 
 /**
- * Updates storage when input changes.
- * @param {Event} event - The input event.
- */
-function updateStorageOnInput (event) {
-  const identifier = event.target.closest('[data-name]')?.getAttribute('data-name');
-  if (identifier) {
-    addPinnedItem(identifier, event.target.value);
-  }
-}
-
-/**
- * Creates a toggle button to pin freetext content.
+ * Creates a toggle button to pin field content (textarea, text input, or radio button).
+ *
  * @param {string} identifier - The data-name for the element.
  * @returns {Promise<HTMLSpanElement>} The created pin toggle element.
  */
@@ -112,20 +214,23 @@ export async function createPinToggle (identifier) {
   pinToggle.setAttribute('role', 'button');
   pinToggle.setAttribute('tabindex', '0');
 
-  // Find the associated textarea/input
   const questionElement = document.querySelector(`[data-name="${identifier}"]`);
-  const inputElement = questionElement ? questionElement.querySelector('textarea, input[type="text"]') : null;
+  const field = questionElement ? detectFieldType(questionElement) : null;
 
-  if (!inputElement) {
+  if (!field) {
     pinToggle.style.display = 'none';
     return pinToggle;
   }
 
   isPinned(identifier)
     .then(pinned => {
-      updateToggleState(pinToggle, pinned);
+      updateToggleState(pinToggle, pinned, field.type);
       if (pinned) {
-        inputElement.addEventListener('input', updateStorageOnInput);
+        if (field.type === 'text') {
+          field.cleanup = setupTextInputListener(field.element, identifier);
+        } else if (field.type === 'radio') {
+          field.cleanup = setupRadioListener(field.element, identifier);
+        }
       }
     })
     .catch(error => {
@@ -136,14 +241,14 @@ export async function createPinToggle (identifier) {
 
   pinToggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    handleToggle(pinToggle, identifier, inputElement);
+    handleToggle(pinToggle, identifier, field);
   });
 
   pinToggle.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
-      handleToggle(pinToggle, identifier, inputElement);
+      handleToggle(pinToggle, identifier, field);
     }
   });
 
