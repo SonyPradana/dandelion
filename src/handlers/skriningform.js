@@ -1,5 +1,5 @@
 import { button } from '../components/button';
-import { getActiveConfig } from '../configuration';
+import { getActiveConfig, recordEvent, isLimitReached } from '../configuration';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
@@ -24,6 +24,12 @@ export async function initializeSkriningForm () {
 
   if (tombol) {
     tombol.addEventListener('click', async () => {
+      if (await isLimitReached()) {
+        alert('Daily limit reached. Please try again tomorrow.');
+        return;
+      }
+      await recordEvent('click');
+
       const config = await getActiveConfig();
       const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
@@ -38,6 +44,7 @@ export async function initializeSkriningForm () {
       fillDropdowns(dropdownKeywords, excludes);
     });
     document.body.appendChild(tombol);
+    recordEvent('load');
   }
 
   /**

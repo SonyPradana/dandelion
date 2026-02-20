@@ -13,6 +13,7 @@
         <div class="tab-nav">
             <button class="tab-button active" data-tab="agreement">Persetujuan</button>
             <button class="tab-button" data-tab="config">Konfigurasi</button>
+            <button class="tab-button" data-tab="stats">Statistik</button>
         </div>
 
         <div id="agreement" class="tab-content active">
@@ -154,7 +155,40 @@
                         <a href="#" id="export-link">Ekspor</a>
                         <a href="#" id="import-link">Impor</a>
                     </div>
-                    <input type="file" id="import-file-input" style="display: none;" accept=".json">
+                </div>
+            </div>
+        </div>
+
+        <div id="stats" class="tab-content">
+            <div class="header">
+                <h1>Statistik Penggunaan</h1>
+            </div>
+            <div class="content">
+                <div class="stats-grid">
+                    <div class="stats-item">
+                        <div class="stats-label">Tombol Muncul (Hari Ini)</div>
+                        <div class="stats-value" id="today-load">0</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">Tombol Klik (Hari Ini)</div>
+                        <div class="stats-value" id="today-click">0</div>
+                        <div class="progress-container">
+                            <div class="progress-bar" id="click-progress"></div>
+                        </div>
+                        <div class="remaining-label" id="remaining-click">Sisa: 0</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">Total Muncul</div>
+                        <div class="stats-value" id="total-load">0</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">Total Klik</div>
+                        <div class="stats-value" id="total-click">0</div>
+                    </div>
+                    <div class="stats-item">
+                        <div class="stats-label">Batas Harian</div>
+                        <div class="stats-value" id="daily-limit">0</div>
+                    </div>
                 </div>
             </div>
         </div>

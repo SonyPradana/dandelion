@@ -83,3 +83,59 @@ export function getActiveConfig () {
 export function setConfig (config) {
   browser.storage.local.set(config);
 }
+
+/**
+ * Records a time-based event (load or click).
+ * @param {'load' | 'click'} type
+ * @returns {Promise<void>}
+ */
+export async function recordEvent (type) {
+  const data = await browser.storage.local.get('stats');
+  const stats = data.stats || { load: [], click: [] };
+
+  if (!stats[type]) stats[type] = [];
+
+  stats[type].push(Date.now());
+
+  // Cleanup: Keep only last 30 days of data to save storage
+  const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+  stats[type] = stats[type].filter(ts => ts > thirtyDaysAgo);
+
+  await browser.storage.local.set({ stats });
+}
+
+/**
+ * Gets statistics for total and today.
+ * @returns {Promise<{
+ *   totalLoad: number,
+ *   totalClick: number,
+ *   todayLoad: number,
+ *   todayClick: number,
+ *   limit: number
+ * }>}
+ */
+export async function getStats () {
+  const data = await browser.storage.local.get('stats');
+  const stats = data.stats || { load: [], click: [] };
+
+  const todayStart = new Date().setHours(0, 0, 0, 0);
+
+  const countToday = (arr) => arr.filter(ts => ts >= todayStart).length;
+
+  return {
+    totalLoad: stats.load.length,
+    totalClick: stats.click.length,
+    todayLoad: countToday(stats.load),
+    todayClick: countToday(stats.click),
+    limit: parseInt(process.env.DAILY_LIMIT || '100', 10)
+  };
+}
+
+/**
+ * Checks if the daily click limit has been reached.
+ * @returns {Promise<boolean>}
+ */
+export async function isLimitReached () {
+  const stats = await getStats();
+  return stats.todayClick >= stats.limit;
+}

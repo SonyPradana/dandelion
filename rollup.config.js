@@ -1,5 +1,18 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
+import replace from '@rollup/plugin-replace';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const plugins = [
+  resolve(),
+  commonjs(),
+  replace({
+    'process.env.DAILY_LIMIT': JSON.stringify(process.env.DAILY_LIMIT || '100'),
+    preventAssignment: true
+  })
+];
 
 export default [
   {
@@ -9,7 +22,7 @@ export default [
       format: 'iife',
       name: 'DandelionContentScript',
     },
-    plugins: [resolve(), commonjs()],
+    plugins,
   },
   {
     input: 'src/view/popup.js',
@@ -18,6 +31,6 @@ export default [
       format: 'iife',
       name: 'DandelionPopup',
     },
-    plugins: [resolve(), commonjs()],
+    plugins,
   },
 ];
