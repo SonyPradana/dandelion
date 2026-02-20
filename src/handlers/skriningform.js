@@ -51,9 +51,7 @@ export async function initializeSkriningForm () {
 
       const text = childViewerSpan.textContent.trim();
 
-      if (config.includes(text)) return true;
-
-      return /^(Tidak)[\s\u00A0]/.test(text);
+      return config.includes(text);
     });
 
     allMatchingLabels.forEach(labelSpan => {
