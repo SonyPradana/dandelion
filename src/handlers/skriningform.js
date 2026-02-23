@@ -33,9 +33,9 @@ export async function initializeSkriningForm () {
         ...Object.keys(pinneds)
       ];
 
-      fillPinnedFields(pinneds);
       fillRadioButtons(radioButtonKeywords, excludes);
-      fillDropdowns(dropdownKeywords, excludes);
+      await fillDropdowns(dropdownKeywords, excludes);
+      await fillPinnedFields(pinneds);
     });
     document.body.appendChild(tombol);
   }
