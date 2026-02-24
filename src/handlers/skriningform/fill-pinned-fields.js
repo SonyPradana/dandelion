@@ -9,7 +9,7 @@
  *   "LPM002-quest|freetext": "Tidak ada"
  * }
  */
-export function fillPinnedFields (pinneds) {
+export async function fillPinnedFields (pinneds) {
   for (const key in pinneds) {
     if (Object.prototype.hasOwnProperty.call(pinneds, key)) {
       const value = pinneds[key];
@@ -25,6 +25,8 @@ export function fillPinnedFields (pinneds) {
         fillTextarea(questionElement, value);
       } else if (field.type === 'radio') {
         fillRadioButton(questionElement, value);
+      } else if (field.type === 'combobox') {
+        await fillDropdowns(questionElement, value);
       }
     }
   }
@@ -38,6 +40,18 @@ export function fillPinnedFields (pinneds) {
  * @returns {{ type: string, getValue: Function }|null} Field object or null if not supported
  */
 export function detectFieldType (questionElement) {
+  // Check for combobox
+  const dropdown = questionElement.querySelector('.sd-dropdown');
+  if (dropdown) {
+    return {
+      type: 'combobox',
+      getValue: () => {
+        const valueElement = dropdown.querySelector('.sd-dropdown__value span.sv-string-viewer');
+        return valueElement ? valueElement.textContent.trim() : null;
+      }
+    };
+  }
+
   // Check for textarea
   const textInput = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
   if (textInput) {
@@ -107,5 +121,42 @@ function fillRadioButton (questionElement, targetLabel) {
         break;
       }
     }
+  }
+}
+
+/**
+ * Select combobox/dropdown option that matches the given text
+ *
+ * @param {HTMLElement} questionElement - The question element containing combobox
+ * @param {string} targetValue - The option text to match
+ */
+async function fillDropdowns (questionElement, targetValue) {
+  const chevronButton = questionElement.querySelector('.sd-dropdown_chevron-button');
+  if (!chevronButton) return;
+
+  // Open dropdown
+  chevronButton.click();
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  // Find visible options
+  const visibleOptions = Array.from(document.querySelectorAll('.sv-popup--dropdown .sv-string-viewer'))
+    .filter(option => {
+      const popup = option.closest('.sv-popup');
+      return popup && popup.style.display !== 'none';
+    });
+
+  // Find matching option
+  const targetOption = visibleOptions.find(span => {
+    const text = span.textContent.trim();
+    return text === targetValue;
+  });
+
+  if (targetOption) {
+    targetOption.closest('.sv-list__item').click();
+    await new Promise(resolve => setTimeout(resolve, 200));
+  } else {
+    // Close dropdown if no match found
+    chevronButton.click();
+    await new Promise(resolve => setTimeout(resolve, 150));
   }
 }
