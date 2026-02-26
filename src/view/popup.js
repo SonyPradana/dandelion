@@ -1,4 +1,4 @@
-import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
+import { getAgreement, setAgreement, getFullConfig, setConfig, getStats } from '../configuration';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
 
@@ -7,51 +7,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const configWrapper = document.getElementById('config-wrapper');
   let loadedConfig = null;
 
-  // Initialize KeywordList components
-  const radioButtonKeywordsList = new KeywordList(
-    'radio-button-keywords-input',      // source textbox
-    'radio-button-keywords-list',       // list container
-    'radio-button-keywords-add-input',  // add input
-    'radio-button-keywords-add'         // add button
-  );
-
-  const dropdownKeywordsList = new KeywordList(
-    'dropdown-keywords-input',          // source textbox
-    'dropdown-keywords-list',           // list container
-    'dropdown-keywords-add-input',      // add input
-    'dropdown-keywords-add'             // add button
-  );
-
-  window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList };
-  let pinnedValuesList = null;
-
   /**
-   * Toggles the enabled/disabled state of the configuration tab and its contents.
-   * @param {boolean} isAgreed - Whether the user has agreed to the terms.
+   * Fetches and renders the latest statistics.
    */
-  function updateConfigState (isAgreed) {
-    configWrapper.classList.toggle('disabled', !isAgreed);
+  async function renderStats () {
+    const stats = await getStats();
+    const todayClick = stats.todayClick;
+    const limit = stats.limit;
+    const remaining = Math.max(0, limit - todayClick);
+    const percentage = Math.min(100, (todayClick / limit) * 100);
 
-    const formElements = configWrapper.querySelectorAll('input, select, button, a');
-    formElements.forEach(element => {
-      element.disabled = !isAgreed;
-    });
-  }
+    // Update Basic Labels
+    document.getElementById('today-load').textContent = stats.todayLoad;
+    document.getElementById('today-click').textContent = todayClick;
+    document.getElementById('total-load').textContent = stats.totalLoad;
+    document.getElementById('total-click').textContent = stats.totalClick;
+    document.getElementById('daily-limit').textContent = limit;
 
-  // --- Agreement Tab Logic ---
-  getAgreement().then((agreed) => {
-    if (agreeCheckbox) {
-      agreeCheckbox.checked = agreed;
+    // Update Progress UI
+    const progressBar = document.getElementById('click-progress');
+    const remainingLabel = document.getElementById('remaining-click');
+
+    if (progressBar && remainingLabel) {
+      progressBar.style.width = `${percentage}%`;
+      remainingLabel.textContent = `Sisa: ${remaining}`;
+
+      // Change colors based on usage
+      progressBar.classList.remove('warning', 'danger');
+      if (percentage >= 90) {
+        progressBar.classList.add('danger');
+      } else if (percentage >= 70) {
+        progressBar.classList.add('warning');
+      }
     }
-    updateConfigState(agreed);
-  });
-
-  if (agreeCheckbox) {
-    agreeCheckbox.addEventListener('change', () => {
-      const isAgreed = agreeCheckbox.checked;
-      setAgreement(isAgreed);
-      updateConfigState(isAgreed);
-    });
   }
 
   // --- Tab Switching Logic ---
@@ -69,10 +57,17 @@ document.addEventListener('DOMContentLoaded', () => {
       tabContents.forEach((content) => {
         content.id === tabName ? content.classList.add('active') : content.classList.remove('active');
       });
+
+      if (tabName === 'stats') {
+        renderStats();
+      }
     });
   });
 
-  // --- Configuration Tab Logic ---
+  // Initial stats render
+  renderStats();
+
+  // Initialize KeywordList components
   const saveConfigBtn = document.getElementById('save-config-btn');
   const formInput = document.getElementById('form-input');
   const surveyInput = document.getElementById('survey-input');
