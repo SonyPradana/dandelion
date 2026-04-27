@@ -30,6 +30,8 @@ export async function fillPinnedFields (pinneds) {
       }
     }
   }
+
+  setTimeout(() => document.body.click(), 50);
 }
 
 /**
