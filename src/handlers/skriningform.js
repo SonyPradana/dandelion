@@ -36,6 +36,10 @@ export async function initializeSkriningForm () {
       fillRadioButtons(radioButtonKeywords, excludes);
       await fillDropdowns(dropdownKeywords, excludes);
       await fillPinnedFields(pinneds);
+
+      if (config.scrollToBottom) {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }
     });
     document.body.appendChild(tombol);
   }

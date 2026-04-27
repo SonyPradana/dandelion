@@ -31,7 +31,6 @@ export async function fillPinnedFields (pinneds) {
     }
   }
 
-  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
   setTimeout(() => document.body.click(), 50);
 }
 

@@ -4,6 +4,7 @@ const DEFAULT_CONFIG = {
   formSelector: '',
   surveySelector: '',
   activeProfile: 'profile1',
+  scrollToBottom: true,
   profiles: {
     profile1: {
       radioButtonKeywords: '',
@@ -55,6 +56,7 @@ export function getFullConfig () {
       formSelector: result.formSelector ?? DEFAULT_CONFIG.formSelector,
       surveySelector: result.surveySelector ?? DEFAULT_CONFIG.surveySelector,
       activeProfile: result.activeProfile ?? DEFAULT_CONFIG.activeProfile,
+      scrollToBottom: result.scrollToBottom ?? DEFAULT_CONFIG.scrollToBottom,
       profiles
     };
   });
@@ -70,6 +72,7 @@ export function getActiveConfig () {
     return {
       form: config.formSelector,
       survey: config.surveySelector,
+      scrollToBottom: config.scrollToBottom,
       ...activeProfileSettings
     };
   });
