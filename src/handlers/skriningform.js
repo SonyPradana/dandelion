@@ -44,7 +44,7 @@ export async function initializeSkriningForm () {
       setTimeout(() => {
         window.scrollTo({
           top: document.body.scrollHeight,
-          behavior: 'auto'
+          behavior: 'smooth'
         });
       }, 100);
     });
