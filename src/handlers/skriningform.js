@@ -37,9 +37,16 @@ export async function initializeSkriningForm () {
       await fillDropdowns(dropdownKeywords, excludes);
       await fillPinnedFields(pinneds);
 
-      if (config.scrollToBottom) {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      if (document.activeElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
       }
+
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'auto'
+        });
+      }, 100);
     });
     document.body.appendChild(tombol);
   }
