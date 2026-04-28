@@ -36,6 +36,17 @@ export async function initializeSkriningForm () {
       fillRadioButtons(radioButtonKeywords, excludes);
       await fillDropdowns(dropdownKeywords, excludes);
       await fillPinnedFields(pinneds);
+
+      if (document.activeElement && document.activeElement !== document.body) {
+        document.activeElement.blur();
+      }
+
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 100);
     });
     document.body.appendChild(tombol);
   }
