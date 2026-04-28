@@ -9,17 +9,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize KeywordList components
   const radioButtonKeywordsList = new KeywordList(
-    'radio-button-keywords-input',      // source textbox
-    'radio-button-keywords-list',       // list container
-    'radio-button-keywords-add-input',  // add input
-    'radio-button-keywords-add'         // add button
+    'radio-button-keywords-input', // source textbox
+    'radio-button-keywords-list', // list container
+    'radio-button-keywords-add-input', // add input
+    'radio-button-keywords-add', // add button
   );
 
   const dropdownKeywordsList = new KeywordList(
-    'dropdown-keywords-input',          // source textbox
-    'dropdown-keywords-list',           // list container
-    'dropdown-keywords-add-input',      // add input
-    'dropdown-keywords-add'             // add button
+    'dropdown-keywords-input', // source textbox
+    'dropdown-keywords-list', // list container
+    'dropdown-keywords-add-input', // add input
+    'dropdown-keywords-add', // add button
   );
 
   window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList };
@@ -29,11 +29,11 @@ document.addEventListener('DOMContentLoaded', () => {
    * Toggles the enabled/disabled state of the configuration tab and its contents.
    * @param {boolean} isAgreed - Whether the user has agreed to the terms.
    */
-  function updateConfigState (isAgreed) {
+  function updateConfigState(isAgreed) {
     configWrapper.classList.toggle('disabled', !isAgreed);
 
     const formElements = configWrapper.querySelectorAll('input, select, button, a');
-    formElements.forEach(element => {
+    formElements.forEach((element) => {
       element.disabled = !isAgreed;
     });
   }
@@ -67,7 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
       button.classList.add('active');
 
       tabContents.forEach((content) => {
-        content.id === tabName ? content.classList.add('active') : content.classList.remove('active');
+        content.id === tabName
+          ? content.classList.add('active')
+          : content.classList.remove('active');
       });
     });
   });
@@ -86,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Updates the form inputs based on the selected profile in the loaded config.
    * @param {string} selectedProfile - The key of the profile to load ('profile1' or 'profile2').
    */
-  function updateFormForProfile (selectedProfile) {
+  function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
 
     const profileSettings = loadedConfig.profiles[selectedProfile];
@@ -127,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const selectedProfile = profileSelect.value;
           loadedConfig.profiles[selectedProfile].pinneds = newPinneds;
         }
-      }
+      },
     );
 
     updateFormForProfile(config.activeProfile);
@@ -175,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();
-    getFullConfig().then(config => {
+    getFullConfig().then((config) => {
       const configStr = JSON.stringify(config, null, 2);
       const blob = new Blob([configStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);

@@ -1,273 +1,273 @@
 .kv-list-wrapper {
-    border: 1px solid var(--border-color-medium);
-    border-radius: var(--border-radius-large);
-    background: var(--background-color-component);
-    padding: 8px;
-    margin-top: 8px;
+  border: 1px solid var(--border-color-medium);
+  border-radius: var(--border-radius-large);
+  background: var(--background-color-component);
+  padding: 8px;
+  margin-top: 8px;
 }
 
 /* Header */
 .kv-list-header {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr 40px;
-    gap: 8px;
-    padding: 8px;
-    background: var(--primary-color);
-    border-radius: var(--border-radius-medium);
-    margin-bottom: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 40px;
+  gap: 8px;
+  padding: 8px;
+  background: var(--primary-color);
+  border-radius: var(--border-radius-medium);
+  margin-bottom: 8px;
 }
 
 .kv-header-key,
 .kv-header-value,
 .kv-header-action {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-color-light);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color-light);
 }
 
 .kv-header-key {
-    padding-left: 4px;
+  padding-left: 4px;
 }
 
 /* Items Container */
 .kv-list-items {
-    min-height: 60px;
-    max-height: 200px;
-    overflow-y: auto;
-    margin-bottom: 8px;
+  min-height: 60px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 8px;
 }
 
 .kv-list-items::-webkit-scrollbar {
-    width: 6px;
+  width: 6px;
 }
 
 .kv-list-items::-webkit-scrollbar-track {
-    background: var(--background-color-soft);
-    border-radius: 3px;
+  background: var(--background-color-soft);
+  border-radius: 3px;
 }
 
 .kv-list-items::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
-    border-radius: 3px;
+  background: var(--primary-color);
+  border-radius: 3px;
 }
 
 .kv-list-items::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-color-darker);
+  background: var(--primary-color-darker);
 }
 
 /* Item Row */
 .kv-item-row {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr 40px;
-    gap: 8px;
-    background: var(--background-color-main);
-    border: 1px solid var(--border-color-dark);
-    border-radius: var(--border-radius-medium);
-    padding: 8px;
-    margin-bottom: 6px;
-    transition: all 0.2s ease;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 40px;
+  gap: 8px;
+  background: var(--background-color-main);
+  border: 1px solid var(--border-color-dark);
+  border-radius: var(--border-radius-medium);
+  padding: 8px;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
 }
 
 .kv-item-row:last-child {
-    margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .kv-item-row:hover {
-    border-color: var(--primary-color);
-    box-shadow: var(--primary-hover-shadow);
+  border-color: var(--primary-color);
+  box-shadow: var(--primary-hover-shadow);
 }
 
 /* Key Column (readonly, clickable to expand) */
 .kv-item-key {
-    font-size: 12px;
-    color: var(--text-color-secondary);
-    word-break: break-all;
-    padding: 6px 8px;
-    background: var(--background-color-subtle);
-    border-radius: var(--border-radius-small);
-    font-family: 'Courier New', monospace;
-    line-height: 1.4;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    position: relative;
-    user-select: text;
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  word-break: break-all;
+  padding: 6px 8px;
+  background: var(--background-color-subtle);
+  border-radius: var(--border-radius-small);
+  font-family: 'Courier New', monospace;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  user-select: text;
 }
 
 .kv-item-key:hover {
-    background: #ebebeb; /* Note: This color wasn't in the global list, could be a new var --background-color-subtle-hover */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #ebebeb; /* Note: This color wasn't in the global list, could be a new var --background-color-subtle-hover */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .kv-item-key:not(.expanded) {
-    max-height: 2.8em;
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+  max-height: 2.8em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .kv-item-key.expanded {
-    max-height: none;
-    background: var(--background-color-expanded);
-    border: 1px dashed var(--primary-color);
+  max-height: none;
+  background: var(--background-color-expanded);
+  border: 1px dashed var(--primary-color);
 }
 
 .kv-item-key:hover::after {
-    opacity: 0.5;
+  opacity: 0.5;
 }
 
 .kv-item-value {
-    display: flex;
-    align-items: flex-start;
+  display: flex;
+  align-items: flex-start;
 }
 
 .kv-textarea {
-    width: 100%;
-    padding: 6px 8px;
-    border: 1px solid var(--border-color-medium);
-    border-radius: var(--border-radius-small);
-    font-size: 13px;
-    font-family: inherit;
-    resize: none;
-    overflow: hidden;
-    min-height: 32px;
-    transition: border-color 0.2s ease;
-    line-height: 1.4;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border-color-medium);
+  border-radius: var(--border-radius-small);
+  font-size: 13px;
+  font-family: inherit;
+  resize: none;
+  overflow: hidden;
+  min-height: 32px;
+  transition: border-color 0.2s ease;
+  line-height: 1.4;
 }
 
 .kv-textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: var(--primary-focus-shadow);
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: var(--primary-focus-shadow);
 }
 
 .kv-textarea::placeholder {
-    color: var(--text-color-placeholder);
+  color: var(--text-color-placeholder);
 }
 
 /* Action Column (delete button) */
 .kv-item-action {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 4px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 4px;
 }
 
 .kv-btn-remove {
-    background: var(--destructive-color);
-    color: var(--text-color-light);
-    border: none;
-    border-radius: var(--border-radius-small);
-    width: 28px;
-    height: 28px;
-    cursor: pointer;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-    line-height: 1;
+  background: var(--destructive-color);
+  color: var(--text-color-light);
+  border: none;
+  border-radius: var(--border-radius-small);
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .kv-btn-remove:hover {
-    background: var(--destructive-color-hover);
-    transform: scale(1.1);
+  background: var(--destructive-color-hover);
+  transform: scale(1.1);
 }
 
 .kv-btn-remove:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
 }
 
 /* Add Row */
 .kv-add-row {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr 40px;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 2px dashed var(--border-color-medium);
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 40px;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 2px dashed var(--border-color-medium);
 }
 
 .kv-add-key,
 .kv-add-value {
-    display: flex;
-    align-items: flex-start;
+  display: flex;
+  align-items: flex-start;
 }
 
 .kv-input-key {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--border-color-medium);
-    border-radius: var(--border-radius-medium);
-    font-size: 13px;
-    font-family: 'Courier New', monospace;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color-medium);
+  border-radius: var(--border-radius-medium);
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
 }
 
 .kv-input-key:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: var(--primary-focus-shadow);
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: var(--primary-focus-shadow);
 }
 
 .kv-input-key::placeholder {
-    font-family: inherit;
+  font-family: inherit;
 }
 
 .kv-add-action {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .kv-btn-add {
-    background: var(--primary-color);
-    color: var(--text-color-light);
-    border: none;
-    border-radius: var(--border-radius-medium);
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
-    font-size: 20px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
+  background: var(--primary-color);
+  color: var(--text-color-light);
+  border: none;
+  border-radius: var(--border-radius-medium);
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .kv-btn-add:hover {
-    background: var(--primary-color-darker);
-    transform: scale(1.05);
+  background: var(--primary-color-darker);
+  transform: scale(1.05);
 }
 
 .kv-btn-add:active {
-    transform: scale(0.95);
+  transform: scale(0.95);
 }
 
 /* Empty State */
 .kv-empty-state {
-    text-align: center;
-    color: var(--text-color-placeholder);
-    font-size: 12px;
-    padding: 30px 20px;
-    font-style: italic;
+  text-align: center;
+  color: var(--text-color-placeholder);
+  font-size: 12px;
+  padding: 30px 20px;
+  font-style: italic;
 }
 
 /* Responsive adjustments for smaller containers */
 @media (max-width: 400px) {
-    .kv-list-header,
-    .kv-item-row,
-    .kv-add-row {
-        grid-template-columns: 1fr 1fr 36px;
-    }
-    
-    .kv-item-key {
-        font-size: 11px;
-    }
-    
-    .kv-textarea,
-    .kv-input-key {
-        font-size: 12px;
-    }
+  .kv-list-header,
+  .kv-item-row,
+  .kv-add-row {
+    grid-template-columns: 1fr 1fr 36px;
+  }
+
+  .kv-item-key {
+    font-size: 11px;
+  }
+
+  .kv-textarea,
+  .kv-input-key {
+    font-size: 12px;
+  }
 }

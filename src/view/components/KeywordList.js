@@ -29,7 +29,7 @@ export class KeywordList {
    * @param {string} addButtonId - ID of the button to add new keywords
    * @throws {Error} If any of the required DOM elements are not found
    */
-  constructor (sourceTextboxId, listElementId, inputElementId, addButtonId) {
+  constructor(sourceTextboxId, listElementId, inputElementId, addButtonId) {
     /** @type {HTMLInputElement} */
     this.sourceTextbox = document.getElementById(sourceTextboxId);
 
@@ -56,7 +56,7 @@ export class KeywordList {
    * @private
    * @returns {void}
    */
-  init () {
+  init() {
     this.addButton.addEventListener('click', () => this.addItem());
     this.inputElement.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
@@ -80,15 +80,15 @@ export class KeywordList {
    * @private
    * @returns {void}
    */
-  loadFromTextbox () {
+  loadFromTextbox() {
     const value = this.sourceTextbox.value;
     if (!value) {
       this.items = [];
     } else {
       this.items = value
         .split(';')
-        .map(item => item.trimStart())
-        .filter(item => item.length > 0);
+        .map((item) => item.trimStart())
+        .filter((item) => item.length > 0);
     }
     this.render();
   }
@@ -100,7 +100,7 @@ export class KeywordList {
    * @private
    * @returns {void}
    */
-  updateTextbox () {
+  updateTextbox() {
     this.sourceTextbox.value = this.items.join(';');
     // Trigger input event so other listeners can react
     this.sourceTextbox.dispatchEvent(new Event('input', { bubbles: true }));
@@ -118,7 +118,7 @@ export class KeywordList {
    * @public
    * @returns {void}
    */
-  addItem () {
+  addItem() {
     const value = this.inputElement.value.trimStart(); // trim left spaces
 
     if (!value || value.includes('\n')) {
@@ -139,7 +139,7 @@ export class KeywordList {
    * @param {number} index - Zero-based index of the item to remove
    * @returns {void}
    */
-  removeItem (index) {
+  removeItem(index) {
     this.items.splice(index, 1);
     this.render();
     this.updateTextbox();
@@ -156,7 +156,7 @@ export class KeywordList {
    * @private
    * @returns {void}
    */
-  render () {
+  render() {
     this.listElement.innerHTML = '';
 
     this.items.forEach((item, index) => {
@@ -206,7 +206,7 @@ export class KeywordList {
    * @param {DragEvent} e - The drag event
    * @returns {void}
    */
-  handleDragStart (e) {
+  handleDragStart(e) {
     this.draggedItem = e.currentTarget;
     e.currentTarget.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
@@ -219,7 +219,7 @@ export class KeywordList {
    * @param {DragEvent} e
    * @returns {boolean} Always returns false to allow drop
    */
-  handleDragOver (e) {
+  handleDragOver(e) {
     if (e.preventDefault) {
       e.preventDefault();
     }
@@ -241,7 +241,7 @@ export class KeywordList {
    * @param {DragEvent} e
    * @returns {boolean}
    */
-  handleDrop (e) {
+  handleDrop(e) {
     if (e.stopPropagation) {
       e.stopPropagation();
     }
@@ -270,12 +270,12 @@ export class KeywordList {
    * @param {DragEvent} e
    * @returns {void}
    */
-  handleDragEnd (e) {
+  handleDragEnd(e) {
     e.currentTarget.classList.remove('dragging');
 
     // Remove all drag-over classes
     const allItems = this.listElement.querySelectorAll('.keyword-item');
-    allItems.forEach(item => item.classList.remove('drag-over'));
+    allItems.forEach((item) => item.classList.remove('drag-over'));
   }
 
   /**
@@ -284,7 +284,7 @@ export class KeywordList {
    * @param {DragEvent} e - The drag event
    * @returns {void}
    */
-  handleDragLeave (e) {
+  handleDragLeave(e) {
     e.currentTarget.classList.remove('drag-over');
   }
 }

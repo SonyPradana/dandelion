@@ -9,7 +9,7 @@
  *   "LPM002-quest|freetext": "Tidak ada"
  * }
  */
-export async function fillPinnedFields (pinneds) {
+export async function fillPinnedFields(pinneds) {
   for (const key in pinneds) {
     if (Object.prototype.hasOwnProperty.call(pinneds, key)) {
       const value = pinneds[key];
@@ -39,7 +39,7 @@ export async function fillPinnedFields (pinneds) {
  * @param {HTMLElement} questionElement - The question element container
  * @returns {{ type: string, getValue: Function }|null} Field object or null if not supported
  */
-export function detectFieldType (questionElement) {
+export function detectFieldType(questionElement) {
   // Check for combobox
   const dropdown = questionElement.querySelector('.sd-dropdown');
   if (dropdown) {
@@ -48,16 +48,18 @@ export function detectFieldType (questionElement) {
       getValue: () => {
         const valueElement = dropdown.querySelector('.sd-dropdown__value span.sv-string-viewer');
         return valueElement ? valueElement.textContent.trim() : null;
-      }
+      },
     };
   }
 
   // Check for textarea
-  const textInput = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
+  const textInput = questionElement.querySelector(
+    'textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)',
+  );
   if (textInput) {
     return {
       type: 'text',
-      getValue: () => textInput.value
+      getValue: () => textInput.value,
     };
   }
 
@@ -75,7 +77,7 @@ export function detectFieldType (questionElement) {
 
         const labelText = label.querySelector('span.sd-item__control-label span.sv-string-viewer');
         return labelText ? labelText.textContent.trim() : null;
-      }
+      },
     };
   }
 
@@ -88,8 +90,10 @@ export function detectFieldType (questionElement) {
  * @param {HTMLElement} questionElement - The question element containing textarea/input
  * @param {string} value - The value to fill
  */
-function fillTextarea (questionElement, value) {
-  const inputElement = questionElement.querySelector('textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)');
+function fillTextarea(questionElement, value) {
+  const inputElement = questionElement.querySelector(
+    'textarea, input[type="text"]:not(.sd-dropdown__filter-string-input)',
+  );
 
   if (inputElement && inputElement.value !== value) {
     inputElement.value = value;
@@ -103,11 +107,13 @@ function fillTextarea (questionElement, value) {
  * @param {HTMLElement} questionElement - The question element containing radio buttons
  * @param {string} targetLabel - The label text to match (e.g., "Ya", "Tidak")
  */
-function fillRadioButton (questionElement, targetLabel) {
+function fillRadioButton(questionElement, targetLabel) {
   const radioLabels = questionElement.querySelectorAll('label.sd-selectbase__label');
 
   for (const label of radioLabels) {
-    const labelTextElement = label.querySelector('span.sd-item__control-label span.sv-string-viewer');
+    const labelTextElement = label.querySelector(
+      'span.sd-item__control-label span.sv-string-viewer',
+    );
 
     if (labelTextElement) {
       const labelText = labelTextElement.textContent.trim();
@@ -130,33 +136,34 @@ function fillRadioButton (questionElement, targetLabel) {
  * @param {HTMLElement} questionElement - The question element containing combobox
  * @param {string} targetValue - The option text to match
  */
-async function fillDropdowns (questionElement, targetValue) {
+async function fillDropdowns(questionElement, targetValue) {
   const chevronButton = questionElement.querySelector('.sd-dropdown_chevron-button');
   if (!chevronButton) return;
 
   // Open dropdown
   chevronButton.click();
-  await new Promise(resolve => setTimeout(resolve, 300));
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
   // Find visible options
-  const visibleOptions = Array.from(document.querySelectorAll('.sv-popup--dropdown .sv-string-viewer'))
-    .filter(option => {
-      const popup = option.closest('.sv-popup');
-      return popup && popup.style.display !== 'none';
-    });
+  const visibleOptions = Array.from(
+    document.querySelectorAll('.sv-popup--dropdown .sv-string-viewer'),
+  ).filter((option) => {
+    const popup = option.closest('.sv-popup');
+    return popup && popup.style.display !== 'none';
+  });
 
   // Find matching option
-  const targetOption = visibleOptions.find(span => {
+  const targetOption = visibleOptions.find((span) => {
     const text = span.textContent.trim();
     return text === targetValue;
   });
 
   if (targetOption) {
     targetOption.closest('.sv-list__item').click();
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
   } else {
     // Close dropdown if no match found
     chevronButton.click();
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 150));
   }
 }

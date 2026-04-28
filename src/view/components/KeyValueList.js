@@ -28,7 +28,7 @@ export class KeyValueList {
    * @param {Function} onChangeCallback - Callback function called when data changes
    * @throws {Error} If container element is not found
    */
-  constructor (containerId, initialData, onChangeCallback) {
+  constructor(containerId, initialData, onChangeCallback) {
     /** @type {HTMLElement} Container element for the key-value list */
     this.container = document.getElementById(containerId);
 
@@ -51,7 +51,7 @@ export class KeyValueList {
    * @private
    * @returns {void}
    */
-  init () {
+  init() {
     this.render();
   }
 
@@ -61,7 +61,7 @@ export class KeyValueList {
    * @public
    * @returns {Object.<string, string>} Current key-value pairs
    */
-  getData () {
+  getData() {
     return { ...this.data };
   }
 
@@ -72,7 +72,7 @@ export class KeyValueList {
    * @param {Object.<string, string>} newData - New key-value pairs object
    * @returns {void}
    */
-  setData (newData) {
+  setData(newData) {
     this.data = newData || {};
     this.render();
   }
@@ -87,7 +87,7 @@ export class KeyValueList {
    * @param {string} value - The value (can be multi-line)
    * @returns {boolean} True if added successfully, false otherwise
    */
-  addItem (key, value) {
+  addItem(key, value) {
     const trimmedKey = key.trim();
 
     if (!trimmedKey) {
@@ -113,7 +113,7 @@ export class KeyValueList {
    * @param {string} key - The key to remove
    * @returns {void}
    */
-  removeItem (key) {
+  removeItem(key) {
     delete this.data[key];
     this.render();
     this.notifyChange();
@@ -127,7 +127,7 @@ export class KeyValueList {
    * @param {string} newValue - The new value
    * @returns {void}
    */
-  updateValue (key, newValue) {
+  updateValue(key, newValue) {
     if (Object.prototype.hasOwnProperty.call(this.data, key)) {
       this.data[key] = newValue;
       this.notifyChange();
@@ -140,7 +140,7 @@ export class KeyValueList {
    * @private
    * @returns {void}
    */
-  notifyChange () {
+  notifyChange() {
     this.onChange(this.getData());
   }
 
@@ -155,7 +155,7 @@ export class KeyValueList {
    * @private
    * @returns {void}
    */
-  render () {
+  render() {
     this.container.innerHTML = '';
 
     // Create wrapper
@@ -185,7 +185,7 @@ export class KeyValueList {
       emptyState.textContent = 'Belum ada data. Tambahkan key-value baru di bawah.';
       itemsContainer.appendChild(emptyState);
     } else {
-      keys.forEach(key => {
+      keys.forEach((key) => {
         const item = this.createItemRow(key, this.data[key]);
         itemsContainer.appendChild(item);
       });
@@ -208,7 +208,7 @@ export class KeyValueList {
    * @param {string} value - The value (editable)
    * @returns {HTMLElement} The row element
    */
-  createItemRow (key, value) {
+  createItemRow(key, value) {
     const row = document.createElement('div');
     row.className = 'kv-item-row';
 
@@ -275,7 +275,7 @@ export class KeyValueList {
    * @private
    * @returns {HTMLElement} The add row element
    */
-  createAddRow () {
+  createAddRow() {
     const addRow = document.createElement('div');
     addRow.className = 'kv-add-row';
 
@@ -355,7 +355,7 @@ export class KeyValueList {
    * @param {HTMLTextAreaElement} textarea - The textarea element to resize
    * @returns {void}
    */
-  autoResizeTextarea (textarea) {
+  autoResizeTextarea(textarea) {
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
   }

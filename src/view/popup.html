@@ -1,172 +1,210 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Syarat dan Ketentuan Penggunaan</title>
-    <link rel="stylesheet" href="./popup.css">
-    <link rel="stylesheet" href="./components/KeywordList.css">
-    <link rel="stylesheet" href="./components/KeyValueList.css">
-</head>
-<body>
+    <link rel="stylesheet" href="./popup.css" />
+    <link rel="stylesheet" href="./components/KeywordList.css" />
+    <link rel="stylesheet" href="./components/KeyValueList.css" />
+  </head>
+  <body>
     <div class="container">
-        <div class="tab-nav">
-            <button class="tab-button active" data-tab="agreement">Persetujuan</button>
-            <button class="tab-button" data-tab="config">Konfigurasi</button>
+      <div class="tab-nav">
+        <button class="tab-button active" data-tab="agreement">Persetujuan</button>
+        <button class="tab-button" data-tab="config">Konfigurasi</button>
+      </div>
+
+      <div id="agreement" class="tab-content active">
+        <div class="header">
+          <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
         </div>
-
-        <div id="agreement" class="tab-content active">
-            <div class="header">
-                <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
+        <div class="content">
+          <div class="highlight">
+            <strong>PERSETUJUAN PENGGUNAAN:</strong> Dengan menggunakan Tool ini, Anda menyetujui
+            seluruh ketentuan berikut.
+          </div>
+          <div class="section">
+            <h2>1. FUNGSI TOOL</h2>
+            <p>
+              Tool ini <strong>HANYA</strong> mengisi otomatis pilihan yang sudah Anda tentukan
+              sebelumnya pada formulir di browser Anda. Tool bekerja secara lokal dan memerlukan
+              klik manual untuk diaktifkan.
+            </p>
+          </div>
+          <div class="section">
+            <h2>2. APA YANG TIDAK DILAKUKAN TOOL</h2>
+            <p>Tool ini <strong>TIDAK</strong>:</p>
+            <ul>
+              <li>Mengirim data ke server manapun</li>
+              <li>Mengakses atau menyimpan data pribadi/pasien</li>
+              <li>Memodifikasi sistem aplikasi</li>
+              <li>Submit formulir secara otomatis</li>
+            </ul>
+          </div>
+          <div class="section">
+            <h2>3. TANGGUNG JAWAB PENGGUNA</h2>
+            <p>Anda <strong>WAJIB</strong>:</p>
+            <ul>
+              <li>Memverifikasi ulang seluruh jawaban sebelum submit</li>
+              <li>Bertanggung jawab penuh atas keakuratan data</li>
+              <li>Mematuhi kebijakan aplikasi/website dan ketentuan hukum yang berlaku</li>
+            </ul>
+          </div>
+          <div class="section">
+            <h2>4. BATASAN TANGGUNG JAWAB</h2>
+            <p>Pengembang <strong>TIDAK bertanggung jawab</strong> atas:</p>
+            <ul>
+              <li>Kesalahan pengisian data</li>
+              <li>Konsekuensi atau hukum dari penggunaan Tool</li>
+              <li>Gangguan atau error yang mungkin terjadi</li>
+            </ul>
+          </div>
+          <div class="section">
+            <h2>5. PRIVASI DAN PERLINDUNGAN DATA</h2>
+            <ul>
+              <li>
+                Tool ini <strong>TIDAK mengakses, mengumpulkan, atau mengirim data</strong> ke
+                server eksternal.
+              </li>
+              <li>
+                Tool hanya menyimpan <strong>konfigurasi pengisian secara lokal</strong> di browser
+                Anda.
+              </li>
+              <li>Data pada formulir aplikasi tetap sepenuhnya di sistem asli.</li>
+            </ul>
+          </div>
+          <div class="section">
+            <h2>6. IMPOR & EKSPOR KONFIGURASI</h2>
+            <p>
+              Fitur ini mengelola file konfigurasi pengisian yang
+              <strong>dapat berisi informasi pribadi umum</strong>.
+            </p>
+            <p>
+              <strong>Jaga kerahasiaan file konfigurasi Anda</strong> karena dapat berisi informasi
+              sensitif.
+            </p>
+            <p>Anda bertanggung jawab penuh atas:</p>
+            <ul>
+              <li>Keamanan dan penyimpanan file konfigurasi</li>
+              <li>Memastikan file impor dari sumber tepercaya</li>
+              <li><strong>TIDAK membagikan file</strong> ke pihak tidak berwenang</li>
+            </ul>
+            <p>
+              Pengembang <strong>tidak bertanggung jawab</strong> atas kebocoran atau penyalahgunaan
+              file konfigurasi.
+            </p>
+          </div>
+          <div class="checkbox-group">
+            <h3 style="margin-bottom: 16px; font-size: 15px; color: #333">KONFIRMASI</h3>
+            <div class="checkbox-item">
+              <input type="checkbox" id="agree-checkbox" />
+              <label for="agree-checkbox"
+                >Saya telah membaca dan menyetujui syarat dan ketentuan.</label
+              >
             </div>
-            <div class="content">
-                <div class="highlight">
-                    <strong>PERSETUJUAN PENGGUNAAN:</strong> Dengan menggunakan Tool ini, Anda menyetujui seluruh ketentuan berikut.
-                </div>
-                <div class="section">
-                    <h2>1. FUNGSI TOOL</h2>
-                    <p>Tool ini <strong>HANYA</strong> mengisi otomatis pilihan yang sudah Anda tentukan sebelumnya pada formulir di browser Anda. Tool bekerja secara lokal dan memerlukan klik manual untuk diaktifkan.</p>
-                </div>
-                <div class="section">
-                    <h2>2. APA YANG TIDAK DILAKUKAN TOOL</h2>
-                    <p>Tool ini <strong>TIDAK</strong>:</p>
-                    <ul>
-                        <li>Mengirim data ke server manapun</li>
-                        <li>Mengakses atau menyimpan data pribadi/pasien</li>
-                        <li>Memodifikasi sistem aplikasi</li>
-                        <li>Submit formulir secara otomatis</li>
-                    </ul>
-                </div>
-                <div class="section">
-                    <h2>3. TANGGUNG JAWAB PENGGUNA</h2>
-                    <p>Anda <strong>WAJIB</strong>:</p>
-                    <ul>
-                        <li>Memverifikasi ulang seluruh jawaban sebelum submit</li>
-                        <li>Bertanggung jawab penuh atas keakuratan data</li>
-                        <li>Mematuhi kebijakan aplikasi/website dan ketentuan hukum yang berlaku</li>
-                    </ul>
-                </div>
-                <div class="section">
-                    <h2>4. BATASAN TANGGUNG JAWAB</h2>
-                    <p>Pengembang <strong>TIDAK bertanggung jawab</strong> atas:</p>
-                    <ul>
-                        <li>Kesalahan pengisian data</li>
-                        <li>Konsekuensi atau hukum dari penggunaan Tool</li>
-                        <li>Gangguan atau error yang mungkin terjadi</li>
-                    </ul>
-                </div>
-                <div class="section">
-                    <h2>5. PRIVASI DAN PERLINDUNGAN DATA</h2>
-                    <ul>
-                        <li>Tool ini <strong>TIDAK mengakses, mengumpulkan, atau mengirim data</strong> ke server eksternal.</li>
-                        <li>Tool hanya menyimpan <strong>konfigurasi pengisian secara lokal</strong> di browser Anda.</li>
-                        <li>Data pada formulir aplikasi tetap sepenuhnya di sistem asli.</li>
-                    </ul>
-                </div>
-                <div class="section">
-                    <h2>6. IMPOR & EKSPOR KONFIGURASI</h2>
-                    <p>Fitur ini mengelola file konfigurasi pengisian yang <strong>dapat berisi informasi pribadi umum</strong>.</p>
-                    <p><strong>Jaga kerahasiaan file konfigurasi Anda</strong> karena dapat berisi informasi sensitif.</p>
-                    <p>Anda bertanggung jawab penuh atas:</p>
-                    <ul>
-                        <li>Keamanan dan penyimpanan file konfigurasi</li>
-                        <li>Memastikan file impor dari sumber tepercaya</li>
-                        <li><strong>TIDAK membagikan file</strong> ke pihak tidak berwenang</li>
-                    </ul>
-                    <p>Pengembang <strong>tidak bertanggung jawab</strong> atas kebocoran atau penyalahgunaan file konfigurasi.</p>
-                </div>
-                <div class="checkbox-group">
-                    <h3 style="margin-bottom: 16px; font-size: 15px; color: #333;">KONFIRMASI</h3>
-                    <div class="checkbox-item">
-                        <input type="checkbox" id="agree-checkbox">
-                        <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
 
-        <div id="config" class="tab-content">
-            <div id="config-wrapper">
-                <div class="header">
-                    <h1>Konfigurasi</h1>
-                </div>
-                <div class="content">
-                    <div class="form-group">
-                        <label for="profile-select">Pilih Profile</label>
-                        <select id="profile-select">
-                            <option value="profile1" default>Profile 1</option>
-                            <option value="profile2">Profile 2</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="form-input">Formulir</label>
-                        <input type="text" id="form-input" placeholder="Masukkan selektor untuk Formulir">
-                    </div>
-                    <div class="form-group">
-                        <label for="survey-input">Survei</label>
-                        <input type="text" id="survey-input" placeholder="Masukkan selektor untuk Survei">
-                    </div>
-                    
-                    <!-- Radio Button Keywords -->
-                    <div class="form-group">
-                        <label for="radio-button-keywords-input">Kata Kunci Tombol Radio</label>
-                        <input type="text" id="radio-button-keywords-input" placeholder="Value pisahkan dengan ;">
-                        <div class="keyword-list-container">
-                            <div class="keyword-list" id="radio-button-keywords-list"></div>
-                            <div class="keyword-input-container">
-                                <input type="text" id="radio-button-keywords-add-input" placeholder="Tambah kata kunci...">
-                                <button type="button" class="btn-add" id="radio-button-keywords-add">+</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dropdown Keywords -->
-                    <div class="form-group">
-                        <label for="dropdown-keywords-input">Kata Kunci Dropdown</avertissement>
-                        <input type="text" id="dropdown-keywords-input" placeholder="Value pisahkan dengan ;">
-                        <div class="keyword-list-container">
-                            <div class="keyword-list" id="dropdown-keywords-list"></div>
-                            <div class="keyword-input-container">
-                                <input type="text" id="dropdown-keywords-add-input" placeholder="Tambah kata kunci...">
-                                <button type="button" class="btn-add" id="dropdown-keywords-add">+</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <details class="collapsible-details">
-                        <summary class="collapsible-summary">Konfigurasi Lanjutan</summary>
-                        <div class="collapsible-content-native">
-                            <div class="form-group">
-                                <label for="excludes">Data dikecualikan</label>
-                                <input type="text" id="excludes" placeholder="Kecualikan atau lewati survei">
-                            </div>
-        
-                            <!-- Pinned Values -->
-                            <div class="form-group">
-                                <label>Nilai Tersemat</label>
-                                <div id="pinned-values-container"></div>
-                            </div>
-                        </div>
-                    </details>
-                    
-                    <div class="form-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="scroll-bottom-checkbox">
-                            <label for="scroll-bottom-checkbox">Scroll ke bawah setelah selesai</label>
-                        </div>
-                    </div>
-
-                    <button id="save-config-btn" class="btn">Simpan</button>
-                    <div class="action-links">
-                        <a href="#" id="export-link">Ekspor</a>
-                        <a href="#" id="import-link">Impor</a>
-                    </div>
-                    <input type="file" id="import-file-input" style="display: none;" accept=".json">
-                </div>
+      <div id="config" class="tab-content">
+        <div id="config-wrapper">
+          <div class="header">
+            <h1>Konfigurasi</h1>
+          </div>
+          <div class="content">
+            <div class="form-group">
+              <label for="profile-select">Pilih Profile</label>
+              <select id="profile-select">
+                <option value="profile1" default>Profile 1</option>
+                <option value="profile2">Profile 2</option>
+              </select>
             </div>
+            <div class="form-group">
+              <label for="form-input">Formulir</label>
+              <input type="text" id="form-input" placeholder="Masukkan selektor untuk Formulir" />
+            </div>
+            <div class="form-group">
+              <label for="survey-input">Survei</label>
+              <input type="text" id="survey-input" placeholder="Masukkan selektor untuk Survei" />
+            </div>
+
+            <!-- Radio Button Keywords -->
+            <div class="form-group">
+              <label for="radio-button-keywords-input">Kata Kunci Tombol Radio</label>
+              <input
+                type="text"
+                id="radio-button-keywords-input"
+                placeholder="Value pisahkan dengan ;"
+              />
+              <div class="keyword-list-container">
+                <div class="keyword-list" id="radio-button-keywords-list"></div>
+                <div class="keyword-input-container">
+                  <input
+                    type="text"
+                    id="radio-button-keywords-add-input"
+                    placeholder="Tambah kata kunci..."
+                  />
+                  <button type="button" class="btn-add" id="radio-button-keywords-add">+</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dropdown Keywords -->
+            <div class="form-group">
+              <label for="dropdown-keywords-input">Kata Kunci Dropdown</label>
+              <input
+                type="text"
+                id="dropdown-keywords-input"
+                placeholder="Value pisahkan dengan ;"
+              />
+              <div class="keyword-list-container">
+                <div class="keyword-list" id="dropdown-keywords-list"></div>
+                <div class="keyword-input-container">
+                  <input
+                    type="text"
+                    id="dropdown-keywords-add-input"
+                    placeholder="Tambah kata kunci..."
+                  />
+                  <button type="button" class="btn-add" id="dropdown-keywords-add">+</button>
+                </div>
+              </div>
+            </div>
+
+            <details class="collapsible-details">
+              <summary class="collapsible-summary">Konfigurasi Lanjutan</summary>
+              <div class="collapsible-content-native">
+                <div class="form-group">
+                  <label for="excludes">Data dikecualikan</label>
+                  <input type="text" id="excludes" placeholder="Kecualikan atau lewati survei" />
+                </div>
+
+                <!-- Pinned Values -->
+                <div class="form-group">
+                  <label>Nilai Tersemat</label>
+                  <div id="pinned-values-container"></div>
+                </div>
+              </div>
+            </details>
+
+            <div class="form-group">
+              <div class="checkbox-item">
+                <input type="checkbox" id="scroll-bottom-checkbox" />
+                <label for="scroll-bottom-checkbox">Scroll ke bawah setelah selesai</label>
+              </div>
+            </div>
+
+            <button id="save-config-btn" class="btn">Simpan</button>
+            <div class="action-links">
+              <a href="#" id="export-link">Ekspor</a>
+              <a href="#" id="import-link">Impor</a>
+            </div>
+            <input type="file" id="import-file-input" style="display: none" accept=".json" />
+          </div>
         </div>
+      </div>
     </div>
 
     <script src="../view/popup.js"></script>
-</body>
+  </body>
 </html>

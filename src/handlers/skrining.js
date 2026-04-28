@@ -1,12 +1,12 @@
-export function initializeSkrining () {
+export function initializeSkrining() {
   const radioClickedSet = new Set();
   let throttleTimeout = null;
   let observer = null;
 
-  function manipulateRadioButtons () {
+  function manipulateRadioButtons() {
     const allRadioButtons = document.querySelectorAll('input[type="radio"]');
 
-    allRadioButtons.forEach(radio => {
+    allRadioButtons.forEach((radio) => {
       const radioKey = radio.id || `${radio.name}_${radio.value}`;
 
       if (!radio.checked && radioClickedSet.has(radioKey) === false) {
@@ -22,7 +22,7 @@ export function initializeSkrining () {
     }
   }
 
-  function throttledManipulate () {
+  function throttledManipulate() {
     if (throttleTimeout) return;
     throttleTimeout = setTimeout(() => {
       manipulateRadioButtons();
@@ -30,7 +30,7 @@ export function initializeSkrining () {
     }, 200);
   }
 
-  function startObserver () {
+  function startObserver() {
     if (observer) return;
 
     observer = new MutationObserver(() => throttledManipulate());
@@ -39,7 +39,7 @@ export function initializeSkrining () {
     console.log('Dandelion: Observer started.');
   }
 
-  function stopObserver () {
+  function stopObserver() {
     if (observer) {
       observer.disconnect();
       observer = null;

@@ -5,7 +5,7 @@ import { detectFieldType } from '../handlers/skriningform/fill-pinned-fields';
 const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
 let stylesInitialized = false;
 
-function initializeStyles () {
+function initializeStyles() {
   if (stylesInitialized) return;
 
   const styleSheet = document.createElement('style');
@@ -46,7 +46,7 @@ function initializeStyles () {
  * @param {string} identifier - The text to display inside the marker and the data-name for the exclude toggle.
  * @returns {HTMLDivElement} The created marker element.
  */
-export function debugMarker (identifier) {
+export function debugMarker(identifier) {
   initializeStyles();
 
   const marker = document.createElement('div');

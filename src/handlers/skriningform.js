@@ -9,7 +9,7 @@ import { fillPinnedFields } from './skriningform/fill-pinned-fields';
  * This button only trigger local form filling.
  * The use must consciously press the button to perform the action.
  */
-export async function initializeSkriningForm () {
+export async function initializeSkriningForm() {
   let isDebugEnabled = false; // Initial state is off
 
   const tombol = button('dandelion-auto-fill');
@@ -25,12 +25,14 @@ export async function initializeSkriningForm () {
   if (tombol) {
     tombol.addEventListener('click', async () => {
       const config = await getActiveConfig();
-      const radioButtonKeywords = (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
-      const dropdownKeywords = (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
+      const radioButtonKeywords =
+        (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
+      const dropdownKeywords =
+        (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
       const pinneds = config.pinneds || {};
       const excludes = [
         ...((config.excludes && config.excludes.split(';')) || []),
-        ...Object.keys(pinneds)
+        ...Object.keys(pinneds),
       ];
 
       fillRadioButtons(radioButtonKeywords, excludes);
@@ -44,7 +46,7 @@ export async function initializeSkriningForm () {
       setTimeout(() => {
         window.scrollTo({
           top: document.body.scrollHeight,
-          behavior: 'smooth'
+          behavior: 'smooth',
         });
       }, 100);
     });
@@ -52,11 +54,13 @@ export async function initializeSkriningForm () {
   }
 
   /**
-    * @param {string[]} config - List of radioInput konfuguration
-    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
-    */
-  function fillRadioButtons (config, skipList = []) {
-    const allMatchingLabels = Array.from(document.querySelectorAll('span.sd-item__control-label')).filter(span => {
+   * @param {string[]} config - List of radioInput konfuguration
+   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
+   */
+  function fillRadioButtons(config, skipList = []) {
+    const allMatchingLabels = Array.from(
+      document.querySelectorAll('span.sd-item__control-label'),
+    ).filter((span) => {
       const childViewerSpan = span.querySelector('span.sv-string-viewer');
       if (!childViewerSpan) return false;
 
@@ -65,7 +69,7 @@ export async function initializeSkriningForm () {
       return config.includes(text);
     });
 
-    allMatchingLabels.forEach(labelSpan => {
+    allMatchingLabels.forEach((labelSpan) => {
       const parentLabel = labelSpan.closest('label.sd-selectbase__label');
       if (parentLabel) {
         const questionElement = parentLabel.closest('[data-name]');
@@ -85,10 +89,10 @@ export async function initializeSkriningForm () {
   }
 
   /**
-    * @param {string[]} config - List of radioInput konfuguration
-    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
-    */
-  async function fillDropdowns (config, skipList = []) {
+   * @param {string[]} config - List of radioInput konfuguration
+   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
+   */
+  async function fillDropdowns(config, skipList = []) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
 
     for (let i = 0; i < chevronButtons.length; i++) {
@@ -105,39 +109,40 @@ export async function initializeSkriningForm () {
 
       chevronButton.click();
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const visibleOptions = Array.from(document.querySelectorAll('.sv-popup--dropdown .sv-string-viewer'))
-        .filter(option => {
-          const popup = option.closest('.sv-popup');
-          return popup && popup.style.display !== 'none';
-        });
+      const visibleOptions = Array.from(
+        document.querySelectorAll('.sv-popup--dropdown .sv-string-viewer'),
+      ).filter((option) => {
+        const popup = option.closest('.sv-popup');
+        return popup && popup.style.display !== 'none';
+      });
 
-      const targetOptionElement = visibleOptions.find(span => {
+      const targetOptionElement = visibleOptions.find((span) => {
         const text = span.textContent.trim();
         return config.includes(text);
       });
 
       if (targetOptionElement) {
         targetOptionElement.closest('.sv-list__item').click();
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       } else {
         chevronButton.click(); // Close drop down
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise((resolve) => setTimeout(resolve, 150));
       }
     }
   }
 
   /**
-    * @param {boolean} enable - Toggle show or hide debug markers.
-    */
-  function showDebugInformation (enable) {
+   * @param {boolean} enable - Toggle show or hide debug markers.
+   */
+  function showDebugInformation(enable) {
     const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
 
     if (enable) {
       const elementsWithDataName = document.querySelectorAll('[data-name]');
 
-      elementsWithDataName.forEach(element => {
+      elementsWithDataName.forEach((element) => {
         // Prevent adding duplicate markers
         if (element.querySelector(`.${DEBUG_MARKER_CLASS}`)) {
           return;
@@ -155,7 +160,7 @@ export async function initializeSkriningForm () {
       });
     } else {
       const markers = document.querySelectorAll(`.${DEBUG_MARKER_CLASS}`);
-      markers.forEach(marker => marker.remove());
+      markers.forEach((marker) => marker.remove());
     }
   }
 }

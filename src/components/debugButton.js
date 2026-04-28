@@ -2,7 +2,7 @@
  * Creates the debug toggle button.
  * @returns {HTMLButtonElement}
  */
-export function debugButton () {
+export function debugButton() {
   const debugToggle = document.createElement('button');
   debugToggle.id = 'dandelion-debug-toggle';
   debugToggle.innerHTML = '🐞';
