@@ -1,5 +1,4 @@
-TERMS OF USE / AGREEMENT
-========================
+# TERMS OF USE / AGREEMENT
 
 Dengan menggunakan, menyalin, atau memodifikasi kode sumber ini,
 Anda setuju dengan ketentuan berikut:
@@ -16,10 +15,9 @@ Anda setuju dengan ketentuan berikut:
 Dengan melanjutkan penggunaan, Anda dianggap telah membaca dan menyetujui
 ketentuan ini.
 
-------------------------------------------------------------
+---
 
-MIT License
-===========
+# MIT License
 
 Copyright (c) 2026 SonyPradana
 

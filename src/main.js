@@ -9,7 +9,7 @@ getAgreement().then((agreed) => {
   }
 });
 
-function initializeForm () {
+function initializeForm() {
   getActiveConfig().then((config) => {
     const currentURL = window.location.href;
 

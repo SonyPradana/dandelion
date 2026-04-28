@@ -5,7 +5,7 @@ const EXCLUDE_TOGGLE_CLASS = 'dandelion-exclude-toggle';
 // Initialize styles once
 let stylesInitialized = false;
 
-function initializeStyles () {
+function initializeStyles() {
   if (stylesInitialized) return;
 
   const styleSheet = document.createElement('style');
@@ -47,11 +47,11 @@ function initializeStyles () {
  * @param {HTMLElement} toggleElement - The toggle button element.
  * @param {boolean} isExcluded - Whether the item is excluded.
  */
-function updateToggleState (toggleElement, isExcluded) {
+function updateToggleState(toggleElement, isExcluded) {
   toggleElement.textContent = isExcluded ? '❌' : '➕';
   toggleElement.setAttribute(
     'aria-label',
-    isExcluded ? 'Include this question' : 'Exclude this question'
+    isExcluded ? 'Include this question' : 'Exclude this question',
   );
 }
 
@@ -60,7 +60,7 @@ function updateToggleState (toggleElement, isExcluded) {
  * @param {HTMLElement} toggleElement - The toggle button element.
  * @param {string} identifier - The identifier for the item to toggle.
  */
-async function handleToggle (toggleElement, identifier) {
+async function handleToggle(toggleElement, identifier) {
   toggleElement.classList.add('loading');
 
   try {
@@ -80,7 +80,7 @@ async function handleToggle (toggleElement, identifier) {
  * @param {string} identifier - The identifier for the item.
  * @returns {HTMLSpanElement} The created toggle button.
  */
-export function createExcludeToggle (identifier) {
+export function createExcludeToggle(identifier) {
   initializeStyles();
 
   const excludeToggle = document.createElement('span');
@@ -90,8 +90,8 @@ export function createExcludeToggle (identifier) {
 
   // Initialize state
   isExcluded(identifier)
-    .then(excluded => updateToggleState(excludeToggle, excluded))
-    .catch(error => {
+    .then((excluded) => updateToggleState(excludeToggle, excluded))
+    .catch((error) => {
       console.error('Failed to check exclude state:', error);
       excludeToggle.textContent = '⚠️';
       excludeToggle.setAttribute('aria-label', 'Error loading exclude state');

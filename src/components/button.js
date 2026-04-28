@@ -3,7 +3,7 @@
  * @param {string} id - The ID to be assigned to the button element
  * @returns {HTMLButtonElement|undefined}
  */
-export function button (id) {
+export function button(id) {
   if (document.querySelector(`#${id}`)) {
     return;
   }

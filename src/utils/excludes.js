@@ -4,7 +4,7 @@ import { getFullConfig, setConfig } from '../configuration.js';
  * Retrieves the current active profile's excludes list as an array.
  * @returns {Promise<string[]>} A promise that resolves to an array of excluded data-names.
  */
-async function getExcludesForActiveProfile () {
+async function getExcludesForActiveProfile() {
   const fullConfig = await getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
   const excludesString = fullConfig.profiles[activeProfileName]?.excludes || '';
@@ -17,7 +17,7 @@ async function getExcludesForActiveProfile () {
  * @param {string[]} excludesArray - The array of data-names to save as excludes.
  * @returns {Promise<void>}
  */
-async function saveExcludesForActiveProfile (excludesArray) {
+async function saveExcludesForActiveProfile(excludesArray) {
   const fullConfig = await getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
 
@@ -34,7 +34,7 @@ async function saveExcludesForActiveProfile (excludesArray) {
  * @param {string} dataName - The data-name to check.
  * @returns {Promise<boolean>} True if excluded, false otherwise.
  */
-export async function isExcluded (dataName) {
+export async function isExcluded(dataName) {
   const excludesList = await getExcludesForActiveProfile();
 
   return excludesList.includes(dataName);
@@ -45,7 +45,7 @@ export async function isExcluded (dataName) {
  * @param {string} dataName - The data-name to toggle.
  * @returns {Promise<boolean>} True if the data-name is now excluded, false if it's now included.
  */
-export async function toggleExclude (dataName) {
+export async function toggleExclude(dataName) {
   const excludesList = await getExcludesForActiveProfile();
   const index = excludesList.indexOf(dataName);
 

@@ -20,13 +20,13 @@ try {
 
   const targetHost = process.env.TARGET_HOST;
   if (targetHost) {
-    const hosts = targetHost.split(';').filter(h => h);
+    const hosts = targetHost.split(';').filter((h) => h);
 
     if (hosts.length > 0) {
       manifest.host_permissions = hosts;
 
       if (manifest.content_scripts && Array.isArray(manifest.content_scripts)) {
-        manifest.content_scripts = manifest.content_scripts.map(script => ({
+        manifest.content_scripts = manifest.content_scripts.map((script) => ({
           ...script,
           matches: hosts,
         }));

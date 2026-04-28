@@ -17,24 +17,22 @@ const DEFAULT_CONFIG = {
       dropdownKeywords: '',
       excludes: '',
       pinneds: {},
-    }
-  }
+    },
+  },
 };
 
 /**
  * @returns {Promise<boolean>}
  */
-export function getAgreement () {
-  return browser.storage.local
-    .get('termsAgreed')
-    .then((result) => result?.termsAgreed ?? false);
+export function getAgreement() {
+  return browser.storage.local.get('termsAgreed').then((result) => result?.termsAgreed ?? false);
 }
 
 /**
  * @param {boolean} value
  * @returns {void}
  */
-export function setAgreement (value) {
+export function setAgreement(value) {
   browser.storage.local.set({ termsAgreed: value });
 }
 
@@ -42,12 +40,12 @@ export function setAgreement (value) {
  * Gets the full configuration object, including all profiles.
  * @returns {Promise<typeof DEFAULT_CONFIG>}
  */
-export function getFullConfig () {
+export function getFullConfig() {
   return browser.storage.local.get(Object.keys(DEFAULT_CONFIG)).then((result) => {
     // Deep merge with defaults to ensure all keys are present
     const profiles = {
       ...DEFAULT_CONFIG.profiles,
-      ...(result.profiles || {})
+      ...(result.profiles || {}),
     };
     profiles.profile1 = { ...DEFAULT_CONFIG.profiles.profile1, ...(profiles.profile1 || {}) };
     profiles.profile2 = { ...DEFAULT_CONFIG.profiles.profile2, ...(profiles.profile2 || {}) };
@@ -57,7 +55,7 @@ export function getFullConfig () {
       surveySelector: result.surveySelector ?? DEFAULT_CONFIG.surveySelector,
       activeProfile: result.activeProfile ?? DEFAULT_CONFIG.activeProfile,
       scrollToBottom: result.scrollToBottom ?? DEFAULT_CONFIG.scrollToBottom,
-      profiles
+      profiles,
     };
   });
 }
@@ -66,14 +64,14 @@ export function getFullConfig () {
  * Gets the configuration for the currently active profile.
  * @returns {Promise<{form: string, survey: string, radioButtonKeywords: string, dropdownKeywords: string}>}
  */
-export function getActiveConfig () {
-  return getFullConfig().then(config => {
+export function getActiveConfig() {
+  return getFullConfig().then((config) => {
     const activeProfileSettings = config.profiles[config.activeProfile];
     return {
       form: config.formSelector,
       survey: config.surveySelector,
       scrollToBottom: config.scrollToBottom,
-      ...activeProfileSettings
+      ...activeProfileSettings,
     };
   });
 }
@@ -83,6 +81,6 @@ export function getActiveConfig () {
  * @param {typeof DEFAULT_CONFIG} config
  * @returns {void}
  */
-export function setConfig (config) {
+export function setConfig(config) {
   browser.storage.local.set(config);
 }

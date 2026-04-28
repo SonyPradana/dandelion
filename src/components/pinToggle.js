@@ -4,7 +4,7 @@ const PIN_TOGGLE_CLASS = 'dandelion-pin-toggle';
 
 let stylesInitialized = false;
 
-function initializeStyles () {
+function initializeStyles() {
   if (stylesInitialized) return;
 
   const styleSheet = document.createElement('style');
@@ -49,7 +49,7 @@ function initializeStyles () {
  * @param {HTMLElement} toggleElement - The toggle button element.
  * @param {boolean} pinned - Whether the item is pinned.
  */
-function updateToggleState (toggleElement, pinned) {
+function updateToggleState(toggleElement, pinned) {
   toggleElement.textContent = '📌';
   toggleElement.classList.toggle('active', pinned);
   toggleElement.setAttribute('aria-label', pinned ? 'Unpin this field' : 'Pin this field');
@@ -62,7 +62,7 @@ function updateToggleState (toggleElement, pinned) {
  * @param {string} identifier - The data-name identifier.
  * @param {Function} getValue - Callback to get current field value.
  */
-async function handleToggle (toggleElement, identifier, getValue) {
+async function handleToggle(toggleElement, identifier, getValue) {
   toggleElement.classList.add('loading');
 
   try {
@@ -96,7 +96,7 @@ async function handleToggle (toggleElement, identifier, getValue) {
  * @param {Function} getValue - Callback that returns the current field value.
  * @returns {Promise<HTMLSpanElement>} The created pin toggle element.
  */
-export async function createPinToggle (identifier, getValue) {
+export async function createPinToggle(identifier, getValue) {
   initializeStyles();
 
   const pinToggle = document.createElement('span');
@@ -105,10 +105,10 @@ export async function createPinToggle (identifier, getValue) {
   pinToggle.setAttribute('tabindex', '0');
 
   isPinned(identifier)
-    .then(pinned => {
+    .then((pinned) => {
       updateToggleState(pinToggle, pinned);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Failed to check pin state:', error);
       pinToggle.textContent = '⚠️';
       pinToggle.setAttribute('aria-label', 'Error loading pin state');
