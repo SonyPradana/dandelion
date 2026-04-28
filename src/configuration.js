@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 const DEFAULT_CONFIG = {
   formSelector: '',
   surveySelector: '',
+  notCheckedUrl: '',
   activeProfile: 'profile1',
   scrollToBottom: true,
   profiles: {
@@ -10,12 +11,14 @@ const DEFAULT_CONFIG = {
       radioButtonKeywords: '',
       dropdownKeywords: '',
       excludes: '',
+      notCheckedList: '',
       pinneds: {},
     },
     profile2: {
       radioButtonKeywords: '',
       dropdownKeywords: '',
       excludes: '',
+      notCheckedList: '',
       pinneds: {},
     },
   },
