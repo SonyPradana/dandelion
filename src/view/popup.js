@@ -22,7 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
     'dropdown-keywords-add', // add button
   );
 
-  window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList };
+  const notCheckedList = new KeywordList(
+    'not-checked-list-input', // source textbox
+    'not-checked-list-container', // list container
+    'not-checked-list-add-input', // add input
+    'not-checked-list-add', // add button
+  );
+
+  window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList, notCheckedList };
   let pinnedValuesList = null;
 
   /**
@@ -78,9 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const saveConfigBtn = document.getElementById('save-config-btn');
   const formInput = document.getElementById('form-input');
   const surveyInput = document.getElementById('survey-input');
+  const notCheckedUrlInput = document.getElementById('not-checked-url-input');
   const scrollBottomCheckbox = document.getElementById('scroll-bottom-checkbox');
   const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
   const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
+  const notCheckedListInput = document.getElementById('not-checked-list-input');
   const profileSelect = document.getElementById('profile-select');
   const excludesInput = document.getElementById('excludes');
 
@@ -94,15 +103,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileSettings = loadedConfig.profiles[selectedProfile];
     formInput.value = loadedConfig.formSelector;
     surveyInput.value = loadedConfig.surveySelector;
+    notCheckedUrlInput.value = loadedConfig.notCheckedUrl || '';
     scrollBottomCheckbox.checked = loadedConfig.scrollToBottom || false;
 
     // Set values to textboxes (KeywordList components will auto-sync via event listener)
     radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
     dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
+    notCheckedListInput.value = profileSettings.notCheckedList || '';
 
     // Trigger input event to sync with KeywordList components
     radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
     dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
+    notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
 
     excludesInput.value = profileSettings.excludes;
 
@@ -148,11 +160,13 @@ document.addEventListener('DOMContentLoaded', () => {
       loadedConfig.activeProfile = selectedProfile;
       loadedConfig.formSelector = formInput.value;
       loadedConfig.surveySelector = surveyInput.value;
+      loadedConfig.notCheckedUrl = notCheckedUrlInput.value;
       loadedConfig.scrollToBottom = scrollBottomCheckbox.checked;
 
       // Get values from textboxes (already synced by KeywordList components)
       loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
       loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
+      loadedConfig.profiles[selectedProfile].notCheckedList = notCheckedListInput.value;
 
       loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
 

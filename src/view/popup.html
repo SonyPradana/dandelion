@@ -128,6 +128,14 @@
               <label for="survey-input">Survei</label>
               <input type="text" id="survey-input" placeholder="Masukkan selektor untuk Survei" />
             </div>
+            <div class="form-group">
+              <label for="not-checked-url-input">Tidak diperiksa</label>
+              <input
+                type="text"
+                id="not-checked-url-input"
+                placeholder="Masukkan pola URL untuk Tidak Periksa"
+              />
+            </div>
 
             <!-- Radio Button Keywords -->
             <div class="form-group">
@@ -183,6 +191,27 @@
                 <div class="form-group">
                   <label>Nilai Tersemat</label>
                   <div id="pinned-values-container"></div>
+                </div>
+
+                <!-- Not Checked Master List -->
+                <div class="form-group">
+                  <label for="not-checked-list-input">Daftar Master 'Tidak Periksa'</label>
+                  <input
+                    type="text"
+                    id="not-checked-list-input"
+                    placeholder="ID baris pisahkan dengan ;"
+                  />
+                  <div class="keyword-list-container">
+                    <div class="keyword-list" id="not-checked-list-container"></div>
+                    <div class="keyword-input-container">
+                      <input
+                        type="text"
+                        id="not-checked-list-add-input"
+                        placeholder="Tambah ID baris (rowfrm...)"
+                      />
+                      <button type="button" class="btn-add" id="not-checked-list-add">+</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </details>
