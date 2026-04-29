@@ -20,10 +20,9 @@ function initializeForm() {
   getActiveConfig().then((config) => {
     console.log('Active Config Loaded:', config);
 
-    // Dynamic routing with fallback
-    const notCheckedPattern = config.notCheckedUrl || 'ckg-pelayanan/detail-pemeriksaan';
+    const notCheckedPattern = config.notChecked?.url;
 
-    if (currentURL.includes(notCheckedPattern)) {
+    if (notCheckedPattern && currentURL.includes(notCheckedPattern)) {
       console.log('Matching Detail Pemeriksaan page...');
       initializeNotChecked();
     } else if (config.survey && currentURL.includes(config.survey)) {

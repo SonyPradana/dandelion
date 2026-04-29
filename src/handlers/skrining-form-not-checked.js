@@ -3,6 +3,7 @@ import { debugButton } from '../components/debugButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
+import { getActiveConfig } from '../configuration';
 
 /**
  * Fitur otomatisasi klik menggunakan ID Baris (rowfrm...)
@@ -146,19 +147,24 @@ function toggleHelperMode() {
   });
 }
 
-function startAutomation(ids) {
+async function startAutomation(ids) {
+  const config = await getActiveConfig();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
   localStorage.setItem(TOTAL_KEY, ids.length.toString());
   syncStatusPanel();
-  processNextItem();
+
+  const delay = config.notChecked?.itemDelay || 1000;
+  setTimeout(processNextItem, delay);
 }
 
-function resumeAutomation() {
+async function resumeAutomation() {
   const pending = localStorage.getItem(STORAGE_KEY);
   if (pending) {
     const ids = JSON.parse(pending);
     if (ids.length > 0) {
-      setTimeout(processNextItem, 2000);
+      const config = await getActiveConfig();
+      const delay = config.notChecked?.automationDelay || 2000;
+      setTimeout(processNextItem, delay);
     } else {
       finishAutomation();
     }
@@ -190,52 +196,64 @@ function finishAutomation() {
 async function processNextItem() {
   const pendingStr = localStorage.getItem(STORAGE_KEY);
   if (!pendingStr) return;
+
   const ids = JSON.parse(pendingStr);
   if (ids.length === 0) {
     finishAutomation();
     return;
   }
+
+  const config = await getActiveConfig();
+  const ncConfig = config.notChecked || {};
   syncStatusPanel();
+
   const currentId = ids[0];
   const rowElement = await waitForRow(currentId, 10_000);
+
   if (rowElement) {
     const row = rowElement.closest('.grid');
     if (!row) {
-      moveToNext(ids);
+      moveToNext(ids, ncConfig.itemDelay);
       return;
     }
     const rowText = row.textContent;
     const label = row.querySelector('label');
     if (rowText.includes('Tidak diperiksa') || rowText.includes('Selesai diperiksa')) {
-      moveToNext(ids);
+      moveToNext(ids, ncConfig.itemDelay);
       return;
     }
     if (!label) {
-      moveToNext(ids);
+      moveToNext(ids, ncConfig.itemDelay);
       return;
     }
     row.style.backgroundColor = '#fff3e5';
     label.click();
+
     try {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 5000);
       moveToNext(ids, false);
       confirmBtn.click();
+
       setTimeout(() => {
-        if (localStorage.getItem(STORAGE_KEY)) window.location.reload();
-      }, 3000);
+        if (localStorage.getItem(STORAGE_KEY)) {
+          window.location.reload();
+        }
+      }, ncConfig.reloadDelay || 3000);
     } catch (error) {
-      moveToNext(ids);
+      moveToNext(ids, ncConfig.itemDelay);
     }
   } else {
-    moveToNext(ids);
+    moveToNext(ids, ncConfig.itemDelay);
   }
 }
 
-function moveToNext(ids, continueImmediately = true) {
+function moveToNext(ids, delay) {
   ids.shift();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
   syncStatusPanel();
-  if (continueImmediately) setTimeout(processNextItem, 1000);
+  if (typeof delay === 'number') {
+    setTimeout(processNextItem, delay);
+  }
 }
 
 function waitForRow(id, timeout = 10_000) {
