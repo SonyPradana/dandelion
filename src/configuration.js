@@ -56,6 +56,7 @@ export function getFullConfig() {
     return {
       formSelector: result.formSelector ?? DEFAULT_CONFIG.formSelector,
       surveySelector: result.surveySelector ?? DEFAULT_CONFIG.surveySelector,
+      notCheckedUrl: result.notCheckedUrl ?? DEFAULT_CONFIG.notCheckedUrl,
       activeProfile: result.activeProfile ?? DEFAULT_CONFIG.activeProfile,
       scrollToBottom: result.scrollToBottom ?? DEFAULT_CONFIG.scrollToBottom,
       profiles,
@@ -65,7 +66,7 @@ export function getFullConfig() {
 
 /**
  * Gets the configuration for the currently active profile.
- * @returns {Promise<{form: string, survey: string, radioButtonKeywords: string, dropdownKeywords: string}>}
+ * @returns {Promise<{form: string, survey: string, notCheckedUrl: string, radioButtonKeywords: string, dropdownKeywords: string}>}
  */
 export function getActiveConfig() {
   return getFullConfig().then((config) => {
@@ -73,6 +74,7 @@ export function getActiveConfig() {
     return {
       form: config.formSelector,
       survey: config.surveySelector,
+      notCheckedUrl: config.notCheckedUrl,
       scrollToBottom: config.scrollToBottom,
       ...activeProfileSettings,
     };
