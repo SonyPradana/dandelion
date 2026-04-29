@@ -1,6 +1,7 @@
 import { button } from '../components/button';
 import { debugButton } from '../components/debugButton';
-import { createNotCheckedToggle } from '../components/notCheckedToggle';
+import { createRowMarker } from '../components/rowMarker';
+import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
 
 /**
@@ -10,7 +11,7 @@ import { getNotCheckedList } from '../utils/notChecked';
 
 const STORAGE_KEY = 'dandelion_pending_not_checked';
 const TOTAL_KEY = 'dandelion_total_not_checked';
-const DEBUG_MARKER_CLASS = 'dandelion-row-marker';
+const ROW_MARKER_CLASS = 'dandelion-row-marker';
 
 export function initialize() {
   console.log('Skrining Form Not Checked Handler Active');
@@ -22,7 +23,6 @@ export function initialize() {
   function ensureButtonsMounted() {
     let mainBtn = document.getElementById('dandelion-not-checked-automation');
     let debugBtn = document.getElementById('dandelion-debug-toggle');
-    const statusPanel = document.getElementById('dandelion-status-panel');
 
     const isRunning = localStorage.getItem(STORAGE_KEY) !== null;
 
@@ -41,17 +41,12 @@ export function initialize() {
           }
 
           const masterList = await getNotCheckedList();
-          console.log('%cMaster List (Config):', 'color: #ffd700; font-weight: bold', masterList);
-
           if (masterList.length === 0) {
             alert('Daftar target (Master List) kosong! Gunakan tombol 🐞 untuk menandai baris.');
             return;
           }
 
-          // PRE-CHECK: Remove IDs that are already "Done" in current DOM
-          // This creates a local execution list without affecting the Master List in config.
           const executionList = filterAlreadyDoneIds(masterList);
-
           if (executionList.length === 0) {
             alert('Semua item dalam Master List sudah diperiksa atau selesai di halaman ini.');
             return;
@@ -59,7 +54,7 @@ export function initialize() {
 
           if (
             confirm(
-              `Mulai otomatisasi untuk ${executionList.length} item yang belum diisi (dari total ${masterList.length} di Master List)?`,
+              `Mulai otomatisasi untuk ${executionList.length} item (dari total ${masterList.length} di Master List)?`,
             )
           ) {
             startAutomation(executionList);
@@ -80,27 +75,9 @@ export function initialize() {
       }
     }
 
-    if (!statusPanel && isRunning) {
-      createStatusPanel();
-    }
-
     // UI state updates
     if (isRunning) {
-      if (mainBtn) {
-        mainBtn.style.opacity = '0.5';
-        mainBtn.style.cursor = 'not-allowed';
-        mainBtn.style.filter = 'grayscale(1)';
-      }
-      if (debugBtn) {
-        debugBtn.style.opacity = '0.3';
-        debugBtn.style.cursor = 'not-allowed';
-      }
-      // Disable existing markers
-      document.querySelectorAll(`.${DEBUG_MARKER_CLASS}`).forEach((m) => {
-        m.style.opacity = '0.3';
-        m.style.pointerEvents = 'none';
-      });
-      updateStatusPanel();
+      updateUIForRunningState(mainBtn, debugBtn);
     }
   }
 
@@ -108,10 +85,29 @@ export function initialize() {
   resumeAutomation();
 }
 
-/**
- * Filter IDs that are already marked as "Tidak diperiksa" or "Selesai diperiksa"
- * locally for the current execution session.
- */
+function updateUIForRunningState(mainBtn, debugBtn) {
+  if (mainBtn) {
+    mainBtn.style.opacity = '0.5';
+    mainBtn.style.cursor = 'not-allowed';
+    mainBtn.style.filter = 'grayscale(1)';
+  }
+  if (debugBtn) {
+    debugBtn.style.opacity = '0.3';
+    debugBtn.style.cursor = 'not-allowed';
+  }
+  document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
+    m.style.opacity = '0.3';
+    m.style.pointerEvents = 'none';
+  });
+  syncStatusPanel();
+}
+
+function syncStatusPanel() {
+  const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  const total = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
+  updateStatusPanel(total - pending.length, total, pending.length > 0);
+}
+
 function filterAlreadyDoneIds(ids) {
   return ids.filter((id) => {
     const el = document.getElementById(id);
@@ -119,7 +115,6 @@ function filterAlreadyDoneIds(ids) {
     if (row) {
       const text = row.textContent;
       if (text.includes('Tidak diperiksa') || text.includes('Selesai diperiksa')) {
-        console.log(`%cLocal Filter: Skipping ${id} (Already Done/Checked)`, 'color: gray');
         return false;
       }
     }
@@ -129,14 +124,12 @@ function filterAlreadyDoneIds(ids) {
 
 function toggleHelperMode() {
   const rowIdElements = document.querySelectorAll('[id^="rowfrm"]');
-  const existingMarkers = document.querySelectorAll(`.${DEBUG_MARKER_CLASS}`);
+  const existingMarkers = document.querySelectorAll(`.${ROW_MARKER_CLASS}`);
 
   if (existingMarkers.length > 0) {
     existingMarkers.forEach((m) => m.remove());
     return;
   }
-
-  initializeMarkerStyles();
 
   rowIdElements.forEach((el) => {
     const gridRow = el.closest('.grid');
@@ -149,69 +142,14 @@ function toggleHelperMode() {
       titleColumn.style.position = 'relative';
     }
 
-    const marker = document.createElement('div');
-    marker.className = DEBUG_MARKER_CLASS;
-
-    const idText = document.createElement('span');
-    idText.textContent = el.id;
-    idText.style.marginRight = '2px';
-
-    const toggle = createNotCheckedToggle(el.id);
-
-    marker.appendChild(idText);
-    marker.appendChild(toggle);
-    titleColumn.appendChild(marker);
+    titleColumn.appendChild(createRowMarker(el.id));
   });
-}
-
-function initializeMarkerStyles() {
-  if (document.getElementById('dandelion-row-marker-styles')) return;
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'dandelion-row-marker-styles';
-  styleSheet.textContent = `
-    .${DEBUG_MARKER_CLASS} {
-      position: absolute; top: -0.8rem; left: 3rem; z-index: 1000;
-      background-color: rgba(253, 255, 153, 0.95); color: #171717;
-      padding: 2px 8px; font-size: 10px; font-family: monospace;
-      font-weight: bold; border: 1px solid rgba(0, 0, 0, 0.1);
-      border-radius: 4px; display: flex; align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15); pointer-events: auto;
-      white-space: nowrap; backdrop-filter: blur(4px);
-    }
-  `;
-  document.head.appendChild(styleSheet);
-}
-
-function createStatusPanel() {
-  const panel = document.createElement('div');
-  panel.id = 'dandelion-status-panel';
-  panel.style.cssText = `
-    position: fixed; top: 7rem; right: 0.75rem; z-index: 9997;
-    padding: 0.5rem 0.75rem; background: rgba(0, 0, 0, 0.7);
-    color: white; border-radius: 8px; font-size: 0.75rem;
-    pointer-events: none; display: flex; flex-direction: column;
-    gap: 2px; min-width: 100px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  `;
-  document.body.appendChild(panel);
-}
-
-function updateStatusPanel() {
-  const panel = document.getElementById('dandelion-status-panel');
-  if (!panel) return;
-  const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  const total = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
-  const done = total - pending.length;
-  panel.innerHTML = `
-    <div style="font-weight: bold; color: #ffd700;">Dandelion running</div>
-    <div>Progress: ${done}/${total}</div>
-    <div style="font-size: 0.7rem; opacity: 0.8;">${pending.length > 0 ? '⏳ Processing...' : '✅ All Done'}</div>
-  `;
 }
 
 function startAutomation(ids) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
   localStorage.setItem(TOTAL_KEY, ids.length.toString());
-  createStatusPanel();
+  syncStatusPanel();
   processNextItem();
 }
 
@@ -230,14 +168,8 @@ function resumeAutomation() {
 function finishAutomation() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(TOTAL_KEY);
-  const panel = document.getElementById('dandelion-status-panel');
-  if (panel) {
-    panel.innerHTML = `
-      <div style="font-weight: bold; color: #00ff00;">Task Finished</div>
-      <div>Done ✓</div>
-    `;
-    setTimeout(() => panel.remove(), 5000);
-  }
+  removeStatusPanel(5000);
+
   const mainBtn = document.getElementById('dandelion-not-checked-automation');
   const debugBtn = document.getElementById('dandelion-debug-toggle');
   if (mainBtn) {
@@ -249,7 +181,7 @@ function finishAutomation() {
     debugBtn.style.opacity = '1';
     debugBtn.style.cursor = 'pointer';
   }
-  document.querySelectorAll(`.${DEBUG_MARKER_CLASS}`).forEach((m) => {
+  document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '1';
     m.style.pointerEvents = 'auto';
   });
@@ -263,7 +195,7 @@ async function processNextItem() {
     finishAutomation();
     return;
   }
-  updateStatusPanel();
+  syncStatusPanel();
   const currentId = ids[0];
   const rowElement = await waitForRow(currentId, 10_000);
   if (rowElement) {
@@ -302,7 +234,7 @@ async function processNextItem() {
 function moveToNext(ids, continueImmediately = true) {
   ids.shift();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  updateStatusPanel();
+  syncStatusPanel();
   if (continueImmediately) setTimeout(processNextItem, 1000);
 }
 
