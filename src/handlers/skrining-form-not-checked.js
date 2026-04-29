@@ -7,7 +7,7 @@ import { getActiveConfig } from '../configuration';
 
 /**
  * Fitur otomatisasi klik menggunakan ID Baris (rowfrm...)
- * Alur: Pre-check -> Simpan State Lokal -> Eksekusi -> Refresh.
+ * Alur: Analisa DOM -> Bersihkan Antrian Local -> Eksekusi -> Refresh.
  */
 
 const STORAGE_KEY = 'dandelion_pending_not_checked';
@@ -43,22 +43,25 @@ export function initialize() {
 
           const masterList = await getNotCheckedList();
           if (masterList.length === 0) {
-            alert('Daftar target (Master List) kosong! Gunakan tombol 🐞 untuk menandai baris.');
+            alert('Daftar master kosong! Gunakan tombol 🐞 untuk menandai baris.');
             return;
           }
 
-          const executionList = filterAlreadyDoneIds(masterList);
-          if (executionList.length === 0) {
-            alert('Semua item dalam Master List sudah diperiksa atau selesai di halaman ini.');
+          // --- PROSES ANALISA ---
+          console.log('%cMemulai Analisa Antrian...', 'color: #007bff; font-weight: bold');
+          const validIds = analyzeTaskQueue(masterList);
+          
+          if (validIds.length === 0) {
+            alert('Hasil Analisa: Tidak ada item dari daftar yang perlu diproses di halaman ini.');
             return;
           }
 
           if (
             confirm(
-              `Mulai otomatisasi untuk ${executionList.length} item (dari total ${masterList.length} di Master List)?`,
+              `Ditemukan ${validIds.length} item yang perlu diproses (dari total ${masterList.length} di Master List). Mulai?`,
             )
           ) {
-            startAutomation(executionList);
+            startAutomation(validIds);
           }
         });
         document.body.appendChild(mainBtn);
@@ -76,7 +79,6 @@ export function initialize() {
       }
     }
 
-    // UI state updates
     if (isRunning) {
       updateUIForRunningState(mainBtn, debugBtn);
     }
@@ -84,6 +86,31 @@ export function initialize() {
 
   ensureButtonsMounted();
   resumeAutomation();
+}
+
+/**
+ * PROSES ANALISA: Memeriksa eksistensi dan status setiap ID di Master List.
+ * Menghasilkan daftar ID yang benar-benar ada dan belum selesai.
+ */
+function analyzeTaskQueue(masterList) {
+  return masterList.filter((id) => {
+    const el = document.getElementById(id);
+    if (!el) {
+      console.log(`%cAnalisa: ID ${id} tidak ditemukan di halaman. Skip.`, 'color: gray');
+      return false;
+    }
+
+    const row = el.closest('.grid');
+    if (row) {
+      const text = row.textContent;
+      if (text.includes('Tidak diperiksa') || text.includes('Selesai diperiksa')) {
+        console.log(`%cAnalisa: ID ${id} sudah selesai dikerjakan. Skip.`, 'color: #28a745');
+        return false;
+      }
+    }
+
+    return true;
+  });
 }
 
 function updateUIForRunningState(mainBtn, debugBtn) {
@@ -107,20 +134,6 @@ function syncStatusPanel() {
   const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   const total = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
   updateStatusPanel(total - pending.length, total, pending.length > 0);
-}
-
-function filterAlreadyDoneIds(ids) {
-  return ids.filter((id) => {
-    const el = document.getElementById(id);
-    const row = el ? el.closest('.grid') : null;
-    if (row) {
-      const text = row.textContent;
-      if (text.includes('Tidak diperiksa') || text.includes('Selesai diperiksa')) {
-        return false;
-      }
-    }
-    return true;
-  });
 }
 
 function toggleHelperMode() {
@@ -152,7 +165,7 @@ async function startAutomation(ids) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
   localStorage.setItem(TOTAL_KEY, ids.length.toString());
   syncStatusPanel();
-
+  
   const delay = config.notChecked?.itemDelay || 1000;
   setTimeout(processNextItem, delay);
 }
@@ -164,6 +177,7 @@ async function resumeAutomation() {
     if (ids.length > 0) {
       const config = await getActiveConfig();
       const delay = config.notChecked?.automationDelay || 2000;
+      console.log(`Automation resuming in ${delay}ms...`);
       setTimeout(processNextItem, delay);
     } else {
       finishAutomation();
@@ -196,20 +210,20 @@ function finishAutomation() {
 async function processNextItem() {
   const pendingStr = localStorage.getItem(STORAGE_KEY);
   if (!pendingStr) return;
-
+  
   const ids = JSON.parse(pendingStr);
   if (ids.length === 0) {
     finishAutomation();
     return;
   }
-
+  
   const config = await getActiveConfig();
   const ncConfig = config.notChecked || {};
   syncStatusPanel();
-
+  
   const currentId = ids[0];
   const rowElement = await waitForRow(currentId, 10_000);
-
+  
   if (rowElement) {
     const row = rowElement.closest('.grid');
     if (!row) {
@@ -228,22 +242,27 @@ async function processNextItem() {
     }
     row.style.backgroundColor = '#fff3e5';
     label.click();
-
+    
     try {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 5000);
       moveToNext(ids, false);
       confirmBtn.click();
-
+      
       setTimeout(() => {
         if (localStorage.getItem(STORAGE_KEY)) {
-          window.location.reload();
+           window.location.reload();
         }
       }, ncConfig.reloadDelay || 3000);
     } catch (error) {
+      console.error('Popup error:', error);
       moveToNext(ids, ncConfig.itemDelay);
     }
   } else {
-    moveToNext(ids, ncConfig.itemDelay);
+    console.log(`ID ${currentId} tidak ditemukan saat eksekusi. Melakukan analisa ulang antrian...`);
+    // Jika di tengah jalan elemen hilang (misal direfresh SPA), analisa ulang antrian
+    const remainingIds = analyzeTaskQueue(ids);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingIds));
+    processNextItem();
   }
 }
 
