@@ -22,9 +22,10 @@ export function updateStatusPanel(done, total, isProcessing) {
       background: rgba(0, 0, 0, 0.7);
       color: white;
       border-radius: 8px;
-      font-size: 0.75rem;
-      font-family: sans-serif;
-      backdrop-filter: blur(4px);
+      font-size: 0.6875rem;
+      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       pointer-events: none;
       display: flex;
       flex-direction: column;

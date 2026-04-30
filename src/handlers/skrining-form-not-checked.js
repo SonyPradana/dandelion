@@ -50,7 +50,7 @@ export function initialize() {
           // --- PROSES ANALISA ---
           console.log('%cMemulai Analisa Antrian...', 'color: #007bff; font-weight: bold');
           const validIds = analyzeTaskQueue(masterList);
-          
+
           if (validIds.length === 0) {
             alert('Hasil Analisa: Tidak ada item dari daftar yang perlu diproses di halaman ini.');
             return;
@@ -165,7 +165,7 @@ async function startAutomation(ids) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
   localStorage.setItem(TOTAL_KEY, ids.length.toString());
   syncStatusPanel();
-  
+
   const delay = config.notChecked?.itemDelay || 1000;
   setTimeout(processNextItem, delay);
 }
@@ -210,20 +210,20 @@ function finishAutomation() {
 async function processNextItem() {
   const pendingStr = localStorage.getItem(STORAGE_KEY);
   if (!pendingStr) return;
-  
+
   const ids = JSON.parse(pendingStr);
   if (ids.length === 0) {
     finishAutomation();
     return;
   }
-  
+
   const config = await getActiveConfig();
   const ncConfig = config.notChecked || {};
   syncStatusPanel();
-  
+
   const currentId = ids[0];
   const rowElement = await waitForRow(currentId, 10_000);
-  
+
   if (rowElement) {
     const row = rowElement.closest('.grid');
     if (!row) {
@@ -242,15 +242,15 @@ async function processNextItem() {
     }
     row.style.backgroundColor = '#fff3e5';
     label.click();
-    
+
     try {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 5000);
       moveToNext(ids, false);
       confirmBtn.click();
-      
+
       setTimeout(() => {
         if (localStorage.getItem(STORAGE_KEY)) {
-           window.location.reload();
+          window.location.reload();
         }
       }, ncConfig.reloadDelay || 3000);
     } catch (error) {
@@ -258,7 +258,9 @@ async function processNextItem() {
       moveToNext(ids, ncConfig.itemDelay);
     }
   } else {
-    console.log(`ID ${currentId} tidak ditemukan saat eksekusi. Melakukan analisa ulang antrian...`);
+    console.log(
+      `ID ${currentId} tidak ditemukan saat eksekusi. Melakukan analisa ulang antrian...`,
+    );
     // Jika di tengah jalan elemen hilang (misal direfresh SPA), analisa ulang antrian
     const remainingIds = analyzeTaskQueue(ids);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(remainingIds));

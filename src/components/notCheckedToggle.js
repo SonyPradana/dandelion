@@ -23,9 +23,11 @@ export function createNotCheckedToggle(identifier) {
   toggle.className = TOGGLE_CLASS;
   toggle.style.cssText = `
     cursor: pointer;
-    margin-left: 8px;
-    font-size: 14px;
+    margin-left: 0.5rem;
+    font-size: 0.6875rem;
+    font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
     user-select: none;
+    transition: opacity 0.2s ease;
   `;
 
   isInNotCheckedList(identifier).then((isActive) => {

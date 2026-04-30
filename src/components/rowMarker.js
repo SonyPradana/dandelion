@@ -16,17 +16,18 @@ function initializeStyles() {
       background-color: rgba(253, 255, 153, 0.95);
       color: #171717;
       padding: 2px 8px;
-      font-size: 10px;
+      font-size: 0.6875rem;
       font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
       font-weight: bold;
       border: 1px solid rgba(0, 0, 0, 0.1);
       border-radius: 4px;
       display: flex;
       align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       pointer-events: auto;
       white-space: nowrap;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       transition: opacity 0.2s ease;
     }
   `;
