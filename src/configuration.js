@@ -3,6 +3,12 @@ import browser from 'webextension-polyfill';
 const DEFAULT_CONFIG = {
   formSelector: '',
   surveySelector: '',
+  notChecked: {
+    url: '',
+    automationDelay: 2000,
+    itemDelay: 1000,
+    reloadDelay: 3000,
+  },
   activeProfile: 'profile1',
   scrollToBottom: true,
   profiles: {
@@ -10,12 +16,14 @@ const DEFAULT_CONFIG = {
       radioButtonKeywords: '',
       dropdownKeywords: '',
       excludes: '',
+      notCheckedList: '',
       pinneds: {},
     },
     profile2: {
       radioButtonKeywords: '',
       dropdownKeywords: '',
       excludes: '',
+      notCheckedList: '',
       pinneds: {},
     },
   },
@@ -42,7 +50,13 @@ export function setAgreement(value) {
  */
 export function getFullConfig() {
   return browser.storage.local.get(Object.keys(DEFAULT_CONFIG)).then((result) => {
-    // Deep merge with defaults to ensure all keys are present
+    // Deep merge with defaults for global objects
+    const notChecked = {
+      ...DEFAULT_CONFIG.notChecked,
+      ...(result.notChecked || {}),
+    };
+
+    // Deep merge for profiles
     const profiles = {
       ...DEFAULT_CONFIG.profiles,
       ...(result.profiles || {}),
@@ -53,6 +67,7 @@ export function getFullConfig() {
     return {
       formSelector: result.formSelector ?? DEFAULT_CONFIG.formSelector,
       surveySelector: result.surveySelector ?? DEFAULT_CONFIG.surveySelector,
+      notChecked,
       activeProfile: result.activeProfile ?? DEFAULT_CONFIG.activeProfile,
       scrollToBottom: result.scrollToBottom ?? DEFAULT_CONFIG.scrollToBottom,
       profiles,
@@ -62,7 +77,6 @@ export function getFullConfig() {
 
 /**
  * Gets the configuration for the currently active profile.
- * @returns {Promise<{form: string, survey: string, radioButtonKeywords: string, dropdownKeywords: string}>}
  */
 export function getActiveConfig() {
   return getFullConfig().then((config) => {
@@ -70,6 +84,7 @@ export function getActiveConfig() {
     return {
       form: config.formSelector,
       survey: config.surveySelector,
+      notChecked: config.notChecked, // Grouped object
       scrollToBottom: config.scrollToBottom,
       ...activeProfileSettings,
     };

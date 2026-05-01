@@ -382,3 +382,40 @@ body {
 .collapsible-content-native {
   padding: 20px 15px 10px;
 }
+
+/* Delay Settings UI */
+.delay-settings-grid {
+  display: grid;
+  grid-template-cols: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.form-group-sm {
+  margin-bottom: 0;
+}
+
+.form-group-sm label {
+  font-size: 10px;
+  white-space: nowrap;
+  margin-bottom: 4px;
+  color: var(--text-color-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group-sm input {
+  padding: 6px 8px;
+  font-size: 11px;
+  border: 1px solid var(--border-color-medium);
+  border-radius: var(--border-radius-medium);
+  width: 100%;
+  background: var(--background-color-component);
+  transition: border-color 0.2s;
+}
+
+.form-group-sm input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
