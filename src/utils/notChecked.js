@@ -1,8 +1,8 @@
 import { getFullConfig, setConfig } from '../configuration.js';
 
 /**
- * Retrieves the current active profile's notCheckedList as an array.
- * @returns {Promise<string[]>}
+ * Retrieves the "Not Checked" master list for the currently active profile.
+ * @returns {Promise<string[]>} A promise that resolves to an array of row IDs.
  */
 export async function getNotCheckedList() {
   const fullConfig = await getFullConfig();
@@ -13,8 +13,8 @@ export async function getNotCheckedList() {
 }
 
 /**
- * Saves the provided array back to the active profile's notCheckedList.
- * @param {string[]} listArray
+ * Saves the "Not Checked" master list back to the active profile's configuration.
+ * @param {string[]} listArray - The array of row IDs to save.
  * @returns {Promise<void>}
  */
 async function saveNotCheckedList(listArray) {
@@ -30,9 +30,9 @@ async function saveNotCheckedList(listArray) {
 }
 
 /**
- * Checks if an ID is in the notCheckedList.
- * @param {string} id
- * @returns {Promise<boolean>}
+ * Checks if a specific ID exists in the "Not Checked" master list.
+ * @param {string} id - The row ID to check.
+ * @returns {Promise<boolean>} Resolves to true if the ID is in the list.
  */
 export async function isInNotCheckedList(id) {
   const list = await getNotCheckedList();
@@ -40,9 +40,9 @@ export async function isInNotCheckedList(id) {
 }
 
 /**
- * Toggles an ID in the notCheckedList.
- * @param {string} id
- * @returns {Promise<boolean>}
+ * Toggles an ID in the "Not Checked" master list (adds if missing, removes if present).
+ * @param {string} id - The row ID to toggle.
+ * @returns {Promise<boolean>} Resolves to the new presence state (true if added).
  */
 export async function toggleNotCheckedItem(id) {
   const list = await getNotCheckedList();

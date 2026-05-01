@@ -1,19 +1,23 @@
 /**
- * Deteksi apakah halaman siap diproses (Sedang Pemeriksaan).
+ * Checks if the page is in a state ready for processing (active examination).
+ * @returns {boolean} True if the page indicators show an active processing state.
  */
 export function isPageInProcessingState() {
   const content = document.body.textContent || '';
   const hasProcessingText = content.includes('Sedang Pemeriksaan');
 
   const hasFinishButton = Array.from(document.querySelectorAll('button, div')).some(
-    (el) => el.textContent.includes('Selesaikan Layanan') && !el.classList.contains('cursor-not-allowed'),
+    (el) =>
+      el.textContent.includes('Selesaikan Layanan') && !el.classList.contains('cursor-not-allowed'),
   );
 
   return hasProcessingText || hasFinishButton;
 }
 
 /**
- * Menghitung statistik antrian berdasarkan Master List dan kondisi DOM.
+ * Calculates queue statistics based on the master list and current DOM state.
+ * @param {string[]} masterList - The full list of IDs from the configuration.
+ * @returns {{ foundIds: string[], pendingIds: string[], doneIds: string[] }} Object containing categorized ID lists.
  */
 export function getQueueStats(masterList) {
   const foundIds = [];
@@ -39,9 +43,12 @@ export function getQueueStats(masterList) {
 }
 
 /**
- * Menunggu elemen baris muncul di DOM.
+ * Waits for a specific row element to appear in the DOM.
+ * @param {string} id - The ID of the element to wait for.
+ * @param {number} [timeout=10000] - Maximum time to wait in milliseconds.
+ * @returns {Promise<HTMLElement|null>} Resolves to the element if found, or null if timeout occurs.
  */
-export function waitForRow(id, timeout = 10000) {
+export function waitForRow(id, timeout = 10_000) {
   return new Promise((resolve) => {
     const startTime = Date.now();
     const check = () => {
@@ -55,7 +62,12 @@ export function waitForRow(id, timeout = 10000) {
 }
 
 /**
- * Menunggu elemen spesifik muncul berdasarkan selector dan teks.
+ * Waits for a generic element to appear based on selector and text content.
+ * @param {string} selector - CSS selector to search for.
+ * @param {string} textContent - Text content that the element must contain.
+ * @param {number} [timeout=5000] - Maximum time to wait in milliseconds.
+ * @returns {Promise<HTMLElement>} Resolves to the found element.
+ * @throws {Error} If the element is not found within the timeout period.
  */
 export function waitForElement(selector, textContent, timeout = 5000) {
   return new Promise((resolve, reject) => {

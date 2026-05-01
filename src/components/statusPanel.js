@@ -46,16 +46,16 @@ export function updateStatusPanel(done, total, status, options = {}) {
 
   let statusText = status;
   if (typeof status === 'boolean') {
-    statusText = status ? '⏳ Processing...' : '✅ All Done';
+    statusText = status ? '⏳ Sedang diproses...' : '✅ Selesai';
   }
 
-  const titleText = title || 'Dandelion Status';
+  const titleText = title || 'Status Tugas';
   const titleColor = onDelete ? '#ff4d4d' : '#ffd700';
 
   panel.innerHTML = `
     <div style="font-weight: bold; color: ${titleColor}; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px; margin-bottom: 4px; font-size: 10px; letter-spacing: 0.5px;">${titleText.toUpperCase()}</div>
     <div style="display: flex; justify-content: space-between; gap: 15px; align-items: center;">
-      <span style="opacity: 0.8;">Progress</span>
+      <span style="opacity: 0.8;">Progres</span>
       <span style="font-weight: bold; font-size: 12px;">${done}/${total}</span>
     </div>
     <div style="font-size: 0.6rem; opacity: 0.7; font-style: italic;">${statusText}</div>
@@ -89,7 +89,7 @@ export function updateStatusPanel(done, total, status, options = {}) {
     };
     deleteBtn.onclick = (e) => {
       e.stopPropagation();
-      if (confirm('Hentikan proses berjalan dan hapus antrian lokal?')) {
+      if (confirm('Hentikan aktivitas ini dan hapus tugas?')) {
         onDelete();
       }
     };
@@ -109,8 +109,8 @@ export function removeStatusPanel(delay = 0) {
 
   if (delay > 0) {
     panel.innerHTML = `
-      <div style="font-weight: bold; color: #00ff00; padding: 5px 0;">Task Finished</div>
-      <div style="font-size: 0.6rem;">All tasks completed ✓</div>
+      <div style="font-weight: bold; color: #00ff00; padding: 5px 0;">Selesai</div>
+      <div style="font-size: 0.6rem;">Seluruh tugas telah diproses ✓</div>
     `;
     setTimeout(() => {
       const p = document.getElementById(STATUS_PANEL_ID);
