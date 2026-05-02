@@ -44,9 +44,10 @@ function initializeStyles() {
 /**
  * Creates a debug marker element with specific styling, including an exclude toggle.
  * @param {string} identifier - The text to display inside the marker and the data-name for the exclude toggle.
+ * @param {Object} [config] - Optional configuration object to initialize toggle states.
  * @returns {HTMLDivElement} The created marker element.
  */
-export function debugMarker(identifier) {
+export function debugMarker(identifier, config) {
   initializeStyles();
 
   const marker = document.createElement('div');
@@ -58,13 +59,25 @@ export function debugMarker(identifier) {
   const questionElement = document.querySelector(`[data-name="${identifier}"]`);
   const field = questionElement ? detectFieldType(questionElement) : null;
 
+  // Determine initial states from config if available
+  let initialIsPinned = undefined;
+  let initialIsExcluded = undefined;
+
+  if (config) {
+    const pinneds = config.pinneds || {};
+    initialIsPinned = Object.prototype.hasOwnProperty.call(pinneds, identifier);
+
+    const excludesArray = (config.excludes && config.excludes.split(';')) || [];
+    initialIsExcluded = excludesArray.includes(identifier);
+  }
+
   if (field) {
-    createPinToggle(identifier, field.getValue).then(function (pinToggle) {
+    createPinToggle(identifier, field.getValue, config, initialIsPinned).then(function (pinToggle) {
       marker.insertBefore(pinToggle, excludeToggle);
     });
   }
 
-  const excludeToggle = createExcludeToggle(identifier);
+  const excludeToggle = createExcludeToggle(identifier, config, initialIsExcluded);
   marker.appendChild(excludeToggle);
 
   return marker;

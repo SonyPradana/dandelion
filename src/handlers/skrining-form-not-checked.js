@@ -2,8 +2,7 @@ import { button } from '../components/button';
 import { debugButton } from '../components/debugButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
-import { getNotCheckedList } from '../utils/notChecked';
-import { getActiveConfig } from '../configuration';
+import { parseNotCheckedList } from '../utils/notChecked';
 import {
   isPageInProcessingState,
   getQueueStats,
@@ -20,11 +19,13 @@ const TOTAL_KEY = 'dandelion_total_not_checked';
 const ROW_MARKER_CLASS = 'dandelion-row-marker';
 
 let isAutomationActive = false;
+let currentConfig = null;
 
 /**
  * Initializes the Not-Checked handler and starts the page state monitor.
  */
-export function initialize() {
+export function initialize(config) {
+  currentConfig = config;
   startStateMonitor();
 }
 
@@ -88,7 +89,7 @@ function ensureButtonsMounted(isProcessing) {
           }
         }
 
-        const masterList = await getNotCheckedList();
+        const masterList = parseNotCheckedList(currentConfig);
         if (masterList.length === 0) {
           alert('Daftar target kosong. Gunakan fitur 🐞 untuk menandai baris.');
           return;
@@ -176,7 +177,7 @@ async function toggleHelperMode() {
     return;
   }
 
-  const masterList = await getNotCheckedList();
+  const masterList = parseNotCheckedList(currentConfig);
   const stats = getQueueStats(masterList);
 
   updateStatusPanel(stats.doneIds.length, stats.foundIds.length, 'Mode Debug Aktif 🐞', {
@@ -201,7 +202,7 @@ async function toggleHelperMode() {
       titleColumn.style.position = 'relative';
     }
 
-    titleColumn.appendChild(createRowMarker(el.id));
+    titleColumn.appendChild(createRowMarker(el.id, currentConfig));
   });
 }
 
@@ -212,12 +213,11 @@ async function toggleHelperMode() {
  */
 async function startAutomation(pendingIds, totalFoundOnPage) {
   isAutomationActive = true;
-  const config = await getActiveConfig();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingIds));
   localStorage.setItem(TOTAL_KEY, totalFoundOnPage.toString());
   syncStatusPanel();
 
-  const delay = config.notChecked?.itemDelay || 1000;
+  const delay = currentConfig.notChecked?.itemDelay || 1000;
   setTimeout(processNextItem, delay);
 }
 
@@ -229,8 +229,7 @@ async function resumeAutomation() {
   if (pending) {
     const ids = JSON.parse(pending);
     if (ids.length > 0) {
-      const config = await getActiveConfig();
-      const delay = config.notChecked?.automationDelay || 2000;
+      const delay = currentConfig.notChecked?.automationDelay || 2000;
       setTimeout(processNextItem, delay);
     } else {
       finishAutomation();
@@ -282,8 +281,7 @@ async function processNextItem() {
     return;
   }
 
-  const config = await getActiveConfig();
-  const ncConfig = config.notChecked || {};
+  const ncConfig = currentConfig.notChecked || {};
   syncStatusPanel();
 
   const currentId = ids[0];
@@ -322,7 +320,7 @@ async function processNextItem() {
       moveToNext(ids, ncConfig.itemDelay);
     }
   } else {
-    const masterList = await getNotCheckedList();
+    const masterList = parseNotCheckedList(currentConfig);
     const stats = getQueueStats(masterList);
 
     if (stats.pendingIds.length === 0) {

@@ -16,11 +16,11 @@ function initialize() {
     const notCheckedPattern = config.notChecked?.url;
 
     if (notCheckedPattern && currentURL.includes(notCheckedPattern)) {
-      initializeNotChecked();
+      initializeNotChecked(config);
     } else if (config.survey && currentURL.includes(config.survey)) {
-      initializeSkriningForm();
+      initializeSkriningForm(config);
     } else if (config.form && currentURL.includes(config.form)) {
-      initializeSkrining();
+      initializeSkrining(config);
     }
   });
 }

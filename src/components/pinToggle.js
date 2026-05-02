@@ -1,4 +1,10 @@
-import { addPinnedItem, removePinnedItem, isPinned } from '../utils/pinneds.js';
+import { getFullConfig, setConfig } from '../configuration.js';
+import {
+  isPinned,
+  addPinnedItemLogic,
+  removePinnedItemLogic,
+  getPinnedItems,
+} from '../utils/pinneds.js';
 
 const PIN_TOGGLE_CLASS = 'dandelion-pin-toggle';
 
@@ -23,80 +29,52 @@ function initializeStyles() {
       transition: opacity 0.2s ease, color 0.2s ease;
       opacity: 0.5;
     }
-    .${PIN_TOGGLE_CLASS}:hover {
-      background-color: rgba(0, 0, 0, 0.12);
-    }
-    .${PIN_TOGGLE_CLASS}:focus {
-      outline: 2px solid #161616;
-      outline-offset: 1px;
-    }
-    .${PIN_TOGGLE_CLASS}.active {
-      opacity: 1;
-      color: #161616;
-    }
-    .${PIN_TOGGLE_CLASS}.loading {
-      opacity: 0.5;
-      pointer-events: none;
-    }
+    .${PIN_TOGGLE_CLASS}:hover { background-color: rgba(0, 0, 0, 0.12); }
+    .${PIN_TOGGLE_CLASS}.active { opacity: 1; color: #161616; }
+    .${PIN_TOGGLE_CLASS}.loading { opacity: 0.5; pointer-events: none; }
   `;
   document.head.appendChild(styleSheet);
   stylesInitialized = true;
 }
 
-/**
- * Updates the pin toggle button state.
- *
- * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {boolean} pinned - Whether the item is pinned.
- */
 function updateToggleState(toggleElement, pinned) {
   toggleElement.textContent = '📌';
   toggleElement.classList.toggle('active', pinned);
   toggleElement.setAttribute('aria-label', pinned ? 'Unpin this field' : 'Pin this field');
 }
 
-/**
- * Handles the toggle pin action.
- *
- * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {string} identifier - The data-name identifier.
- * @param {Function} getValue - Callback to get current field value.
- */
 async function handleToggle(toggleElement, identifier, getValue) {
   toggleElement.classList.add('loading');
-
   try {
-    const currentPinned = await isPinned(identifier);
-    const nowPinned = !currentPinned;
+    const fullConfig = await getFullConfig();
+    const activeProfile = fullConfig.activeProfile;
+    const profile = fullConfig.profiles[activeProfile];
+    const currentPinneds = getPinnedItems(profile);
 
-    if (nowPinned) {
-      const currentValue = getValue();
-      if (currentValue !== null) {
-        await addPinnedItem(identifier, currentValue);
-      }
+    const alreadyPinned = Object.prototype.hasOwnProperty.call(currentPinneds, identifier);
+    let updatedPinneds = null;
+
+    if (alreadyPinned) {
+      updatedPinneds = removePinnedItemLogic(identifier, currentPinneds);
     } else {
-      await removePinnedItem(identifier);
+      const value = getValue();
+      if (value === null) return;
+      updatedPinneds = addPinnedItemLogic(identifier, value, currentPinneds);
     }
 
-    updateToggleState(toggleElement, nowPinned);
+    fullConfig.profiles[activeProfile].pinneds = updatedPinneds;
+    await setConfig(fullConfig);
+
+    updateToggleState(toggleElement, !alreadyPinned);
   } catch (error) {
-    console.error('Failed to toggle pin:', error);
+    console.error('Dandelion: Failed to toggle pin:', error);
     toggleElement.textContent = '⚠️';
-    toggleElement.setAttribute('aria-label', 'Error toggling pin state');
   } finally {
     toggleElement.classList.remove('loading');
   }
 }
 
-/**
- * Creates a toggle button to pin a field value.
- * Does not query the DOM directly - relies on getValue callback provided by the caller.
- *
- * @param {string} identifier - The data-name for the element.
- * @param {Function} getValue - Callback that returns the current field value.
- * @returns {Promise<HTMLSpanElement>} The created pin toggle element.
- */
-export async function createPinToggle(identifier, getValue) {
+export async function createPinToggle(identifier, getValue, profileConfig, initialIsPinned) {
   initializeStyles();
 
   const pinToggle = document.createElement('span');
@@ -104,27 +82,15 @@ export async function createPinToggle(identifier, getValue) {
   pinToggle.setAttribute('role', 'button');
   pinToggle.setAttribute('tabindex', '0');
 
-  isPinned(identifier)
-    .then((pinned) => {
-      updateToggleState(pinToggle, pinned);
-    })
-    .catch((error) => {
-      console.error('Failed to check pin state:', error);
-      pinToggle.textContent = '⚠️';
-      pinToggle.setAttribute('aria-label', 'Error loading pin state');
-    });
+  if (initialIsPinned !== undefined) {
+    updateToggleState(pinToggle, initialIsPinned);
+  } else {
+    updateToggleState(pinToggle, isPinned(identifier, profileConfig));
+  }
 
   pinToggle.addEventListener('click', (e) => {
     e.stopPropagation();
     handleToggle(pinToggle, identifier, getValue);
-  });
-
-  pinToggle.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      e.stopPropagation();
-      handleToggle(pinToggle, identifier, getValue);
-    }
   });
 
   return pinToggle;

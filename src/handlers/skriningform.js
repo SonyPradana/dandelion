@@ -1,5 +1,4 @@
 import { button } from '../components/button';
-import { getActiveConfig } from '../configuration';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
@@ -9,7 +8,7 @@ import { fillPinnedFields } from './skriningform/fill-pinned-fields';
  * This button only trigger local form filling.
  * The use must consciously press the button to perform the action.
  */
-export async function initializeSkriningForm() {
+export function initializeSkriningForm(config) {
   let isDebugEnabled = false; // Initial state is off
 
   const tombol = button('dandelion-auto-fill');
@@ -24,7 +23,6 @@ export async function initializeSkriningForm() {
 
   if (tombol) {
     tombol.addEventListener('click', async () => {
-      const config = await getActiveConfig();
       const radioButtonKeywords =
         (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords =
@@ -149,7 +147,7 @@ export async function initializeSkriningForm() {
         }
 
         const dataName = element.getAttribute('data-name');
-        const marker = debugMarker(dataName);
+        const marker = debugMarker(dataName, config);
 
         // Ensure the parent is positioned to contain the absolute marker
         if (window.getComputedStyle(element).position === 'static') {

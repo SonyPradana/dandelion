@@ -1,4 +1,4 @@
-export function initializeSkrining() {
+export function initializeSkrining(config) {
   const radioClickedSet = new Set();
   let throttleTimeout = null;
   let observer = null;
