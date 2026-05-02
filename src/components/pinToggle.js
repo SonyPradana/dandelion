@@ -1,10 +1,5 @@
-import { getFullConfig, setConfig } from '../configuration.js';
-import {
-  isPinned,
-  addPinnedItemLogic,
-  removePinnedItemLogic,
-  getPinnedItems,
-} from '../utils/pinneds.js';
+import { configManager } from '../configuration.js';
+import { isPinned, addPinnedItemLogic, removePinnedItemLogic, getPinnedItems } from '../utils/pinneds.js';
 
 const PIN_TOGGLE_CLASS = 'dandelion-pin-toggle';
 
@@ -46,7 +41,7 @@ function updateToggleState(toggleElement, pinned) {
 async function handleToggle(toggleElement, identifier, getValue) {
   toggleElement.classList.add('loading');
   try {
-    const fullConfig = await getFullConfig();
+    const fullConfig = configManager.data;
     const activeProfile = fullConfig.activeProfile;
     const profile = fullConfig.profiles[activeProfile];
     const currentPinneds = getPinnedItems(profile);
@@ -63,7 +58,7 @@ async function handleToggle(toggleElement, identifier, getValue) {
     }
 
     fullConfig.profiles[activeProfile].pinneds = updatedPinneds;
-    await setConfig(fullConfig);
+    await configManager.sync();
 
     updateToggleState(toggleElement, !alreadyPinned);
   } catch (error) {

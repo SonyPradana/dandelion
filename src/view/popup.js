@@ -1,44 +1,42 @@
-import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
+import { configManager } from '../configuration';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');
-  let loadedConfig = null;
+  
+  // Load config once at start
+  await configManager.load();
+  let loadedConfig = configManager.data;
 
   // Initialize KeywordList components
   const radioButtonKeywordsList = new KeywordList(
-    'radio-button-keywords-input', // source textbox
-    'radio-button-keywords-list', // list container
-    'radio-button-keywords-add-input', // add input
-    'radio-button-keywords-add', // add button
+    'radio-button-keywords-input',
+    'radio-button-keywords-list',
+    'radio-button-keywords-add-input',
+    'radio-button-keywords-add',
   );
 
   const dropdownKeywordsList = new KeywordList(
-    'dropdown-keywords-input', // source textbox
-    'dropdown-keywords-list', // list container
-    'dropdown-keywords-add-input', // add input
-    'dropdown-keywords-add', // add button
+    'dropdown-keywords-input',
+    'dropdown-keywords-list',
+    'dropdown-keywords-add-input',
+    'dropdown-keywords-add',
   );
 
   const notCheckedList = new KeywordList(
-    'not-checked-list-input', // source textbox
-    'not-checked-list-container', // list container
-    'not-checked-list-add-input', // add input
-    'not-checked-list-add', // add button
+    'not-checked-list-input',
+    'not-checked-list-container',
+    'not-checked-list-add-input',
+    'not-checked-list-add',
   );
 
   window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList, notCheckedList };
   let pinnedValuesList = null;
 
-  /**
-   * Toggles the enabled/disabled state of the configuration tab and its contents.
-   * @param {boolean} isAgreed - Whether the user has agreed to the terms.
-   */
   function updateConfigState(isAgreed) {
     configWrapper.classList.toggle('disabled', !isAgreed);
-
     const formElements = configWrapper.querySelectorAll('input, select, button, a');
     formElements.forEach((element) => {
       element.disabled = !isAgreed;
@@ -46,17 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Agreement Tab Logic ---
-  getAgreement().then((agreed) => {
-    if (agreeCheckbox) {
-      agreeCheckbox.checked = agreed;
-    }
-    updateConfigState(agreed);
-  });
+  const agreed = configManager.getAgreement();
+  if (agreeCheckbox) {
+    agreeCheckbox.checked = agreed;
+  }
+  updateConfigState(agreed);
 
   if (agreeCheckbox) {
-    agreeCheckbox.addEventListener('change', () => {
+    agreeCheckbox.addEventListener('change', async () => {
       const isAgreed = agreeCheckbox.checked;
-      setAgreement(isAgreed);
+      await configManager.setAgreement(isAgreed);
       updateConfigState(isAgreed);
     });
   }
@@ -69,10 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     button.addEventListener('click', () => {
       if (button.disabled) return;
       const tabName = button.dataset.tab;
-
       tabButtons.forEach((btn) => btn.classList.remove('active'));
       button.classList.add('active');
-
       tabContents.forEach((content) => {
         content.id === tabName
           ? content.classList.add('active')
@@ -96,10 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const profileSelect = document.getElementById('profile-select');
   const excludesInput = document.getElementById('excludes');
 
-  /**
-   * Updates the form inputs based on the selected profile in the loaded config.
-   * @param {string} selectedProfile - The key of the profile to load ('profile1' or 'profile2').
-   */
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
 
@@ -107,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
     formInput.value = loadedConfig.formSelector;
     surveyInput.value = loadedConfig.surveySelector;
 
-    // Load Not Checked Group
     const nc = loadedConfig.notChecked || {};
     notCheckedUrlInput.value = nc.url || '';
     notCheckedAutomationDelayInput.value = nc.automationDelay || 2000;
@@ -116,12 +106,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     scrollBottomCheckbox.checked = loadedConfig.scrollToBottom || false;
 
-    // Set values to textboxes (KeywordList components will auto-sync via event listener)
     radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
     dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
     notCheckedListInput.value = profileSettings.notCheckedList || '';
 
-    // Trigger input event to sync with KeywordList components
     radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
     dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
     notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -132,68 +120,52 @@ document.addEventListener('DOMContentLoaded', () => {
       pinnedValuesList.setData(profileSettings.pinneds || {});
     }
 
-    // Update select box selection
     profileSelect.value = selectedProfile;
   }
 
-  // Load initial config and set up profile switching
-  getFullConfig().then((config) => {
-    loadedConfig = config;
+  // Initialize UI with loaded config
+  const activeProfileSettings = loadedConfig.profiles[loadedConfig.activeProfile];
+  pinnedValuesList = new KeyValueList(
+    'pinned-values-container',
+    activeProfileSettings.pinneds || {},
+    (newPinneds) => {
+      if (loadedConfig) {
+        const selectedProfile = profileSelect.value;
+        loadedConfig.profiles[selectedProfile].pinneds = newPinneds;
+      }
+    },
+  );
 
-    // Initialize KeyValueList component with onChange callback
-    const activeProfileSettings = config.profiles[config.activeProfile];
-    pinnedValuesList = new KeyValueList(
-      'pinned-values-container',
-      activeProfileSettings.pinneds || {},
-      (newPinneds) => {
-        // Auto-update loadedConfig when pinneds change
-        if (loadedConfig) {
-          const selectedProfile = profileSelect.value;
-          loadedConfig.profiles[selectedProfile].pinneds = newPinneds;
-        }
-      },
-    );
+  updateFormForProfile(loadedConfig.activeProfile);
+  profileSelect.addEventListener('change', (event) => updateFormForProfile(event.target.value));
 
-    updateFormForProfile(config.activeProfile);
-
-    profileSelect.addEventListener('change', (event) => updateFormForProfile(event.target.value));
-  });
-
-  // Save button logic
   if (saveConfigBtn) {
-    saveConfigBtn.addEventListener('click', () => {
+    saveConfigBtn.addEventListener('click', async () => {
       if (!loadedConfig) return;
 
       const selectedProfile = profileSelect.value;
-
-      // Update the loadedConfig object with current form values
       loadedConfig.activeProfile = selectedProfile;
       loadedConfig.formSelector = formInput.value;
       loadedConfig.surveySelector = surveyInput.value;
 
-      // Save Not Checked Group
       if (!loadedConfig.notChecked) loadedConfig.notChecked = {};
       loadedConfig.notChecked.url = notCheckedUrlInput.value;
-      loadedConfig.notChecked.automationDelay =
-        parseInt(notCheckedAutomationDelayInput.value) || 2000;
+      loadedConfig.notChecked.automationDelay = parseInt(notCheckedAutomationDelayInput.value) || 2000;
       loadedConfig.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
       loadedConfig.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 3000;
 
       loadedConfig.scrollToBottom = scrollBottomCheckbox.checked;
 
-      // Get values from textboxes (already synced by KeywordList components)
       loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
       loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
       loadedConfig.profiles[selectedProfile].notCheckedList = notCheckedListInput.value;
-
       loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
 
-      // Get pinneds from KeyValueList (already auto-synced via onChange callback)
       if (pinnedValuesList) {
         loadedConfig.profiles[selectedProfile].pinneds = pinnedValuesList.getData();
       }
 
-      setConfig(loadedConfig);
+      await configManager.setFullConfig(loadedConfig);
 
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
@@ -209,18 +181,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();
-    getFullConfig().then((config) => {
-      const configStr = JSON.stringify(config, null, 2);
-      const blob = new Blob([configStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'dandelion-config.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
+    const configStr = JSON.stringify(loadedConfig, null, 2);
+    const blob = new Blob([configStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dandelion-config.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   });
 
   importLink.addEventListener('click', (event) => {
@@ -230,27 +200,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   importFileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const importedConfig = JSON.parse(e.target.result);
-
-        // Basic validation
         if (!importedConfig.profiles || !importedConfig.activeProfile) {
           throw new Error('Invalid config file format.');
         }
-
-        // Save and reload
-        setConfig(importedConfig);
-        loadedConfig = importedConfig;
-        updateFormForProfile(importedConfig.activeProfile);
+        await configManager.setFullConfig(importedConfig);
+        loadedConfig = configManager.data;
+        updateFormForProfile(loadedConfig.activeProfile);
       } catch (error) {
+        console.error('Dandelion: Import failed', error);
       } finally {
-        // Reset file input
         importFileInput.value = '';
       }
     };

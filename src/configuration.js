@@ -29,42 +29,38 @@ const DEFAULT_CONFIG = {
   },
 };
 
-/**
- * @returns {Promise<boolean>}
- */
-export function getAgreement() {
-  return browser.storage.local.get('termsAgreed').then((result) => result?.termsAgreed ?? false);
-}
+class ConfigManager {
+  data = null;
+  termsAgreed = false;
 
-/**
- * @param {boolean} value
- * @returns {void}
- */
-export function setAgreement(value) {
-  browser.storage.local.set({ termsAgreed: value });
-}
+  /**
+   * Loads configuration from storage and merges with defaults.
+   * @returns {Promise<Object>} The full configuration object.
+   */
+  async load() {
+    const keys = ['termsAgreed', ...Object.keys(DEFAULT_CONFIG)];
+    const result = await browser.storage.local.get(keys);
 
-/**
- * Gets the full configuration object, including all profiles.
- * @returns {Promise<typeof DEFAULT_CONFIG>}
- */
-export function getFullConfig() {
-  return browser.storage.local.get(Object.keys(DEFAULT_CONFIG)).then((result) => {
-    // Deep merge with defaults for global objects
+    this.termsAgreed = result.termsAgreed ?? false;
+
+    // Deep merge for nested objects
     const notChecked = {
       ...DEFAULT_CONFIG.notChecked,
       ...(result.notChecked || {}),
     };
 
-    // Deep merge for profiles
     const profiles = {
       ...DEFAULT_CONFIG.profiles,
       ...(result.profiles || {}),
     };
-    profiles.profile1 = { ...DEFAULT_CONFIG.profiles.profile1, ...(profiles.profile1 || {}) };
-    profiles.profile2 = { ...DEFAULT_CONFIG.profiles.profile2, ...(profiles.profile2 || {}) };
+    
+    // Ensure all profiles are merged with their defaults
+    Object.keys(profiles).forEach((key) => {
+      const defaultProfile = DEFAULT_CONFIG.profiles[key] || {};
+      profiles[key] = { ...defaultProfile, ...(profiles[key] || {}) };
+    });
 
-    return {
+    this.data = {
       formSelector: result.formSelector ?? DEFAULT_CONFIG.formSelector,
       surveySelector: result.surveySelector ?? DEFAULT_CONFIG.surveySelector,
       notChecked,
@@ -72,30 +68,60 @@ export function getFullConfig() {
       scrollToBottom: result.scrollToBottom ?? DEFAULT_CONFIG.scrollToBottom,
       profiles,
     };
-  });
-}
 
-/**
- * Gets the configuration for the currently active profile.
- */
-export function getActiveConfig() {
-  return getFullConfig().then((config) => {
-    const activeProfileSettings = config.profiles[config.activeProfile];
+    return this.data;
+  }
+
+  /**
+   * Gets the configuration for the currently active profile.
+   * @returns {Object}
+   */
+  getActiveConfig() {
+    if (!this.data) return null;
+    const activeProfileSettings = this.data.profiles[this.data.activeProfile];
     return {
-      form: config.formSelector,
-      survey: config.surveySelector,
-      notChecked: config.notChecked, // Grouped object
-      scrollToBottom: config.scrollToBottom,
+      form: this.data.formSelector,
+      survey: this.data.surveySelector,
+      notChecked: this.data.notChecked,
+      scrollToBottom: this.data.scrollToBottom,
       ...activeProfileSettings,
     };
-  });
+  }
+
+  /**
+   * Saves the current memory state back to storage.
+   * @returns {Promise<void>}
+   */
+  async sync() {
+    if (!this.data) return;
+    await browser.storage.local.set({
+      termsAgreed: this.termsAgreed,
+      ...this.data,
+    });
+  }
+
+  /**
+   * Updates the full configuration object in memory and syncs it.
+   * @param {Object} newData 
+   */
+  async setFullConfig(newData) {
+    this.data = { ...newData };
+    await this.sync();
+  }
+
+  /**
+   * Updates agreement state.
+   * @param {boolean} agreed 
+   */
+  async setAgreement(agreed) {
+    this.termsAgreed = agreed;
+    await browser.storage.local.set({ termsAgreed: agreed });
+  }
+
+  getAgreement() {
+    return this.termsAgreed;
+  }
 }
 
-/**
- * Saves the full configuration object.
- * @param {typeof DEFAULT_CONFIG} config
- * @returns {void}
- */
-export function setConfig(config) {
-  browser.storage.local.set(config);
-}
+// Export a singleton instance
+export const configManager = new ConfigManager();

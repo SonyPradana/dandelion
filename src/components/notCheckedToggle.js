@@ -1,4 +1,4 @@
-import { getFullConfig, setConfig } from '../configuration.js';
+import { configManager } from '../configuration.js';
 import { isInNotCheckedList, toggleNotCheckedLogic } from '../utils/notChecked.js';
 
 const TOGGLE_CLASS = 'dandelion-not-checked-toggle';
@@ -10,14 +10,14 @@ function updateToggleState(toggleElement, isActive) {
 async function handleToggle(toggleElement, identifier) {
   toggleElement.style.opacity = '0.5';
   try {
-    const fullConfig = await getFullConfig();
+    const fullConfig = configManager.data;
     const activeProfile = fullConfig.activeProfile;
     const currentList = fullConfig.profiles[activeProfile].notCheckedList || '';
 
     const { updatedList, nowPresent } = toggleNotCheckedLogic(identifier, currentList);
 
     fullConfig.profiles[activeProfile].notCheckedList = updatedList;
-    await setConfig(fullConfig);
+    await configManager.sync();
 
     updateToggleState(toggleElement, nowPresent);
   } catch (error) {

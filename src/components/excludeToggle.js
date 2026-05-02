@@ -1,4 +1,4 @@
-import { getFullConfig, setConfig } from '../configuration.js';
+import { configManager } from '../configuration.js';
 import { isExcluded, toggleExcludeLogic } from '../utils/excludes.js';
 
 const EXCLUDE_TOGGLE_CLASS = 'dandelion-exclude-toggle';
@@ -42,14 +42,14 @@ function updateToggleState(toggleElement, excluded) {
 async function handleToggle(toggleElement, identifier) {
   toggleElement.classList.add('loading');
   try {
-    const fullConfig = await getFullConfig();
+    const fullConfig = configManager.data;
     const activeProfile = fullConfig.activeProfile;
     const currentExcludes = fullConfig.profiles[activeProfile].excludes || '';
 
     const { updatedExcludes, nowExcluded } = toggleExcludeLogic(identifier, currentExcludes);
 
     fullConfig.profiles[activeProfile].excludes = updatedExcludes;
-    await setConfig(fullConfig);
+    await configManager.sync();
 
     updateToggleState(toggleElement, nowExcluded);
   } catch (error) {
