@@ -1,5 +1,6 @@
 import { button } from '../components/button';
 import { debugButton } from '../components/debugButton';
+import { zenModeButton } from '../components/zenModeButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
@@ -61,10 +62,12 @@ function startStateMonitor() {
 function ensureButtonsMounted(isProcessing) {
   let mainBtn = document.getElementById('dandelion-not-checked-automation');
   let debugBtn = document.getElementById('dandelion-debug-toggle');
+  let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 
   if (!isProcessing) {
     if (mainBtn) mainBtn.remove();
     if (debugBtn) debugBtn.remove();
+    if (zenBtn) zenBtn.remove();
     if (!isAutomationActive && localStorage.getItem(STORAGE_KEY) === null) {
       removeStatusPanel();
     }
@@ -105,6 +108,16 @@ function ensureButtonsMounted(isProcessing) {
         }
       });
       document.body.appendChild(mainBtn);
+    }
+  }
+
+  if (!zenBtn) {
+    zenBtn = zenModeButton(false);
+    if (zenBtn) {
+      zenBtn.addEventListener('click', () => {
+        console.log('Dandelion: Zen Mode button clicked!');
+      });
+      document.body.appendChild(zenBtn);
     }
   }
 
