@@ -5,6 +5,7 @@ import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
 import { getActiveConfig } from '../configuration';
+import { isZenModeActive, clearZenMode, setZenModeState } from '../utils/zenMode';
 import {
   isPageInProcessingState,
   getQueueStats,
@@ -33,10 +34,10 @@ export function initialize() {
  * Periodically monitors the page state to manage button visibility and resume pending tasks.
  */
 function startStateMonitor() {
-  setInterval(() => {
+  setInterval(async () => {
     const isProcessing = isPageInProcessingState();
 
-    ensureButtonsMounted(isProcessing);
+    await ensureButtonsMounted(isProcessing);
 
     const pendingData = localStorage.getItem(STORAGE_KEY);
     if (pendingData) {
@@ -59,16 +60,18 @@ function startStateMonitor() {
  * Manages the presence of automation control buttons based on the current page state.
  * @param {boolean} isProcessing - Indicates if the page is in an active examination state.
  */
-function ensureButtonsMounted(isProcessing) {
+async function ensureButtonsMounted(isProcessing) {
   let mainBtn = document.getElementById('dandelion-not-checked-automation');
   let debugBtn = document.getElementById('dandelion-debug-toggle');
   let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
+
+  const zenActive = await isZenModeActive();
 
   if (!isProcessing) {
     if (mainBtn) mainBtn.remove();
     if (debugBtn) debugBtn.remove();
     if (zenBtn) zenBtn.remove();
-    if (!isAutomationActive && localStorage.getItem(STORAGE_KEY) === null) {
+    if (!isAutomationActive && localStorage.getItem(STORAGE_KEY) === null && !zenActive) {
       removeStatusPanel();
     }
     return;
@@ -112,10 +115,20 @@ function ensureButtonsMounted(isProcessing) {
   }
 
   if (!zenBtn) {
-    zenBtn = zenModeButton(false);
+    zenBtn = zenModeButton(zenActive);
     if (zenBtn) {
-      zenBtn.addEventListener('click', () => {
-        console.log('Dandelion: Zen Mode button clicked!');
+      zenBtn.addEventListener('click', async () => {
+        if (isAutomationActive) return;
+
+        if (await isZenModeActive()) {
+          console.log('Dandelion: Zen Mode Deactivated (Simulated)');
+          await clearZenMode();
+          zenBtn.classList.remove('dandelion-zen-active');
+        } else {
+          console.log('Dandelion: Zen Mode Activated (Simulated)');
+          await setZenModeState({ active: true, queue: [], total: 0 });
+          zenBtn.classList.add('dandelion-zen-active');
+        }
       });
       document.body.appendChild(zenBtn);
     }
