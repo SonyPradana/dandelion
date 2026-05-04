@@ -83,7 +83,7 @@ async function ensureButtonsMounted(isProcessing) {
     mainBtn = button('dandelion-not-checked-automation');
     if (mainBtn) {
       mainBtn.addEventListener('click', async () => {
-        if (isAutomationActive) return;
+        if (isAutomationActive || await isZenModeActive()) return;
 
         const pending = localStorage.getItem(STORAGE_KEY);
         if (pending && JSON.parse(pending).length > 0) {
@@ -137,16 +137,16 @@ async function ensureButtonsMounted(isProcessing) {
   if (!debugBtn) {
     debugBtn = debugButton();
     if (debugBtn) {
-      debugBtn.addEventListener('click', () => {
-        if (isAutomationActive) return;
+      debugBtn.addEventListener('click', async () => {
+        if (isAutomationActive || await isZenModeActive()) return;
         toggleHelperMode();
       });
       document.body.appendChild(debugBtn);
     }
   }
 
-  if (isRunningLocally) {
-    updateUIForRunningState(mainBtn, debugBtn);
+  if (isRunningLocally || zenActive) {
+    updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive);
   }
 }
 
@@ -154,22 +154,45 @@ async function ensureButtonsMounted(isProcessing) {
  * Updates button appearance and disables interactions while automation is running.
  * @param {HTMLElement} mainBtn - The primary automation button.
  * @param {HTMLElement} debugBtn - The debug/helper mode toggle button.
+ * @param {HTMLElement} zenBtn - The zen mode toggle button.
+ * @param {boolean} isRunningLocally - Not Checked automation is active.
+ * @param {boolean} zenActive - Zen Mode is active.
  */
-function updateUIForRunningState(mainBtn, debugBtn) {
-  if (mainBtn) {
-    mainBtn.style.opacity = '0.5';
-    mainBtn.style.cursor = 'not-allowed';
-    mainBtn.style.filter = 'grayscale(1)';
+function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive) {
+  if (isRunningLocally) {
+    if (mainBtn) {
+      mainBtn.style.opacity = '0.5';
+      mainBtn.style.cursor = 'not-allowed';
+      mainBtn.style.filter = 'grayscale(1)';
+    }
+    if (debugBtn) {
+      debugBtn.style.opacity = '0.3';
+      debugBtn.style.cursor = 'not-allowed';
+    }
+    if (zenBtn) {
+      zenBtn.style.opacity = '0.3';
+      zenBtn.style.cursor = 'not-allowed';
+    }
   }
-  if (debugBtn) {
-    debugBtn.style.opacity = '0.3';
-    debugBtn.style.cursor = 'not-allowed';
+
+  if (zenActive) {
+    if (mainBtn) {
+      mainBtn.style.opacity = '0.3';
+      mainBtn.style.cursor = 'not-allowed';
+    }
+    if (debugBtn) {
+      debugBtn.style.opacity = '0.3';
+      debugBtn.style.cursor = 'not-allowed';
+    }
+    // Zen button itself stays interactive so we can turn it off
   }
+
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '0.3';
     m.style.pointerEvents = 'none';
   });
-  syncStatusPanel();
+
+  if (isRunningLocally) syncStatusPanel();
 }
 
 /**
@@ -276,6 +299,7 @@ function finishAutomation() {
 
   const mainBtn = document.getElementById('dandelion-not-checked-automation');
   const debugBtn = document.getElementById('dandelion-debug-toggle');
+  const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 
   if (mainBtn) {
     mainBtn.style.opacity = '1';
@@ -285,6 +309,10 @@ function finishAutomation() {
   if (debugBtn) {
     debugBtn.style.opacity = '1';
     debugBtn.style.cursor = 'pointer';
+  }
+  if (zenBtn) {
+    zenBtn.style.opacity = '1';
+    zenBtn.style.cursor = 'pointer';
   }
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '1';
