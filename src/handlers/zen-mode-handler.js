@@ -5,8 +5,7 @@ import {
   getNextFromQueue,
   clearZenMode,
 } from '../utils/zenMode';
-import { getNotCheckedList } from '../utils/notChecked';
-import { getQueueStats, waitForRow } from './inspection/not-checked-utils';
+import { waitForRow } from './inspection/not-checked-utils';
 
 let isAutomationActive = false;
 
@@ -19,7 +18,7 @@ export function initializeZenMode() {
     if (state.active && state.queue.length > 0 && !isAutomationActive) {
       resumeZenAutomation();
     }
-  }, 2000);
+  }, 500);
 }
 
 /**
@@ -88,9 +87,17 @@ async function processNextZenItem() {
     return;
   }
 
-  const el = document.getElementById(nextId);
-  const row = el ? el.closest('.grid, tr') : null;
-  const btn = el ? el.querySelector('button') : null;
+  // Wait for the row element to actually appear in DOM (up to 5 seconds)
+  const rowElement = await waitForRow(nextId, 5000);
+
+  if (!rowElement) {
+    await getNextFromQueue();
+    processNextZenItem();
+    return;
+  }
+
+  const row = rowElement.closest('.grid, tr');
+  const btn = rowElement.querySelector('button');
 
   // Re-verify if still pending and clickable
   const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
