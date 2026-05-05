@@ -24,22 +24,40 @@ export function initializeZenMode() {
 
 /**
  * Starts Zen Mode automation from scratch.
- * Scans the page and builds the queue from currently pending items.
+ * Scans the page for any available and active form buttons.
  */
 export async function startZenAutomation() {
-  const masterList = await getNotCheckedList();
-  const stats = getQueueStats(masterList);
+  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"]'));
+  const pendingIds = [];
 
-  if (stats.pendingIds.length === 0) {
-    alert('Tidak ada form aktif untuk diproses.');
+  rowElements.forEach(el => {
+    const row = el.closest('.grid, tr');
+    const button = el.querySelector('button');
+    
+    // Check if row is not "Done"
+    const isDone = row && (
+      row.textContent.includes('Selesai diperiksa') || 
+      row.querySelector('img[src*="icon-success"]')
+    );
+
+    // Check if button is clickable
+    const isClickable = button && !button.disabled && !button.classList.contains('cursor-not-allowed');
+
+    if (!isDone && isClickable) {
+      pendingIds.push(el.id);
+    }
+  });
+
+  if (pendingIds.length === 0) {
+    alert('Tidak ada form aktif yang ditemukan di halaman ini.');
     return;
   }
 
-  if (confirm(`Mulai Zen Mode untuk ${stats.pendingIds.length} form?`)) {
+  if (confirm(`Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`)) {
     const state = {
       active: true,
-      queue: stats.pendingIds,
-      total: stats.pendingIds.length
+      queue: pendingIds,
+      total: pendingIds.length
     };
     await setZenModeState(state);
     isAutomationActive = true;
@@ -57,7 +75,6 @@ async function resumeZenAutomation() {
 
 /**
  * Processes the next item in the Zen Mode queue.
- * Re-verifies if the item is still pending before clicking.
  */
 async function processNextZenItem() {
   const nextId = await peekNextFromQueue();
@@ -69,30 +86,32 @@ async function processNextZenItem() {
     return;
   }
 
-  // Check if current ID is still pending on the page
-  const masterList = await getNotCheckedList();
-  const stats = getQueueStats(masterList);
-  
-  if (!stats.pendingIds.includes(nextId)) {
-    console.log(`Dandelion: ${nextId} is no longer pending (done or skipped). Shifting queue...`);
-    await getNextFromQueue(); // Remove it
-    processNextZenItem(); // Move to next
+  const el = document.getElementById(nextId);
+  const row = el ? el.closest('.grid, tr') : null;
+  const btn = el ? el.querySelector('button') : null;
+
+  // Re-verify if still pending and clickable
+  const isDone = row && (
+    row.textContent.includes('Selesai diperiksa') || 
+    row.querySelector('img[src*="icon-success"]')
+  );
+  const isClickable = btn && !btn.disabled && !btn.classList.contains('cursor-not-allowed');
+
+  if (isDone || !isClickable) {
+    console.log(`Dandelion: ${nextId} is no longer active. Shifting...`);
+    await getNextFromQueue();
+    processNextZenItem();
     return;
   }
 
-  const rowElement = await waitForRow(nextId, 10_000);
-  if (rowElement) {
-    const btn = rowElement.querySelector('button');
-    if (btn) {
-      console.log('Dandelion: Clicking Input Data for', nextId);
-      rowElement.style.backgroundColor = '#e0f2fe'; // Light blue highlight
-      btn.click();
-      return;
-    }
+  if (btn) {
+    console.log('Dandelion: Clicking Input Data for', nextId);
+    if (row) row.style.backgroundColor = '#e0f2fe';
+    btn.click();
+    return;
   }
 
-  // If row not found or button missing, skip this one
-  console.warn('Dandelion: Could not find button for', nextId, '. Skipping.');
+  // Fallback
   await getNextFromQueue();
   processNextZenItem();
 }
