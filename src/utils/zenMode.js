@@ -18,6 +18,7 @@ const DEFAULT_STATE = { active: false, queue: [], total: 0 };
 export async function getZenModeState() {
   const result = await browser.storage.local.get(STORAGE_KEY);
   const state = result[STORAGE_KEY] || DEFAULT_STATE;
+  console.log('Dandelion [ZenMode]: Shared state retrieved:', state);
   return state;
 }
 
@@ -59,6 +60,18 @@ export async function peekNextFromQueue() {
   const state = await getZenModeState();
   if (state.queue.length === 0) return null;
   return state.queue[0];
+}
+
+/**
+ * Gets and removes the next ID from the queue.
+ * @returns {Promise<string|null>}
+ */
+export async function getNextFromQueue() {
+  const state = await getZenModeState();
+  if (state.queue.length === 0) return null;
+  const nextId = state.queue.shift();
+  await setZenModeState(state);
+  return nextId;
 }
 
 /**
