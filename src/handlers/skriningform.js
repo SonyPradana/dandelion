@@ -28,7 +28,7 @@ export async function initializeSkriningForm() {
   const zenActive = await isZenModeActive();
   if (zenActive) {
     const zenToggle = zenModeButton(true);
-    
+
     zenToggle.addEventListener('click', async () => {
       await clearZenMode();
       // Remove both buttons to signal Zen Mode is off

@@ -1,9 +1,9 @@
-import { 
-  getZenModeState, 
-  setZenModeState, 
-  peekNextFromQueue, 
+import {
+  getZenModeState,
+  setZenModeState,
+  peekNextFromQueue,
   getNextFromQueue,
-  clearZenMode 
+  clearZenMode,
 } from '../utils/zenMode';
 import { getNotCheckedList } from '../utils/notChecked';
 import { getQueueStats, waitForRow } from './inspection/not-checked-utils';
@@ -30,19 +30,20 @@ export async function startZenAutomation() {
   const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"]'));
   const pendingIds = [];
 
-  rowElements.forEach(el => {
+  rowElements.forEach((el) => {
     const row = el.closest('.grid, tr');
     const button = el.querySelector('button');
-    
+
     // Check if row is not "Done"
     const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
-    const isDone = row && (
-      row.textContent.includes('Selesai diperiksa') || 
-      (successImg && !successImg.src.includes('gray'))
-    );
+    const isDone =
+      row &&
+      (row.textContent.includes('Selesai diperiksa') ||
+        (successImg && !successImg.src.includes('gray')));
 
     // Check if button is clickable
-    const isClickable = button && !button.disabled && !button.classList.contains('cursor-not-allowed');
+    const isClickable =
+      button && !button.disabled && !button.classList.contains('cursor-not-allowed');
 
     if (!isDone && isClickable) {
       pendingIds.push(el.id);
@@ -58,7 +59,7 @@ export async function startZenAutomation() {
     const state = {
       active: true,
       queue: pendingIds,
-      total: pendingIds.length
+      total: pendingIds.length,
     };
     await setZenModeState(state);
     isAutomationActive = true;
@@ -79,9 +80,8 @@ async function resumeZenAutomation() {
  */
 async function processNextZenItem() {
   const nextId = await peekNextFromQueue();
-  
+
   if (!nextId) {
-    console.log('Dandelion: Zen Mode Finished');
     await clearZenMode();
     isAutomationActive = false;
     alert('Zen Mode Selesai!');
@@ -94,21 +94,19 @@ async function processNextZenItem() {
 
   // Re-verify if still pending and clickable
   const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
-  const isDone = row && (
-    row.textContent.includes('Selesai diperiksa') || 
-    (successImg && !successImg.src.includes('gray'))
-  );
+  const isDone =
+    row &&
+    (row.textContent.includes('Selesai diperiksa') ||
+      (successImg && !successImg.src.includes('gray')));
   const isClickable = btn && !btn.disabled && !btn.classList.contains('cursor-not-allowed');
 
   if (isDone || !isClickable) {
-    console.log(`Dandelion: ${nextId} is no longer active. Shifting...`);
     await getNextFromQueue();
     processNextZenItem();
     return;
   }
 
   if (btn) {
-    console.log('Dandelion: Clicking Input Data for', nextId);
     if (row) row.style.backgroundColor = '#e0f2fe';
     btn.click();
     return;

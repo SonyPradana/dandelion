@@ -85,7 +85,7 @@ async function ensureButtonsMounted(isProcessing) {
     mainBtn = button('dandelion-not-checked-automation');
     if (mainBtn) {
       mainBtn.addEventListener('click', async () => {
-        if (isStandardAutomationActive || await isZenModeActive()) return;
+        if (isStandardAutomationActive || (await isZenModeActive())) return;
 
         const pending = localStorage.getItem(STORAGE_KEY);
         if (pending && JSON.parse(pending).length > 0) {
@@ -154,7 +154,7 @@ async function ensureButtonsMounted(isProcessing) {
     debugBtn = debugButton();
     if (debugBtn) {
       debugBtn.addEventListener('click', async () => {
-        if (isStandardAutomationActive || await isZenModeActive()) return;
+        if (isStandardAutomationActive || (await isZenModeActive())) return;
         toggleHelperMode();
       });
       document.body.appendChild(debugBtn);

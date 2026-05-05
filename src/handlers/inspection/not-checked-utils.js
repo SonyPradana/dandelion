@@ -32,9 +32,10 @@ export function getQueueStats(masterList) {
       const text = row ? row.textContent : '';
 
       const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
-      const isDone = text.includes('Tidak diperiksa') || 
-                     text.includes('Selesai diperiksa') || 
-                     (successImg && !successImg.src.includes('gray'));
+      const isDone =
+        text.includes('Tidak diperiksa') ||
+        text.includes('Selesai diperiksa') ||
+        (successImg && !successImg.src.includes('gray'));
 
       if (isDone) {
         doneIds.push(id);

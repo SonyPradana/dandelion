@@ -18,13 +18,12 @@ const DEFAULT_STATE = { active: false, queue: [], total: 0 };
 export async function getZenModeState() {
   const result = await browser.storage.local.get(STORAGE_KEY);
   const state = result[STORAGE_KEY] || DEFAULT_STATE;
-  console.log('Dandelion [ZenMode]: Shared state retrieved:', state);
   return state;
 }
 
 /**
  * Saves the Zen Mode state to extension storage.
- * @param {ZenModeState} state 
+ * @param {ZenModeState} state
  * @returns {Promise<void>}
  */
 export async function setZenModeState(state) {
@@ -42,7 +41,7 @@ export async function isZenModeActive() {
 
 /**
  * Adds IDs to the Zen Mode queue.
- * @param {string[]} ids 
+ * @param {string[]} ids
  * @returns {Promise<void>}
  */
 export async function addToQueue(ids) {
