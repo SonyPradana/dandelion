@@ -5,7 +5,7 @@ import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
 import { getActiveConfig } from '../configuration';
-import { isZenModeActive, clearZenMode, setZenModeState } from '../utils/zenMode';
+import { isZenModeActive, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode-handler';
 import {
   isPageInProcessingState,
@@ -124,17 +124,7 @@ async function ensureButtonsMounted(isProcessing) {
 
         if (await isZenModeActive()) {
           await clearZenMode();
-          zenBtn.classList.remove('dandelion-zen-active');
-          // Reset other buttons
-          if (mainBtn) {
-            mainBtn.style.opacity = '1';
-            mainBtn.style.cursor = 'pointer';
-            mainBtn.style.filter = 'none';
-          }
-          if (debugBtn) {
-            debugBtn.style.opacity = '1';
-            debugBtn.style.cursor = 'pointer';
-          }
+          // UI will be restored by next interval of ensureButtonsMounted
         } else {
           startZenAutomation();
         }
@@ -163,7 +153,39 @@ async function ensureButtonsMounted(isProcessing) {
 
   if (isRunningLocally || zenActive) {
     updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive);
+  } else {
+    restoreUIState(mainBtn, debugBtn, zenBtn);
   }
+}
+
+/**
+ * Restores buttons to their normal active state.
+ * @param {HTMLElement} mainBtn
+ * @param {HTMLElement} debugBtn
+ * @param {HTMLElement} zenBtn
+ */
+function restoreUIState(mainBtn, debugBtn, zenBtn) {
+  if (mainBtn) {
+    mainBtn.style.opacity = '1';
+    mainBtn.style.cursor = 'pointer';
+    mainBtn.style.filter = 'none';
+    mainBtn.style.pointerEvents = 'auto';
+  }
+  if (debugBtn) {
+    debugBtn.style.opacity = '1';
+    debugBtn.style.cursor = 'pointer';
+    debugBtn.style.pointerEvents = 'auto';
+  }
+  if (zenBtn) {
+    zenBtn.style.opacity = '1';
+    zenBtn.style.cursor = 'pointer';
+    zenBtn.style.pointerEvents = 'auto';
+    zenBtn.classList.remove('dandelion-zen-active');
+  }
+  document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
+    m.style.opacity = '1';
+    m.style.pointerEvents = 'auto';
+  });
 }
 
 /**
