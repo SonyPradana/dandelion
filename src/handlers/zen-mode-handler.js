@@ -35,9 +35,10 @@ export async function startZenAutomation() {
     const button = el.querySelector('button');
     
     // Check if row is not "Done"
+    const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
     const isDone = row && (
       row.textContent.includes('Selesai diperiksa') || 
-      row.querySelector('img[src*="icon-success"]')
+      (successImg && !successImg.src.includes('gray'))
     );
 
     // Check if button is clickable
@@ -80,9 +81,10 @@ async function processNextZenItem() {
   const nextId = await peekNextFromQueue();
   
   if (!nextId) {
-    alert('Zen Mode Selesai!');
+    console.log('Dandelion: Zen Mode Finished');
     await clearZenMode();
     isAutomationActive = false;
+    alert('Zen Mode Selesai!');
     return;
   }
 
@@ -91,9 +93,10 @@ async function processNextZenItem() {
   const btn = el ? el.querySelector('button') : null;
 
   // Re-verify if still pending and clickable
+  const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
   const isDone = row && (
     row.textContent.includes('Selesai diperiksa') || 
-    row.querySelector('img[src*="icon-success"]')
+    (successImg && !successImg.src.includes('gray'))
   );
   const isClickable = btn && !btn.disabled && !btn.classList.contains('cursor-not-allowed');
 

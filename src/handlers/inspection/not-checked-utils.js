@@ -31,9 +31,10 @@ export function getQueueStats(masterList) {
       const row = el.closest('.grid, tr');
       const text = row ? row.textContent : '';
 
+      const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
       const isDone = text.includes('Tidak diperiksa') || 
                      text.includes('Selesai diperiksa') || 
-                     (row && row.querySelector('img[src*="icon-success"]'));
+                     (successImg && !successImg.src.includes('gray'));
 
       if (isDone) {
         doneIds.push(id);

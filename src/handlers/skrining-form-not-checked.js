@@ -141,6 +141,13 @@ async function ensureButtonsMounted(isProcessing) {
       });
       document.body.appendChild(zenBtn);
     }
+  } else {
+    // Update existing button state
+    if (zenActive) {
+      zenBtn.classList.add('dandelion-zen-active');
+    } else {
+      zenBtn.classList.remove('dandelion-zen-active');
+    }
   }
 
   if (!debugBtn) {
