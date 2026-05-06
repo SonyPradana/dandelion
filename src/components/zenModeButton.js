@@ -55,7 +55,32 @@ export function zenModeButton(isActive = false) {
     btn.classList.add('dandelion-zen-active');
   }
 
+  /**
+   * Updates the button state.
+   * @param {boolean} isDimmed
+   */
+  btn.setDimmed = (isDimmed) => {
+    if (isDimmed) {
+      btn.classList.add('dandelion-dimmed');
+    } else {
+      btn.classList.remove('dandelion-dimmed');
+    }
+  };
+
+  /**
+   * Toggles the active (animated) state.
+   * @param {boolean} active
+   */
+  btn.setActive = (active) => {
+    if (active) {
+      btn.classList.add('dandelion-zen-active');
+    } else {
+      btn.classList.remove('dandelion-zen-active');
+    }
+  };
+
   btn.addEventListener('mousedown', () => {
+    if (btn.classList.contains('dandelion-dimmed')) return;
     btn.style.transform = 'scale(0.95)';
   });
 

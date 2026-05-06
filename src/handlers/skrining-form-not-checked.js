@@ -131,13 +131,6 @@ async function ensureButtonsMounted(isProcessing) {
       });
       document.body.appendChild(zenBtn);
     }
-  } else {
-    // Update existing button state
-    if (zenActive) {
-      zenBtn.classList.add('dandelion-zen-active');
-    } else {
-      zenBtn.classList.remove('dandelion-zen-active');
-    }
   }
 
   if (!debugBtn) {
@@ -166,25 +159,18 @@ async function ensureButtonsMounted(isProcessing) {
  */
 function restoreUIState(mainBtn, debugBtn, zenBtn) {
   if (mainBtn) {
-    mainBtn.style.opacity = '1';
-    mainBtn.style.cursor = 'pointer';
-    mainBtn.style.filter = 'none';
-    mainBtn.style.pointerEvents = 'auto';
+    mainBtn.setRunning(false);
+    mainBtn.setDimmed(false);
   }
   if (debugBtn) {
-    debugBtn.style.opacity = '1';
-    debugBtn.style.cursor = 'pointer';
-    debugBtn.style.pointerEvents = 'auto';
+    debugBtn.setDimmed(false);
   }
   if (zenBtn) {
-    zenBtn.style.opacity = '1';
-    zenBtn.style.cursor = 'pointer';
-    zenBtn.style.pointerEvents = 'auto';
-    zenBtn.classList.remove('dandelion-zen-active');
+    zenBtn.setDimmed(false);
+    zenBtn.setActive(false);
   }
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
-    m.style.opacity = '1';
-    m.style.pointerEvents = 'auto';
+    m.classList.remove('dandelion-dimmed');
   });
 }
 
@@ -198,36 +184,19 @@ function restoreUIState(mainBtn, debugBtn, zenBtn) {
  */
 function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive) {
   if (isRunningLocally) {
-    if (mainBtn) {
-      mainBtn.style.opacity = '0.5';
-      mainBtn.style.cursor = 'not-allowed';
-      mainBtn.style.filter = 'grayscale(1)';
-    }
-    if (debugBtn) {
-      debugBtn.style.opacity = '0.3';
-      debugBtn.style.cursor = 'not-allowed';
-    }
-    if (zenBtn) {
-      zenBtn.style.opacity = '0.3';
-      zenBtn.style.cursor = 'not-allowed';
-    }
+    if (mainBtn) mainBtn.setRunning(true);
+    if (debugBtn) debugBtn.setDimmed(true);
+    if (zenBtn) zenBtn.setDimmed(true);
   }
 
   if (zenActive) {
-    if (mainBtn) {
-      mainBtn.style.opacity = '0.3';
-      mainBtn.style.cursor = 'not-allowed';
-    }
-    if (debugBtn) {
-      debugBtn.style.opacity = '0.3';
-      debugBtn.style.cursor = 'not-allowed';
-    }
-    // Zen button itself stays interactive so we can turn it off
+    if (mainBtn) mainBtn.setDimmed(true);
+    if (debugBtn) debugBtn.setDimmed(true);
+    if (zenBtn) zenBtn.setActive(true);
   }
 
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
-    m.style.opacity = '0.3';
-    m.style.pointerEvents = 'none';
+    m.classList.add('dandelion-dimmed');
   });
 
   if (isRunningLocally) syncStatusPanel();

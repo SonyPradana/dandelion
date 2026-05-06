@@ -30,6 +30,10 @@ function initializeStyles() {
       -webkit-backdrop-filter: blur(8px);
       transition: opacity 0.2s ease;
     }
+    .${ROW_MARKER_CLASS}.dandelion-dimmed {
+      opacity: 0.3 !important;
+      pointer-events: none !important;
+    }
   `;
   document.head.appendChild(styleSheet);
   stylesInitialized = true;

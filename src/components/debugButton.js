@@ -24,7 +24,20 @@ export function debugButton() {
       transition: all 0.2s ease-in-out;
     `;
 
+  /**
+   * Updates the button state.
+   * @param {boolean} isDimmed
+   */
+  debugToggle.setDimmed = (isDimmed) => {
+    if (isDimmed) {
+      debugToggle.classList.add('dandelion-dimmed');
+    } else {
+      debugToggle.classList.remove('dandelion-dimmed');
+    }
+  };
+
   debugToggle.addEventListener('mousedown', () => {
+    if (debugToggle.classList.contains('dandelion-dimmed')) return;
     debugToggle.style.transform = 'scale(0.95)';
   });
 
