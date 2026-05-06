@@ -6,7 +6,7 @@ import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel'
 import { getNotCheckedList } from '../utils/notChecked';
 import { getActiveConfig } from '../configuration';
 import { isZenModeActive, clearZenMode } from '../utils/zenMode';
-import { startZenAutomation, initializeZenMode } from './zen-mode-handler';
+import { startZenAutomation, initializeZenMode } from './zen-mode';
 import {
   isPageInProcessingState,
   getQueueStats,
