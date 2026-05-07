@@ -8,6 +8,7 @@ import { getActiveConfig } from '../configuration';
 import { isZenModeActive, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
 import { controlPanel } from '../components/controlPanel';
+import { notify } from '../components/notification';
 import {
   isPageInProcessingState,
   getQueueStats,
@@ -90,7 +91,7 @@ async function ensureButtonsMounted(isProcessing) {
 
         const pending = localStorage.getItem(STORAGE_KEY);
         if (pending && JSON.parse(pending).length > 0) {
-          if (confirm('Ada antrian yang belum selesai. Lanjutkan?')) {
+          if (await notify.confirm('Antrian Pending', 'Ada antrian yang belum selesai. Lanjutkan?')) {
             isStandardAutomationActive = true;
             resumeAutomation();
             return;
@@ -99,17 +100,17 @@ async function ensureButtonsMounted(isProcessing) {
 
         const masterList = await getNotCheckedList();
         if (masterList.length === 0) {
-          alert('Daftar target kosong. Gunakan fitur 🐞 untuk menandai baris.');
+          await notify.alert('Daftar Kosong', 'Daftar target kosong. Gunakan fitur 🐞 untuk menandai baris.');
           return;
         }
 
         const stats = getQueueStats(masterList);
         if (stats.pendingIds.length === 0) {
-          alert(`Analisa: ${stats.foundIds.length} item ditemukan, semuanya sudah selesai.`);
+          await notify.alert('Analisa Progres', `Analisa: ${stats.foundIds.length} item ditemukan, semuanya sudah selesai.`);
           return;
         }
 
-        if (confirm(`Mulai proses untuk ${stats.pendingIds.length} item yang terpilih?`)) {
+        if (await notify.confirm('Mulai Otomasi', `Mulai proses untuk ${stats.pendingIds.length} item yang terpilih?`)) {
           startAutomation(stats.pendingIds, stats.foundIds.length);
         }
       });
@@ -297,15 +298,16 @@ async function resumeAutomation() {
 
 /**
  * Performs cleanup of local storage and resets UI state when automation completes.
- */
-function finishAutomation() {
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(TOTAL_KEY);
-  isStandardAutomationActive = false;
+ function finishAutomation() {
+   localStorage.removeItem(STORAGE_KEY);
+   localStorage.removeItem(TOTAL_KEY);
+   isStandardAutomationActive = false;
 
-  removeStatusPanel(5000);
+   removeStatusPanel();
+   notify.info('Selesai', 'Seluruh tugas telah diproses ✓', 5000);
 
-  const mainBtn = document.getElementById('dandelion-not-checked-automation');
+   const mainBtn = document.getElementById('dandelion-not-checked-automation');
+ ...
   const debugBtn = document.getElementById('dandelion-debug-toggle');
   const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 
