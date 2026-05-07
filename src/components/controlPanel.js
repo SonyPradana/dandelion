@@ -92,6 +92,11 @@ class ControlPanel {
       // Avoid duplicates
       if (slot.contains(element)) return;
 
+      // Limit Slot 3 (Notifications) to 5 items
+      if (slotId === 3 && slot.children.length >= 5) {
+        slot.children[0].remove();
+      }
+
       if (slotId === 2 && element.id === 'dandelion-debug-toggle') {
         // Debug button should be first in DOM (rightmost in row-reverse)
         slot.prepend(element);

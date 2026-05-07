@@ -27,7 +27,25 @@ export function createBasePanel(id) {
       transition: all 0.3s ease;
       border: 1px solid rgba(255, 255, 255, 0.1);
       pointer-events: auto;
+      position: relative;
     `;
+
+    const closeBtn = document.createElement('div');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+      position: absolute;
+      top: 5px;
+      right: 8px;
+      cursor: pointer;
+      opacity: 0.5;
+      font-size: 14px;
+      line-height: 1;
+      transition: opacity 0.2s;
+    `;
+    closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+    closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
+    closeBtn.onclick = () => panel.remove();
+    panel.appendChild(closeBtn);
   }
 
   controlPanel.mount(panel, 3);

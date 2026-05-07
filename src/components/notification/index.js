@@ -8,9 +8,10 @@ export const notify = {
    * Simple flash info notification
    */
   info(title, message, duration = 3000) {
-    const { panel, setHeader, remove } = createBasePanel('dandelion-notify-info');
+    const id = `dandelion-info-${Date.now()}`;
+    const { panel, setHeader, remove } = createBasePanel(id);
     
-    panel.innerHTML = `
+    panel.innerHTML += `
       ${setHeader(title, '#4ade80')}
       <div style="font-size: 11px; line-height: 1.4; opacity: 0.9;">${message}</div>
     `;
@@ -24,6 +25,9 @@ export const notify = {
    * Alert notification (Promise based)
    */
   alert(title, message) {
+    const existing = document.querySelectorAll('[id^="dandelion-alert-"]');
+    existing.forEach(el => el.remove());
+
     return new Promise((resolve) => {
       const id = `dandelion-alert-${Date.now()}`;
       const { panel, setHeader, remove } = createBasePanel(id);
@@ -46,6 +50,9 @@ export const notify = {
    * Confirm notification (Promise based)
    */
   confirm(title, message) {
+    const existing = document.querySelectorAll('[id^="dandelion-confirm-"]');
+    existing.forEach(el => el.remove());
+
     return new Promise((resolve) => {
       const id = `dandelion-confirm-${Date.now()}`;
       const { panel, setHeader, remove } = createBasePanel(id);
