@@ -4,11 +4,36 @@ import { controlPanel } from '../controlPanel';
  * Shared base for all Slot 3 panels (Status, Alert, Confirm, etc.)
  */
 export function createBasePanel(id) {
+  const styleId = 'dandelion-panel-animations';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      @keyframes dandelion-slide-in {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+      }
+      @keyframes dandelion-fade-out {
+        from { opacity: 1; transform: scale(1); }
+        to { opacity: 0; transform: scale(0.95); }
+      }
+      .dandelion-panel-show {
+        animation: dandelion-slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      .dandelion-panel-hide {
+        animation: dandelion-fade-out 0.2s ease-in forwards;
+        pointer-events: none;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   let panel = document.getElementById(id);
   
   if (!panel) {
     panel = document.createElement('div');
     panel.id = id;
+    panel.classList.add('dandelion-panel-show');
     panel.style.cssText = `
       padding: 0.6rem 0.9rem;
       background: rgba(0, 0, 0, 0.6);
@@ -44,7 +69,10 @@ export function createBasePanel(id) {
     `;
     closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
     closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
-    closeBtn.onclick = () => panel.remove();
+    closeBtn.onclick = () => {
+      panel.classList.replace('dandelion-panel-show', 'dandelion-panel-hide');
+      panel.addEventListener('animationend', () => panel.remove(), { once: true });
+    };
     panel.appendChild(closeBtn);
   }
 
@@ -61,7 +89,9 @@ export function createBasePanel(id) {
       return headerHtml;
     },
     remove() {
-      panel.remove();
+      if (panel.classList.contains('dandelion-panel-hide')) return;
+      panel.classList.replace('dandelion-panel-show', 'dandelion-panel-hide');
+      panel.addEventListener('animationend', () => panel.remove(), { once: true });
     }
   };
 }
