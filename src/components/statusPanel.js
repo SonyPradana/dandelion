@@ -1,3 +1,5 @@
+import { controlPanel } from './controlPanel';
+
 const STATUS_PANEL_ID = 'dandelion-status-panel';
 
 /**
@@ -18,10 +20,6 @@ export function updateStatusPanel(done, total, status, options = {}) {
     panel = document.createElement('div');
     panel.id = STATUS_PANEL_ID;
     panel.style.cssText = `
-      position: fixed;
-      top: 7rem;
-      right: 0.75rem;
-      z-index: 9997;
       padding: 0.6rem 0.9rem;
       background: rgba(0, 0, 0, 0.6);
       color: white;
@@ -38,8 +36,9 @@ export function updateStatusPanel(done, total, status, options = {}) {
       transition: all 0.3s ease;
       border: 1px solid rgba(255, 255, 255, 0.1);
     `;
-    document.body.appendChild(panel);
   }
+
+  controlPanel.mount(panel, 3);
 
   // Always enable pointer events if onDelete is provided, otherwise disable
   panel.style.pointerEvents = onDelete ? 'auto' : 'none';

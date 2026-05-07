@@ -29,10 +29,6 @@ export function zenModeButton(isActive = false) {
   }
 
   const baseStyle = `
-    position: fixed;
-    top: 4.5rem;
-    right: 4.5rem;
-    z-index: 9998;
     padding: 0.3rem 0.75rem;
     background: rgba(255, 255, 255, 0.8);
     color: #3b82f6;

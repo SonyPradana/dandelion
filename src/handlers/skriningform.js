@@ -6,6 +6,7 @@ import { fillPinnedFields } from './skriningform/fill-pinned-fields';
 import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
+import { controlPanel } from '../components/controlPanel';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -23,7 +24,7 @@ export async function initializeSkriningForm() {
     showDebugInformation(isDebugEnabled);
   });
 
-  document.body.appendChild(debugToggle);
+  controlPanel.mount(debugToggle, 2);
 
   const zenActive = await isZenModeActive();
   if (zenActive) {
@@ -32,9 +33,9 @@ export async function initializeSkriningForm() {
     zenToggle.addEventListener('click', async () => {
       await clearZenMode();
       // Remove both buttons to signal Zen Mode is off
-      zenToggle.remove();
+      controlPanel.remove(zenToggle);
       const skipBtnEl = document.getElementById('dandelion-zen-skip');
-      if (skipBtnEl) skipBtnEl.remove();
+      if (skipBtnEl) controlPanel.remove(skipBtnEl);
     });
 
     const skipBtn = skipButton();
@@ -44,11 +45,11 @@ export async function initializeSkriningForm() {
       skipBtn.style.opacity = '0.5';
       skipBtn.style.pointerEvents = 'none';
       skipBtn.innerHTML = '✅ Skipped';
-      setTimeout(() => skipBtn.remove(), 1000);
+      setTimeout(() => controlPanel.remove(skipBtn), 1000);
     });
 
-    document.body.appendChild(zenToggle);
-    document.body.appendChild(skipBtn);
+    controlPanel.mount(zenToggle, 2);
+    controlPanel.mount(skipBtn, 2);
   }
 
   if (tombol) {
@@ -79,7 +80,7 @@ export async function initializeSkriningForm() {
         });
       }, 100);
     });
-    document.body.appendChild(tombol);
+    controlPanel.mount(tombol, 1);
   }
 
   /**

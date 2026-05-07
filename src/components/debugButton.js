@@ -7,10 +7,6 @@ export function debugButton() {
   debugToggle.id = 'dandelion-debug-toggle';
   debugToggle.innerHTML = '🐞';
   debugToggle.style.cssText = `
-      position: fixed;
-      top: 4.5rem;
-      right: 0.75rem;
-      z-index: 9998;
       padding: 0.3rem 0.75rem;
       background: rgba(255, 255, 255, 0.8);
       color: #171717;

@@ -9,10 +9,6 @@ export function skipButton() {
   btn.title = 'Skip to next form';
 
   const baseStyle = `
-    position: fixed;
-    top: 4.5rem;
-    right: 8.25rem; /* Positioned to the left of zen button (which is at 4.5rem) */
-    z-index: 9998;
     padding: 0.3rem 0.75rem;
     background: rgba(255, 255, 255, 0.8);
     color: #ef4444;

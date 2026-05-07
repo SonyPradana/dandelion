@@ -32,10 +32,6 @@ export function button(id) {
   tombol.id = id;
   tombol.innerHTML = '🙈';
   tombol.style.cssText = `
-      position: fixed;
-      top: 0.75rem;
-      right: 0.75rem;
-      z-index: 9999;
       padding: 0.75rem 1.25rem;
       background: rgb(253, 255, 153);
       color: #171717;

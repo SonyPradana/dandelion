@@ -7,6 +7,7 @@ import { getNotCheckedList } from '../utils/notChecked';
 import { getActiveConfig } from '../configuration';
 import { isZenModeActive, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
+import { controlPanel } from '../components/controlPanel';
 import {
   isPageInProcessingState,
   getQueueStats,
@@ -70,9 +71,9 @@ async function ensureButtonsMounted(isProcessing) {
   const zenActive = await isZenModeActive();
 
   if (!isProcessing) {
-    if (mainBtn) mainBtn.remove();
-    if (debugBtn) debugBtn.remove();
-    if (zenBtn) zenBtn.remove();
+    if (mainBtn) controlPanel.remove(mainBtn);
+    if (debugBtn) controlPanel.remove(debugBtn);
+    if (zenBtn) controlPanel.remove(zenBtn);
     if (!isStandardAutomationActive && localStorage.getItem(STORAGE_KEY) === null && !zenActive) {
       removeStatusPanel();
     }
@@ -112,7 +113,7 @@ async function ensureButtonsMounted(isProcessing) {
           startAutomation(stats.pendingIds, stats.foundIds.length);
         }
       });
-      document.body.appendChild(mainBtn);
+      controlPanel.mount(mainBtn, 1);
     }
   }
 
@@ -129,7 +130,7 @@ async function ensureButtonsMounted(isProcessing) {
           startZenAutomation();
         }
       });
-      document.body.appendChild(zenBtn);
+      controlPanel.mount(zenBtn, 2);
     }
   }
 
@@ -140,7 +141,7 @@ async function ensureButtonsMounted(isProcessing) {
         if (isStandardAutomationActive || (await isZenModeActive())) return;
         toggleHelperMode();
       });
-      document.body.appendChild(debugBtn);
+      controlPanel.mount(debugBtn, 2);
     }
   }
 
@@ -309,17 +310,15 @@ function finishAutomation() {
   const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 
   if (mainBtn) {
-    mainBtn.style.opacity = '1';
-    mainBtn.style.cursor = 'pointer';
-    mainBtn.style.filter = 'none';
+    if (typeof mainBtn.setRunning === 'function') mainBtn.setRunning(false);
+    if (typeof mainBtn.setDimmed === 'function') mainBtn.setDimmed(false);
   }
   if (debugBtn) {
-    debugBtn.style.opacity = '1';
-    debugBtn.style.cursor = 'pointer';
+    if (typeof debugBtn.setDimmed === 'function') debugBtn.setDimmed(false);
   }
   if (zenBtn) {
-    zenBtn.style.opacity = '1';
-    zenBtn.style.cursor = 'pointer';
+    if (typeof zenBtn.setDimmed === 'function') zenBtn.setDimmed(false);
+    if (typeof zenBtn.setActive === 'function') zenBtn.setActive(false);
   }
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '1';
