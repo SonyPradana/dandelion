@@ -1,6 +1,3 @@
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-
 export default [
   {
     input: 'src/main.js',
@@ -9,7 +6,6 @@ export default [
       format: 'iife',
       name: 'DandelionContentScript',
     },
-    plugins: [resolve(), commonjs()],
   },
   {
     input: 'src/view/popup.js',
@@ -18,6 +14,5 @@ export default [
       format: 'iife',
       name: 'DandelionPopup',
     },
-    plugins: [resolve(), commonjs()],
   },
 ];
