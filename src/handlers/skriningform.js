@@ -3,6 +3,9 @@ import { getActiveConfig } from '../configuration';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
+import { zenModeButton } from '../components/zenModeButton';
+import { skipButton } from '../components/skipButton';
+import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -21,6 +24,32 @@ export async function initializeSkriningForm() {
   });
 
   document.body.appendChild(debugToggle);
+
+  const zenActive = await isZenModeActive();
+  if (zenActive) {
+    const zenToggle = zenModeButton(true);
+
+    zenToggle.addEventListener('click', async () => {
+      await clearZenMode();
+      // Remove both buttons to signal Zen Mode is off
+      zenToggle.remove();
+      const skipBtnEl = document.getElementById('dandelion-zen-skip');
+      if (skipBtnEl) skipBtnEl.remove();
+    });
+
+    const skipBtn = skipButton();
+    skipBtn.addEventListener('click', async () => {
+      await skipQueue();
+      // Remove skip button to signal it was processed
+      skipBtn.style.opacity = '0.5';
+      skipBtn.style.pointerEvents = 'none';
+      skipBtn.innerHTML = '✅ Skipped';
+      setTimeout(() => skipBtn.remove(), 1000);
+    });
+
+    document.body.appendChild(zenToggle);
+    document.body.appendChild(skipBtn);
+  }
 
   if (tombol) {
     tombol.addEventListener('click', async () => {

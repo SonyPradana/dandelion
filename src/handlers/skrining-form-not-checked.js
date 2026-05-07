@@ -1,9 +1,12 @@
 import { button } from '../components/button';
 import { debugButton } from '../components/debugButton';
+import { zenModeButton } from '../components/zenModeButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
 import { getActiveConfig } from '../configuration';
+import { isZenModeActive, clearZenMode } from '../utils/zenMode';
+import { startZenAutomation, initializeZenMode } from './zen-mode';
 import {
   isPageInProcessingState,
   getQueueStats,
@@ -19,23 +22,24 @@ const STORAGE_KEY = 'dandelion_pending_not_checked';
 const TOTAL_KEY = 'dandelion_total_not_checked';
 const ROW_MARKER_CLASS = 'dandelion-row-marker';
 
-let isAutomationActive = false;
+let isStandardAutomationActive = false;
 
 /**
  * Initializes the Not-Checked handler and starts the page state monitor.
  */
 export function initialize() {
   startStateMonitor();
+  initializeZenMode();
 }
 
 /**
  * Periodically monitors the page state to manage button visibility and resume pending tasks.
  */
 function startStateMonitor() {
-  setInterval(() => {
+  setInterval(async () => {
     const isProcessing = isPageInProcessingState();
 
-    ensureButtonsMounted(isProcessing);
+    await ensureButtonsMounted(isProcessing);
 
     const pendingData = localStorage.getItem(STORAGE_KEY);
     if (pendingData) {
@@ -46,8 +50,8 @@ function startStateMonitor() {
         return;
       }
 
-      if (isProcessing && !isAutomationActive) {
-        isAutomationActive = true;
+      if (isProcessing && !isStandardAutomationActive) {
+        isStandardAutomationActive = true;
         resumeAutomation();
       }
     }
@@ -58,14 +62,18 @@ function startStateMonitor() {
  * Manages the presence of automation control buttons based on the current page state.
  * @param {boolean} isProcessing - Indicates if the page is in an active examination state.
  */
-function ensureButtonsMounted(isProcessing) {
+async function ensureButtonsMounted(isProcessing) {
   let mainBtn = document.getElementById('dandelion-not-checked-automation');
   let debugBtn = document.getElementById('dandelion-debug-toggle');
+  let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
+
+  const zenActive = await isZenModeActive();
 
   if (!isProcessing) {
     if (mainBtn) mainBtn.remove();
     if (debugBtn) debugBtn.remove();
-    if (!isAutomationActive && localStorage.getItem(STORAGE_KEY) === null) {
+    if (zenBtn) zenBtn.remove();
+    if (!isStandardAutomationActive && localStorage.getItem(STORAGE_KEY) === null && !zenActive) {
       removeStatusPanel();
     }
     return;
@@ -77,12 +85,12 @@ function ensureButtonsMounted(isProcessing) {
     mainBtn = button('dandelion-not-checked-automation');
     if (mainBtn) {
       mainBtn.addEventListener('click', async () => {
-        if (isAutomationActive) return;
+        if (isStandardAutomationActive || (await isZenModeActive())) return;
 
         const pending = localStorage.getItem(STORAGE_KEY);
         if (pending && JSON.parse(pending).length > 0) {
           if (confirm('Ada antrian yang belum selesai. Lanjutkan?')) {
-            isAutomationActive = true;
+            isStandardAutomationActive = true;
             resumeAutomation();
             return;
           }
@@ -108,42 +116,90 @@ function ensureButtonsMounted(isProcessing) {
     }
   }
 
+  if (!zenBtn) {
+    zenBtn = zenModeButton(zenActive);
+    if (zenBtn) {
+      zenBtn.addEventListener('click', async () => {
+        if (isStandardAutomationActive) return;
+
+        if (await isZenModeActive()) {
+          await clearZenMode();
+          // UI will be restored by next interval of ensureButtonsMounted
+        } else {
+          startZenAutomation();
+        }
+      });
+      document.body.appendChild(zenBtn);
+    }
+  }
+
   if (!debugBtn) {
     debugBtn = debugButton();
     if (debugBtn) {
-      debugBtn.addEventListener('click', () => {
-        if (isAutomationActive) return;
+      debugBtn.addEventListener('click', async () => {
+        if (isStandardAutomationActive || (await isZenModeActive())) return;
         toggleHelperMode();
       });
       document.body.appendChild(debugBtn);
     }
   }
 
-  if (isRunningLocally) {
-    updateUIForRunningState(mainBtn, debugBtn);
+  if (isRunningLocally || zenActive) {
+    updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive);
+  } else {
+    restoreUIState(mainBtn, debugBtn, zenBtn);
   }
+}
+
+/**
+ * Restores buttons to their normal active state.
+ * @param {HTMLElement} mainBtn
+ * @param {HTMLElement} debugBtn
+ * @param {HTMLElement} zenBtn
+ */
+function restoreUIState(mainBtn, debugBtn, zenBtn) {
+  if (mainBtn) {
+    mainBtn.setRunning(false);
+    mainBtn.setDimmed(false);
+  }
+  if (debugBtn) {
+    debugBtn.setDimmed(false);
+  }
+  if (zenBtn) {
+    zenBtn.setDimmed(false);
+    zenBtn.setActive(false);
+  }
+  document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
+    m.classList.remove('dandelion-dimmed');
+  });
 }
 
 /**
  * Updates button appearance and disables interactions while automation is running.
  * @param {HTMLElement} mainBtn - The primary automation button.
  * @param {HTMLElement} debugBtn - The debug/helper mode toggle button.
+ * @param {HTMLElement} zenBtn - The zen mode toggle button.
+ * @param {boolean} isRunningLocally - Not Checked automation is active.
+ * @param {boolean} zenActive - Zen Mode is active.
  */
-function updateUIForRunningState(mainBtn, debugBtn) {
-  if (mainBtn) {
-    mainBtn.style.opacity = '0.5';
-    mainBtn.style.cursor = 'not-allowed';
-    mainBtn.style.filter = 'grayscale(1)';
+function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive) {
+  if (isRunningLocally) {
+    if (mainBtn) mainBtn.setRunning(true);
+    if (debugBtn) debugBtn.setDimmed(true);
+    if (zenBtn) zenBtn.setDimmed(true);
   }
-  if (debugBtn) {
-    debugBtn.style.opacity = '0.3';
-    debugBtn.style.cursor = 'not-allowed';
+
+  if (zenActive) {
+    if (mainBtn) mainBtn.setDimmed(true);
+    if (debugBtn) debugBtn.setDimmed(true);
+    if (zenBtn) zenBtn.setActive(true);
   }
+
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
-    m.style.opacity = '0.3';
-    m.style.pointerEvents = 'none';
+    m.classList.add('dandelion-dimmed');
   });
-  syncStatusPanel();
+
+  if (isRunningLocally) syncStatusPanel();
 }
 
 /**
@@ -158,7 +214,7 @@ function syncStatusPanel() {
     onDelete: () => {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(TOTAL_KEY);
-      isAutomationActive = false;
+      isStandardAutomationActive = false;
       window.location.reload();
     },
   });
@@ -184,7 +240,7 @@ async function toggleHelperMode() {
     onDelete: () => {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(TOTAL_KEY);
-      isAutomationActive = false;
+      isStandardAutomationActive = false;
       window.location.reload();
     },
   });
@@ -211,7 +267,7 @@ async function toggleHelperMode() {
  * @param {number} totalFoundOnPage - Total number of relevant IDs found on the page.
  */
 async function startAutomation(pendingIds, totalFoundOnPage) {
-  isAutomationActive = true;
+  isStandardAutomationActive = true;
   const config = await getActiveConfig();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingIds));
   localStorage.setItem(TOTAL_KEY, totalFoundOnPage.toString());
@@ -244,12 +300,13 @@ async function resumeAutomation() {
 function finishAutomation() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(TOTAL_KEY);
-  isAutomationActive = false;
+  isStandardAutomationActive = false;
 
   removeStatusPanel(5000);
 
   const mainBtn = document.getElementById('dandelion-not-checked-automation');
   const debugBtn = document.getElementById('dandelion-debug-toggle');
+  const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 
   if (mainBtn) {
     mainBtn.style.opacity = '1';
@@ -259,6 +316,10 @@ function finishAutomation() {
   if (debugBtn) {
     debugBtn.style.opacity = '1';
     debugBtn.style.cursor = 'pointer';
+  }
+  if (zenBtn) {
+    zenBtn.style.opacity = '1';
+    zenBtn.style.cursor = 'pointer';
   }
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '1';
@@ -272,7 +333,7 @@ function finishAutomation() {
 async function processNextItem() {
   const pendingStr = localStorage.getItem(STORAGE_KEY);
   if (!pendingStr) {
-    isAutomationActive = false;
+    isStandardAutomationActive = false;
     return;
   }
 

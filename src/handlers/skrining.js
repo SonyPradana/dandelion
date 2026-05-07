@@ -18,7 +18,6 @@ export function initializeSkrining() {
     // Jika semua radio sudah pernah diklik, disconnect observer
     if (allRadioButtons.length > 0 && radioClickedSet.size >= allRadioButtons.length) {
       stopObserver();
-      console.log('Dandelion: All radio buttons filled, observer disconnected.');
     }
   }
 
@@ -36,14 +35,12 @@ export function initializeSkrining() {
     observer = new MutationObserver(() => throttledManipulate());
     observer.observe(document.body, { childList: true, subtree: true });
     throttledManipulate();
-    console.log('Dandelion: Observer started.');
   }
 
   function stopObserver() {
     if (observer) {
       observer.disconnect();
       observer = null;
-      console.log('Dandelion: Observer disconnected.');
     }
   }
 

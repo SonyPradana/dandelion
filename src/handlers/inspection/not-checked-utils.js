@@ -28,10 +28,16 @@ export function getQueueStats(masterList) {
     const el = document.getElementById(id);
     if (el) {
       foundIds.push(id);
-      const row = el.closest('.grid');
+      const row = el.closest('.grid, tr');
       const text = row ? row.textContent : '';
 
-      if (text.includes('Tidak diperiksa') || text.includes('Selesai diperiksa')) {
+      const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
+      const isDone =
+        text.includes('Tidak diperiksa') ||
+        text.includes('Selesai diperiksa') ||
+        (successImg && !successImg.src.includes('gray'));
+
+      if (isDone) {
         doneIds.push(id);
       } else {
         pendingIds.push(id);

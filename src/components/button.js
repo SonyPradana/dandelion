@@ -8,6 +8,26 @@ export function button(id) {
     return;
   }
 
+  const styleId = 'dandelion-component-states';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .dandelion-running {
+        opacity: 0.5 !important;
+        cursor: not-allowed !important;
+        filter: grayscale(1) !important;
+        pointer-events: none !important;
+      }
+      .dandelion-dimmed {
+        opacity: 0.3 !important;
+        cursor: not-allowed !important;
+        pointer-events: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   const tombol = document.createElement('button');
   tombol.id = id;
   tombol.innerHTML = '🙈';
@@ -27,7 +47,36 @@ export function button(id) {
       transition: all 0.2s ease-in-out;
     `;
 
+  /**
+   * Updates the button running state.
+   * @param {boolean} isRunning
+   */
+  tombol.setRunning = (isRunning) => {
+    if (isRunning) {
+      tombol.classList.add('dandelion-running');
+    } else {
+      tombol.classList.remove('dandelion-running');
+    }
+  };
+
+  /**
+   * Dimmed state when other automation is running.
+   * @param {boolean} isDimmed
+   */
+  tombol.setDimmed = (isDimmed) => {
+    if (isDimmed) {
+      tombol.classList.add('dandelion-dimmed');
+    } else {
+      tombol.classList.remove('dandelion-dimmed');
+    }
+  };
+
   tombol.addEventListener('mousedown', () => {
+    if (
+      tombol.classList.contains('dandelion-running') ||
+      tombol.classList.contains('dandelion-dimmed')
+    )
+      return;
     tombol.style.transform = 'scale(0.95)';
   });
 
