@@ -253,7 +253,8 @@ function syncStatusPanel() {
 
   const doneCount = Math.max(0, totalFoundOnPage - pending.length);
 
-  updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {    onDelete: () => {
+  updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {
+    onDelete: () => {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(TOTAL_KEY);
       isStandardAutomationActive = false;
