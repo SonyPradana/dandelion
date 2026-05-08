@@ -50,9 +50,10 @@ class ControlPanel {
       '2',
       `
       flex-direction: row-reverse;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
       justify-content: flex-start;
       align-items: center;
+      max-width: 120px;
     `,
     );
 

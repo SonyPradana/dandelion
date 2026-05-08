@@ -246,15 +246,14 @@ function syncStatusPanel() {
   const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   const totalFoundOnPage = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
 
-  if (pending.length === 0 && totalFoundOnPage > 0) {
+  if (pending.length === 0 && localStorage.getItem(STORAGE_KEY) !== null) {
     finishAutomation();
     return;
   }
 
-  const doneCount = totalFoundOnPage - pending.length;
+  const doneCount = Math.max(0, totalFoundOnPage - pending.length);
 
-  updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {
-    onDelete: () => {
+  updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {    onDelete: () => {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(TOTAL_KEY);
       isStandardAutomationActive = false;
@@ -413,13 +412,14 @@ async function processNextItem() {
 
     try {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 6000);
+      const isLastItem = ids.length === 1;
+      
       moveToNext(ids, false);
       confirmBtn.click();
 
       setTimeout(() => {
-        if (localStorage.getItem(STORAGE_KEY)) {
-          window.location.reload();
-        }
+        // Always reload after a click to ensure DOM is updated for next item or finish state
+        window.location.reload();
       }, ncConfig.reloadDelay || 3000);
     } catch (error) {
       moveToNext(ids, ncConfig.itemDelay);
