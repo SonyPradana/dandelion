@@ -9,9 +9,9 @@ export const notify = {
    */
   info(title, message, duration = 3000) {
     const id = `dandelion-info-${Date.now()}`;
-    const { panel, setHeader, remove } = createBasePanel(id);
+    const { contentArea, setHeader, remove } = createBasePanel(id);
 
-    panel.innerHTML += `
+    contentArea.innerHTML = `
       ${setHeader(title, '#4ade80')}
       <div style="font-size: 11px; line-height: 1.4; opacity: 0.9;">${message}</div>
     `;
@@ -20,7 +20,6 @@ export const notify = {
       setTimeout(remove, duration);
     }
   },
-
   /**
    * Alert notification (Promise based)
    */

@@ -245,6 +245,12 @@ function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, ze
 function syncStatusPanel() {
   const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   const totalFoundOnPage = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
+
+  if (pending.length === 0 && totalFoundOnPage > 0) {
+    finishAutomation();
+    return;
+  }
+
   const doneCount = totalFoundOnPage - pending.length;
 
   updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {
@@ -333,16 +339,16 @@ async function resumeAutomation() {
 
 /**
  * Performs cleanup of local storage and resets UI state when automation completes.
- function finishAutomation() {
-   localStorage.removeItem(STORAGE_KEY);
-   localStorage.removeItem(TOTAL_KEY);
-   isStandardAutomationActive = false;
+ */
+function finishAutomation() {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(TOTAL_KEY);
+  isStandardAutomationActive = false;
 
-   removeStatusPanel();
-   notify.info('Selesai', 'Seluruh tugas telah diproses ✓', 5000);
+  removeStatusPanel();
+  notify.info('Selesai', 'Seluruh tugas telah diproses ✓', 5000);
 
-   const mainBtn = document.getElementById('dandelion-not-checked-automation');
- ...
+  const mainBtn = document.getElementById('dandelion-not-checked-automation');
   const debugBtn = document.getElementById('dandelion-debug-toggle');
   const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 

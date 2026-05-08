@@ -34,25 +34,37 @@ class ControlPanel {
     `;
 
     // Slot 1 — Main button (🙈) - Anchor for Slot 4
-    this.createSlot(1, '1', `
+    this.createSlot(
+      1,
+      '1',
+      `
       position: relative; 
       flex-direction: column;
       align-items: flex-end;
-    `);
+    `,
+    );
 
     // Slot 2 — Debug / Zen / Skip
-    this.createSlot(2, '2', `
+    this.createSlot(
+      2,
+      '2',
+      `
       flex-direction: row-reverse;
       flex-wrap: nowrap;
       justify-content: flex-start;
       align-items: center;
-    `);
+    `,
+    );
 
     // Slot 3 — Notifications (full width)
-    this.createSlot(3, '3', `
+    this.createSlot(
+      3,
+      '3',
+      `
       flex-direction: column;
       align-items: flex-end;
-    `);
+    `,
+    );
 
     // Slot 4 — Profile switcher (Anchored to Slot 1)
     const slot4 = document.createElement('div');
@@ -76,14 +88,14 @@ class ControlPanel {
 
   /**
    * Creates a grid slot.
-   * @param {number|string} id 
+   * @param {number|string} id
    * @param {string} gridRow
-   * @param {string} specificStyles 
+   * @param {string} specificStyles
    */
   createSlot(id, gridRow, specificStyles) {
     const slot = document.createElement('div');
     slot.id = `${PANEL_ID}-slot-${id}`;
-    
+
     slot.style.cssText = `
       grid-row: ${gridRow};
       pointer-events: none;
@@ -97,8 +109,8 @@ class ControlPanel {
 
   /**
    * Mounts an element into a specific slot.
-   * @param {HTMLElement} element 
-   * @param {number} slotId 
+   * @param {HTMLElement} element
+   * @param {number} slotId
    */
   mount(element, slotId) {
     this.init();
@@ -120,14 +132,17 @@ class ControlPanel {
 
   /**
    * Removes an element from the panel.
-   * @param {HTMLElement|string} elementOrId 
+   * @param {HTMLElement|string} elementOrId
    */
   remove(elementOrId) {
-    const element = typeof elementOrId === 'string' 
-      ? document.getElementById(elementOrId) 
-      : elementOrId;
-    
-    if (element && element.parentElement && element.parentElement.id.startsWith(`${PANEL_ID}-slot-`)) {
+    const element =
+      typeof elementOrId === 'string' ? document.getElementById(elementOrId) : elementOrId;
+
+    if (
+      element &&
+      element.parentElement &&
+      element.parentElement.id.startsWith(`${PANEL_ID}-slot-`)
+    ) {
       element.remove();
     }
   }

@@ -15,7 +15,7 @@ const STATUS_PANEL_ID = 'dandelion-status-panel';
  */
 export function updateStatusPanel(done, total, status, options = {}) {
   const { title, onDelete } = options;
-  const { panel, setHeader } = createBasePanel(STATUS_PANEL_ID);
+  const { panel, contentArea, setHeader } = createBasePanel(STATUS_PANEL_ID);
 
   // Always enable pointer events if onDelete is provided, otherwise disable
   panel.style.pointerEvents = onDelete ? 'auto' : 'none';
@@ -28,7 +28,7 @@ export function updateStatusPanel(done, total, status, options = {}) {
   const titleText = title || 'Status Tugas';
   const titleColor = onDelete ? '#ff4d4d' : '#ffd700';
 
-  panel.innerHTML = `
+  contentArea.innerHTML = `
     ${setHeader(titleText, titleColor)}
     <div style="display: flex; justify-content: space-between; gap: 15px; align-items: center;">
       <span style="opacity: 0.8;">Progres</span>
@@ -38,14 +38,18 @@ export function updateStatusPanel(done, total, status, options = {}) {
   `;
 
   if (onDelete) {
-    const deleteBtn = createPanelButton('HENTIKAN & HAPUS', 'danger');
-    deleteBtn.onclick = async (e) => {
-      e.stopPropagation();
-      if (await notify.confirm('Hentikan Tugas', 'Hentikan aktivitas ini dan hapus tugas?')) {
-        onDelete();
-      }
-    };
-    panel.appendChild(deleteBtn);
+    // Check if button already exists in contentArea
+    if (!contentArea.querySelector('.dandelion-delete-btn')) {
+      const deleteBtn = createPanelButton('HENTIKAN & HAPUS', 'danger');
+      deleteBtn.classList.add('dandelion-delete-btn');
+      deleteBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if (await notify.confirm('Hentikan Tugas', 'Hentikan aktivitas ini dan hapus tugas?')) {
+          onDelete();
+        }
+      };
+      contentArea.appendChild(deleteBtn);
+    }
   }
 
   return panel;

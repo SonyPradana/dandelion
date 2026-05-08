@@ -78,12 +78,19 @@ export function createBasePanel(id) {
       panel.addEventListener('animationend', () => panel.remove(), { once: true });
     };
     panel.appendChild(closeBtn);
+
+    const content = document.createElement('div');
+    content.className = 'dandelion-panel-content';
+    content.style.width = '100%';
+    panel.appendChild(content);
   }
 
+  const contentArea = panel.querySelector('.dandelion-panel-content');
   controlPanel.mount(panel, 3);
 
   return {
     panel,
+    contentArea,
     /**
      * @param {string} text
      * @param {string} color
@@ -145,6 +152,7 @@ export function createPanelButton(text, type = 'default') {
     transition: all 0.2s;
     letter-spacing: 0.3px;
     text-transform: uppercase;
+    pointer-events: auto;
   `;
 
   btn.onmouseover = () => {
