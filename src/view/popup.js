@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const notCheckedAutomationDelayInput = document.getElementById('not-checked-automation-delay');
   const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
+  const notCheckedDomTimeoutInput = document.getElementById('not-checked-dom-timeout');
   const scrollBottomCheckbox = document.getElementById('scroll-bottom-checkbox');
   const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
   const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
@@ -112,7 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
     notCheckedUrlInput.value = nc.url || '';
     notCheckedAutomationDelayInput.value = nc.automationDelay || 2000;
     notCheckedItemDelayInput.value = nc.itemDelay || 1000;
-    notCheckedReloadDelayInput.value = nc.reloadDelay || 3000;
+    notCheckedReloadDelayInput.value = nc.reloadDelay || 1000;
+    notCheckedDomTimeoutInput.value = nc.domTimeout || 5000;
 
     scrollBottomCheckbox.checked = loadedConfig.scrollToBottom || false;
 
@@ -177,7 +179,8 @@ document.addEventListener('DOMContentLoaded', () => {
       loadedConfig.notChecked.automationDelay =
         parseInt(notCheckedAutomationDelayInput.value) || 2000;
       loadedConfig.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
-      loadedConfig.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 3000;
+      loadedConfig.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
+      loadedConfig.notChecked.domTimeout = parseInt(notCheckedDomTimeoutInput.value) || 5000;
 
       loadedConfig.scrollToBottom = scrollBottomCheckbox.checked;
 

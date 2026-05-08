@@ -388,7 +388,8 @@ async function processNextItem() {
   const ncConfig = config.notChecked || {};
 
   const currentId = ids[0];
-  const rowElement = await waitForRow(currentId, 15_000);
+  const domTimeout = ncConfig.domTimeout || 5000;
+  const rowElement = await waitForRow(currentId, domTimeout);
 
   if (rowElement) {
     const row = rowElement.closest('.grid');
@@ -420,7 +421,7 @@ async function processNextItem() {
 
       setTimeout(() => {
         window.location.reload();
-      }, ncConfig.reloadDelay || 3000);
+      }, ncConfig.reloadDelay || 1000);
     } catch (error) {
       setTimeout(processNextItem, ncConfig.itemDelay || 1000);
     }
