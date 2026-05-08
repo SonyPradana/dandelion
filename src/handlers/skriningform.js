@@ -5,6 +5,7 @@ import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
 import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
+import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
@@ -59,11 +60,15 @@ export async function initializeSkriningForm() {
     const skipBtn = skipButton();
     skipBtn.addEventListener('click', async () => {
       await skipQueue();
-      // Remove skip button to signal it was processed
       skipBtn.style.opacity = '0.5';
       skipBtn.style.pointerEvents = 'none';
       skipBtn.innerHTML = '✅ Skipped';
       setTimeout(() => controlPanel.remove(skipBtn), 1000);
+
+      try {
+        const homeBtn = await waitForElement('button', 'Kembali ke Halaman Utama', 3000);
+        homeBtn.click();
+      } catch {}
     });
 
     controlPanel.mount(zenToggle, 2);
