@@ -10,7 +10,7 @@ export const notify = {
   info(title, message, duration = 3000) {
     const id = `dandelion-info-${Date.now()}`;
     const { panel, setHeader, remove } = createBasePanel(id);
-    
+
     panel.innerHTML += `
       ${setHeader(title, '#4ade80')}
       <div style="font-size: 11px; line-height: 1.4; opacity: 0.9;">${message}</div>
@@ -26,7 +26,7 @@ export const notify = {
    */
   alert(title, message) {
     const existing = document.querySelectorAll('[id^="dandelion-alert-"]');
-    existing.forEach(el => el.remove());
+    existing.forEach((el) => el.remove());
 
     return new Promise((resolve) => {
       const id = `dandelion-alert-${Date.now()}`;
@@ -51,7 +51,7 @@ export const notify = {
    */
   confirm(title, message) {
     const existing = document.querySelectorAll('[id^="dandelion-confirm-"]');
-    existing.forEach(el => el.remove());
+    existing.forEach((el) => el.remove());
 
     return new Promise((resolve) => {
       const id = `dandelion-confirm-${Date.now()}`;
@@ -96,7 +96,7 @@ export const notify = {
       <div style="font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;">${message}</div>
     `;
 
-    actions.forEach(action => {
+    actions.forEach((action) => {
       const btn = createPanelButton(action.label, action.type || 'default');
       btn.onclick = () => {
         if (action.autoClose !== false) remove();
@@ -106,5 +106,5 @@ export const notify = {
     });
 
     return { panel, remove };
-  }
+  },
 };

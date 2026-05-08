@@ -99,3 +99,13 @@ export function getActiveConfig() {
 export function setConfig(config) {
   browser.storage.local.set(config);
 }
+
+/**
+ * Fast helper to switch active profile
+ * @param {string} profileKey
+ */
+export async function setActiveProfile(profileKey) {
+  const config = await getFullConfig();
+  config.activeProfile = profileKey;
+  await setConfig(config);
+}

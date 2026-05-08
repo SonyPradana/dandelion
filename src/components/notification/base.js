@@ -29,7 +29,7 @@ export function createBasePanel(id) {
   }
 
   let panel = document.getElementById(id);
-  
+
   if (!panel) {
     panel = document.createElement('div');
     panel.id = id;
@@ -67,8 +67,12 @@ export function createBasePanel(id) {
       line-height: 1;
       transition: opacity 0.2s;
     `;
-    closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
-    closeBtn.onmouseout = () => closeBtn.style.opacity = '0.5';
+    closeBtn.onmouseover = () => {
+      closeBtn.style.opacity = '1';
+    };
+    closeBtn.onmouseout = () => {
+      closeBtn.style.opacity = '0.5';
+    };
     closeBtn.onclick = () => {
       panel.classList.replace('dandelion-panel-show', 'dandelion-panel-hide');
       panel.addEventListener('animationend', () => panel.remove(), { once: true });
@@ -81,8 +85,8 @@ export function createBasePanel(id) {
   return {
     panel,
     /**
-     * @param {string} text 
-     * @param {string} color 
+     * @param {string} text
+     * @param {string} color
      */
     setHeader(text, color = '#ffd700') {
       const headerHtml = `<div class="dandelion-panel-header" style="font-weight: bold; color: ${color}; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px; margin-bottom: 4px; font-size: 10px; letter-spacing: 0.5px;">${text.toUpperCase()}</div>`;
@@ -92,7 +96,7 @@ export function createBasePanel(id) {
       if (panel.classList.contains('dandelion-panel-hide')) return;
       panel.classList.replace('dandelion-panel-show', 'dandelion-panel-hide');
       panel.addEventListener('animationend', () => panel.remove(), { once: true });
-    }
+    },
   };
 }
 
@@ -102,12 +106,12 @@ export function createBasePanel(id) {
 export function createPanelButton(text, type = 'default') {
   const btn = document.createElement('button');
   btn.textContent = text;
-  
+
   let colors = {
     background: 'rgba(255, 255, 255, 0.1)',
     color: 'white',
     border: 'rgba(255, 255, 255, 0.2)',
-    hover: 'rgba(255, 255, 255, 0.2)'
+    hover: 'rgba(255, 255, 255, 0.2)',
   };
 
   if (type === 'danger') {
@@ -115,14 +119,14 @@ export function createPanelButton(text, type = 'default') {
       background: 'rgba(255, 77, 77, 0.15)',
       color: '#ff4d4d',
       border: 'rgba(255, 77, 77, 0.3)',
-      hover: 'rgba(255, 77, 77, 0.3)'
+      hover: 'rgba(255, 77, 77, 0.3)',
     };
   } else if (type === 'success') {
     colors = {
       background: 'rgba(34, 197, 94, 0.15)',
       color: '#4ade80',
       border: 'rgba(34, 197, 94, 0.3)',
-      hover: 'rgba(34, 197, 94, 0.3)'
+      hover: 'rgba(34, 197, 94, 0.3)',
     };
   }
 

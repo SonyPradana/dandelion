@@ -1,13 +1,12 @@
 const PANEL_ID = 'dandelion-control-panel';
+const PANEL_GAP = 8; // px — single source of truth
 
 /**
  * Singleton class to manage the floating control panel.
  */
 class ControlPanel {
-  constructor() {
-    this.panel = null;
-    this.slots = {};
-  }
+  panel = null;
+  slots = {};
 
   /**
    * Initializes the control panel if it doesn't exist.
@@ -26,20 +25,51 @@ class ControlPanel {
       right: 0.75rem;
       z-index: 10000;
       display: grid;
-      grid-template-columns: repeat(2, auto);
+      grid-template-columns: 1fr;
       grid-template-rows: repeat(3, auto);
-      gap: 10px;
+      gap: ${PANEL_GAP}px;
       pointer-events: none;
-      border: 1px dashed rgba(0, 0, 0, 0.2); /* Dev debug border */
       justify-items: end;
       align-items: start;
     `;
 
-    // Initialize Slots
-    this.createSlot(1, '1 / 2 / 2 / 3'); // Main Button
-    this.createSlot(2, '2 / 2 / 3 / 3'); // Debug / Zen / Skip
-    this.createSlot(3, '3 / 1 / 4 / 3'); // Status Panel
-    this.createSlot(4, '1 / 1 / 3 / 2'); // Profile / Empty
+    // Slot 1 — Main button (🙈) - Anchor for Slot 4
+    this.createSlot(1, '1', `
+      position: relative; 
+      flex-direction: column;
+      align-items: flex-end;
+    `);
+
+    // Slot 2 — Debug / Zen / Skip
+    this.createSlot(2, '2', `
+      flex-direction: row-reverse;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      align-items: center;
+    `);
+
+    // Slot 3 — Notifications (full width)
+    this.createSlot(3, '3', `
+      flex-direction: column;
+      align-items: flex-end;
+    `);
+
+    // Slot 4 — Profile switcher (Anchored to Slot 1)
+    const slot4 = document.createElement('div');
+    slot4.id = `${PANEL_ID}-slot-4`;
+    slot4.style.cssText = `
+      position: absolute;
+      top: 0;
+      right: calc(100% + ${PANEL_GAP}px);
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: ${PANEL_GAP}px;
+    `;
+    // Append Slot 4 to Slot 1 instead of Main Panel
+    this.slots[1].appendChild(slot4);
+    this.slots[4] = slot4;
 
     document.body.appendChild(this.panel);
   }
@@ -47,33 +77,18 @@ class ControlPanel {
   /**
    * Creates a grid slot.
    * @param {number|string} id 
-   * @param {string} gridArea 
+   * @param {string} gridRow
+   * @param {string} specificStyles 
    */
-  createSlot(id, gridArea) {
+  createSlot(id, gridRow, specificStyles) {
     const slot = document.createElement('div');
     slot.id = `${PANEL_ID}-slot-${id}`;
     
-    let specificStyles = '';
-    if (id === 2) {
-      // Slot 2: Flex row-reverse, wrap after ~2 items (assuming buttons are ~40-50px wide)
-      specificStyles = `
-        flex-direction: row-reverse;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        max-width: 120px; /* Fits roughly 2 small buttons + gap */
-      `;
-    } else {
-      specificStyles = `
-        flex-direction: column;
-        align-items: flex-end;
-      `;
-    }
-
     slot.style.cssText = `
-      grid-area: ${gridArea};
-      pointer-events: auto;
+      grid-row: ${gridRow};
+      pointer-events: none;
       display: flex;
-      gap: 8px;
+      gap: ${PANEL_GAP}px;
       ${specificStyles}
     `;
     this.panel.appendChild(slot);
@@ -89,16 +104,13 @@ class ControlPanel {
     this.init();
     const slot = this.slots[slotId];
     if (slot) {
-      // Avoid duplicates
       if (slot.contains(element)) return;
 
-      // Limit Slot 3 (Notifications) to 5 items
       if (slotId === 3 && slot.children.length >= 5) {
         slot.children[0].remove();
       }
 
       if (slotId === 2 && element.id === 'dandelion-debug-toggle') {
-        // Debug button should be first in DOM (rightmost in row-reverse)
         slot.prepend(element);
       } else {
         slot.appendChild(element);

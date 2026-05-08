@@ -7,6 +7,7 @@ import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
 import { controlPanel } from '../components/controlPanel';
+import { createProfileComponent } from '../components/profile';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -17,7 +18,24 @@ export async function initializeSkriningForm() {
   let isDebugEnabled = false; // Initial state is off
 
   const tombol = button('dandelion-auto-fill');
+  const profileIndicator = await createProfileComponent();
   const debugToggle = debugButton();
+
+  if (tombol) {
+    let hideTimeout = null;
+    const showProfile = () => {
+      if (hideTimeout) clearTimeout(hideTimeout);
+      profileIndicator.setVisibility(true);
+    };
+    const hideProfile = () => {
+      hideTimeout = setTimeout(() => profileIndicator.setVisibility(false), 300);
+    };
+
+    tombol.addEventListener('mouseenter', showProfile);
+    tombol.addEventListener('mouseleave', hideProfile);
+    profileIndicator.addEventListener('mouseenter', showProfile);
+    profileIndicator.addEventListener('mouseleave', hideProfile);
+  }
 
   debugToggle.addEventListener('click', () => {
     isDebugEnabled = !isDebugEnabled;
@@ -81,6 +99,7 @@ export async function initializeSkriningForm() {
       }, 100);
     });
     controlPanel.mount(tombol, 1);
+    controlPanel.mount(profileIndicator, 4);
   }
 
   /**

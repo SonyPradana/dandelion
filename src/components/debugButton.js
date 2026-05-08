@@ -18,6 +18,7 @@ export function debugButton() {
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       transition: all 0.2s ease-in-out;
+      pointer-events: auto;
     `;
 
   /**

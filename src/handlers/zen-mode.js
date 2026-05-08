@@ -55,7 +55,9 @@ export async function startZenAutomation() {
     return;
   }
 
-  if (await notify.confirm('Zen Mode', `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`)) {
+  if (
+    await notify.confirm('Zen Mode', `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`)
+  ) {
     const state = {
       active: true,
       queue: pendingIds,

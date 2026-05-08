@@ -9,6 +9,7 @@ import { isZenModeActive, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
 import { controlPanel } from '../components/controlPanel';
 import { notify } from '../components/notification';
+import { createProfileComponent } from '../components/profile';
 import {
   isPageInProcessingState,
   getQueueStats,
@@ -68,6 +69,7 @@ async function ensureButtonsMounted(isProcessing) {
   let mainBtn = document.getElementById('dandelion-not-checked-automation');
   let debugBtn = document.getElementById('dandelion-debug-toggle');
   let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
+  let profileIndicator = document.getElementById('dandelion-profile-indicator');
 
   const zenActive = await isZenModeActive();
 
@@ -75,6 +77,7 @@ async function ensureButtonsMounted(isProcessing) {
     if (mainBtn) controlPanel.remove(mainBtn);
     if (debugBtn) controlPanel.remove(debugBtn);
     if (zenBtn) controlPanel.remove(zenBtn);
+    if (profileIndicator) controlPanel.remove(profileIndicator);
     if (!isStandardAutomationActive && localStorage.getItem(STORAGE_KEY) === null && !zenActive) {
       removeStatusPanel();
     }
@@ -86,12 +89,32 @@ async function ensureButtonsMounted(isProcessing) {
   if (!mainBtn) {
     mainBtn = button('dandelion-not-checked-automation');
     if (mainBtn) {
+      if (!profileIndicator) {
+        profileIndicator = await createProfileComponent();
+      }
+
+      let hideTimeout = null;
+      const showProfile = () => {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        profileIndicator.setVisibility(true);
+      };
+      const hideProfile = () => {
+        hideTimeout = setTimeout(() => profileIndicator.setVisibility(false), 300);
+      };
+
+      mainBtn.addEventListener('mouseenter', showProfile);
+      mainBtn.addEventListener('mouseleave', hideProfile);
+      profileIndicator.addEventListener('mouseenter', showProfile);
+      profileIndicator.addEventListener('mouseleave', hideProfile);
+
       mainBtn.addEventListener('click', async () => {
         if (isStandardAutomationActive || (await isZenModeActive())) return;
 
         const pending = localStorage.getItem(STORAGE_KEY);
         if (pending && JSON.parse(pending).length > 0) {
-          if (await notify.confirm('Antrian Pending', 'Ada antrian yang belum selesai. Lanjutkan?')) {
+          if (
+            await notify.confirm('Antrian Pending', 'Ada antrian yang belum selesai. Lanjutkan?')
+          ) {
             isStandardAutomationActive = true;
             resumeAutomation();
             return;
@@ -100,21 +123,33 @@ async function ensureButtonsMounted(isProcessing) {
 
         const masterList = await getNotCheckedList();
         if (masterList.length === 0) {
-          await notify.alert('Daftar Kosong', 'Daftar target kosong. Gunakan fitur 🐞 untuk menandai baris.');
+          await notify.alert(
+            'Daftar Kosong',
+            'Daftar target kosong. Gunakan fitur 🐞 untuk menandai baris.',
+          );
           return;
         }
 
         const stats = getQueueStats(masterList);
         if (stats.pendingIds.length === 0) {
-          await notify.alert('Analisa Progres', `Analisa: ${stats.foundIds.length} item ditemukan, semuanya sudah selesai.`);
+          await notify.alert(
+            'Analisa Progres',
+            `Analisa: ${stats.foundIds.length} item ditemukan, semuanya sudah selesai.`,
+          );
           return;
         }
 
-        if (await notify.confirm('Mulai Otomasi', `Mulai proses untuk ${stats.pendingIds.length} item yang terpilih?`)) {
+        if (
+          await notify.confirm(
+            'Mulai Otomasi',
+            `Mulai proses untuk ${stats.pendingIds.length} item yang terpilih?`,
+          )
+        ) {
           startAutomation(stats.pendingIds, stats.foundIds.length);
         }
       });
       controlPanel.mount(mainBtn, 1);
+      controlPanel.mount(profileIndicator, 4);
     }
   }
 

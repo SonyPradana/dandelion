@@ -23,6 +23,7 @@ export function skipButton() {
     display: flex;
     align-items: center;
     justify-content: center;
+    pointer-events: auto;
   `;
 
   btn.style.cssText = baseStyle;
