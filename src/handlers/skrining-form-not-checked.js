@@ -386,7 +386,6 @@ async function processNextItem() {
 
   const config = await getActiveConfig();
   const ncConfig = config.notChecked || {};
-  syncStatusPanel();
 
   const currentId = ids[0];
   const rowElement = await waitForRow(currentId, 15_000);
@@ -407,22 +406,23 @@ async function processNextItem() {
       moveToNext(ids, ncConfig.itemDelay);
       return;
     }
+    ids.shift();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    syncStatusPanel();
+
     row.style.backgroundColor = '#fff3e5';
     label.click();
 
     try {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 6000);
-      const isLastItem = ids.length === 1;
-      
-      moveToNext(ids, false);
+
       confirmBtn.click();
 
       setTimeout(() => {
-        // Always reload after a click to ensure DOM is updated for next item or finish state
         window.location.reload();
       }, ncConfig.reloadDelay || 3000);
     } catch (error) {
-      moveToNext(ids, ncConfig.itemDelay);
+      setTimeout(processNextItem, ncConfig.itemDelay || 1000);
     }
   } else {
     const masterList = await getNotCheckedList();
