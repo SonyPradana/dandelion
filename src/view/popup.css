@@ -383,6 +383,61 @@ body {
   padding: 20px 15px 10px;
 }
 
+/* Config Group (collapsible sections) */
+.config-group {
+  margin-bottom: 20px;
+  border-radius: var(--border-radius-large);
+  background: var(--background-color-medium);
+  border: 1px solid var(--border-color-light);
+}
+
+.config-group[open] {
+  background: var(--background-color-main);
+}
+
+.config-group[open] > summary {
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.config-group > .form-group {
+  padding: 0 15px 10px;
+}
+
+.config-group > .delay-settings-grid {
+  padding: 0 15px 10px;
+}
+
+.config-group > summary {
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color-muted);
+  list-style: none;
+}
+
+.config-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.config-group > summary::after {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--text-color-muted);
+  transition: transform 0.3s ease;
+  transform-origin: center;
+}
+
+.config-group[open] > summary::after {
+  transform: rotate(180deg);
+}
+
 /* Delay Settings UI */
 .delay-settings-grid {
   display: grid;

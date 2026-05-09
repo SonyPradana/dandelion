@@ -120,142 +120,101 @@
                 <option value="profile2">Profile 2</option>
               </select>
             </div>
-            <div class="form-group">
-              <label for="form-input">Formulir</label>
-              <input type="text" id="form-input" placeholder="Masukkan selektor untuk Formulir" />
-            </div>
-            <div class="form-group">
-              <label for="survey-input">Survei</label>
-              <input type="text" id="survey-input" placeholder="Masukkan selektor untuk Survei" />
-            </div>
-            <div class="form-group">
-              <label for="not-checked-url-input">URL 'Tidak Periksa'</label>
-              <input
-                type="text"
-                id="not-checked-url-input"
-                placeholder="Masukkan pola URL (pemeriksaan)"
-              />
-            </div>
 
-            <!-- Radio Button Keywords -->
-            <div class="form-group">
-              <label for="radio-button-keywords-input">Kata Kunci Tombol Radio</label>
-              <input
-                type="text"
-                id="radio-button-keywords-input"
-                placeholder="Value pisahkan dengan ;"
-              />
-              <div class="keyword-list-container">
-                <div class="keyword-list" id="radio-button-keywords-list"></div>
-                <div class="keyword-input-container">
-                  <input
-                    type="text"
-                    id="radio-button-keywords-add-input"
-                    placeholder="Tambah kata kunci..."
-                  />
-                  <button type="button" class="btn-add" id="radio-button-keywords-add">+</button>
+            <details class="config-group" open>
+              <summary>Form Skrining</summary>
+
+              <div class="form-group">
+                <label for="form-skrining-url">URL</label>
+                <input type="text" id="form-skrining-url" placeholder="Masukkan pola URL form skrining" />
+              </div>
+
+              <div class="form-group">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="form-skrining-scroll-to-button" />
+                  <label for="form-skrining-scroll-to-button">Scroll ke tombol setelah selesai</label>
                 </div>
               </div>
-            </div>
 
-            <!-- Dropdown Keywords -->
-            <div class="form-group">
-              <label for="dropdown-keywords-input">Kata Kunci Dropdown</label>
-              <input
-                type="text"
-                id="dropdown-keywords-input"
-                placeholder="Value pisahkan dengan ;"
-              />
-              <div class="keyword-list-container">
-                <div class="keyword-list" id="dropdown-keywords-list"></div>
-                <div class="keyword-input-container">
-                  <input
-                    type="text"
-                    id="dropdown-keywords-add-input"
-                    placeholder="Tambah kata kunci..."
-                  />
-                  <button type="button" class="btn-add" id="dropdown-keywords-add">+</button>
+              <div class="form-group">
+                <label for="form-skrining-radio-keywords-input">Kata Kunci Tombol Radio</label>
+                <input type="text" id="form-skrining-radio-keywords-input" placeholder="Value pisahkan dengan ;" />
+                <div class="keyword-list-container">
+                  <div class="keyword-list" id="form-skrining-radio-keywords-list"></div>
+                  <div class="keyword-input-container">
+                    <input type="text" id="form-skrining-radio-keywords-add-input" placeholder="Tambah kata kunci..." />
+                    <button type="button" class="btn-add" id="form-skrining-radio-keywords-add">+</button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <details class="collapsible-details">
-              <summary class="collapsible-summary">Konfigurasi Lanjutan</summary>
-              <div class="collapsible-content-native">
-                <div class="form-group">
-                  <label for="excludes">Data dikecualikan</label>
-                  <input type="text" id="excludes" placeholder="Kecualikan atau lewati survei" />
-                </div>
-
-                <!-- Pinned Values -->
-                <div class="form-group">
-                  <label>Nilai Tersemat</label>
-                  <div id="pinned-values-container"></div>
-                </div>
-
-                <!-- Not Checked Master List -->
-                <div class="form-group">
-                  <label for="not-checked-list-input">Daftar Master 'Tidak Periksa'</label>
-                  <input
-                    type="text"
-                    id="not-checked-list-input"
-                    placeholder="ID baris pisahkan dengan ;"
-                  />
-                  <div class="keyword-list-container">
-                    <div class="keyword-list" id="not-checked-list-container"></div>
-                    <div class="keyword-input-container">
-                      <input
-                        type="text"
-                        id="not-checked-list-add-input"
-                        placeholder="Tambah ID baris (rowfrm...)"
-                      />
-                      <button type="button" class="btn-add" id="not-checked-list-add">+</button>
-                    </div>
+              <div class="form-group">
+                <label for="form-skrining-dropdown-keywords-input">Kata Kunci Dropdown</label>
+                <input type="text" id="form-skrining-dropdown-keywords-input" placeholder="Value pisahkan dengan ;" />
+                <div class="keyword-list-container">
+                  <div class="keyword-list" id="form-skrining-dropdown-keywords-list"></div>
+                  <div class="keyword-input-container">
+                    <input type="text" id="form-skrining-dropdown-keywords-add-input" placeholder="Tambah kata kunci..." />
+                    <button type="button" class="btn-add" id="form-skrining-dropdown-keywords-add">+</button>
                   </div>
                 </div>
+              </div>
 
-                <!-- Not Checked Delay Settings -->
-                <div class="delay-settings-grid">
-                  <div class="form-group-sm">
-                    <label for="not-checked-automation-delay">Jeda Awal</label>
-                    <input
-                      type="number"
-                      id="not-checked-automation-delay"
-                      placeholder="2000"
-                      min="500"
-                      max="10000"
-                    />
+              <div class="form-group">
+                <label for="form-skrining-excludes">Data dikecualikan</label>
+                <input type="text" id="form-skrining-excludes" placeholder="Kecualikan atau lewati survei" />
+              </div>
+
+              <div class="form-group">
+                <label>Nilai Tersemat</label>
+                <div id="form-skrining-pinned-values"></div>
+              </div>
+            </details>
+
+            <details class="config-group" open>
+              <summary>Tidak Periksa</summary>
+
+              <div class="form-group">
+                <label for="not-checked-url">URL</label>
+                <input type="text" id="not-checked-url" placeholder="Masukkan pola URL (pemeriksaan)" />
+              </div>
+
+              <div class="form-group">
+                <label for="not-checked-list-input">Daftar Master 'Tidak Periksa'</label>
+                <input type="text" id="not-checked-list-input" placeholder="ID baris pisahkan dengan ;" />
+                <div class="keyword-list-container">
+                  <div class="keyword-list" id="not-checked-list-container"></div>
+                  <div class="keyword-input-container">
+                    <input type="text" id="not-checked-list-add-input" placeholder="Tambah ID baris (rowfrm...)" />
+                    <button type="button" class="btn-add" id="not-checked-list-add">+</button>
                   </div>
-                  <div class="form-group-sm">
-                    <label for="not-checked-item-delay">Jeda Item</label>
-                    <input
-                      type="number"
-                      id="not-checked-item-delay"
-                      placeholder="1000"
-                      min="100"
-                      max="5000"
-                    />
-                  </div>
-                  <div class="form-group-sm">
-                    <label for="not-checked-reload-delay">Jeda Reload</label>
-                    <input
-                      type="number"
-                      id="not-checked-reload-delay"
-                      placeholder="3000"
-                      min="500"
-                      max="15000"
-                    />
-                  </div>
+                </div>
+              </div>
+
+              <div class="delay-settings-grid">
+                <div class="form-group-sm">
+                  <label for="not-checked-automation-delay">Jeda Awal</label>
+                  <input type="number" id="not-checked-automation-delay" placeholder="2000" min="500" max="10000" />
+                </div>
+                <div class="form-group-sm">
+                  <label for="not-checked-item-delay">Jeda Item</label>
+                  <input type="number" id="not-checked-item-delay" placeholder="1000" min="100" max="5000" />
+                </div>
+                <div class="form-group-sm">
+                  <label for="not-checked-reload-delay">Jeda Reload</label>
+                  <input type="number" id="not-checked-reload-delay" placeholder="3000" min="500" max="15000" />
                 </div>
               </div>
             </details>
 
-            <div class="form-group">
-              <div class="checkbox-item">
-                <input type="checkbox" id="scroll-bottom-checkbox" />
-                <label for="scroll-bottom-checkbox">Scroll ke bawah setelah selesai</label>
+            <details class="config-group">
+              <summary>Skrining (Legacy)</summary>
+
+              <div class="form-group">
+                <label for="skrining-url">URL</label>
+                <input type="text" id="skrining-url" placeholder="Masukkan pola URL skrining" />
               </div>
-            </div>
+            </details>
 
             <button id="save-config-btn" class="btn">Simpan</button>
             <div class="action-links">

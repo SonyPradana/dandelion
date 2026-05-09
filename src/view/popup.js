@@ -9,24 +9,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize KeywordList components
   const radioButtonKeywordsList = new KeywordList(
-    'radio-button-keywords-input', // source textbox
-    'radio-button-keywords-list', // list container
-    'radio-button-keywords-add-input', // add input
-    'radio-button-keywords-add', // add button
+    'form-skrining-radio-keywords-input',
+    'form-skrining-radio-keywords-list',
+    'form-skrining-radio-keywords-add-input',
+    'form-skrining-radio-keywords-add',
   );
 
   const dropdownKeywordsList = new KeywordList(
-    'dropdown-keywords-input', // source textbox
-    'dropdown-keywords-list', // list container
-    'dropdown-keywords-add-input', // add input
-    'dropdown-keywords-add', // add button
+    'form-skrining-dropdown-keywords-input',
+    'form-skrining-dropdown-keywords-list',
+    'form-skrining-dropdown-keywords-add-input',
+    'form-skrining-dropdown-keywords-add',
   );
 
   const notCheckedList = new KeywordList(
-    'not-checked-list-input', // source textbox
-    'not-checked-list-container', // list container
-    'not-checked-list-add-input', // add input
-    'not-checked-list-add', // add button
+    'not-checked-list-input',
+    'not-checked-list-container',
+    'not-checked-list-add-input',
+    'not-checked-list-add',
   );
 
   window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList, notCheckedList };
@@ -83,18 +83,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Configuration Tab Logic ---
   const saveConfigBtn = document.getElementById('save-config-btn');
-  const formInput = document.getElementById('form-input');
-  const surveyInput = document.getElementById('survey-input');
-  const notCheckedUrlInput = document.getElementById('not-checked-url-input');
+  const formSkriningUrlInput = document.getElementById('form-skrining-url');
+  const scrollToButtonCheckbox = document.getElementById('form-skrining-scroll-to-button');
+  const radioButtonKeywordsInput = document.getElementById('form-skrining-radio-keywords-input');
+  const dropdownKeywordsInput = document.getElementById('form-skrining-dropdown-keywords-input');
+  const excludesInput = document.getElementById('form-skrining-excludes');
+  const notCheckedUrlInput = document.getElementById('not-checked-url');
+  const notCheckedListInput = document.getElementById('not-checked-list-input');
   const notCheckedAutomationDelayInput = document.getElementById('not-checked-automation-delay');
   const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
-  const scrollBottomCheckbox = document.getElementById('scroll-bottom-checkbox');
-  const radioButtonKeywordsInput = document.getElementById('radio-button-keywords-input');
-  const dropdownKeywordsInput = document.getElementById('dropdown-keywords-input');
-  const notCheckedListInput = document.getElementById('not-checked-list-input');
+  const skriningUrlInput = document.getElementById('skrining-url');
   const profileSelect = document.getElementById('profile-select');
-  const excludesInput = document.getElementById('excludes');
 
   /**
    * Updates the form inputs based on the selected profile in the loaded config.
@@ -104,33 +104,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!loadedConfig) return;
 
     const profileSettings = loadedConfig.profiles[selectedProfile];
-    formInput.value = loadedConfig.formSelector;
-    surveyInput.value = loadedConfig.surveySelector;
 
-    // Load Not Checked Group
-    const nc = loadedConfig.notChecked || {};
-    notCheckedUrlInput.value = nc.url || '';
-    notCheckedAutomationDelayInput.value = nc.automationDelay || 2000;
-    notCheckedItemDelayInput.value = nc.itemDelay || 1000;
-    notCheckedReloadDelayInput.value = nc.reloadDelay || 1000;
-
-    scrollBottomCheckbox.checked = loadedConfig.scrollToBottom || false;
-
-    // Set values to textboxes (KeywordList components will auto-sync via event listener)
-    radioButtonKeywordsInput.value = profileSettings.radioButtonKeywords;
-    dropdownKeywordsInput.value = profileSettings.dropdownKeywords;
-    notCheckedListInput.value = profileSettings.notCheckedList || '';
+    // Form Skrining
+    const fs = profileSettings.formSkrining || {};
+    formSkriningUrlInput.value = fs.url || '';
+    scrollToButtonCheckbox.checked = fs.scrollToButton ?? true;
+    radioButtonKeywordsInput.value = fs.radioButtonKeywords || '';
+    dropdownKeywordsInput.value = fs.dropdownKeywords || '';
+    excludesInput.value = fs.excludes || '';
 
     // Trigger input event to sync with KeywordList components
     radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
     dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
-    notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-    excludesInput.value = profileSettings.excludes;
 
     if (pinnedValuesList) {
-      pinnedValuesList.setData(profileSettings.pinneds || {});
+      pinnedValuesList.setData(fs.pinneds || {});
     }
+
+    // Not Checked
+    const nc = profileSettings.notChecked || {};
+    notCheckedUrlInput.value = nc.url || '';
+    notCheckedListInput.value = nc.notCheckedList || '';
+    notCheckedAutomationDelayInput.value = nc.automationDelay || 2000;
+    notCheckedItemDelayInput.value = nc.itemDelay || 1000;
+    notCheckedReloadDelayInput.value = nc.reloadDelay || 1000;
+
+    notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    // Skrining (Legacy)
+    const sk = profileSettings.skrining || {};
+    skriningUrlInput.value = sk.url || '';
 
     // Update select box selection
     profileSelect.value = selectedProfile;
@@ -143,13 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize KeyValueList component with onChange callback
     const activeProfileSettings = config.profiles[config.activeProfile];
     pinnedValuesList = new KeyValueList(
-      'pinned-values-container',
-      activeProfileSettings.pinneds || {},
+      'form-skrining-pinned-values',
+      activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
-        // Auto-update loadedConfig when pinneds change
         if (loadedConfig) {
           const selectedProfile = profileSelect.value;
-          loadedConfig.profiles[selectedProfile].pinneds = newPinneds;
+          if (!loadedConfig.profiles[selectedProfile].formSkrining) {
+            loadedConfig.profiles[selectedProfile].formSkrining = {};
+          }
+          loadedConfig.profiles[selectedProfile].formSkrining.pinneds = newPinneds;
         }
       },
     );
@@ -165,33 +170,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!loadedConfig) return;
 
       const selectedProfile = profileSelect.value;
+      const profileSettings = loadedConfig.profiles[selectedProfile];
 
-      // Update the loadedConfig object with current form values
       loadedConfig.activeProfile = selectedProfile;
-      loadedConfig.formSelector = formInput.value;
-      loadedConfig.surveySelector = surveyInput.value;
 
-      // Save Not Checked Group
-      if (!loadedConfig.notChecked) loadedConfig.notChecked = {};
-      loadedConfig.notChecked.url = notCheckedUrlInput.value;
-      loadedConfig.notChecked.automationDelay =
-        parseInt(notCheckedAutomationDelayInput.value) || 2000;
-      loadedConfig.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
-      loadedConfig.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
+      // Form Skrining
+      if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
+      profileSettings.formSkrining.url = formSkriningUrlInput.value;
+      profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
+      profileSettings.formSkrining.radioButtonKeywords = radioButtonKeywordsInput.value;
+      profileSettings.formSkrining.dropdownKeywords = dropdownKeywordsInput.value;
+      profileSettings.formSkrining.excludes = excludesInput.value;
 
-      loadedConfig.scrollToBottom = scrollBottomCheckbox.checked;
-
-      // Get values from textboxes (already synced by KeywordList components)
-      loadedConfig.profiles[selectedProfile].radioButtonKeywords = radioButtonKeywordsInput.value;
-      loadedConfig.profiles[selectedProfile].dropdownKeywords = dropdownKeywordsInput.value;
-      loadedConfig.profiles[selectedProfile].notCheckedList = notCheckedListInput.value;
-
-      loadedConfig.profiles[selectedProfile].excludes = excludesInput.value;
-
-      // Get pinneds from KeyValueList (already auto-synced via onChange callback)
       if (pinnedValuesList) {
-        loadedConfig.profiles[selectedProfile].pinneds = pinnedValuesList.getData();
+        profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
       }
+
+      // Skrining (Legacy)
+      if (!profileSettings.skrining) profileSettings.skrining = {};
+      profileSettings.skrining.url = skriningUrlInput.value;
+
+      // Not Checked
+      if (!profileSettings.notChecked) profileSettings.notChecked = {};
+      profileSettings.notChecked.url = notCheckedUrlInput.value;
+      profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
+      profileSettings.notChecked.automationDelay =
+        parseInt(notCheckedAutomationDelayInput.value) || 2000;
+      profileSettings.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
+      profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
 
       setConfig(loadedConfig);
 
@@ -235,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const importedConfig = JSON.parse(e.target.result);
 
@@ -244,10 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error('Invalid config file format.');
         }
 
-        // Save and reload
+        // Save and reload (getFullConfig auto-migrates old format)
         setConfig(importedConfig);
-        loadedConfig = importedConfig;
-        updateFormForProfile(importedConfig.activeProfile);
+        loadedConfig = await getFullConfig();
+        updateFormForProfile(loadedConfig.activeProfile);
       } catch (error) {
       } finally {
         // Reset file input
