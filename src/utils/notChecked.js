@@ -7,7 +7,7 @@ import { getFullConfig, setConfig } from '../configuration.js';
 export async function getNotCheckedList() {
   const fullConfig = await getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
-  const listString = fullConfig.profiles[activeProfileName]?.notCheckedList || '';
+  const listString = fullConfig.profiles[activeProfileName]?.notChecked?.notCheckedList || '';
 
   return listString.split(';').filter(Boolean);
 }
@@ -24,8 +24,11 @@ async function saveNotCheckedList(listArray) {
   if (!fullConfig.profiles[activeProfileName]) {
     fullConfig.profiles[activeProfileName] = {};
   }
+  if (!fullConfig.profiles[activeProfileName].notChecked) {
+    fullConfig.profiles[activeProfileName].notChecked = {};
+  }
 
-  fullConfig.profiles[activeProfileName].notCheckedList = listArray.join(';');
+  fullConfig.profiles[activeProfileName].notChecked.notCheckedList = listArray.join(';');
   await setConfig(fullConfig);
 }
 

@@ -1,0 +1,214 @@
+# TODO: Restrukturisasi Konfigurasi by Handler
+
+## Struktur Config Baru
+
+```javascript
+{
+  activeProfile: 'profile1',
+  profiles: {
+    profile1: {
+      formSkrining: {
+        url: '',                   // was surveySelector
+        scrollToButton: true,      // was scrollToBottom (rename)
+        radioButtonKeywords: '',
+        dropdownKeywords: '',
+        excludes: '',
+        pinneds: {},
+      },
+      notChecked: {
+        url: '',                   // URL pattern (tetap)
+        notCheckedList: '',        // PINDAH dari profile-level ke sini
+        automationDelay: 2000,
+        itemDelay: 1000,
+        reloadDelay: 1000,
+        domTimeout: 5000,
+      },
+      skrining: {
+        url: '',                   // was formSelector
+      },
+      zenMode: {
+        domTimeout: 5000,          // hidden dari UI, dev/debug only
+      },
+    },
+    profile2: { ... },
+  },
+}
+```
+
+---
+
+## Agent 1 — UI (Popup/View)
+
+### Files: `src/view/popup.html`, `src/view/popup.js`, `src/view/popup.css`
+
+### Tasks:
+
+- [x] **popup.html — Grup Ulang Layout** (section per handler, update IDs)
+- [x] **popup.js — Update Load/Save Config** (baca/tulis dari struktur baru)
+- [x] **popup.css** — Penyesuaian layout
+
+- [ ] **Ganti `<div class="section">` jadi `<details class="config-group" open>`**
+  - **popup.html**: Tiap grup config dibungkus `<details class="config-group" open>` dengan `<summary>` sebagai header
+    ```html
+    <details class="config-group" open>
+      <summary>Form Skrining</summary>
+      ...
+    </details>
+    <details class="config-group" open>
+      <summary>Tidak Periksa</summary>
+      ...
+    </details>
+    <details class="config-group">
+      <summary>Skrining (Legacy)</summary>
+      <!-- input #skrining-url -->
+    </details>
+    ```
+  - Grup "Skrining (Legacy)" berisi input `#skrining-url` — default **tertutup**
+
+- [ ] **Tambah input `skrining.url` ke UI** (di dalam grup Skrining Legacy)
+  - **popup.js**:
+    ```javascript
+    const skriningUrlInput = document.getElementById('skrining-url');
+    // load:
+    const sk = profileSettings.skrining || {};
+    skriningUrlInput.value = sk.url || '';
+    // save:
+    if (!profileSettings.skrining) profileSettings.skrining = {};
+    profileSettings.skrining.url = skriningUrlInput.value;
+    ```
+
+- [ ] **popup.css — Style `.config-group`**
+  - Style `<details>` dan `<summary>` senada dengan `.collapsible-details` yang sudah ada
+  - Tambah chevron/arrow indicator via `summary::marker` atau `::before`
+
+---
+
+## Agent 2 — Configuration + Handlers
+
+### Files:
+- `src/configuration.js`
+- `src/main.js`
+- `src/handlers/skriningform.js`
+- `src/handlers/skrining-form-not-checked.js` (mungkin tidak perlu)
+- `src/utils/notChecked.js`
+- `src/utils/pinneds.js`
+- `src/utils/excludes.js`
+
+### Tasks:
+
+- [x] **main.js** — routing: `config.skrining.url`, `config.formSkrining.url`, `config.notChecked.url`
+- [x] **skriningform.js** — akses `config.formSkrining.xxx`
+- [x] **utils/notChecked.js** — path `notChecked.notCheckedList`
+- [x] **utils/pinneds.js** — path `formSkrining.pinneds`
+- [x] **utils/excludes.js** — path `formSkrining.excludes`
+
+- [ ] **configuration.js — REVISI: Fallback import & migrasi**
+  - Bug: `setConfig(importedConfig)` di popup.js simpan raw old format → `updateFormForProfile()` gagal baca
+  - **Fix di configuration.js**: ekspor fungsi `migrateConfig(config)` yang bisa dipanggil dari luar
+    ```javascript
+    export function migrateConfig(raw) {
+      // Deteksi old format dan migrasi ke baru
+      // Return config baru (tanpa simpan ke storage)
+    }
+    ```
+  - Tambah validasi: saat migrasi, pastikan SEMUA field di-copy (tidak hanya profile1 & profile2)
+
+- [ ] **popup.js — REVISI: Import pake getFullConfig()**
+  - `popup.js:244-247`:
+    ```javascript
+    // SEBELUM (salah):
+    setConfig(importedConfig);
+    loadedConfig = importedConfig;
+    updateFormForProfile(importedConfig.activeProfile);
+
+    // SESUDAH (benar):
+    setConfig(importedConfig);
+    loadedConfig = await getFullConfig();  // auto-migrate
+    updateFormForProfile(loadedConfig.activeProfile);
+    ```
+
+### Detail (arsip):
+
+1. **configuration.js — DEFAULT_CONFIG Baru + Migrasi**
+   - Ubah `DEFAULT_CONFIG`:
+   ```javascript
+   const DEFAULT_CONFIG = {
+     activeProfile: 'profile1',
+     profiles: {
+       profile1: {
+         formSkrining: { url: '', scrollToButton: true, radioButtonKeywords: '', dropdownKeywords: '', excludes: '', pinneds: {} },
+         notChecked: { url: '', notCheckedList: '', automationDelay: 2000, itemDelay: 1000, reloadDelay: 1000, domTimeout: 5000 },
+         skrining: { url: '' },
+         zenMode: { domTimeout: 5000 },
+       },
+       profile2: { ... },
+     },
+   };
+   ```
+   - `getFullConfig()`: deteksi format lama → migrasi otomatis
+   - Deteksi format lama: `result.formSelector !== undefined` atau `result.profiles.profile1.radioButtonKeywords !== undefined`
+   - Mapping migrasi:
+     - `formSelector` → `profiles[].skrining.url`
+     - `surveySelector` → `profiles[].formSkrining.url`
+     - `scrollToBottom` → `profiles[].formSkrining.scrollToButton`
+     - `radioButtonKeywords` → `profiles[].formSkrining.radioButtonKeywords`
+     - `dropdownKeywords` → `profiles[].formSkrining.dropdownKeywords`
+     - `excludes` → `profiles[].formSkrining.excludes`
+     - `pinneds` → `profiles[].formSkrining.pinneds`
+     - `notCheckedList` → `profiles[].notChecked.notCheckedList`
+     - `notChecked.*` → tetap
+   - Setelah migrasi, simpan config baru (`setConfig()`) agar next load langsung pake format baru
+   - `getActiveConfig()`: return nested structure untuk handler
+     ```javascript
+     return {
+       formSkrining: activeProfileSettings.formSkrining,
+       notChecked: activeProfileSettings.notChecked,
+       skrining: activeProfileSettings.skrining,
+       zenMode: activeProfileSettings.zenMode,
+       activeProfile: config.activeProfile,
+     };
+     ```
+   - Hapus flattening `form`, `survey`, `scrollToBottom` dari return
+
+2. **main.js — Update Routing**
+   ```javascript
+   if (config.notChecked?.url && currentURL.includes(config.notChecked.url)) {
+     initializeNotChecked();
+   } else if (config.formSkrining?.url && currentURL.includes(config.formSkrining.url)) {
+     initializeSkriningForm();
+   } else if (config.skrining?.url && currentURL.includes(config.skrining.url)) {
+     initializeSkrining();
+   }
+   ```
+
+3. **skriningform.js — Update Akses Config**
+   - `config.radioButtonKeywords` → `config.formSkrining.radioButtonKeywords`
+   - `config.dropdownKeywords` → `config.formSkrining.dropdownKeywords`
+   - `config.pinneds` → `config.formSkrining.pinneds`
+   - `config.excludes` → `config.formSkrining.excludes`
+
+4. **utils/notChecked.js — Update Path**
+   - `fullConfig.profiles[activeProfileName]?.notCheckedList`
+     → `fullConfig.profiles[activeProfileName]?.notChecked?.notCheckedList`
+   - `fullConfig.profiles[activeProfileName].notCheckedList`
+     → `fullConfig.profiles[activeProfileName].notChecked.notCheckedList`
+
+5. **utils/pinneds.js — Update Akses**
+   - `config.pinneds` → `config.formSkrining.pinneds`
+   - `config.profiles[activeProfile].pinneds` → `config.profiles[activeProfile].formSkrining.pinneds`
+
+6. **utils/excludes.js — Update Path**
+   - `fullConfig.profiles[activeProfileName]?.excludes` → `fullConfig.profiles[activeProfileName]?.formSkrining?.excludes`
+   - `fullConfig.profiles[activeProfileName].excludes` → `fullConfig.profiles[activeProfileName].formSkrining.excludes`
+
+---
+
+## Catatan Penting
+
+- **Export** → selalu pakai format baru
+- **Import** → terima format lama & baru (migrasi di `getFullConfig`)
+- **`skrining`** grup → tampil di UI dengan input URL (legacy)
+- **`zenMode`** grup → tidak tampil di UI (internal/dev only)
+- **`domTimeout`** di zenMode → hidden, hanya untuk dev/debug
+- Semua handler **harus** di-test setelah perubahan
+- Urutan prioritas routing main.js: notChecked → formSkrining → skrining

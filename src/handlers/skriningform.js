@@ -78,13 +78,14 @@ export async function initializeSkriningForm() {
   if (tombol) {
     tombol.addEventListener('click', async () => {
       const config = await getActiveConfig();
+      const fs = config.formSkrining || {};
       const radioButtonKeywords =
-        (config.radioButtonKeywords && config.radioButtonKeywords.split(';')) || [];
+        (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
       const dropdownKeywords =
-        (config.dropdownKeywords && config.dropdownKeywords.split(';')) || [];
-      const pinneds = config.pinneds || {};
+        (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
+      const pinneds = fs.pinneds || {};
       const excludes = [
-        ...((config.excludes && config.excludes.split(';')) || []),
+        ...((fs.excludes && fs.excludes.split(';')) || []),
         ...Object.keys(pinneds),
       ];
 
