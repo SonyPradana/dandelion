@@ -4,6 +4,7 @@ const DEFAULT_CONFIG = {
   activeProfile: 'profile1',
   profiles: {
     profile1: {
+      name: 'Profile 1',
       formSkrining: {
         url: '',
         scrollToButton: true,
@@ -24,6 +25,7 @@ const DEFAULT_CONFIG = {
       zenMode: { domTimeout: 5000 },
     },
     profile2: {
+      name: 'Profile 2',
       formSkrining: {
         url: '',
         scrollToButton: true,
@@ -78,7 +80,9 @@ export function migrateConfig(raw) {
 
     for (const profileKey of profileKeys) {
       const oldProfile = raw.profiles[profileKey] || {};
+      const defaultName = { profile1: 'Profile 1', profile2: 'Profile 2' }[profileKey] || '';
       profiles[profileKey] = {
+        name: oldProfile.name || defaultName,
         formSkrining: {
           url: raw.surveySelector ?? '',
           scrollToButton: raw.scrollToBottom ?? true,
@@ -128,6 +132,7 @@ function applyConfigDefaults(raw) {
     const defaultProfile = DEFAULT_CONFIG.profiles[key] || {};
     const savedProfile = rawProfiles[key] || {};
     profiles[key] = {
+      name: savedProfile.name || defaultProfile.name || '',
       formSkrining: { ...defaultProfile.formSkrining, ...(savedProfile.formSkrining || {}) },
       notChecked: { ...defaultProfile.notChecked, ...(savedProfile.notChecked || {}) },
       skrining: { ...defaultProfile.skrining, ...(savedProfile.skrining || {}) },
