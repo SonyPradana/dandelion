@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+const start = performance.now();
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
 
@@ -36,7 +38,8 @@ try {
 
   fs.writeFileSync(distManifestPath, JSON.stringify(manifest, null, 2));
 
-  console.log(`manifest.json built successfully and placed in ${distDir}`);
+  const duration = (performance.now() - start).toFixed(2);
+  console.log(`Manifest build in ${duration}ms`);
 } catch (error) {
   console.error('Failed to build manifest.json:', error);
   process.exit(1);

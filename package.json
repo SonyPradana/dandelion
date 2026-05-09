@@ -12,7 +12,7 @@
     "format": "oxfmt . --write",
     "format:check": "oxfmt . --check",
     "clean": "rimraf dist",
-    "copy:static": "copyfiles -u 1 src/view/{popup.html,popup.css,/components/KeywordList.css,/components/KeyValueList.css} dist/ && copyfiles -u 1 icons/* dist/icons",
+    "copy:static": "node scripts/copy-static.js",
     "compile": "rolldown -c",
     "manifest": "node scripts/build-manifest.js",
     "build": "pnpm clean && pnpm compile && pnpm copy:static && pnpm manifest",
@@ -22,7 +22,6 @@
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
-    "copyfiles": "^2.4.1",
     "dotenv": "^17.4.2",
     "oxfmt": "^0.47.0",
     "oxlint": "^1.63.0",
