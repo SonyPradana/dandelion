@@ -161,7 +161,6 @@ async function ensureButtonsMounted(isProcessing) {
 
         if (await isZenModeActive()) {
           await clearZenMode();
-          // UI will be restored by next interval of ensureButtonsMounted
         } else {
           startZenAutomation();
         }
@@ -245,12 +244,6 @@ function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, ze
 function syncStatusPanel() {
   const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   const totalFoundOnPage = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
-
-  if (pending.length === 0 && localStorage.getItem(STORAGE_KEY) !== null) {
-    finishAutomation();
-    return;
-  }
-
   const doneCount = Math.max(0, totalFoundOnPage - pending.length);
 
   updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {
@@ -339,6 +332,7 @@ async function resumeAutomation() {
 
 /**
  * Performs cleanup of local storage and resets UI state when automation completes.
+ * Dipanggil oleh startStateMonitor setelah reload mendeteksi ids.length === 0.
  */
 function finishAutomation() {
   localStorage.removeItem(STORAGE_KEY);
@@ -408,16 +402,13 @@ async function processNextItem() {
       moveToNext(ids, ncConfig.itemDelay);
       return;
     }
-    ids.shift();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-    syncStatusPanel();
 
     row.style.backgroundColor = '#fff3e5';
     label.click();
 
     try {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 6000);
-
+      moveToNext(ids, false);
       confirmBtn.click();
 
       setTimeout(() => {
@@ -448,7 +439,9 @@ async function processNextItem() {
 function moveToNext(ids, delay) {
   ids.shift();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  syncStatusPanel();
+  if (delay !== false) {
+    syncStatusPanel();
+  }
   if (typeof delay === 'number') {
     setTimeout(processNextItem, delay);
   }
