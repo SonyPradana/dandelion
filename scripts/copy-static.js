@@ -2,10 +2,10 @@ import { cpSync, mkdirSync } from 'fs';
 
 const start = performance.now();
 const copies = [
-  ['src/view/popup.html', 'dist/popup.html'],
-  ['src/view/popup.css', 'dist/popup.css'],
-  ['src/view/components/KeywordList.css', 'dist/components/KeywordList.css'],
-  ['src/view/components/KeyValueList.css', 'dist/components/KeyValueList.css'],
+  ['src/view/popup.html', 'dist/view/popup.html'],
+  ['src/view/popup.css', 'dist/view/popup.css'],
+  ['src/view/components/KeywordList.css', 'dist/view/components/KeywordList.css'],
+  ['src/view/components/KeyValueList.css', 'dist/view/components/KeyValueList.css'],
 ];
 
 for (const [src, dest] of copies) {
