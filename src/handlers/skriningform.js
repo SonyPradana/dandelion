@@ -81,8 +81,7 @@ export async function initializeSkriningForm() {
       const fs = config.formSkrining || {};
       const radioButtonKeywords =
         (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
-      const dropdownKeywords =
-        (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
+      const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
       const pinneds = fs.pinneds || {};
       const excludes = [
         ...((fs.excludes && fs.excludes.split(';')) || []),

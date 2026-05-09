@@ -86,6 +86,7 @@
 ## Agent 2 — Configuration + Handlers
 
 ### Files:
+
 - `src/configuration.js`
 - `src/main.js`
 - `src/handlers/skriningform.js`
@@ -105,10 +106,13 @@
 - [ ] **configuration.js — REVISI: Hapus old keys setelah migrasi**
   - **Bug**: Old keys (`formSelector`, `surveySelector`, `scrollToBottom`, `notChecked`) tidak pernah dihapus setelah migrasi → setiap `getFullConfig()` migrasi ulang → timpa data user
   - **Fix di `getFullConfig()`**:
+
     ```javascript
     export function getFullConfig() {
       return browser.storage.local.get(null).then((result) => {
-        const isOldFormat = result.formSelector !== undefined || result.profiles?.profile1?.radioButtonKeywords !== undefined;
+        const isOldFormat =
+          result.formSelector !== undefined ||
+          result.profiles?.profile1?.radioButtonKeywords !== undefined;
         const migrated = migrateConfig(result);
 
         if (isOldFormat) {
@@ -126,17 +130,22 @@
       });
     }
     ```
+
   - **Ini fix 2 masalah sekaligus**: import bisa fallback + component/component save ke storage dengan benar
 
 - [ ] **popup.js — REVISI: Import pake getFullConfig()** (sudah benar, tinggal verifikasi)
-    loadedConfig = await getFullConfig();  // auto-migrate
-    updateFormForProfile(loadedConfig.activeProfile);
-    ```
+      loadedConfig = await getFullConfig(); // auto-migrate
+      updateFormForProfile(loadedConfig.activeProfile);
+
+  ```
+
+  ```
 
 ### Detail (arsip):
 
 1. **configuration.js — DEFAULT_CONFIG Baru + Migrasi**
    - Ubah `DEFAULT_CONFIG`:
+
    ```javascript
    const DEFAULT_CONFIG = {
      activeProfile: 'profile1',
@@ -151,6 +160,7 @@
      },
    };
    ```
+
    - `getFullConfig()`: deteksi format lama → migrasi otomatis
    - Deteksi format lama: `result.formSelector !== undefined` atau `result.profiles.profile1.radioButtonKeywords !== undefined`
    - Mapping migrasi:
@@ -177,6 +187,7 @@
    - Hapus flattening `form`, `survey`, `scrollToBottom` dari return
 
 2. **main.js — Update Routing**
+
    ```javascript
    if (config.notChecked?.url && currentURL.includes(config.notChecked.url)) {
      initializeNotChecked();

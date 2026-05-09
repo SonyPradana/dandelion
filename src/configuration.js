@@ -4,14 +4,42 @@ const DEFAULT_CONFIG = {
   activeProfile: 'profile1',
   profiles: {
     profile1: {
-      formSkrining: { url: '', scrollToButton: true, radioButtonKeywords: '', dropdownKeywords: '', excludes: '', pinneds: {} },
-      notChecked: { url: '', notCheckedList: '', automationDelay: 2000, itemDelay: 1000, reloadDelay: 1000, domTimeout: 5000 },
+      formSkrining: {
+        url: '',
+        scrollToButton: true,
+        radioButtonKeywords: '',
+        dropdownKeywords: '',
+        excludes: '',
+        pinneds: {},
+      },
+      notChecked: {
+        url: '',
+        notCheckedList: '',
+        automationDelay: 2000,
+        itemDelay: 1000,
+        reloadDelay: 1000,
+        domTimeout: 5000,
+      },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000 },
     },
     profile2: {
-      formSkrining: { url: '', scrollToButton: true, radioButtonKeywords: '', dropdownKeywords: '', excludes: '', pinneds: {} },
-      notChecked: { url: '', notCheckedList: '', automationDelay: 2000, itemDelay: 1000, reloadDelay: 1000, domTimeout: 5000 },
+      formSkrining: {
+        url: '',
+        scrollToButton: true,
+        radioButtonKeywords: '',
+        dropdownKeywords: '',
+        excludes: '',
+        pinneds: {},
+      },
+      notChecked: {
+        url: '',
+        notCheckedList: '',
+        automationDelay: 2000,
+        itemDelay: 1000,
+        reloadDelay: 1000,
+        domTimeout: 5000,
+      },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000 },
     },
@@ -41,7 +69,8 @@ export function setAgreement(value) {
  * @returns {typeof DEFAULT_CONFIG} Migrated config with defaults applied
  */
 export function migrateConfig(raw) {
-  const isOldFormat = raw.formSelector !== undefined || raw.profiles?.profile1?.radioButtonKeywords !== undefined;
+  const isOldFormat =
+    raw.formSelector !== undefined || raw.profiles?.profile1?.radioButtonKeywords !== undefined;
 
   if (isOldFormat) {
     const profileKeys = Object.keys(raw.profiles || {});
@@ -119,12 +148,19 @@ function applyConfigDefaults(raw) {
  */
 export function getFullConfig() {
   return browser.storage.local.get(null).then((result) => {
-    const isOldFormat = result.formSelector !== undefined || result.profiles?.profile1?.radioButtonKeywords !== undefined;
+    const isOldFormat =
+      result.formSelector !== undefined ||
+      result.profiles?.profile1?.radioButtonKeywords !== undefined;
     const migrated = migrateConfig(result);
 
     if (isOldFormat) {
       setConfig(migrated);
-      browser.storage.local.remove(['formSelector', 'surveySelector', 'scrollToBottom', 'notChecked']);
+      browser.storage.local.remove([
+        'formSelector',
+        'surveySelector',
+        'scrollToBottom',
+        'notChecked',
+      ]);
     }
 
     return migrated;
