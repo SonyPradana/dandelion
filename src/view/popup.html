@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="./popup.css" />
     <link rel="stylesheet" href="./components/KeywordList.css" />
     <link rel="stylesheet" href="./components/KeyValueList.css" />
+    <link rel="stylesheet" href="./components/ProfileManager.css" />
   </head>
   <body>
     <div class="container">
@@ -114,11 +115,8 @@
           </div>
           <div class="content">
             <div class="form-group">
-              <label for="profile-select">Pilih Profile</label>
-              <select id="profile-select">
-                <option value="profile1" default>Profile 1</option>
-                <option value="profile2">Profile 2</option>
-              </select>
+              <label>Profile</label>
+              <div id="profile-manager-container"></div>
             </div>
 
             <details class="config-group" open>

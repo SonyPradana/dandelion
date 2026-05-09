@@ -46,40 +46,10 @@
 - [x] **popup.html — Grup Ulang Layout** (section per handler, update IDs)
 - [x] **popup.js — Update Load/Save Config** (baca/tulis dari struktur baru)
 - [x] **popup.css** — Penyesuaian layout
-
-- [ ] **Ganti `<div class="section">` jadi `<details class="config-group" open>`**
-  - **popup.html**: Tiap grup config dibungkus `<details class="config-group" open>` dengan `<summary>` sebagai header
-    ```html
-    <details class="config-group" open>
-      <summary>Form Skrining</summary>
-      ...
-    </details>
-    <details class="config-group" open>
-      <summary>Tidak Periksa</summary>
-      ...
-    </details>
-    <details class="config-group">
-      <summary>Skrining (Legacy)</summary>
-      <!-- input #skrining-url -->
-    </details>
-    ```
-  - Grup "Skrining (Legacy)" berisi input `#skrining-url` — default **tertutup**
-
-- [ ] **Tambah input `skrining.url` ke UI** (di dalam grup Skrining Legacy)
-  - **popup.js**:
-    ```javascript
-    const skriningUrlInput = document.getElementById('skrining-url');
-    // load:
-    const sk = profileSettings.skrining || {};
-    skriningUrlInput.value = sk.url || '';
-    // save:
-    if (!profileSettings.skrining) profileSettings.skrining = {};
-    profileSettings.skrining.url = skriningUrlInput.value;
-    ```
-
-- [ ] **popup.css — Style `.config-group`**
-  - Style `<details>` dan `<summary>` senada dengan `.collapsible-details` yang sudah ada
-  - Tambah chevron/arrow indicator via `summary::marker` atau `::before`
+- [x] **ProfileManager komponen** — `ProfileManager.js` + `ProfileManager.css`
+- [x] **Ganti `<div class="section">` jadi `<details class="config-group" open>`**
+- [x] **Tambah input `skrining.url` ke UI** (di grup Skrining Legacy)
+- [x] **popup.css — Style `.config-group`**
 
 ---
 
@@ -103,7 +73,34 @@
 - [x] **utils/pinneds.js** — path `formSkrining.pinneds`
 - [x] **utils/excludes.js** — path `formSkrining.excludes`
 
-- [ ] **configuration.js — REVISI: Hapus old keys setelah migrasi**
+- [x] **configuration.js — Hapus old keys setelah migrasi** (fix stale key loop)
+
+- [ ] **configuration.js — REVISI: Profile name hilang setelah reload**
+  - **Bug**: `applyConfigDefaults()` hanya copy 4 group (`formSkrining`, `notChecked`, `skrining`, `zenMode`), tidak copy field `name`
+  - **Fix di 3 tempat**:
+    1. `DEFAULT_CONFIG` — tambah `name`:
+    ```javascript
+    profile1: { name: 'Profile 1', formSkrining: {...}, ... },
+    profile2: { name: 'Profile 2', formSkrining: {...}, ... },
+    ```
+
+    2. `applyConfigDefaults()` — spread `name`:
+    ```javascript
+    profiles[key] = {
+      name: savedProfile.name || defaultProfile.name || '',
+      formSkrining: { ... },
+      ...
+    };
+    ```
+
+    3. `migrateConfig()` — tambah `name` untuk migrated profiles:
+    ```javascript
+    profiles[profileKey] = {
+      name: oldProfile.name || (profileKey === 'profile1' ? 'Profile 1' : 'Profile 2'),
+      formSkrining: { ... },
+      ...
+    };
+    ```
   - **Bug**: Old keys (`formSelector`, `surveySelector`, `scrollToBottom`, `notChecked`) tidak pernah dihapus setelah migrasi → setiap `getFullConfig()` migrasi ulang → timpa data user
   - **Fix di `getFullConfig()`**:
 

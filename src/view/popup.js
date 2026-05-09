@@ -1,6 +1,7 @@
 import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
+import { ProfileManager } from './components/ProfileManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
@@ -94,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
-  const profileSelect = document.getElementById('profile-select');
 
   /**
    * Updates the form inputs based on the selected profile in the loaded config.
@@ -134,9 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Skrining (Legacy)
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
-
-    // Update select box selection
-    profileSelect.value = selectedProfile;
   }
 
   // Load initial config and set up profile switching
@@ -150,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
-          const selectedProfile = profileSelect.value;
+          const selectedProfile = loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
           }
@@ -161,7 +158,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateFormForProfile(config.activeProfile);
 
-    profileSelect.addEventListener('change', (event) => updateFormForProfile(event.target.value));
+    void new ProfileManager('profile-manager-container', config.profiles, config.activeProfile, {
+      onSwitch: (newActiveProfile) => {
+        loadedConfig.activeProfile = newActiveProfile;
+        updateFormForProfile(newActiveProfile);
+        setConfig(loadedConfig);
+      },
+      onChange: () => {
+        setConfig(loadedConfig);
+      },
+    });
   });
 
   // Save button logic
@@ -169,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
 
-      const selectedProfile = profileSelect.value;
+      const selectedProfile = loadedConfig.activeProfile;
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       loadedConfig.activeProfile = selectedProfile;
