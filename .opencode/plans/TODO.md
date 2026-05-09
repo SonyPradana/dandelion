@@ -102,27 +102,33 @@
 - [x] **utils/pinneds.js** — path `formSkrining.pinneds`
 - [x] **utils/excludes.js** — path `formSkrining.excludes`
 
-- [ ] **configuration.js — REVISI: Fallback import & migrasi**
-  - Bug: `setConfig(importedConfig)` di popup.js simpan raw old format → `updateFormForProfile()` gagal baca
-  - **Fix di configuration.js**: ekspor fungsi `migrateConfig(config)` yang bisa dipanggil dari luar
+- [ ] **configuration.js — REVISI: Hapus old keys setelah migrasi**
+  - **Bug**: Old keys (`formSelector`, `surveySelector`, `scrollToBottom`, `notChecked`) tidak pernah dihapus setelah migrasi → setiap `getFullConfig()` migrasi ulang → timpa data user
+  - **Fix di `getFullConfig()`**:
     ```javascript
-    export function migrateConfig(raw) {
-      // Deteksi old format dan migrasi ke baru
-      // Return config baru (tanpa simpan ke storage)
+    export function getFullConfig() {
+      return browser.storage.local.get(null).then((result) => {
+        const isOldFormat = result.formSelector !== undefined || result.profiles?.profile1?.radioButtonKeywords !== undefined;
+        const migrated = migrateConfig(result);
+
+        if (isOldFormat) {
+          setConfig(migrated);
+          // Hapus old keys biar migrasi cuma sekali
+          browser.storage.local.remove([
+            'formSelector',
+            'surveySelector',
+            'scrollToBottom',
+            'notChecked',
+          ]);
+        }
+
+        return migrated;
+      });
     }
     ```
-  - Tambah validasi: saat migrasi, pastikan SEMUA field di-copy (tidak hanya profile1 & profile2)
+  - **Ini fix 2 masalah sekaligus**: import bisa fallback + component/component save ke storage dengan benar
 
-- [ ] **popup.js — REVISI: Import pake getFullConfig()**
-  - `popup.js:244-247`:
-    ```javascript
-    // SEBELUM (salah):
-    setConfig(importedConfig);
-    loadedConfig = importedConfig;
-    updateFormForProfile(importedConfig.activeProfile);
-
-    // SESUDAH (benar):
-    setConfig(importedConfig);
+- [ ] **popup.js — REVISI: Import pake getFullConfig()** (sudah benar, tinggal verifikasi)
     loadedConfig = await getFullConfig();  // auto-migrate
     updateFormForProfile(loadedConfig.activeProfile);
     ```

@@ -124,6 +124,7 @@ export function getFullConfig() {
 
     if (isOldFormat) {
       setConfig(migrated);
+      browser.storage.local.remove(['formSelector', 'surveySelector', 'scrollToBottom', 'notChecked']);
     }
 
     return migrated;
