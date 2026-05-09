@@ -7,7 +7,8 @@ const DEFAULT_CONFIG = {
     url: '',
     automationDelay: 2000,
     itemDelay: 1000,
-    reloadDelay: 3000,
+    reloadDelay: 1000,
+    domTimeout: 5000,
   },
   activeProfile: 'profile1',
   scrollToBottom: true,
@@ -98,4 +99,14 @@ export function getActiveConfig() {
  */
 export function setConfig(config) {
   browser.storage.local.set(config);
+}
+
+/**
+ * Fast helper to switch active profile
+ * @param {string} profileKey
+ */
+export async function setActiveProfile(profileKey) {
+  const config = await getFullConfig();
+  config.activeProfile = profileKey;
+  await setConfig(config);
 }

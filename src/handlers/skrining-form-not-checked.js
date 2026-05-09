@@ -7,6 +7,9 @@ import { getNotCheckedList } from '../utils/notChecked';
 import { getActiveConfig } from '../configuration';
 import { isZenModeActive, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
+import { controlPanel } from '../components/controlPanel';
+import { notify } from '../components/notification';
+import { createProfileComponent } from '../components/profile';
 import {
   isPageInProcessingState,
   getQueueStats,
@@ -66,13 +69,15 @@ async function ensureButtonsMounted(isProcessing) {
   let mainBtn = document.getElementById('dandelion-not-checked-automation');
   let debugBtn = document.getElementById('dandelion-debug-toggle');
   let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
+  let profileIndicator = document.getElementById('dandelion-profile-indicator');
 
   const zenActive = await isZenModeActive();
 
   if (!isProcessing) {
-    if (mainBtn) mainBtn.remove();
-    if (debugBtn) debugBtn.remove();
-    if (zenBtn) zenBtn.remove();
+    if (mainBtn) controlPanel.remove(mainBtn);
+    if (debugBtn) controlPanel.remove(debugBtn);
+    if (zenBtn) controlPanel.remove(zenBtn);
+    if (profileIndicator) controlPanel.remove(profileIndicator);
     if (!isStandardAutomationActive && localStorage.getItem(STORAGE_KEY) === null && !zenActive) {
       removeStatusPanel();
     }
@@ -84,12 +89,32 @@ async function ensureButtonsMounted(isProcessing) {
   if (!mainBtn) {
     mainBtn = button('dandelion-not-checked-automation');
     if (mainBtn) {
+      if (!profileIndicator) {
+        profileIndicator = await createProfileComponent();
+      }
+
+      let hideTimeout = null;
+      const showProfile = () => {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        profileIndicator.setVisibility(true);
+      };
+      const hideProfile = () => {
+        hideTimeout = setTimeout(() => profileIndicator.setVisibility(false), 300);
+      };
+
+      mainBtn.addEventListener('mouseenter', showProfile);
+      mainBtn.addEventListener('mouseleave', hideProfile);
+      profileIndicator.addEventListener('mouseenter', showProfile);
+      profileIndicator.addEventListener('mouseleave', hideProfile);
+
       mainBtn.addEventListener('click', async () => {
         if (isStandardAutomationActive || (await isZenModeActive())) return;
 
         const pending = localStorage.getItem(STORAGE_KEY);
         if (pending && JSON.parse(pending).length > 0) {
-          if (confirm('Ada antrian yang belum selesai. Lanjutkan?')) {
+          if (
+            await notify.confirm('Antrian Pending', 'Ada antrian yang belum selesai. Lanjutkan?')
+          ) {
             isStandardAutomationActive = true;
             resumeAutomation();
             return;
@@ -98,21 +123,33 @@ async function ensureButtonsMounted(isProcessing) {
 
         const masterList = await getNotCheckedList();
         if (masterList.length === 0) {
-          alert('Daftar target kosong. Gunakan fitur 🐞 untuk menandai baris.');
+          await notify.alert(
+            'Daftar Kosong',
+            'Daftar target kosong. Gunakan fitur 🐞 untuk menandai baris.',
+          );
           return;
         }
 
         const stats = getQueueStats(masterList);
         if (stats.pendingIds.length === 0) {
-          alert(`Analisa: ${stats.foundIds.length} item ditemukan, semuanya sudah selesai.`);
+          await notify.alert(
+            'Analisa Progres',
+            `Analisa: ${stats.foundIds.length} item ditemukan, semuanya sudah selesai.`,
+          );
           return;
         }
 
-        if (confirm(`Mulai proses untuk ${stats.pendingIds.length} item yang terpilih?`)) {
+        if (
+          await notify.confirm(
+            'Mulai Otomasi',
+            `Mulai proses untuk ${stats.pendingIds.length} item yang terpilih?`,
+          )
+        ) {
           startAutomation(stats.pendingIds, stats.foundIds.length);
         }
       });
-      document.body.appendChild(mainBtn);
+      controlPanel.mount(mainBtn, 1);
+      controlPanel.mount(profileIndicator, 4);
     }
   }
 
@@ -124,12 +161,11 @@ async function ensureButtonsMounted(isProcessing) {
 
         if (await isZenModeActive()) {
           await clearZenMode();
-          // UI will be restored by next interval of ensureButtonsMounted
         } else {
           startZenAutomation();
         }
       });
-      document.body.appendChild(zenBtn);
+      controlPanel.mount(zenBtn, 2);
     }
   }
 
@@ -140,7 +176,7 @@ async function ensureButtonsMounted(isProcessing) {
         if (isStandardAutomationActive || (await isZenModeActive())) return;
         toggleHelperMode();
       });
-      document.body.appendChild(debugBtn);
+      controlPanel.mount(debugBtn, 2);
     }
   }
 
@@ -208,7 +244,7 @@ function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, ze
 function syncStatusPanel() {
   const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
   const totalFoundOnPage = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
-  const doneCount = totalFoundOnPage - pending.length;
+  const doneCount = Math.max(0, totalFoundOnPage - pending.length);
 
   updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {
     onDelete: () => {
@@ -296,30 +332,30 @@ async function resumeAutomation() {
 
 /**
  * Performs cleanup of local storage and resets UI state when automation completes.
+ * Dipanggil oleh startStateMonitor setelah reload mendeteksi ids.length === 0.
  */
 function finishAutomation() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(TOTAL_KEY);
   isStandardAutomationActive = false;
 
-  removeStatusPanel(5000);
+  removeStatusPanel();
+  notify.info('Selesai', 'Seluruh tugas telah diproses ✓', 5000);
 
   const mainBtn = document.getElementById('dandelion-not-checked-automation');
   const debugBtn = document.getElementById('dandelion-debug-toggle');
   const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 
   if (mainBtn) {
-    mainBtn.style.opacity = '1';
-    mainBtn.style.cursor = 'pointer';
-    mainBtn.style.filter = 'none';
+    if (typeof mainBtn.setRunning === 'function') mainBtn.setRunning(false);
+    if (typeof mainBtn.setDimmed === 'function') mainBtn.setDimmed(false);
   }
   if (debugBtn) {
-    debugBtn.style.opacity = '1';
-    debugBtn.style.cursor = 'pointer';
+    if (typeof debugBtn.setDimmed === 'function') debugBtn.setDimmed(false);
   }
   if (zenBtn) {
-    zenBtn.style.opacity = '1';
-    zenBtn.style.cursor = 'pointer';
+    if (typeof zenBtn.setDimmed === 'function') zenBtn.setDimmed(false);
+    if (typeof zenBtn.setActive === 'function') zenBtn.setActive(false);
   }
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '1';
@@ -345,10 +381,10 @@ async function processNextItem() {
 
   const config = await getActiveConfig();
   const ncConfig = config.notChecked || {};
-  syncStatusPanel();
 
   const currentId = ids[0];
-  const rowElement = await waitForRow(currentId, 15_000);
+  const domTimeout = ncConfig.domTimeout || 5000;
+  const rowElement = await waitForRow(currentId, domTimeout);
 
   if (rowElement) {
     const row = rowElement.closest('.grid');
@@ -366,6 +402,7 @@ async function processNextItem() {
       moveToNext(ids, ncConfig.itemDelay);
       return;
     }
+
     row.style.backgroundColor = '#fff3e5';
     label.click();
 
@@ -375,12 +412,10 @@ async function processNextItem() {
       confirmBtn.click();
 
       setTimeout(() => {
-        if (localStorage.getItem(STORAGE_KEY)) {
-          window.location.reload();
-        }
-      }, ncConfig.reloadDelay || 3000);
+        window.location.reload();
+      }, ncConfig.reloadDelay || 1000);
     } catch (error) {
-      moveToNext(ids, ncConfig.itemDelay);
+      setTimeout(processNextItem, ncConfig.itemDelay || 1000);
     }
   } else {
     const masterList = await getNotCheckedList();
@@ -404,7 +439,9 @@ async function processNextItem() {
 function moveToNext(ids, delay) {
   ids.shift();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
-  syncStatusPanel();
+  if (delay !== false) {
+    syncStatusPanel();
+  }
   if (typeof delay === 'number') {
     setTimeout(processNextItem, delay);
   }

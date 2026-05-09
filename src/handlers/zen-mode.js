@@ -6,6 +6,7 @@ import {
   clearZenMode,
 } from '../utils/zenMode';
 import { waitForRow } from './inspection/not-checked-utils';
+import { notify } from '../components/notification';
 
 let isAutomationActive = false;
 
@@ -50,11 +51,13 @@ export async function startZenAutomation() {
   });
 
   if (pendingIds.length === 0) {
-    alert('Tidak ada form aktif yang ditemukan di halaman ini.');
+    await notify.alert('Zen Mode', 'Tidak ada form aktif yang ditemukan di halaman ini.');
     return;
   }
 
-  if (confirm(`Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`)) {
+  if (
+    await notify.confirm('Zen Mode', `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`)
+  ) {
     const state = {
       active: true,
       queue: pendingIds,
@@ -83,7 +86,7 @@ async function processNextZenItem() {
   if (!nextId) {
     await clearZenMode();
     isAutomationActive = false;
-    alert('Zen Mode Selesai!');
+    await notify.alert('Zen Mode', 'Zen Mode Selesai!');
     return;
   }
 

@@ -5,7 +5,10 @@ import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
 import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
+import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
+import { controlPanel } from '../components/controlPanel';
+import { createProfileComponent } from '../components/profile';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -16,14 +19,31 @@ export async function initializeSkriningForm() {
   let isDebugEnabled = false; // Initial state is off
 
   const tombol = button('dandelion-auto-fill');
+  const profileIndicator = await createProfileComponent();
   const debugToggle = debugButton();
+
+  if (tombol) {
+    let hideTimeout = null;
+    const showProfile = () => {
+      if (hideTimeout) clearTimeout(hideTimeout);
+      profileIndicator.setVisibility(true);
+    };
+    const hideProfile = () => {
+      hideTimeout = setTimeout(() => profileIndicator.setVisibility(false), 300);
+    };
+
+    tombol.addEventListener('mouseenter', showProfile);
+    tombol.addEventListener('mouseleave', hideProfile);
+    profileIndicator.addEventListener('mouseenter', showProfile);
+    profileIndicator.addEventListener('mouseleave', hideProfile);
+  }
 
   debugToggle.addEventListener('click', () => {
     isDebugEnabled = !isDebugEnabled;
     showDebugInformation(isDebugEnabled);
   });
 
-  document.body.appendChild(debugToggle);
+  controlPanel.mount(debugToggle, 2);
 
   const zenActive = await isZenModeActive();
   if (zenActive) {
@@ -32,23 +52,27 @@ export async function initializeSkriningForm() {
     zenToggle.addEventListener('click', async () => {
       await clearZenMode();
       // Remove both buttons to signal Zen Mode is off
-      zenToggle.remove();
+      controlPanel.remove(zenToggle);
       const skipBtnEl = document.getElementById('dandelion-zen-skip');
-      if (skipBtnEl) skipBtnEl.remove();
+      if (skipBtnEl) controlPanel.remove(skipBtnEl);
     });
 
     const skipBtn = skipButton();
     skipBtn.addEventListener('click', async () => {
       await skipQueue();
-      // Remove skip button to signal it was processed
       skipBtn.style.opacity = '0.5';
       skipBtn.style.pointerEvents = 'none';
       skipBtn.innerHTML = '✅ Skipped';
-      setTimeout(() => skipBtn.remove(), 1000);
+      setTimeout(() => controlPanel.remove(skipBtn), 1000);
+
+      try {
+        const homeBtn = await waitForElement('button', 'Kembali ke Halaman Utama', 3000);
+        homeBtn.click();
+      } catch {}
     });
 
-    document.body.appendChild(zenToggle);
-    document.body.appendChild(skipBtn);
+    controlPanel.mount(zenToggle, 2);
+    controlPanel.mount(skipBtn, 2);
   }
 
   if (tombol) {
@@ -79,7 +103,8 @@ export async function initializeSkriningForm() {
         });
       }, 100);
     });
-    document.body.appendChild(tombol);
+    controlPanel.mount(tombol, 1);
+    controlPanel.mount(profileIndicator, 4);
   }
 
   /**
