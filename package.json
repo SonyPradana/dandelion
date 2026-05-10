@@ -16,7 +16,8 @@
     "compile": "rolldown -c",
     "manifest": "node scripts/build-manifest.js",
     "build": "pnpm clean && pnpm compile && pnpm copy:static && pnpm manifest",
-    "start:firefox": "pnpm build && web-ext run --source-dir dist"
+    "build:firefox": "node scripts/build-firefox.js",
+    "start:firefox": "pnpm build:firefox && web-ext run --source-dir dist-firefox"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
