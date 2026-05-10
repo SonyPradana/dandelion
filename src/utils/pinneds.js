@@ -6,7 +6,8 @@ import { getActiveConfig, getFullConfig, setConfig } from '../configuration.js';
  */
 export async function getPinnedItems() {
   const config = await getActiveConfig();
-  return typeof config.pinneds === 'object' && config.pinneds !== null ? config.pinneds : {};
+  const pinneds = config.formSkrining?.pinneds;
+  return typeof pinneds === 'object' && pinneds !== null ? pinneds : {};
 }
 
 /**
@@ -19,7 +20,10 @@ export async function savePinnedItems(items) {
   const activeProfile = config.activeProfile;
 
   if (config.profiles && config.profiles[activeProfile]) {
-    config.profiles[activeProfile].pinneds = items;
+    if (!config.profiles[activeProfile].formSkrining) {
+      config.profiles[activeProfile].formSkrining = {};
+    }
+    config.profiles[activeProfile].formSkrining.pinneds = items;
   }
 
   await setConfig(config);

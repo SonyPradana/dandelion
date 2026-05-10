@@ -7,7 +7,7 @@ import { getFullConfig, setConfig } from '../configuration.js';
 async function getExcludesForActiveProfile() {
   const fullConfig = await getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
-  const excludesString = fullConfig.profiles[activeProfileName]?.excludes || '';
+  const excludesString = fullConfig.profiles[activeProfileName]?.formSkrining?.excludes || '';
 
   return excludesString.split(';').filter(Boolean);
 }
@@ -24,8 +24,11 @@ async function saveExcludesForActiveProfile(excludesArray) {
   if (!fullConfig.profiles[activeProfileName]) {
     fullConfig.profiles[activeProfileName] = {};
   }
+  if (!fullConfig.profiles[activeProfileName].formSkrining) {
+    fullConfig.profiles[activeProfileName].formSkrining = {};
+  }
 
-  fullConfig.profiles[activeProfileName].excludes = excludesArray.join(';');
+  fullConfig.profiles[activeProfileName].formSkrining.excludes = excludesArray.join(';');
   await setConfig(fullConfig);
 }
 

@@ -6,6 +6,7 @@ const copies = [
   ['src/view/popup.css', 'dist/view/popup.css'],
   ['src/view/components/KeywordList.css', 'dist/view/components/KeywordList.css'],
   ['src/view/components/KeyValueList.css', 'dist/view/components/KeyValueList.css'],
+  ['src/view/components/ProfileManager.css', 'dist/view/components/ProfileManager.css'],
 ];
 
 for (const [src, dest] of copies) {
