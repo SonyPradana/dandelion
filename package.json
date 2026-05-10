@@ -15,9 +15,12 @@
     "copy:static": "node scripts/copy-static.js",
     "compile": "rolldown -c",
     "manifest": "node scripts/build-manifest.js",
-    "build": "pnpm clean && pnpm compile && pnpm copy:static && pnpm manifest",
+    "build:chrome": "pnpm clean && pnpm compile && pnpm copy:static && pnpm manifest",
     "build:firefox": "node scripts/build-firefox.js",
-    "start:firefox": "pnpm build:firefox && web-ext run --source-dir dist-firefox"
+    "build": "pnpm build:chrome && pnpm build:firefox",
+    "release:chrome": "pnpm build:chrome && node scripts/package.js chrome",
+    "release:firefox": "pnpm build:firefox && node scripts/package.js firefox",
+    "release": "pnpm build && node scripts/package.js all"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
