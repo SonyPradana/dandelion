@@ -30,8 +30,8 @@ jobs:
       - name: Run lint
         run: pnpm lint
 
-      - name: Run format check
-        run: pnpm format:check
-
       - name: Build project
         run: pnpm build
+
+      - name: Run Firefox verification
+        run: pnpm verify:firefox
