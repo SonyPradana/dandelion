@@ -16,9 +16,11 @@ console.log('Signing Firefox extension via AMO...');
 cmd.sign(
   {
     sourceDir: path.join(root, 'dist', 'firefox'),
+    artifactsDir: path.join(root, 'web-ext-artifacts'),
     apiKey: process.env.AMO_JWT_ISSUER,
     apiSecret: process.env.AMO_JWT_SECRET,
     channel: 'unlisted',
+    amoBaseUrl: 'https://addons.mozilla.org/api/v5/',
   },
   { shouldExitProgram: true },
 );
