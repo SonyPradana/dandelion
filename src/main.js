@@ -13,13 +13,11 @@ function initialize() {
   const currentURL = window.location.href;
 
   getActiveConfig().then((config) => {
-    const notCheckedPattern = config.notChecked?.url;
-
-    if (notCheckedPattern && currentURL.includes(notCheckedPattern)) {
+    if (config.notChecked?.url && currentURL.includes(config.notChecked.url)) {
       initializeNotChecked();
-    } else if (config.survey && currentURL.includes(config.survey)) {
+    } else if (config.formSkrining?.url && currentURL.includes(config.formSkrining.url)) {
       initializeSkriningForm();
-    } else if (config.form && currentURL.includes(config.form)) {
+    } else if (config.skrining?.url && currentURL.includes(config.skrining.url)) {
       initializeSkrining();
     }
   });
