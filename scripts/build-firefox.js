@@ -1,42 +1,32 @@
 import 'dotenv/config';
-import { build } from 'rolldown';
+import { spawnSync } from 'child_process';
 import { cpSync, mkdirSync, rmSync, readFileSync, writeFileSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const outDir = path.join(root, 'dist-firefox');
+const outDir = path.join(root, 'dist', 'firefox');
 const start = performance.now();
 
-async function main() {
-  // 1. Clean output directory
+const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
+
+function main() {
   if (existsSync(outDir)) {
     rmSync(outDir, { recursive: true });
   }
 
-  // 2. Bundle JS via Rolldown programmatic API
   console.log('Compiling Firefox bundles...');
-  await build([
-    {
-      input: 'src/main.js',
-      output: {
-        file: path.join(outDir, 'main.js'),
-        format: 'iife',
-        name: 'DandelionContentScript',
-      },
-    },
-    {
-      input: 'src/view/popup.js',
-      output: {
-        file: path.join(outDir, 'view', 'popup.js'),
-        format: 'iife',
-        name: 'DandelionPopup',
-      },
-    },
-  ]);
+  const result = spawnSync('rolldown', ['-c'], {
+    cwd: root,
+    env: { ...process.env, OUTPUT_DIR: 'dist/firefox' },
+    stdio: 'inherit',
+    shell: true,
+  });
+  if (result.status !== 0) {
+    process.exit(result.status);
+  }
 
-  // 3. Copy static files (HTML, CSS, icons)
   console.log('Copying static files...');
   const copies = [
     ['src/view/popup.html', `${outDir}/view/popup.html`],
@@ -50,11 +40,11 @@ async function main() {
   }
   cpSync('icons', `${outDir}/icons`, { recursive: true });
 
-  // 4. Build manifest
   console.log('Building Firefox manifest...');
   const manifest = JSON.parse(
     readFileSync(path.join(root, 'src', 'manifest.firefox.json'), 'utf8'),
   );
+  manifest.version = pkg.version.replace(/-.*$/, '');
 
   const targetHost = process.env.TARGET_HOST;
   if (targetHost) {
@@ -75,8 +65,8 @@ async function main() {
     console.error('FIREFOX_EXTENSION_ID not set in .env');
     process.exit(1);
   }
-  manifest.browser_specific_settings = manifest.browser_specific_settings || {};
-  manifest.browser_specific_settings.gecko = manifest.browser_specific_settings.gecko || {};
+  manifest.browser_specific_settings ||= {};
+  manifest.browser_specific_settings.gecko ||= {};
   manifest.browser_specific_settings.gecko.id = firefoxId;
 
   mkdirSync(outDir, { recursive: true });
@@ -87,7 +77,4 @@ async function main() {
   console.log(`  Output: ${outDir}`);
 }
 
-main().catch((err) => {
-  console.error('Firefox build failed:', err);
-  process.exit(1);
-});
+main();

@@ -1,8 +1,10 @@
+const outDir = process.env.OUTPUT_DIR || 'dist/chrome';
+
 export default [
   {
     input: 'src/main.js',
     output: {
-      file: 'dist/main.js',
+      file: `${outDir}/main.js`,
       format: 'iife',
       name: 'DandelionContentScript',
     },
@@ -10,7 +12,7 @@ export default [
   {
     input: 'src/view/popup.js',
     output: {
-      file: 'dist/view/popup.js',
+      file: `${outDir}/view/popup.js`,
       format: 'iife',
       name: 'DandelionPopup',
     },

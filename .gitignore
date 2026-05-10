@@ -7,8 +7,8 @@
 
 # Build artifacts
 /dist
-/dist-firefox
 /artifacts
+/web-ext-artifacts
 
 # Logs
 *.log

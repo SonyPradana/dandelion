@@ -8,17 +8,18 @@ const start = performance.now();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, '..');
 
+const outDir = process.argv[2] || 'dist/chrome';
 const srcManifestPath = path.join(projectRoot, 'src', 'manifest.json');
-const distManifestPath = path.join(projectRoot, 'dist', 'manifest.json');
-const distDir = path.dirname(distManifestPath);
+const distManifestPath = path.join(projectRoot, outDir, 'manifest.json');
+
+const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'));
 
 try {
   const manifestString = fs.readFileSync(srcManifestPath, 'utf8');
   const manifest = JSON.parse(manifestString);
+  manifest.version = pkg.version.replace(/-.*$/, '');
 
-  if (!fs.existsSync(distDir)) {
-    fs.mkdirSync(distDir, { recursive: true });
-  }
+  fs.mkdirSync(path.dirname(distManifestPath), { recursive: true });
 
   const targetHost = process.env.TARGET_HOST;
   if (targetHost) {
@@ -39,7 +40,7 @@ try {
   fs.writeFileSync(distManifestPath, JSON.stringify(manifest, null, 2));
 
   const duration = (performance.now() - start).toFixed(2);
-  console.log(`Manifest build in ${duration}ms`);
+  console.log(`Manifest (${outDir}) build in ${duration}ms`);
 } catch (error) {
   console.error('Failed to build manifest.json:', error);
   process.exit(1);

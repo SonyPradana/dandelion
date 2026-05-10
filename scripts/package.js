@@ -34,14 +34,16 @@ function signFirefox() {
   const secret = process.env.AMO_JWT_SECRET;
 
   if (!issuer || !secret) {
-    console.error('\nAMO_JWT_ISSUER and AMO_JWT_SECRET must be set in .env to sign Firefox extension.');
+    console.error(
+      '\nAMO_JWT_ISSUER and AMO_JWT_SECRET must be set in .env to sign Firefox extension.',
+    );
     console.error('Get API keys at: https://addons.mozilla.org/en-US/developers/addon/api/key/\n');
     process.exit(1);
   }
 
-  const sourceDir = path.resolve(root, 'dist-firefox');
+  const sourceDir = path.resolve(root, 'dist', 'firefox');
   if (!fs.existsSync(sourceDir)) {
-    console.error('dist-firefox not found. Run pnpm build:firefox first.');
+    console.error('dist/firefox not found. Run pnpm build:firefox first.');
     process.exit(1);
   }
 
@@ -70,7 +72,7 @@ function signFirefox() {
 if (!target || target === 'all' || target === 'chrome') {
   const zipPath = path.join(artifactsDir, `${name}-chrome-v${version}.zip`);
   console.log(`Packaging Chrome: ${zipPath}`);
-  compress('dist', zipPath);
+  compress('dist/chrome', zipPath);
 }
 
 // Firefox

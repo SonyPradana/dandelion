@@ -1,6 +1,6 @@
 {
   "name": "dandelion",
-  "version": "0.0.1",
+  "version": "1.0.0-alfa.1",
   "description": "",
   "keywords": [],
   "license": "MIT",
@@ -11,25 +11,25 @@
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt . --write",
     "format:check": "oxfmt . --check",
-    "clean": "rimraf dist",
-    "copy:static": "node scripts/copy-static.js",
-    "compile": "rolldown -c",
-    "manifest": "node scripts/build-manifest.js",
-    "build:chrome": "pnpm clean && pnpm compile && pnpm copy:static && pnpm manifest",
+    "clean": "node scripts/remove-static.js dist",
+    "clean:chrome": "node scripts/remove-static.js dist/chrome",
+    "clean:firefox": "node scripts/remove-static.js dist/firefox",
+    "build:chrome": "pnpm clean:chrome && cross-env OUTPUT_DIR=dist/chrome rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-manifest.js dist/chrome",
     "build:firefox": "node scripts/build-firefox.js",
     "build": "pnpm build:chrome && pnpm build:firefox",
     "release:chrome": "pnpm build:chrome && node scripts/package.js chrome",
     "release:firefox": "pnpm build:firefox && node scripts/package.js firefox",
-    "release": "pnpm build && node scripts/package.js all"
+    "release": "pnpm build && node scripts/package.js all",
+    "verify:firefox": "web-ext lint --source-dir dist/firefox"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "oxfmt": "^0.47.0",
     "oxlint": "^1.63.0",
-    "rimraf": "^6.1.3",
     "rolldown": "^1.0.0",
     "web-ext": "^9.4.0"
   }
