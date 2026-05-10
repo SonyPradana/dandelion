@@ -17,15 +17,17 @@
     "build:chrome": "pnpm clean:chrome && cross-env OUTPUT_DIR=dist/chrome rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-manifest.js dist/chrome",
     "build:firefox": "node scripts/build-firefox.js",
     "build": "pnpm build:chrome && pnpm build:firefox",
+    "sign:firefox": "node scripts/sign-firefox.js",
     "release:chrome": "pnpm build:chrome && node scripts/package.js chrome",
-    "release:firefox": "pnpm build:firefox && node scripts/package.js firefox",
-    "release": "pnpm build && node scripts/package.js all",
+    "release:firefox": "pnpm build:firefox && pnpm sign:firefox && node scripts/package.js firefox",
+    "release": "pnpm build && pnpm sign:firefox && node scripts/package.js all",
     "verify:firefox": "web-ext lint --source-dir dist/firefox"
   },
   "dependencies": {
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
+    "archiver": "^8.0.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
     "oxfmt": "^0.47.0",
