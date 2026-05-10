@@ -10,6 +10,9 @@
 /artifacts
 /web-ext-artifacts
 
+# Keys
+/keys/*.pem
+
 # Logs
 *.log
 npm-debug.log*

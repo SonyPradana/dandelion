@@ -37,6 +37,10 @@ try {
     }
   }
 
+  if (process.env.CHROME_EXTENSION_KEY) {
+    manifest.key = process.env.CHROME_EXTENSION_KEY;
+  }
+
   fs.writeFileSync(distManifestPath, JSON.stringify(manifest, null, 2));
 
   const duration = (performance.now() - start).toFixed(2);
