@@ -1,18 +1,17 @@
 import 'dotenv/config';
-import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
-const outDir = process.argv[2] || 'dist/firefox';
+const outDir = path.join(root, 'dist', 'firefox');
 const start = performance.now();
 
 const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
 
-const manifest = JSON.parse(
-  readFileSync(path.join(root, 'src', 'manifest.firefox.json'), 'utf8'),
-);
+console.log('Building Firefox manifest...');
+const manifest = JSON.parse(readFileSync(path.join(root, 'src', 'manifest.firefox.json'), 'utf8'));
 manifest.version = pkg.version.replace(/-.*$/, '');
 
 const targetHost = process.env.TARGET_HOST;
@@ -39,7 +38,7 @@ manifest.browser_specific_settings.gecko ||= {};
 manifest.browser_specific_settings.gecko.id = firefoxId;
 
 mkdirSync(outDir, { recursive: true });
-writeFileSync(path.join(root, outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 const duration = (performance.now() - start).toFixed(2);
-console.log(`Manifest (${outDir}) built in ${duration}ms`);
+console.log(`Firefox manifest build in ${duration}ms`);
