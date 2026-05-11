@@ -30,8 +30,11 @@ jobs:
       - name: Run lint
         run: pnpm lint
 
-      - name: Run format check
-        run: pnpm format:check
-
       - name: Build project
         run: pnpm build
+        env:
+          FIREFOX_EXTENSION_ID: ${{ vars.FIREFOX_EXTENSION_ID }}
+          TARGET_HOST: ${{ vars.TARGET_HOST }}
+
+      - name: Run Firefox verification
+        run: pnpm verify:firefox

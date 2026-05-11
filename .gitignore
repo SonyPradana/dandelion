@@ -8,6 +8,10 @@
 # Build artifacts
 /dist
 /artifacts
+/web-ext-artifacts
+
+# Keys
+/keys/*.pem
 
 # Logs
 *.log
