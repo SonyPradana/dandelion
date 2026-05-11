@@ -57,7 +57,7 @@ All scripts run via `pnpm`. The bundler config (`rolldown.config.js`) is shared 
 ```
 rolldown -c           → dist/chrome/ (JS bundles)
 copy-static.js        → dist/chrome/ (HTML, CSS, icons)
-build-manifest.js     → dist/chrome/manifest.json
+build-chrome-manifest.js → dist/chrome/manifest.json
 ```
 
 ### Firefox
@@ -65,7 +65,7 @@ build-manifest.js     → dist/chrome/manifest.json
 ```
 rolldown -c           → dist/firefox/ (JS bundles, same code)
 copy-static.js        → dist/firefox/ (HTML, CSS, icons)
-build-firefox.js      → dist/firefox/manifest.json
+build-firefox-manifest.js → dist/firefox/manifest.json
                         (injects gecko.id, version, data_collection_permissions)
 ```
 
@@ -121,8 +121,8 @@ Known lint warnings (not actionable):
   workflows/ci.yml     — CI pipeline
   CONTRIBUTING.md      — this file
 scripts/
-  build-firefox.js      — Firefox build orchestrator
-  build-manifest.js     — Chrome manifest injector
+  build-firefox-manifest.js — Firefox manifest injector
+  build-chrome-manifest.js  — Chrome manifest injector
   copy-static.js        — copies HTML/CSS/icons
   package.js            — Chrome zip + Firefox XPI copy
   remove-static.js      — rm -rf equivalent (fs.rmSync)
