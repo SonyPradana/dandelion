@@ -32,6 +32,9 @@ jobs:
 
       - name: Build project
         run: pnpm build
+        env:
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          TARGET_HOST: ${{ secrets.TARGET_HOST }}
 
       - name: Run Firefox verification
         run: pnpm verify:firefox
