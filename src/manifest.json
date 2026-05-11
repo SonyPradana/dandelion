@@ -10,6 +10,10 @@
       "js": ["main.js"]
     }
   ],
+  "options_ui": {
+    "page": "view/page/index.html",
+    "open_in_tab": true
+  },
   "action": {
     "default_popup": "view/popup.html",
     "default_icon": {

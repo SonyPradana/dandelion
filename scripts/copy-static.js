@@ -10,6 +10,8 @@ const copies = [
   ['src/view/components/KeywordList.css', `${outDir}/view/components/KeywordList.css`],
   ['src/view/components/KeyValueList.css', `${outDir}/view/components/KeyValueList.css`],
   ['src/view/components/ProfileManager.css', `${outDir}/view/components/ProfileManager.css`],
+  ['src/view/page/index.html', `${outDir}/view/page/index.html`],
+  ['src/view/page/index.css', `${outDir}/view/page/index.css`],
 ];
 
 for (const [src, dest] of copies) {

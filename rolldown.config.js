@@ -17,4 +17,12 @@ export default [
       name: 'DandelionPopup',
     },
   },
+  {
+    input: 'src/view/page/index.js',
+    output: {
+      file: `${outDir}/view/page/index.js`,
+      format: 'iife',
+      name: 'DandelionConfigPage',
+    },
+  },
 ];

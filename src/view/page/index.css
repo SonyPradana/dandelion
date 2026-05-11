@@ -1,0 +1,284 @@
+/* ── Reset body from popup.css ── */
+body {
+  background: #f3f4f6;
+  padding: 0;
+  display: block;
+  align-items: unset;
+  justify-content: unset;
+  min-height: 100vh;
+}
+
+/* ── Container ── */
+#config-container {
+  position: relative;
+}
+
+#config-body {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 48px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0.75rem 0.5rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .sidebar {
+    width: 180px;
+    padding: 1rem;
+  }
+}
+
+.tab-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tab-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0.5rem;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .tab-divider {
+    margin: 4px 0.75rem;
+  }
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: #555;
+  text-align: left;
+  transition: all 0.12s;
+}
+
+.tab-btn:hover {
+  background: #f3f4f6;
+}
+
+.tab-btn.active {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.tab-icon {
+  font-size: 1.15rem;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tab-label {
+  display: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .tab-label {
+    display: block;
+  }
+}
+
+/* ── Main Content ── */
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  max-width: 720px;
+}
+
+/* ── Header ── */
+.app-header {
+  margin-bottom: 1.5rem;
+}
+
+.app-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #111;
+}
+
+/* ── Tab Panes ── */
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.pane-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pane-body .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.pane-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* ── Action Group (Export/Import) ── */
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  display: block;
+  padding: 1rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #4f46e5;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.action-btn:hover {
+  border-color: #4f46e5;
+  box-shadow: 0 1px 4px rgba(79, 70, 229, 0.1);
+}
+
+/* ── Footer ── */
+.app-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0 1rem;
+  margin-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-primary {
+  max-width: 320px;
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+/* ── Agreement Overlay ── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+}
+
+.overlay-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.overlay-card h2 {
+  font-size: 1.25rem;
+  color: #111;
+  margin-bottom: 1rem;
+}
+
+.overlay-card p {
+  font-size: 0.9rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+/* ── States ── */
+.blurred {
+  filter: blur(6px) brightness(0.95);
+  pointer-events: none;
+  user-select: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ── Mobile ── */
+@media (max-width: 639px) {
+  .sidebar {
+    width: 44px;
+    padding: 0.5rem 0.25rem;
+  }
+
+  .tab-btn {
+    padding: 0.5rem;
+    justify-content: center;
+  }
+
+  .main {
+    padding: 1rem;
+  }
+
+  .app-header h1 {
+    font-size: 1.1rem;
+  }
+}

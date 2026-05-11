@@ -309,6 +309,22 @@ body {
   text-decoration: underline;
 }
 
+.open-page-link {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-color-light);
+  color: var(--text-color-muted);
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.15s;
+}
+
+.open-page-link:hover {
+  color: var(--accent-color);
+}
+
 #config {
   position: relative;
 }

@@ -1,15 +1,35 @@
-import browser from 'webextension-polyfill';
-import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
-import { KeywordList } from './components/KeywordList.js';
-import { KeyValueList } from './components/KeyValueList.js';
-import { ProfileManager } from './components/ProfileManager.js';
+import { getAgreement, getFullConfig, setConfig } from '../../configuration';
+import { KeywordList } from '../components/KeywordList.js';
+import { KeyValueList } from '../components/KeyValueList.js';
+import { ProfileManager } from '../components/ProfileManager.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-  const agreeCheckbox = document.getElementById('agree-checkbox');
-  const configWrapper = document.getElementById('config-wrapper');
+document.addEventListener('DOMContentLoaded', async () => {
+  const agreed = await getAgreement();
+  const overlay = document.getElementById('agreement-overlay');
+  const configBody = document.getElementById('config-body');
+
+  if (!agreed) {
+    overlay.classList.remove('hidden');
+    configBody.classList.add('blurred');
+    return;
+  }
+
+  // Tab switching
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanes = document.querySelectorAll('.tab-pane');
+  tabBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tabId = btn.dataset.tab;
+      tabPanes.forEach((pane) => {
+        pane.classList.toggle('active', pane.id === `tab-${tabId}`);
+      });
+    });
+  });
+
   let loadedConfig = null;
 
-  // Initialize KeywordList components
   const radioButtonKeywordsList = new KeywordList(
     'form-skrining-radio-keywords-input',
     'form-skrining-radio-keywords-list',
@@ -34,57 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList, notCheckedList };
   let pinnedValuesList = null;
 
-  /**
-   * Toggles the enabled/disabled state of the configuration tab and its contents.
-   * @param {boolean} isAgreed - Whether the user has agreed to the terms.
-   */
-  function updateConfigState(isAgreed) {
-    configWrapper.classList.toggle('disabled', !isAgreed);
-
-    const formElements = configWrapper.querySelectorAll('input, select, button, a');
-    formElements.forEach((element) => {
-      element.disabled = !isAgreed;
-    });
-  }
-
-  // --- Agreement Tab Logic ---
-  getAgreement().then((agreed) => {
-    if (agreeCheckbox) {
-      agreeCheckbox.checked = agreed;
-    }
-    updateConfigState(agreed);
-  });
-
-  if (agreeCheckbox) {
-    agreeCheckbox.addEventListener('change', () => {
-      const isAgreed = agreeCheckbox.checked;
-      setAgreement(isAgreed);
-      updateConfigState(isAgreed);
-    });
-  }
-
-  // --- Tab Switching Logic ---
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
-
-  tabButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      if (button.disabled) return;
-      const tabName = button.dataset.tab;
-
-      tabButtons.forEach((btn) => btn.classList.remove('active'));
-      button.classList.add('active');
-
-      tabContents.forEach((content) => {
-        content.id === tabName
-          ? content.classList.add('active')
-          : content.classList.remove('active');
-      });
-    });
-  });
-
-  // --- Configuration Tab Logic ---
-  const saveConfigBtn = document.getElementById('save-config-btn');
   const formSkriningUrlInput = document.getElementById('form-skrining-url');
   const scrollToButtonCheckbox = document.getElementById('form-skrining-scroll-to-button');
   const radioButtonKeywordsInput = document.getElementById('form-skrining-radio-keywords-input');
@@ -97,16 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
 
-  /**
-   * Updates the form inputs based on the selected profile in the loaded config.
-   * @param {string} selectedProfile - The key of the profile to load ('profile1' or 'profile2').
-   */
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
 
     const profileSettings = loadedConfig.profiles[selectedProfile];
 
-    // Form Skrining
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
     scrollToButtonCheckbox.checked = fs.scrollToButton ?? true;
@@ -114,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdownKeywordsInput.value = fs.dropdownKeywords || '';
     excludesInput.value = fs.excludes || '';
 
-    // Trigger input event to sync with KeywordList components
     radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
     dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -122,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
       pinnedValuesList.setData(fs.pinneds || {});
     }
 
-    // Not Checked
     const nc = profileSettings.notChecked || {};
     notCheckedUrlInput.value = nc.url || '';
     notCheckedListInput.value = nc.notCheckedList || '';
@@ -132,16 +94,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-    // Skrining (Legacy)
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
   }
 
-  // Load initial config and set up profile switching
   getFullConfig().then((config) => {
     loadedConfig = config;
 
-    // Initialize KeyValueList component with onChange callback
     const activeProfileSettings = config.profiles[config.activeProfile];
     pinnedValuesList = new KeyValueList(
       'form-skrining-pinned-values',
@@ -171,7 +130,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Save button logic
+  const saveConfigBtn = document.getElementById('save-config-btn');
   if (saveConfigBtn) {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
@@ -181,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       loadedConfig.activeProfile = selectedProfile;
 
-      // Form Skrining
       if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
       profileSettings.formSkrining.url = formSkriningUrlInput.value;
       profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
@@ -193,11 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
         profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
       }
 
-      // Skrining (Legacy)
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
 
-      // Not Checked
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;
       profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
@@ -215,14 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Open Full Page ---
-  const openFullPage = document.getElementById('open-full-page');
-  openFullPage.addEventListener('click', (event) => {
-    event.preventDefault();
-    browser.runtime.openOptionsPage();
-  });
-
-  // --- Import/Export Logic ---
   const exportLink = document.getElementById('export-link');
   const importLink = document.getElementById('import-link');
   const importFileInput = document.getElementById('import-file-input');
@@ -259,18 +207,15 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const importedConfig = JSON.parse(e.target.result);
 
-        // Basic validation
         if (!importedConfig.profiles || !importedConfig.activeProfile) {
           throw new Error('Invalid config file format.');
         }
 
-        // Save and reload (getFullConfig auto-migrates old format)
         setConfig(importedConfig);
         loadedConfig = await getFullConfig();
         updateFormForProfile(loadedConfig.activeProfile);
       } catch (error) {
       } finally {
-        // Reset file input
         importFileInput.value = '';
       }
     };
