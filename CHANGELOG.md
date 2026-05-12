@@ -8,17 +8,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.2] - 2026-05-11
 
 ### Added
+
 - Full configuration page with vertical tab navigation and options_ui entry (#34)
 
 ### Fixed
+
 - Use static-copy to prevent uncopied components in Firefox build (#33)
 
 ## [1.0.1] - 2026-05-11
 
 ### Added
+
 - Firefox build pipeline with independent manifest, AMO signing, and cross-platform packaging (#32)
 
 ### Changed
+
 - Configuration restructured per-handler with auto-migration from legacy flat format (#31)
 
 ## [1.0.0] - 2025-10-31
