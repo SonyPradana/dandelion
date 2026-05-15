@@ -1,8 +1,16 @@
 import browser from 'webextension-polyfill';
 
-const STORAGE_KEY = 'dandelion_productivity_stats';
+const STORAGE_KEY = 'productivity_stats';
 
 const CATEGORIES = ['radio', 'freetext', 'dropdown', 'formNotChecked', 'formZen'];
+
+export const WEIGHT_VERSION = 1;
+export const WEIGHTS = { radio: 1, freetext: 1, dropdown: 1, formNotChecked: 5, formZen: 5 };
+export const MONTHLY_TARGET = 10_000;
+
+function getWeights(data) {
+  return data._meta?.weights || WEIGHTS;
+}
 
 function todayKey() {
   const d = new Date();
@@ -44,8 +52,9 @@ function recalcDay(data, key) {
   const entry = data[key];
   if (!entry) return;
 
+  const w = getWeights(data);
   let sum = 0;
-  for (const cat of CATEGORIES) sum += entry[cat] || 0;
+  for (const cat of CATEGORIES) sum += (entry[cat] || 0) * (w[cat] || 1);
   entry.dayTotal = sum;
 
   const yKey = yesterdayKey(key);
@@ -69,12 +78,9 @@ export async function incrementBatch(counts) {
     }
   }
 
+  data._meta = { weightVersion: WEIGHT_VERSION, weights: WEIGHTS };
   recalcDay(data, key);
   await saveAll(data);
-
-  console.log(
-    `[Productivity] update | dayTotal: ${data[key].dayTotal} | grandTotal: ${data[key].grandTotal}`,
-  );
 }
 
 /**
@@ -111,6 +117,14 @@ export async function getDaySummary(dateKey) {
  */
 export async function getTodaySummary() {
   return getDaySummary(todayKey());
+}
+
+/**
+ * Get yesterday's productivity summary for comparison.
+ * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
+ */
+export async function getYesterdaySummary() {
+  return getDaySummary(yesterdayKey(todayKey()));
 }
 
 /**
@@ -159,7 +173,9 @@ export async function getMonthTotal() {
  */
 export async function getOverallBreakdown() {
   const data = await loadAll();
-  const keys = Object.keys(data).toSorted();
+  const keys = Object.keys(data)
+    .filter((k) => k !== '_meta')
+    .toSorted();
 
   const counts = {};
   for (const cat of CATEGORIES) counts[cat] = 0;
@@ -186,4 +202,71 @@ export async function getOverallBreakdown() {
  */
 export async function getFullHistory() {
   return await loadAll();
+}
+
+/**
+ * Validate chain integrity — checks every stored entry.
+ * Call from devtools console after importing.
+ * @returns {Promise<{ valid: boolean, errors: string[], totalChecked: number, mismatches: number }>}
+ */
+export async function validateChain() {
+  const data = await loadAll();
+  const weights = getWeights(data);
+  const errors = [];
+  const keys = Object.keys(data)
+    .filter((k) => k !== '_meta')
+    .toSorted();
+
+  let totalChecked = 0;
+  let mismatches = 0;
+
+  for (const key of keys) {
+    const entry = data[key];
+    if (!entry || entry.dayTotal === undefined) continue;
+    totalChecked++;
+
+    let computedDayTotal = 0;
+    for (const cat of CATEGORIES) {
+      computedDayTotal += (entry[cat] || 0) * (weights[cat] || 1);
+    }
+    if (computedDayTotal !== entry.dayTotal) {
+      errors.push(`[dayTotal] ${key}: stored ${entry.dayTotal} ≠ computed ${computedDayTotal}`);
+      mismatches++;
+    }
+
+    const prevKey = yesterdayKey(key);
+    const prevEntry = data[prevKey];
+    const expectedGrand = (prevEntry ? prevEntry.grandTotal : 0) + (entry.dayTotal || 0);
+    if (entry.grandTotal !== expectedGrand) {
+      errors.push(
+        `[grandTotal] ${key}: stored ${entry.grandTotal} ≠ expected ${expectedGrand} (prev=${prevEntry?.grandTotal ?? 0} + day=${entry.dayTotal})`,
+      );
+      mismatches++;
+    }
+  }
+
+  const valid = mismatches === 0;
+  return { valid, errors, totalChecked, mismatches };
+}
+
+/**
+ * Manual migration — recalculate all entries with current weights and rebuild chain.
+ * Run from devtools console:
+ *   const { migrateWeights } = await import('./utils/productivityTracker.js');
+ *   await migrateWeights();
+ */
+export async function migrateWeights() {
+  const data = await loadAll();
+  const keys = Object.keys(data)
+    .filter((k) => k !== '_meta')
+    .toSorted();
+
+  data._meta = { weightVersion: WEIGHT_VERSION, weights: WEIGHTS };
+
+  for (const key of keys) {
+    recalcDay(data, key);
+  }
+
+  await saveAll(data);
+  console.log(`[Migrate] Recalculated ${keys.length} entries with weights v${WEIGHT_VERSION}`);
 }

@@ -70,7 +70,7 @@ export async function initializeSkriningForm() {
       try {
         const homeBtn = await waitForElement('button', 'Kembali ke Halaman Utama', 3000);
         homeBtn.click();
-      } catch {}
+      } catch { }
     });
 
     controlPanel.mount(zenToggle, 2);
@@ -102,8 +102,8 @@ export async function initializeSkriningForm() {
 
       notify.info(
         'Selesai',
-        `Radio: ${radioCount + pinnedCount.radio} | Dropdown: ${dropdownCount + pinnedCount.dropdown} | Text: ${pinnedCount.freetext}`,
-        3000,
+        `Berhasil, ${radioCount + pinnedCount.radio + dropdownCount + pinnedCount.dropdown + pinnedCount.freetext} ditemukan.`,
+        2500,
       );
 
       if (document.activeElement && document.activeElement !== document.body) {

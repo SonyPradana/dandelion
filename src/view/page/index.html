@@ -49,6 +49,13 @@
           <div class="tab-divider"></div>
 
           <div class="tab-group">
+            <button class="tab-btn" data-tab="produktifitas">
+              <span class="tab-icon">📋</span>
+              <span class="tab-label">Produktivitas</span>
+            </button>
+          </div>
+
+          <div class="tab-group">
             <button class="tab-btn" data-tab="lainnya">
               <span class="tab-icon">⚙️</span>
               <span class="tab-label">Lainnya</span>
@@ -224,6 +231,11 @@
             </div>
           </section>
 
+          <section class="tab-pane" id="tab-produktifitas">
+            <div class="pane-header">Produktivitas</div>
+            <div class="pane-body" id="produktifitas-page-content"></div>
+          </section>
+
           <section class="tab-pane" id="tab-lainnya">
             <div class="pane-header">⚙️ Lainnya</div>
             <div class="pane-body">
@@ -236,6 +248,7 @@
 
               <input type="file" id="import-file-input" style="display: none" accept=".json" />
             </div>
+
           </section>
 
           <footer class="app-footer">

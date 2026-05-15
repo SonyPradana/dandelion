@@ -2,11 +2,19 @@ import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { getAgreement, getActiveConfig } from './configuration.js';
+import { validateChain } from './utils/productivityTracker.js';
 
 getAgreement().then((agreed) => {
   if (agreed) {
     initialize();
   }
+  validateChain().then((result) => {
+    if (!result.valid) {
+      console.warn('[Dandelion] Chain validation FAILED:', result.errors);
+    } else {
+      console.log(`[Dandelion] Chain OK: ${result.totalChecked} entries, 0 mismatches`);
+    }
+  });
 });
 
 function initialize() {
