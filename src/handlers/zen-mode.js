@@ -7,6 +7,7 @@ import {
 } from '../utils/zenMode';
 import { waitForRow } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
+import { increment } from '../utils/productivityTracker';
 
 let isAutomationActive = false;
 
@@ -119,6 +120,7 @@ async function processNextZenItem() {
   if (btn) {
     if (row) row.style.backgroundColor = '#e0f2fe';
     btn.click();
+    await increment('formZen');
     return;
   }
 

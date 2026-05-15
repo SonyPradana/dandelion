@@ -9,6 +9,8 @@ import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
+import { incrementBatch } from '../utils/productivityTracker';
+import { notify } from '../components/notification';
 
 /**
  * ⚠️ Legal / UX Notice:
@@ -88,9 +90,21 @@ export async function initializeSkriningForm() {
         ...Object.keys(pinneds),
       ];
 
-      fillRadioButtons(radioButtonKeywords, excludes);
-      await fillDropdowns(dropdownKeywords, excludes);
-      await fillPinnedFields(pinneds);
+      const radioCount = fillRadioButtons(radioButtonKeywords, excludes);
+      const dropdownCount = await fillDropdowns(dropdownKeywords, excludes);
+      const pinnedCount = await fillPinnedFields(pinneds);
+
+      await incrementBatch({
+        radio: radioCount + pinnedCount.radio,
+        dropdown: dropdownCount + pinnedCount.dropdown,
+        freetext: pinnedCount.freetext,
+      });
+
+      notify.info(
+        'Selesai',
+        `Radio: ${radioCount + pinnedCount.radio} | Dropdown: ${dropdownCount + pinnedCount.dropdown} | Text: ${pinnedCount.freetext}`,
+        3000,
+      );
 
       if (document.activeElement && document.activeElement !== document.body) {
         document.activeElement.blur();
@@ -123,6 +137,8 @@ export async function initializeSkriningForm() {
       return config.includes(text);
     });
 
+    let count = 0;
+
     allMatchingLabels.forEach((labelSpan) => {
       const parentLabel = labelSpan.closest('label.sd-selectbase__label');
       if (parentLabel) {
@@ -137,9 +153,12 @@ export async function initializeSkriningForm() {
         const radioInput = parentLabel.querySelector('input[type="radio"]');
         if (radioInput && !radioInput.checked) {
           radioInput.click();
+          count++;
         }
       }
     });
+
+    return count;
   }
 
   /**
@@ -148,6 +167,7 @@ export async function initializeSkriningForm() {
    */
   async function fillDropdowns(config, skipList = []) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
+    let count = 0;
 
     for (let i = 0; i < chevronButtons.length; i++) {
       const chevronButton = chevronButtons[i];
@@ -179,12 +199,15 @@ export async function initializeSkriningForm() {
 
       if (targetOptionElement) {
         targetOptionElement.closest('.sv-list__item').click();
+        count++;
         await new Promise((resolve) => setTimeout(resolve, 200));
       } else {
         chevronButton.click(); // Close drop down
         await new Promise((resolve) => setTimeout(resolve, 150));
       }
     }
+
+    return count;
   }
 
   /**

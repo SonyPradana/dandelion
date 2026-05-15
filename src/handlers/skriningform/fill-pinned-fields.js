@@ -3,6 +3,7 @@
  * Supports: textarea, text input, and radio buttons.
  *
  * @param {Object} pinneds - Object containing data-name as key and value to fill
+ * @returns {Promise<{radio: number, freetext: number, dropdown: number}>}
  * @example
  * pinneds = {
  *   "LPM001-quest|text": "Ya",
@@ -10,6 +11,10 @@
  * }
  */
 export async function fillPinnedFields(pinneds) {
+  let radio = 0;
+  let freetext = 0;
+  let dropdown = 0;
+
   for (const key in pinneds) {
     if (Object.prototype.hasOwnProperty.call(pinneds, key)) {
       const value = pinneds[key];
@@ -23,13 +28,18 @@ export async function fillPinnedFields(pinneds) {
 
       if (field.type === 'text') {
         fillTextarea(questionElement, value);
+        freetext++;
       } else if (field.type === 'radio') {
         fillRadioButton(questionElement, value);
+        radio++;
       } else if (field.type === 'combobox') {
         await fillDropdowns(questionElement, value);
+        dropdown++;
       }
     }
   }
+
+  return { radio, freetext, dropdown };
 }
 
 /**
