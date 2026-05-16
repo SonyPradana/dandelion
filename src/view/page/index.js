@@ -2,7 +2,15 @@ import { getAgreement, getFullConfig, setConfig } from '../../configuration';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
-import { getTodaySummary, getYesterdaySummary, getRange, getMonthTotal, getOverallBreakdown, getFullHistory, MONTHLY_TARGET } from '../../utils/productivityTracker';
+import {
+  getTodaySummary,
+  getYesterdaySummary,
+  getRange,
+  getMonthTotal,
+  getOverallBreakdown,
+  getFullHistory,
+  MONTHLY_TARGET,
+} from '../../utils/productivityTracker';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreed = await getAgreement();
@@ -339,5 +347,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     reader.readAsText(file);
   });
-
 });

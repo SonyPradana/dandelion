@@ -3,7 +3,13 @@ import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configu
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
 import { ProfileManager } from './components/ProfileManager.js';
-import { getTodaySummary, getYesterdaySummary, getMonthTotal, getOverallBreakdown, MONTHLY_TARGET } from '../utils/productivityTracker';
+import {
+  getTodaySummary,
+  getYesterdaySummary,
+  getMonthTotal,
+  getOverallBreakdown,
+  MONTHLY_TARGET,
+} from '../utils/productivityTracker';
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
@@ -176,14 +182,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;
       profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
-      profileSettings.notChecked.automationDelay = parseInt(notCheckedAutomationDelayInput.value) || 2000;
+      profileSettings.notChecked.automationDelay =
+        parseInt(notCheckedAutomationDelayInput.value) || 2000;
       profileSettings.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
       profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
 
       setConfig(loadedConfig);
 
       saveConfigBtn.textContent = 'Tersimpan!';
-      setTimeout(() => { saveConfigBtn.textContent = 'Simpan'; }, 1500);
+      setTimeout(() => {
+        saveConfigBtn.textContent = 'Simpan';
+      }, 1500);
     });
   }
 
@@ -227,7 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.onload = async (e) => {
       try {
         const importedConfig = JSON.parse(e.target.result);
-        if (!importedConfig.profiles || !importedConfig.activeProfile) throw new Error('Invalid config file format.');
+        if (!importedConfig.profiles || !importedConfig.activeProfile)
+          throw new Error('Invalid config file format.');
         setConfig(importedConfig);
         loadedConfig = await getFullConfig();
         updateFormForProfile(loadedConfig.activeProfile);
