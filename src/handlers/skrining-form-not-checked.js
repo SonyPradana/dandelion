@@ -1,3 +1,4 @@
+import browser from 'webextension-polyfill';
 import { button } from '../components/button';
 import { debugButton } from '../components/debugButton';
 import { zenModeButton } from '../components/zenModeButton';
@@ -45,18 +46,20 @@ function startStateMonitor() {
 
     await ensureButtonsMounted(isProcessing);
 
-    const pendingData = localStorage.getItem(STORAGE_KEY);
+    const storage = await browser.storage.local.get([STORAGE_KEY]);
+    const pendingData = storage[STORAGE_KEY];
+
     if (pendingData) {
       const ids = JSON.parse(pendingData);
 
       if (ids.length === 0) {
-        finishAutomation();
+        await finishAutomation();
         return;
       }
 
       if (isProcessing && !isStandardAutomationActive) {
         isStandardAutomationActive = true;
-        resumeAutomation();
+        await resumeAutomation();
       }
     }
   }, 2000);
@@ -73,19 +76,21 @@ async function ensureButtonsMounted(isProcessing) {
   let profileIndicator = document.getElementById('dandelion-profile-indicator');
 
   const zenActive = await isZenModeActive();
+  const storage = await browser.storage.local.get([STORAGE_KEY]);
+  const hasPending = storage[STORAGE_KEY] !== undefined;
 
   if (!isProcessing) {
     if (mainBtn) controlPanel.remove(mainBtn);
     if (debugBtn) controlPanel.remove(debugBtn);
     if (zenBtn) controlPanel.remove(zenBtn);
     if (profileIndicator) controlPanel.remove(profileIndicator);
-    if (!isStandardAutomationActive && localStorage.getItem(STORAGE_KEY) === null && !zenActive) {
+    if (!isStandardAutomationActive && !hasPending && !zenActive) {
       removeStatusPanel();
     }
     return;
   }
 
-  const isRunningLocally = localStorage.getItem(STORAGE_KEY) !== null;
+  const isRunningLocally = hasPending;
 
   if (!mainBtn) {
     mainBtn = button('dandelion-not-checked-automation');
@@ -111,13 +116,15 @@ async function ensureButtonsMounted(isProcessing) {
       mainBtn.addEventListener('click', async () => {
         if (isStandardAutomationActive || (await isZenModeActive())) return;
 
-        const pending = localStorage.getItem(STORAGE_KEY);
+        const storageClick = await browser.storage.local.get([STORAGE_KEY]);
+        const pending = storageClick[STORAGE_KEY];
+
         if (pending && JSON.parse(pending).length > 0) {
           if (
             await notify.confirm('Antrian Pending', 'Ada antrian yang belum selesai. Lanjutkan?')
           ) {
             isStandardAutomationActive = true;
-            resumeAutomation();
+            await resumeAutomation();
             return;
           }
         }
@@ -146,7 +153,7 @@ async function ensureButtonsMounted(isProcessing) {
             `Mulai proses untuk ${stats.pendingIds.length} item yang terpilih?`,
           )
         ) {
-          startAutomation(stats.pendingIds, stats.foundIds.length);
+          await startAutomation(stats.pendingIds, stats.foundIds.length);
         }
       });
       controlPanel.mount(mainBtn, 1);
@@ -175,14 +182,14 @@ async function ensureButtonsMounted(isProcessing) {
     if (debugBtn) {
       debugBtn.addEventListener('click', async () => {
         if (isStandardAutomationActive || (await isZenModeActive())) return;
-        toggleHelperMode();
+        await toggleHelperMode();
       });
       controlPanel.mount(debugBtn, 2);
     }
   }
 
   if (isRunningLocally || zenActive) {
-    updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive);
+    await updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive);
   } else {
     restoreUIState(mainBtn, debugBtn, zenBtn);
   }
@@ -219,7 +226,7 @@ function restoreUIState(mainBtn, debugBtn, zenBtn) {
  * @param {boolean} isRunningLocally - Not Checked automation is active.
  * @param {boolean} zenActive - Zen Mode is active.
  */
-function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive) {
+async function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive) {
   if (isRunningLocally) {
     if (mainBtn) mainBtn.setRunning(true);
     if (debugBtn) debugBtn.setDimmed(true);
@@ -236,21 +243,21 @@ function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, ze
     m.classList.add('dandelion-dimmed');
   });
 
-  if (isRunningLocally) syncStatusPanel();
+  if (isRunningLocally) await syncStatusPanel();
 }
 
 /**
  * Updates the on-screen progress panel with current task statistics.
  */
-function syncStatusPanel() {
-  const pending = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  const totalFoundOnPage = parseInt(localStorage.getItem(TOTAL_KEY) || '0');
+async function syncStatusPanel() {
+  const storage = await browser.storage.local.get([STORAGE_KEY, TOTAL_KEY]);
+  const pending = JSON.parse(storage[STORAGE_KEY] || '[]');
+  const totalFoundOnPage = parseInt(storage[TOTAL_KEY] || '0');
   const doneCount = Math.max(0, totalFoundOnPage - pending.length);
 
   updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {
-    onDelete: () => {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(TOTAL_KEY);
+    onDelete: async () => {
+      await browser.storage.local.remove([STORAGE_KEY, TOTAL_KEY]);
       isStandardAutomationActive = false;
       window.location.reload();
     },
@@ -274,9 +281,8 @@ async function toggleHelperMode() {
 
   updateStatusPanel(stats.doneIds.length, stats.foundIds.length, 'Mode Debug Aktif 🐞', {
     title: 'Info Debug',
-    onDelete: () => {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(TOTAL_KEY);
+    onDelete: async () => {
+      await browser.storage.local.remove([STORAGE_KEY, TOTAL_KEY]);
       isStandardAutomationActive = false;
       window.location.reload();
     },
@@ -306,19 +312,23 @@ async function toggleHelperMode() {
 async function startAutomation(pendingIds, totalFoundOnPage) {
   isStandardAutomationActive = true;
   const config = await getActiveConfig();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(pendingIds));
-  localStorage.setItem(TOTAL_KEY, totalFoundOnPage.toString());
-  syncStatusPanel();
+  await browser.storage.local.set({
+    [STORAGE_KEY]: JSON.stringify(pendingIds),
+    [TOTAL_KEY]: totalFoundOnPage.toString(),
+  });
+  await syncStatusPanel();
 
   const delay = config.notChecked?.itemDelay || 1000;
   setTimeout(processNextItem, delay);
 }
 
 /**
- * Resumes an existing automation session from localStorage.
+ * Resumes an existing automation session from storage.
  */
 async function resumeAutomation() {
-  const pending = localStorage.getItem(STORAGE_KEY);
+  const storage = await browser.storage.local.get([STORAGE_KEY]);
+  const pending = storage[STORAGE_KEY];
+
   if (pending) {
     const ids = JSON.parse(pending);
     if (ids.length > 0) {
@@ -326,18 +336,17 @@ async function resumeAutomation() {
       const delay = config.notChecked?.automationDelay || 2000;
       setTimeout(processNextItem, delay);
     } else {
-      finishAutomation();
+      await finishAutomation();
     }
   }
 }
 
 /**
- * Performs cleanup of local storage and resets UI state when automation completes.
- * Dipanggil oleh startStateMonitor setelah reload mendeteksi ids.length === 0.
+ * Performs cleanup of storage and resets UI state when automation completes.
+ * Called by startStateMonitor after reload detects ids.length === 0.
  */
-function finishAutomation() {
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(TOTAL_KEY);
+async function finishAutomation() {
+  await browser.storage.local.remove([STORAGE_KEY, TOTAL_KEY]);
   isStandardAutomationActive = false;
 
   removeStatusPanel();
@@ -368,7 +377,9 @@ function finishAutomation() {
  * Processes the next item in the pending queue by clicking its label and handling confirmation.
  */
 async function processNextItem() {
-  const pendingStr = localStorage.getItem(STORAGE_KEY);
+  const storage = await browser.storage.local.get([STORAGE_KEY]);
+  const pendingStr = storage[STORAGE_KEY];
+
   if (!pendingStr) {
     isStandardAutomationActive = false;
     return;
@@ -376,7 +387,7 @@ async function processNextItem() {
 
   const ids = JSON.parse(pendingStr);
   if (ids.length === 0) {
-    finishAutomation();
+    await finishAutomation();
     return;
   }
 
@@ -390,17 +401,17 @@ async function processNextItem() {
   if (rowElement) {
     const row = rowElement.closest('.grid');
     if (!row) {
-      moveToNext(ids, ncConfig.itemDelay);
+      await moveToNext(ids, ncConfig.itemDelay);
       return;
     }
     const rowText = row.textContent;
     const label = row.querySelector('label');
     if (rowText.includes('Tidak diperiksa') || rowText.includes('Selesai diperiksa')) {
-      moveToNext(ids, ncConfig.itemDelay);
+      await moveToNext(ids, ncConfig.itemDelay);
       return;
     }
     if (!label) {
-      moveToNext(ids, ncConfig.itemDelay);
+      await moveToNext(ids, ncConfig.itemDelay);
       return;
     }
 
@@ -409,7 +420,7 @@ async function processNextItem() {
 
     try {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 6000);
-      moveToNext(ids, false);
+      await moveToNext(ids, false);
       confirmBtn.click();
       await increment('formNotChecked');
 
@@ -424,10 +435,12 @@ async function processNextItem() {
     const stats = getQueueStats(masterList);
 
     if (stats.pendingIds.length === 0) {
-      finishAutomation();
+      await finishAutomation();
     } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stats.pendingIds));
-      localStorage.setItem(TOTAL_KEY, stats.foundIds.length.toString());
+      await browser.storage.local.set({
+        [STORAGE_KEY]: JSON.stringify(stats.pendingIds),
+        [TOTAL_KEY]: stats.foundIds.length.toString(),
+      });
       setTimeout(processNextItem, ncConfig.itemDelay);
     }
   }
@@ -438,11 +451,12 @@ async function processNextItem() {
  * @param {string[]} ids - The updated list of pending IDs.
  * @param {number|boolean} delay - Delay in milliseconds before next process, or false to skip automatic call.
  */
-function moveToNext(ids, delay) {
+async function moveToNext(ids, delay) {
   ids.shift();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  await browser.storage.local.set({ [STORAGE_KEY]: JSON.stringify(ids) });
+
   if (delay !== false) {
-    syncStatusPanel();
+    await syncStatusPanel();
   }
   if (typeof delay === 'number') {
     setTimeout(processNextItem, delay);
