@@ -136,6 +136,19 @@ body {
   display: block;
 }
 
+.pane-header-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.pane-header-btn:hover {
+  opacity: 1;
+}
+
 .pane-header {
   display: flex;
   align-items: center;
@@ -299,6 +312,28 @@ body {
 
 .prod-col .prod-row .value {
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.pd {
+  font-size: 12px;
+  margin-left: 4px;
+}
+.pd.pos {
+  color: #22c55e;
+}
+.pd.neg {
+  color: #ef4444;
+}
+.pd.zero {
+  color: #9ca3af;
+  font-weight: 400;
+}
+.po {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-left: 4px;
+  font-weight: 400;
 }
 
 .prod-col .prod-total {

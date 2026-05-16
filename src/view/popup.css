@@ -531,6 +531,28 @@ body {
 .prod-row .value {
   font-weight: 600;
   color: var(--text-color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pd {
+  font-size: 12px;
+  margin-left: 4px;
+}
+.pd.pos {
+  color: #22c55e;
+}
+.pd.neg {
+  color: #ef4444;
+}
+.pd.zero {
+  color: #9ca3af;
+  font-weight: 400;
+}
+.po {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-left: 4px;
+  font-weight: 400;
 }
 
 .prod-total {
@@ -573,7 +595,7 @@ body {
 
 .prod-bar-fill {
   height: 100%;
-  background: var(--primary-gradient);
+  background: linear-gradient(90deg, #22c55e, #16a34a);
   border-radius: 6px;
   transition: width 0.3s ease;
 }

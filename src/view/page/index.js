@@ -193,14 +193,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const importFileInput = document.getElementById('import-file-input');
 
   // --- Produktifitas Tab Logic ---
-  function delta(current, prev) {
-    if (prev === null || prev === undefined) return String(current);
-    if (prev === 0 && current === 0) return '0';
-    if (prev === 0) return `${current} (+${current})`;
+  function rd(current, prev) {
+    if (prev === null || prev === undefined) return `<span class="pv">${current}</span>`;
+    if (prev === 0 && current === 0) return '<span class="pv zero">0</span>';
+    if (prev === 0)
+      return `<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
     const d = current - prev;
-    if (d === 0) return String(current);
-    if (d > 0) return `${current} (+${d})`;
-    return `${current} (${d})`;
+    if (d === 0) return `<span class="pv">${current}</span>`;
+    if (d > 0) return `<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
+    return `<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
   }
 
   async function renderProduktifitas() {
@@ -243,12 +244,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     html += '<div class="prod-col-header">Hari Ini</div>';
     if (today) {
       html += `
-        <div class="prod-row"><span class="label">📻 Radio</span><span class="value">${delta(today.counts.radio, prev?.radio ?? null)} / ${overall.counts.radio.toLocaleString()}</span></div>
-        <div class="prod-row"><span class="label">📝 Teks</span><span class="value">${delta(today.counts.freetext, prev?.freetext ?? null)} / ${overall.counts.freetext.toLocaleString()}</span></div>
-        <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${delta(today.counts.dropdown, prev?.dropdown ?? null)} / ${overall.counts.dropdown.toLocaleString()}</span></div>
-        <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${delta(today.counts.formNotChecked, prev?.formNotChecked ?? null)} / ${overall.counts.formNotChecked.toLocaleString()}</span></div>
-        <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${delta(today.counts.formZen, prev?.formZen ?? null)} / ${overall.counts.formZen.toLocaleString()}</span></div>
-        <div class="prod-total"><span>Total</span><span>${delta(today.dayTotal, yesterday?.dayTotal ?? null)} / ${overall.grandTotal.toLocaleString()}</span></div>
+        <div class="prod-row"><span class="label">📻 Radio</span><span class="value">${rd(today.counts.radio, prev?.radio ?? null)}<span class="po">/ ${overall.counts.radio.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">📝 Teks</span><span class="value">${rd(today.counts.freetext, prev?.freetext ?? null)}<span class="po">/ ${overall.counts.freetext.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po">/ ${overall.counts.dropdown.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span class="po">/ ${overall.counts.formNotChecked.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}<span class="po">/ ${overall.counts.formZen.toLocaleString()}</span></span></div>
+        <div class="prod-total"><span>Total</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po">/ ${overall.grandTotal.toLocaleString()}</span></span></div>
       `;
     } else {
       html += '<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>';
@@ -303,6 +304,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (document.getElementById('tab-produktifitas')?.classList.contains('active')) {
     renderProduktifitas();
   }
+
+  document.getElementById('refresh-prod')?.addEventListener('click', renderProduktifitas);
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();
