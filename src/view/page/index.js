@@ -7,9 +7,11 @@ import {
   getYesterdaySummary,
   getRange,
   getMonthTotal,
+  getWeekTotal,
   getOverallBreakdown,
   getFullHistory,
   MONTHLY_TARGET,
+  TARGET_MODE,
 } from '../../utils/productivityTracker';
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -212,7 +214,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       getFullHistory(),
     ]);
 
-    const monthTotal = await getMonthTotal();
+    const periodLabel = TARGET_MODE === 'weekly' ? 'Minggu' : 'Bulan';
+    const periodTotal = TARGET_MODE === 'weekly' ? await getWeekTotal() : await getMonthTotal();
     const prev = yesterday ? yesterday.counts : null;
 
     const dataDays = Object.values(history).filter((d) => d.dayTotal > 0).length;
@@ -260,9 +263,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="prod-row"><span class="label">📆 Hari Aktif</span><span class="value">${overall.activeDays}</span></div>
       <div class="prod-row"><span class="label">⚡ Rata-rata/hari</span><span class="value">${overall.average}</span></div>
       <div style="margin-top:12px">
-        <div class="prod-header">Progress Bulan Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)</div>
-        <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${Math.min(100, Math.round((monthTotal / MONTHLY_TARGET) * 100))}%"></div></div>
-        <div style="font-size:12px;color:#888;margin-top:4px">${monthTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin</div>
+        <div class="prod-header">Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)</div>
+        <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%"></div></div>
+        <div style="font-size:12px;color:#888;margin-top:4px">${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin</div>
       </div>
     `;
 

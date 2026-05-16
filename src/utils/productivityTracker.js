@@ -6,7 +6,8 @@ const CATEGORIES = ['radio', 'freetext', 'dropdown', 'formNotChecked', 'formZen'
 
 export const WEIGHT_VERSION = 1;
 export const WEIGHTS = { radio: 1, freetext: 1, dropdown: 1, formNotChecked: 5, formZen: 5 };
-export const MONTHLY_TARGET = 10_000;
+export const MONTHLY_TARGET = 30_000;
+export const TARGET_MODE = 'weekly';
 
 function getWeights(data) {
   return data._meta?.weights || WEIGHTS;
@@ -161,6 +162,26 @@ export async function getMonthTotal() {
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const first = `${y}-${m}-01`;
+  const today = todayKey();
+
+  const range = await getRange(first, today);
+  return range.reduce((sum, day) => sum + (day ? day.dayTotal : 0), 0);
+}
+
+/**
+ * Get total dayTotal for the current week (Monday to today).
+ * @returns {Promise<number>}
+ */
+export async function getWeekTotal() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now);
+  monday.setDate(diff);
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  const first = `${y}-${m}-${d}`;
   const today = todayKey();
 
   const range = await getRange(first, today);
