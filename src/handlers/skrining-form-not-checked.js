@@ -17,6 +17,7 @@ import {
   waitForRow,
   waitForElement,
 } from './inspection/not-checked-utils';
+import { increment } from '../utils/productivityTracker';
 
 /**
  * Automates clicking the "Not Checked" confirmation buttons for a list of rows.
@@ -421,6 +422,7 @@ async function processNextItem() {
       const confirmBtn = await waitForElement('button', 'Tidak Periksa', 6000);
       await moveToNext(ids, false);
       confirmBtn.click();
+      await increment('formNotChecked');
 
       setTimeout(() => {
         window.location.reload();

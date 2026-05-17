@@ -348,6 +348,16 @@ body {
   z-index: 1;
 }
 
+#produktifitas.disabled {
+  filter: blur(6px) brightness(0.95);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.8;
+  transition:
+    filter 0.4s ease,
+    opacity 0.4s ease;
+}
+
 /* New styles for <details> and <summary> */
 .collapsible-details {
   margin-bottom: 20px;
@@ -489,4 +499,103 @@ body {
 .form-group-sm input:focus {
   border-color: var(--primary-color);
   outline: none;
+}
+
+/* ── Produktifitas Tab ── */
+.prod-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 16px 0 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.prod-header:first-child {
+  margin-top: 0;
+}
+
+.prod-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.prod-row .label {
+  color: var(--text-color-secondary);
+}
+
+.prod-row .value {
+  font-weight: 600;
+  color: var(--text-color-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pd {
+  font-size: 12px;
+  margin-left: 4px;
+}
+.pd.pos {
+  color: #22c55e;
+}
+.pd.neg {
+  color: #ef4444;
+}
+.pd.zero {
+  color: #9ca3af;
+  font-weight: 400;
+}
+.po {
+  color: #9ca3af;
+  font-size: 12px;
+  margin-left: 4px;
+  font-weight: 400;
+}
+
+.prod-total {
+  font-weight: 700;
+  font-size: 15px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-color-light);
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.prod-grand {
+  font-weight: 700;
+  font-size: 16px;
+  padding: 8px 0;
+  display: flex;
+  justify-content: space-between;
+  color: var(--accent-color);
+}
+
+.prod-progress {
+  margin-top: 16px;
+}
+
+.prod-progress .label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-color-muted);
+  margin-bottom: 4px;
+}
+
+.prod-bar-track {
+  height: 12px;
+  background: var(--background-color-medium);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.prod-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  border-radius: 6px;
+  transition: width 0.3s ease;
 }

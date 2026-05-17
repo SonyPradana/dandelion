@@ -1,3 +1,5 @@
+import { incrementBatch } from '../utils/productivityTracker';
+
 export function initializeSkrining() {
   const radioClickedSet = new Set();
   let throttleTimeout = null;
@@ -5,6 +7,7 @@ export function initializeSkrining() {
 
   function manipulateRadioButtons() {
     const allRadioButtons = document.querySelectorAll('input[type="radio"]');
+    let count = 0;
 
     allRadioButtons.forEach((radio) => {
       const radioKey = radio.id || `${radio.name}_${radio.value}`;
@@ -12,8 +15,13 @@ export function initializeSkrining() {
       if (!radio.checked && radioClickedSet.has(radioKey) === false) {
         radio.click();
         radioClickedSet.add(radioKey);
+        count++;
       }
     });
+
+    if (count > 0) {
+      incrementBatch({ radio: count });
+    }
 
     // Jika semua radio sudah pernah diklik, disconnect observer
     if (allRadioButtons.length > 0 && radioClickedSet.size >= allRadioButtons.length) {

@@ -1,0 +1,293 @@
+import browser from 'webextension-polyfill';
+
+const STORAGE_KEY = 'productivity_stats';
+
+const CATEGORIES = ['radio', 'freetext', 'dropdown', 'formNotChecked', 'formZen'];
+
+export const WEIGHT_VERSION = 1;
+export const WEIGHTS = { radio: 1, freetext: 1, dropdown: 1, formNotChecked: 5, formZen: 5 };
+export const MONTHLY_TARGET = 30_000;
+export const TARGET_MODE = 'weekly';
+
+function getWeights(data) {
+  return data._meta?.weights || WEIGHTS;
+}
+
+function todayKey() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function emptyDay() {
+  const entry = { dayTotal: 0, grandTotal: 0 };
+  for (const cat of CATEGORIES) entry[cat] = 0;
+  return entry;
+}
+
+function yesterdayKey(current) {
+  const d = new Date(current);
+  d.setDate(d.getDate() - 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+async function loadAll() {
+  try {
+    const result = await browser.storage.local.get(STORAGE_KEY);
+    return result[STORAGE_KEY] || {};
+  } catch {
+    return {};
+  }
+}
+
+async function saveAll(data) {
+  await browser.storage.local.set({ [STORAGE_KEY]: data });
+}
+
+function recalcDay(data, key) {
+  const entry = data[key];
+  if (!entry) return;
+
+  const w = getWeights(data);
+  let sum = 0;
+  for (const cat of CATEGORIES) sum += (entry[cat] || 0) * (w[cat] || 1);
+  entry.dayTotal = sum;
+
+  const yKey = yesterdayKey(key);
+  const prevGrand = data[yKey] ? data[yKey].grandTotal : 0;
+  entry.grandTotal = prevGrand + entry.dayTotal;
+}
+
+/**
+ * Bulk increment — 1 read + 1 write.
+ * @param {Partial<Record<'radio'|'freetext'|'dropdown'|'formNotChecked'|'formZen', number>>} counts
+ */
+export async function incrementBatch(counts) {
+  const data = await loadAll();
+  const key = todayKey();
+  if (!data[key]) data[key] = emptyDay();
+
+  for (const cat of CATEGORIES) {
+    const val = counts[cat];
+    if (typeof val === 'number' && val > 0) {
+      data[key][cat] = (data[key][cat] || 0) + val;
+    }
+  }
+
+  data._meta = { weightVersion: WEIGHT_VERSION, weights: WEIGHTS };
+  recalcDay(data, key);
+  await saveAll(data);
+}
+
+/**
+ * Single-category increment.
+ * @param {'radio'|'freetext'|'dropdown'|'formNotChecked'|'formZen'} category
+ */
+export async function increment(category) {
+  if (!CATEGORIES.includes(category)) {
+    console.warn(`[Productivity] Unknown category: ${category}`);
+    return;
+  }
+  await incrementBatch({ [category]: 1 });
+}
+
+/**
+ * Get summary for a specific date.
+ * @param {string} dateKey - Format 'YYYY-MM-DD'
+ * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
+ */
+export async function getDaySummary(dateKey) {
+  const data = await loadAll();
+  const entry = data[dateKey];
+  if (!entry) return null;
+
+  const counts = {};
+  for (const cat of CATEGORIES) counts[cat] = entry[cat] || 0;
+
+  return { date: dateKey, counts, dayTotal: entry.dayTotal, grandTotal: entry.grandTotal };
+}
+
+/**
+ * Get today's productivity summary.
+ * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
+ */
+export async function getTodaySummary() {
+  return getDaySummary(todayKey());
+}
+
+/**
+ * Get yesterday's productivity summary for comparison.
+ * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
+ */
+export async function getYesterdaySummary() {
+  return getDaySummary(yesterdayKey(todayKey()));
+}
+
+/**
+ * Get summaries for a date range (inclusive).
+ * @param {string} fromDate - Format 'YYYY-MM-DD'
+ * @param {string} toDate - Format 'YYYY-MM-DD'
+ * @returns {Promise<Array<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>>}
+ */
+export async function getRange(fromDate, toDate) {
+  const result = [];
+  const from = new Date(fromDate);
+  const end = new Date(toDate);
+  const msPerDay = 86_400_000;
+  const days = Math.floor((end - from) / msPerDay) + 1;
+
+  for (let i = 0; i < days; i++) {
+    const d = new Date(from);
+    d.setDate(d.getDate() + i);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    result.push(await getDaySummary(`${y}-${m}-${day}`));
+  }
+
+  return result;
+}
+
+/**
+ * Get total dayTotal for the current month (from 1st to today).
+ * @returns {Promise<number>}
+ */
+export async function getMonthTotal() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const first = `${y}-${m}-01`;
+  const today = todayKey();
+
+  const range = await getRange(first, today);
+  return range.reduce((sum, day) => sum + (day ? day.dayTotal : 0), 0);
+}
+
+/**
+ * Get total dayTotal for the current week (Monday to today).
+ * @returns {Promise<number>}
+ */
+export async function getWeekTotal() {
+  const now = new Date();
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(now);
+  monday.setDate(diff);
+  const y = monday.getFullYear();
+  const m = String(monday.getMonth() + 1).padStart(2, '0');
+  const d = String(monday.getDate()).padStart(2, '0');
+  const first = `${y}-${m}-${d}`;
+  const today = todayKey();
+
+  const range = await getRange(first, today);
+  return range.reduce((sum, day) => sum + (day ? day.dayTotal : 0), 0);
+}
+
+/**
+ * Get overall breakdown across all history.
+ * @returns {Promise<{ counts: Object, grandTotal: number, activeDays: number, average: number }>}
+ */
+export async function getOverallBreakdown() {
+  const data = await loadAll();
+  const keys = Object.keys(data)
+    .filter((k) => k !== '_meta')
+    .toSorted();
+
+  const counts = {};
+  for (const cat of CATEGORIES) counts[cat] = 0;
+
+  let grandTotal = 0;
+  let activeDays = 0;
+
+  for (const key of keys) {
+    const entry = data[key];
+    if (!entry) continue;
+    for (const cat of CATEGORIES) counts[cat] += entry[cat] || 0;
+    if (entry.dayTotal > 0) activeDays++;
+    if (entry.grandTotal > grandTotal) grandTotal = entry.grandTotal;
+  }
+
+  const average = activeDays > 0 ? Math.round(grandTotal / activeDays) : 0;
+
+  return { counts, grandTotal, activeDays, average };
+}
+
+/**
+ * Get full history for verification (chain integrity check).
+ * @returns {Promise<Object>}
+ */
+export async function getFullHistory() {
+  return await loadAll();
+}
+
+/**
+ * Validate chain integrity — checks every stored entry.
+ * Call from devtools console after importing.
+ * @returns {Promise<{ valid: boolean, errors: string[], totalChecked: number, mismatches: number }>}
+ */
+export async function validateChain() {
+  const data = await loadAll();
+  const weights = getWeights(data);
+  const errors = [];
+  const keys = Object.keys(data)
+    .filter((k) => k !== '_meta')
+    .toSorted();
+
+  let totalChecked = 0;
+  let mismatches = 0;
+
+  for (const key of keys) {
+    const entry = data[key];
+    if (!entry || entry.dayTotal === undefined) continue;
+    totalChecked++;
+
+    let computedDayTotal = 0;
+    for (const cat of CATEGORIES) {
+      computedDayTotal += (entry[cat] || 0) * (weights[cat] || 1);
+    }
+    if (computedDayTotal !== entry.dayTotal) {
+      errors.push(`[dayTotal] ${key}: stored ${entry.dayTotal} ≠ computed ${computedDayTotal}`);
+      mismatches++;
+    }
+
+    const prevKey = yesterdayKey(key);
+    const prevEntry = data[prevKey];
+    const expectedGrand = (prevEntry ? prevEntry.grandTotal : 0) + (entry.dayTotal || 0);
+    if (entry.grandTotal !== expectedGrand) {
+      errors.push(
+        `[grandTotal] ${key}: stored ${entry.grandTotal} ≠ expected ${expectedGrand} (prev=${prevEntry?.grandTotal ?? 0} + day=${entry.dayTotal})`,
+      );
+      mismatches++;
+    }
+  }
+
+  const valid = mismatches === 0;
+  return { valid, errors, totalChecked, mismatches };
+}
+
+/**
+ * Manual migration — recalculate all entries with current weights and rebuild chain.
+ * Run from devtools console:
+ *   const { migrateWeights } = await import('./utils/productivityTracker.js');
+ *   await migrateWeights();
+ */
+export async function migrateWeights() {
+  const data = await loadAll();
+  const keys = Object.keys(data)
+    .filter((k) => k !== '_meta')
+    .toSorted();
+
+  data._meta = { weightVersion: WEIGHT_VERSION, weights: WEIGHTS };
+
+  for (const key of keys) {
+    recalcDay(data, key);
+  }
+
+  await saveAll(data);
+  console.log(`[Migrate] Recalculated ${keys.length} entries with weights v${WEIGHT_VERSION}`);
+}

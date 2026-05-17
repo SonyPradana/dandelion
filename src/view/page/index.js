@@ -2,6 +2,17 @@ import { getAgreement, getFullConfig, setConfig } from '../../configuration';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
+import {
+  getTodaySummary,
+  getYesterdaySummary,
+  getRange,
+  getMonthTotal,
+  getWeekTotal,
+  getOverallBreakdown,
+  getFullHistory,
+  MONTHLY_TARGET,
+  TARGET_MODE,
+} from '../../utils/productivityTracker';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreed = await getAgreement();
@@ -27,6 +38,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
   });
+
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    const targetBtn = document.querySelector(`.tab-btn[data-tab="${hash}"]`);
+    if (targetBtn) targetBtn.click();
+  }
 
   let loadedConfig = null;
 
@@ -174,6 +191,121 @@ document.addEventListener('DOMContentLoaded', async () => {
   const exportLink = document.getElementById('export-link');
   const importLink = document.getElementById('import-link');
   const importFileInput = document.getElementById('import-file-input');
+
+  // --- Produktifitas Tab Logic ---
+  function rd(current, prev) {
+    if (prev === null || prev === undefined) return `<span class="pv">${current}</span>`;
+    if (prev === 0 && current === 0) return '<span class="pv zero">0</span>';
+    if (prev === 0)
+      return `<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
+    const d = current - prev;
+    if (d === 0) return `<span class="pv">${current}</span>`;
+    if (d > 0) return `<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
+    return `<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
+  }
+
+  async function renderProduktifitas() {
+    const container = document.getElementById('produktifitas-page-content');
+    if (!container) return;
+
+    const [today, yesterday, overall, history] = await Promise.all([
+      getTodaySummary(),
+      getYesterdaySummary(),
+      getOverallBreakdown(),
+      getFullHistory(),
+    ]);
+
+    const periodLabel = TARGET_MODE === 'weekly' ? 'Minggu' : 'Bulan';
+    const periodTotal = TARGET_MODE === 'weekly' ? await getWeekTotal() : await getMonthTotal();
+    const prev = yesterday ? yesterday.counts : null;
+
+    const dataDays = Object.values(history).filter((d) => d.dayTotal > 0).length;
+    let chartDays = 7;
+    if (dataDays >= 30) chartDays = 30;
+    else if (dataDays >= 14) chartDays = 14;
+
+    const now = new Date();
+    const from = new Date(now);
+    from.setDate(from.getDate() - (chartDays - 1));
+    const y1 = from.getFullYear();
+    const m1 = String(from.getMonth() + 1).padStart(2, '0');
+    const d1 = String(from.getDate()).padStart(2, '0');
+    const y2 = now.getFullYear();
+    const m2 = String(now.getMonth() + 1).padStart(2, '0');
+    const d2 = String(now.getDate()).padStart(2, '0');
+    const rangeData = await getRange(`${y1}-${m1}-${d1}`, `${y2}-${m2}-${d2}`);
+
+    const maxVal = Math.max(1, ...rangeData.map((d) => (d ? d.dayTotal : 0)));
+
+    // --- Layout: Grid 2 kolom ---
+    let html = '<div class="prod-grid"><div class="prod-col">';
+
+    // Kolom kiri: Hari Ini
+    html += '<div class="prod-col-header">Hari Ini</div>';
+    if (today) {
+      html += `
+        <div class="prod-row"><span class="label">📻 Radio</span><span class="value">${rd(today.counts.radio, prev?.radio ?? null)}<span class="po">/ ${overall.counts.radio.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">📝 Teks</span><span class="value">${rd(today.counts.freetext, prev?.freetext ?? null)}<span class="po">/ ${overall.counts.freetext.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po">/ ${overall.counts.dropdown.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span class="po">/ ${overall.counts.formNotChecked.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}<span class="po">/ ${overall.counts.formZen.toLocaleString()}</span></span></div>
+        <div class="prod-total"><span>Total</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po">/ ${overall.grandTotal.toLocaleString()}</span></span></div>
+      `;
+    } else {
+      html += '<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>';
+    }
+
+    html += '</div><div class="prod-col">';
+
+    // Kolom kanan: Progress + Ringkasan
+    html += '<div class="prod-col-header">Ringkasan</div>';
+    html += `
+      <div class="prod-row"><span class="label">🏆 Grand Total</span><span class="value">${overall.grandTotal.toLocaleString()}</span></div>
+      <div class="prod-row"><span class="label">📆 Hari Aktif</span><span class="value">${overall.activeDays}</span></div>
+      <div class="prod-row"><span class="label">⚡ Rata-rata/hari</span><span class="value">${overall.average}</span></div>
+      <div style="margin-top:12px">
+        <div class="prod-header">Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)</div>
+        <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%"></div></div>
+        <div style="font-size:12px;color:#888;margin-top:4px">${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin</div>
+      </div>
+    `;
+
+    html += '</div></div>';
+
+    html += `
+      <div class="prod-chart-section">
+        <h3>Grafik Produktivitas ${chartDays}H Terakhir</h3>
+        <div class="prod-chart">
+    `;
+
+    for (const day of rangeData) {
+      const pct = day ? Math.round((day.dayTotal / maxVal) * 100) : 0;
+      const label = day ? day.date.slice(5) : '';
+      html += `
+        <div class="prod-chart-bar-wrapper">
+          <div class="prod-chart-bar" style="height:${Math.max(pct, 2)}%"></div>
+          <div class="prod-chart-label">${label}</div>
+        </div>
+      `;
+    }
+
+    html += '</div></div>';
+
+    container.innerHTML = html;
+  }
+
+  const produktifitasTab = document.querySelector('.tab-btn[data-tab="produktifitas"]');
+  if (produktifitasTab) {
+    produktifitasTab.addEventListener('click', () => {
+      setTimeout(renderProduktifitas, 50);
+    });
+  }
+
+  if (document.getElementById('tab-produktifitas')?.classList.contains('active')) {
+    renderProduktifitas();
+  }
+
+  document.getElementById('refresh-prod')?.addEventListener('click', renderProduktifitas);
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();

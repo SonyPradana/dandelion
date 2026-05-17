@@ -3,6 +3,15 @@ import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configu
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
 import { ProfileManager } from './components/ProfileManager.js';
+import {
+  getTodaySummary,
+  getYesterdaySummary,
+  getMonthTotal,
+  getWeekTotal,
+  getOverallBreakdown,
+  MONTHLY_TARGET,
+  TARGET_MODE,
+} from '../utils/productivityTracker';
 
 document.addEventListener('DOMContentLoaded', () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
@@ -34,13 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList, notCheckedList };
   let pinnedValuesList = null;
 
-  /**
-   * Toggles the enabled/disabled state of the configuration tab and its contents.
-   * @param {boolean} isAgreed - Whether the user has agreed to the terms.
-   */
   function updateConfigState(isAgreed) {
     configWrapper.classList.toggle('disabled', !isAgreed);
-
+    const produkWrapper = document.getElementById('produktifitas');
+    if (produkWrapper) produkWrapper.classList.toggle('disabled', !isAgreed);
     const formElements = configWrapper.querySelectorAll('input, select, button, a');
     formElements.forEach((element) => {
       element.disabled = !isAgreed;
@@ -49,9 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Agreement Tab Logic ---
   getAgreement().then((agreed) => {
-    if (agreeCheckbox) {
-      agreeCheckbox.checked = agreed;
-    }
+    if (agreeCheckbox) agreeCheckbox.checked = agreed;
     updateConfigState(agreed);
   });
 
@@ -97,16 +101,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
 
-  /**
-   * Updates the form inputs based on the selected profile in the loaded config.
-   * @param {string} selectedProfile - The key of the profile to load ('profile1' or 'profile2').
-   */
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
-
     const profileSettings = loadedConfig.profiles[selectedProfile];
 
-    // Form Skrining
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
     scrollToButtonCheckbox.checked = fs.scrollToButton ?? true;
@@ -114,15 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdownKeywordsInput.value = fs.dropdownKeywords || '';
     excludesInput.value = fs.excludes || '';
 
-    // Trigger input event to sync with KeywordList components
     radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
     dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-    if (pinnedValuesList) {
-      pinnedValuesList.setData(fs.pinneds || {});
-    }
+    if (pinnedValuesList) pinnedValuesList.setData(fs.pinneds || {});
 
-    // Not Checked
     const nc = profileSettings.notChecked || {};
     notCheckedUrlInput.value = nc.url || '';
     notCheckedListInput.value = nc.notCheckedList || '';
@@ -132,16 +126,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
 
-    // Skrining (Legacy)
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
   }
 
-  // Load initial config and set up profile switching
   getFullConfig().then((config) => {
     loadedConfig = config;
 
-    // Initialize KeyValueList component with onChange callback
     const activeProfileSettings = config.profiles[config.activeProfile];
     pinnedValuesList = new KeyValueList(
       'form-skrining-pinned-values',
@@ -171,33 +162,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Save button logic
   if (saveConfigBtn) {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
-
       const selectedProfile = loadedConfig.activeProfile;
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       loadedConfig.activeProfile = selectedProfile;
 
-      // Form Skrining
       if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
       profileSettings.formSkrining.url = formSkriningUrlInput.value;
       profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
       profileSettings.formSkrining.radioButtonKeywords = radioButtonKeywordsInput.value;
       profileSettings.formSkrining.dropdownKeywords = dropdownKeywordsInput.value;
       profileSettings.formSkrining.excludes = excludesInput.value;
+      if (pinnedValuesList) profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
 
-      if (pinnedValuesList) {
-        profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
-      }
-
-      // Skrining (Legacy)
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
 
-      // Not Checked
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;
       profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
@@ -219,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const openFullPage = document.getElementById('open-full-page');
   openFullPage.addEventListener('click', (event) => {
     event.preventDefault();
-    browser.runtime.openOptionsPage();
+    browser.tabs.create({ url: browser.runtime.getURL('view/page/index.html#profile') });
   });
 
   // --- Import/Export Logic ---
@@ -250,30 +233,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
   importFileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
         const importedConfig = JSON.parse(e.target.result);
-
-        // Basic validation
-        if (!importedConfig.profiles || !importedConfig.activeProfile) {
+        if (!importedConfig.profiles || !importedConfig.activeProfile)
           throw new Error('Invalid config file format.');
-        }
-
-        // Save and reload (getFullConfig auto-migrates old format)
         setConfig(importedConfig);
         loadedConfig = await getFullConfig();
         updateFormForProfile(loadedConfig.activeProfile);
       } catch (error) {
       } finally {
-        // Reset file input
         importFileInput.value = '';
       }
     };
     reader.readAsText(file);
   });
+
+  // --- Produktifitas Tab Logic ---
+  function rd(current, prev) {
+    if (prev === null || prev === undefined) return `<span class="pv">${current}</span>`;
+    if (prev === 0 && current === 0) return '<span class="pv zero">0</span>';
+    if (prev === 0)
+      return `<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
+    const d = current - prev;
+    if (d === 0) return `<span class="pv">${current}</span>`;
+    if (d > 0) return `<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
+    return `<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
+  }
+
+  async function renderProduktifitas() {
+    const container = document.getElementById('produktifitas-content');
+    if (!container) return;
+
+    const periodTotal = TARGET_MODE === 'weekly' ? await getWeekTotal() : await getMonthTotal();
+    const periodLabel = TARGET_MODE === 'weekly' ? 'Minggu' : 'Bulan';
+
+    const [today, yesterday, overall] = await Promise.all([
+      getTodaySummary(),
+      getYesterdaySummary(),
+      getOverallBreakdown(),
+    ]);
+
+    const prev = yesterday ? yesterday.counts : null;
+
+    let html = '<div class="prod-header">Hari Ini</div>';
+
+    if (today) {
+      html += `
+        <div class="prod-row"><span class="label">📻 Radio</span><span class="value">${rd(today.counts.radio, prev?.radio ?? null)}</span></div>
+        <div class="prod-row"><span class="label">📝 Teks</span><span class="value">${rd(today.counts.freetext, prev?.freetext ?? null)}</span></div>
+        <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}</span></div>
+        <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}</span></div>
+        <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}</span></div>
+        <div class="prod-total"><span>Total Hari Ini</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}</span></div>
+      `;
+    } else {
+      html += '<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>';
+    }
+
+    const barPct = Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100));
+    html += `
+      <div class="prod-grand"><span>Grand Total</span><span>${overall.grandTotal.toLocaleString()}</span></div>
+      <div class="prod-progress">
+        <div class="prod-header">Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)</div>
+        <div class="label-row"><span>${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin</span></div>
+        <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${barPct}%"></div></div>
+      </div>
+    `;
+
+    container.innerHTML = html;
+  }
+
+  const produktifitasTab = document.querySelector('.tab-button[data-tab="produktifitas"]');
+  if (produktifitasTab) {
+    produktifitasTab.addEventListener('click', renderProduktifitas);
+  }
+
+  const prodOpenConfig = document.getElementById('prod-open-config');
+  if (prodOpenConfig) {
+    prodOpenConfig.addEventListener('click', (e) => {
+      e.preventDefault();
+      browser.tabs.create({ url: browser.runtime.getURL('view/page/index.html#produktifitas') });
+    });
+  }
+
+  if (document.getElementById('produktifitas')?.classList.contains('active')) {
+    renderProduktifitas();
+  }
 });
