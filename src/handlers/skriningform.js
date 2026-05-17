@@ -186,7 +186,9 @@ export async function initializeSkriningForm() {
       await new Promise((resolve) => setTimeout(resolve, 300));
 
       const visibleOptions = Array.from(
-        document.querySelectorAll('.sv-popup--dropdown .sv-string-viewer, .sv-popup--dropdown-overlay .sv-string-viewer'),
+        document.querySelectorAll(
+          '.sv-popup--dropdown .sv-string-viewer, .sv-popup--dropdown-overlay .sv-string-viewer',
+        ),
       ).filter((option) => {
         const popup = option.closest('.sv-popup');
         return popup && popup.style.display !== 'none';
