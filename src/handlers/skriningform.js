@@ -125,7 +125,7 @@ export async function initializeSkriningForm() {
    * @param {string[]} config - List of radioInput konfuguration
    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
    */
-  function fillRadioButtons(config, skipList = [], processedKeys = new Set()) {
+  function fillRadioButtons(config, skipList = []) {
     const allMatchingLabels = Array.from(
       document.querySelectorAll('span.sd-item__control-label'),
     ).filter((span) => {
@@ -146,7 +146,7 @@ export async function initializeSkriningForm() {
         let dataName = null;
         if (questionElement) {
           dataName = questionElement.getAttribute('data-name');
-          if (skipList.includes(dataName) || processedKeys.has(dataName)) {
+          if (skipList.includes(dataName)) {
             return;
           }
         }
@@ -154,7 +154,7 @@ export async function initializeSkriningForm() {
         const radioInput = parentLabel.querySelector('input[type="radio"]');
         if (radioInput && !radioInput.checked) {
           radioInput.click();
-          if (dataName) processedKeys.add(dataName);
+          if (dataName) skipList.push(dataName);
           count++;
         }
       }
@@ -167,7 +167,7 @@ export async function initializeSkriningForm() {
    * @param {string[]} config - List of radioInput konfuguration
    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
    */
-  async function fillDropdowns(config, skipList = [], processedKeys = new Set()) {
+  async function fillDropdowns(config, skipList = []) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
     let count = 0;
 
@@ -179,7 +179,7 @@ export async function initializeSkriningForm() {
 
       if (questionElement) {
         dataName = questionElement.getAttribute('data-name');
-        if (skipList.includes(dataName) || processedKeys.has(dataName)) {
+        if (skipList.includes(dataName)) {
           continue;
         }
       }
@@ -204,7 +204,7 @@ export async function initializeSkriningForm() {
 
       if (targetOptionElement) {
         targetOptionElement.closest('.sv-list__item').click();
-        if (dataName) processedKeys.add(dataName);
+        if (dataName) skipList.push(dataName);
         count++;
         await new Promise((resolve) => setTimeout(resolve, 200));
       } else {
@@ -217,7 +217,6 @@ export async function initializeSkriningForm() {
   }
 
   async function processWithRecursion(radioKw, dropdownKw, pinneds, excludes) {
-    const processedKeys = new Set();
     let radioTotal = 0;
     let dropdownTotal = 0;
     let freetextTotal = 0;
@@ -227,8 +226,8 @@ export async function initializeSkriningForm() {
     for (let round = 0; round < MAX_ROUNDS; round++) {
       const prevCount = document.querySelectorAll('[data-name]').length;
 
-      const radioCount = fillRadioButtons(radioKw, excludes, processedKeys);
-      const dropdownCount = await fillDropdowns(dropdownKw, excludes, processedKeys);
+      const radioCount = fillRadioButtons(radioKw, excludes);
+      const dropdownCount = await fillDropdowns(dropdownKw, excludes);
       const pinnedCount = await fillPinnedFields(pinneds);
 
       radioTotal += radioCount;
