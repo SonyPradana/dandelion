@@ -2,31 +2,34 @@ import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { getAgreement, getActiveConfig } from './configuration.js';
-import { validateChain } from './utils/productivityTracker.js';
+import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
 
-getAgreement().then((agreed) => {
-  if (agreed) {
-    initialize();
+async function main() {
+  const agreed = await getAgreement();
+  if (!agreed) return;
+
+  const result = await validateChain();
+  if (!result.valid) {
+    console.warn('[Dandelion] Chain validation FAILED:', result.errors);
+    return;
   }
-  validateChain().then((result) => {
-    if (!result.valid) {
-      console.warn('[Dandelion] Chain validation FAILED:', result.errors);
-    } else {
-      console.log(`[Dandelion] Chain OK: ${result.totalChecked} entries, 0 mismatches`);
-    }
-  });
-});
 
-function initialize() {
+  if (await isDailyLimitReached()) return;
+
+  initialize();
+}
+
+main();
+
+async function initialize() {
   const currentURL = window.location.href;
+  const config = await getActiveConfig();
 
-  getActiveConfig().then((config) => {
-    if (config.notChecked?.url && currentURL.includes(config.notChecked.url)) {
-      initializeNotChecked();
-    } else if (config.formSkrining?.url && currentURL.includes(config.formSkrining.url)) {
-      initializeSkriningForm();
-    } else if (config.skrining?.url && currentURL.includes(config.skrining.url)) {
-      initializeSkrining();
-    }
-  });
+  if (config.notChecked?.url && currentURL.includes(config.notChecked.url)) {
+    initializeNotChecked();
+  } else if (config.formSkrining?.url && currentURL.includes(config.formSkrining.url)) {
+    initializeSkriningForm();
+  } else if (config.skrining?.url && currentURL.includes(config.skrining.url)) {
+    initializeSkrining();
+  }
 }
