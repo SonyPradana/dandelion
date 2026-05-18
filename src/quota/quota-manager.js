@@ -8,7 +8,7 @@ const QUOTA_TOKEN_KEY = 'dandelion_quota_token';
 const FREE_PLAN = {
   features: [],
   total_limit: 0,
-  daily_limit: 100,
+  daily_limit: 50,
 };
 
 const WEIGHTS = { radio: 1, freetext: 1, dropdown: 1, formNotChecked: 5, formZen: 5 };

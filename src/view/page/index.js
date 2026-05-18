@@ -320,7 +320,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       html += `
         <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
           <div class="prod-header" style="color:#92400e">🆓 Free Tier</div>
-          <div style="font-size:12px;color:#888">100 poin/hari · tanpa total limit</div>
+          <div style="font-size:12px;color:#888">50 poin/hari · tanpa total limit</div>
         </div>
       `;
     }
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const badge = isFree
       ? '<span class="license-badge free">FREE</span>'
       : '<span class="license-badge pro">PRO</span>';
-    const statusText = isFree ? 'Free Tier (100 poin/hari)' : 'Pro Tier';
+    const statusText = isFree ? 'Free Tier (50 poin/hari)' : 'Pro Tier';
     const statusClass = isFree ? 'free' : 'pro';
 
     let infoHtml = '';
