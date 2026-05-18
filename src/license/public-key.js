@@ -1,0 +1,4 @@
+export const PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEiZpLvq9lEVBtWY2EEH1dPfmfvwTo
+WM7Enjj30BEIvLrtl4PifP5BvYHL7UlsH7QBsbuiU8lNtI3ZvYx5e7w+Cw==
+-----END PUBLIC KEY-----`;

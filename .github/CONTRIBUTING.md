@@ -114,6 +114,94 @@ Known lint warnings (not actionable):
 | `UNSAFE_VAR_ASSIGNMENT`                  | innerHTML usage in existing code                                                                        |
 | `KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION` | `data_collection_permissions` requires FF 140+, but `strict_min_version` is 109 for Windows 8.1 support |
 
+## Offline License System
+
+Extension ships with an embedded EC public key (`src/license/public-key.js`) for verifying offline JWT licenses (ES256 signed). Licenses grant a `total_limit` of weighted productivity points; once exhausted, a `daily_limit` from the JWT applies as a grace cap.
+
+### Generator
+
+```bash
+# Generate a license JWT
+node scripts/gen-license.mjs \
+  -k keys/license-priv.pem \
+  -e 90d \
+  -p 30000 \
+  -d 150 \
+  --version-allowed "1.0.0,1.1.0" \
+  --features "skriningform,skrining"
+```
+
+| Flag                   | Description                                              |
+| ---------------------- | -------------------------------------------------------- |
+| `-k, --private-key`    | Path to ES256 private key PEM (required)                 |
+| `-e, --expiry`         | Duration: `90d`, `12m`, `1y`, or `2027-01-01` (required) |
+| `-p, --point, --token` | Total limit (0 = unlimited)                              |
+| `-d, --daily-limit`    | Grace daily limit after total exhausted (default: 100)   |
+| `--version-allowed`    | Comma-separated allowed extension versions               |
+| `--features`           | Comma-separated feature names                            |
+| `--license-id`         | Custom license ID (default: auto-generated)              |
+
+### Key Pair
+
+```bash
+# Generate key pair (one-time per version)
+node scripts/generate-license-keys.js
+
+# Output:
+#   keys/license-priv.pem  → PRIVATE (keep secure, sign licenses)
+#   keys/license-pub.pem   → PUBLIC  (embed in extension)
+
+# The public key is already embedded in src/license/public-key.js.
+# To update for a new release, replace the PEM and update version.
+```
+
+The public key is **committed** (`src/license/public-key.js`) — it is not a secret. No build-time injection or `.env` variable is needed.
+
+**Key rolling is rarely needed.** One key pair can serve the project's lifetime. Only generate a new pair if:
+
+| Scenario | Action |
+|----------|--------|
+| Private key leaked/committed | **Mandatory** — all existing licenses become invalid; users must re-activate |
+| Intentional revocation of all licenses | Can be done — new key rejects all old signatures |
+| Routine release | Not needed — use `version_allowed` in JWT instead |
+| Minor update / bugfix | Not needed |
+
+`version_allowed` in the JWT controls which extension versions accept the license — this is the primary mechanism for version gating, not key rotation.
+
+### Feature Routing
+
+Auto handlers in `main.js` are gated by `isFeatureEnabled(name)`:
+
+| Feature string        | Handler               | Description      |
+| --------------------- | --------------------- | ---------------- |
+| `skriningform`        | `initializeSkriningForm` | Form skrining |
+| `skrining`            | `initializeSkrining`     | Halaman skrining |
+| `skrining-form-not-checked` | `initializeNotChecked` | Tidak periksa |
+
+- **Free plan**: `isFeatureEnabled()` always returns `true` for all features.
+- **Pro plan**: only features listed in the JWT `features[]` array are enabled.
+- Unlisted features are silently skipped — the handler does not run on matching URLs.
+
+### Bundle Initialisation
+
+Each JS bundle is a separate IIFE with its own `license-manager` module scope. `init()` must be called explicitly in each entry point:
+
+| Bundle | Entry | `init()` required? |
+|--------|-------|--------------------|
+| `main.js` | Content script | Yes — `await licenseInit()` |
+| `popup.js` | Popup page | Yes — `await init()` |
+| `index.js` | Config page | Yes — `await init()` |
+
+Without `await init()`, `getStatus()` returns `isFreePlan: true` (default state) and the PRO UI / feature gates will not work.
+
+### Limit Behaviour
+
+| Scenario                     | Total limit | Daily cap              |
+| ---------------------------- | ----------- | ---------------------- |
+| Free plan (no JWT / invalid) | Unlimited   | 100/day                |
+| Pro, within total limit      | From JWT    | Unlimited              |
+| Pro, total exhausted         | —           | `daily_limit` from JWT |
+
 ## Project Structure
 
 ```
@@ -124,12 +212,19 @@ scripts/
   build-firefox-manifest.js — Firefox manifest injector
   build-chrome-manifest.js  — Chrome manifest injector
   copy-static.js        — copies HTML/CSS/icons
+  gen-license.mjs       — license JWT generator
+  generate-license-keys.js — EC key pair generator
   package.js            — Chrome zip + Firefox XPI copy
   remove-static.js      — rm -rf equivalent (fs.rmSync)
   sign-firefox.js       — AMO signing via web-ext API
 src/
   manifest.json         — Chrome manifest template
   manifest.firefox.json — Firefox manifest template
+  license/              — Offline license system
+    public-key.js       — Embedded EC public key
+    verify.js           — JWT verification (jose + ES256)
+    cache.js            — Verification result cache (10 min TTL)
+    license-manager.js  — Public API (init, canUseTokens, etc.)
 rolldown.config.js      — shared bundler config
 package.json            — scripts & dependencies
 .env.example            — documented env vars

@@ -13,8 +13,17 @@ import {
   MONTHLY_TARGET,
   TARGET_MODE,
 } from '../../utils/productivityTracker';
+import {
+  init,
+  getStatus,
+  getLicenseJWT,
+  saveLicense,
+  removeLicense,
+  getRemainingToday,
+} from '../../license/license-manager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  await init();
   const agreed = await getAgreement();
   const overlay = document.getElementById('agreement-overlay');
   const configBody = document.getElementById('config-body');
@@ -270,6 +279,52 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
     `;
 
+    const licStatus = getStatus();
+    if (!licStatus.isFreePlan && licStatus.payload) {
+      const p = licStatus.payload;
+      const totalLimit = p.total_limit || 0;
+      const from = new Date(p.iat * 1000);
+      const to = new Date();
+      const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
+      const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`;
+      const rangeData = await getRange(fromStr, toStr);
+      const usedInLicense = rangeData.reduce((sum, d) => sum + (d ? d.dayTotal : 0), 0);
+      const totalPct = Math.min(100, Math.round((usedInLicense / totalLimit) * 100));
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mei',
+        'Jun',
+        'Jul',
+        'Agu',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Des',
+      ];
+      const fmtDate = (ts) => {
+        const d = new Date(ts * 1000);
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      };
+      html += `
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
+          <div class="prod-header" style="color:#065f46">🏅 Total Limit (PRO)</div>
+          <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${totalPct}%"></div></div>
+          <div style="font-size:12px;color:#888;margin-top:4px">${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)</div>
+          <div style="font-size:12px;color:#888;margin-top:8px">Periode Lisensi: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}</div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
+          <div class="prod-header" style="color:#92400e">🆓 Free Plan</div>
+          <div style="font-size:12px;color:#888">100 poin/hari · tanpa total limit</div>
+        </div>
+      `;
+    }
+
     html += '</div></div>';
 
     html += `
@@ -306,6 +361,97 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('refresh-prod')?.addEventListener('click', renderProduktifitas);
+
+  // --- License Tab Logic ---
+  async function renderLicense() {
+    const container = document.getElementById('license-page-content');
+    if (!container) return;
+
+    const status = getStatus();
+    const remaining = await getRemainingToday();
+    const jwt = await getLicenseJWT();
+
+    const isFree = status.isFreePlan;
+    const badge = isFree
+      ? '<span class="license-badge free">FREE</span>'
+      : '<span class="license-badge pro">PRO</span>';
+    const statusText = isFree ? 'Free Plan (100 poin/hari)' : 'Pro Plan';
+    const statusClass = isFree ? 'free' : 'pro';
+
+    let infoHtml = '';
+    if (!isFree && status.payload) {
+      const p = status.payload;
+      const expDate = p.exp ? new Date(p.exp * 1000).toLocaleDateString('id-ID') : '-';
+      const featList =
+        Array.isArray(p.features) && p.features.length > 0 ? p.features.join(', ') : '-';
+      const verList =
+        Array.isArray(p.version_allowed) && p.version_allowed.length > 0
+          ? p.version_allowed.join(', ')
+          : '-';
+      infoHtml = `
+        <div class="license-info-grid">
+          <div class="license-info-item"><div class="label">Total Limit</div><div class="value">${(p.total_limit ?? 0).toLocaleString()}</div></div>
+          <div class="license-info-item"><div class="label">Grace Daily</div><div class="value">${(p.daily_limit ?? 100).toLocaleString()}</div></div>
+          <div class="license-info-item"><div class="label">Berlaku Sampai</div><div class="value">${expDate}</div></div>
+          <div class="license-info-item"><div class="label">Sisa Hari Ini</div><div class="value">${remaining.toLocaleString()}</div></div>
+          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Fitur</div><div class="value">${featList}</div></div>
+          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Versi Diizinkan</div><div class="value">${verList}</div></div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="license-status ${statusClass}">${badge} ${statusText}</div>
+      ${infoHtml}
+      <div class="pane-title">Aktifkan Lisensi</div>
+      <textarea class="license-jwt-input" id="license-jwt-input" placeholder="Tempel kode lisensi (JWT) di sini...">${jwt || ''}</textarea>
+      <div class="license-actions">
+        <button class="license-btn activate" id="license-activate-btn">Aktifkan</button>
+        <button class="license-btn remove" id="license-remove-btn" ${isFree ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>Hapus Lisensi</button>
+      </div>
+      <div class="license-message" id="license-message"></div>
+    `;
+
+    document.getElementById('license-activate-btn')?.addEventListener('click', async () => {
+      const input = document.getElementById('license-jwt-input');
+      const msg = document.getElementById('license-message');
+      if (!input || !msg) return;
+      const val = input.value.trim();
+      if (!val) {
+        msg.className = 'license-message error';
+        msg.textContent = 'Masukkan kode lisensi terlebih dahulu.';
+        return;
+      }
+      try {
+        await saveLicense(val);
+        msg.className = 'license-message success';
+        msg.textContent = 'Lisensi berhasil diaktifkan!';
+        setTimeout(renderLicense, 1000);
+      } catch (error) {
+        msg.className = 'license-message error';
+        msg.textContent = `Gagal: ${error.message}`;
+      }
+    });
+
+    document.getElementById('license-remove-btn')?.addEventListener('click', async () => {
+      const msg = document.getElementById('license-message');
+      await removeLicense();
+      msg.className = 'license-message success';
+      msg.textContent = 'Lisensi dihapus, kembali ke Free Plan.';
+      setTimeout(renderLicense, 1000);
+    });
+  }
+
+  const licenseTab = document.querySelector('.tab-btn[data-tab="license"]');
+  if (licenseTab) {
+    licenseTab.addEventListener('click', () => {
+      setTimeout(renderLicense, 50);
+    });
+  }
+
+  if (document.getElementById('tab-license')?.classList.contains('active')) {
+    renderLicense();
+  }
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();

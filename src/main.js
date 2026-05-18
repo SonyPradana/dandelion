@@ -3,8 +3,10 @@ import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { getAgreement, getActiveConfig } from './configuration.js';
 import { validateChain } from './utils/productivityTracker.js';
+import { init as licenseInit, getStatus, isFeatureEnabled } from './license/license-manager.js';
 
-getAgreement().then((agreed) => {
+getAgreement().then(async (agreed) => {
+  await licenseInit();
   if (agreed) {
     initialize();
   }
@@ -21,11 +23,14 @@ function initialize() {
   const currentURL = window.location.href;
 
   getActiveConfig().then((config) => {
-    if (config.notChecked?.url && currentURL.includes(config.notChecked.url)) {
+    if (
+      currentURL.includes(config.notChecked?.url) &&
+      isFeatureEnabled('skrining-form-not-checked')
+    ) {
       initializeNotChecked();
-    } else if (config.formSkrining?.url && currentURL.includes(config.formSkrining.url)) {
+    } else if (currentURL.includes(config.formSkrining?.url) && isFeatureEnabled('skriningform')) {
       initializeSkriningForm();
-    } else if (config.skrining?.url && currentURL.includes(config.skrining.url)) {
+    } else if (currentURL.includes(config.skrining?.url) && isFeatureEnabled('skrining')) {
       initializeSkrining();
     }
   });
