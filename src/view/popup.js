@@ -8,12 +8,15 @@ import {
   getYesterdaySummary,
   getMonthTotal,
   getWeekTotal,
+  getRange,
   getOverallBreakdown,
   MONTHLY_TARGET,
   TARGET_MODE,
 } from '../utils/productivityTracker';
+import { init, getStatus, getToken } from '../quota/quota-manager.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await init();
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');
   let loadedConfig = null;
@@ -278,7 +281,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const prev = yesterday ? yesterday.counts : null;
 
-    let html = '<div class="prod-header">Hari Ini</div>';
+    // --- License Status Card (PRO only) ---
+    const status = getStatus();
+    let licenseHtml = '';
+    if (!status.isFreePlan && status.payload) {
+      const p = status.payload;
+      const from = new Date(p.iat * 1000);
+      const to = new Date();
+      const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
+      const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`;
+      const rangeData = await getRange(fromStr, toStr);
+      const usedInLicense = rangeData.reduce((sum, d) => sum + (d ? d.dayTotal : 0), 0);
+      const totalPct = Math.min(100, Math.round((usedInLicense / (p.total_limit || 1)) * 100));
+      const daysLeft = Math.ceil((p.exp * 1000 - Date.now()) / 86_400_000);
+      const expiryText = daysLeft <= 0 ? 'Kedaluwarsa' : `Berakhir dalam ${daysLeft} hari`;
+      licenseHtml = `
+        <div class="prod-license pro">
+          <span class="license-badge-sm pro">PRO</span>
+          <span class="license-text">${totalPct}% digunakan</span>
+          <span class="license-sep">·</span>
+          <span class="license-text">${expiryText}</span>
+        </div>
+      `;
+    }
+
+    let html = licenseHtml + '<div class="prod-header">Hari Ini</div>';
 
     if (today) {
       html += `

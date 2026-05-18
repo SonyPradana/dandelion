@@ -13,8 +13,17 @@ import {
   MONTHLY_TARGET,
   TARGET_MODE,
 } from '../../utils/productivityTracker';
+import {
+  init,
+  getStatus,
+  getToken,
+  saveToken,
+  removeToken,
+  getRemainingToday,
+} from '../../quota/quota-manager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  await init();
   const agreed = await getAgreement();
   const overlay = document.getElementById('agreement-overlay');
   const configBody = document.getElementById('config-body');
@@ -270,6 +279,52 @@ document.addEventListener('DOMContentLoaded', async () => {
       </div>
     `;
 
+    const licStatus = getStatus();
+    if (!licStatus.isFreePlan && licStatus.payload) {
+      const p = licStatus.payload;
+      const totalLimit = p.total_limit || 0;
+      const from = new Date(p.iat * 1000);
+      const to = new Date();
+      const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
+      const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`;
+      const rangeData = await getRange(fromStr, toStr);
+      const usedInLicense = rangeData.reduce((sum, d) => sum + (d ? d.dayTotal : 0), 0);
+      const totalPct = Math.min(100, Math.round((usedInLicense / totalLimit) * 100));
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mei',
+        'Jun',
+        'Jul',
+        'Agu',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Des',
+      ];
+      const fmtDate = (ts) => {
+        const d = new Date(ts * 1000);
+        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+      };
+      html += `
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
+          <div class="prod-header" style="color:#065f46">🏅 Total Limit (Pro Tier)</div>
+          <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${totalPct}%"></div></div>
+          <div style="font-size:12px;color:#888;margin-top:4px">${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)</div>
+          <div style="font-size:12px;color:#888;margin-top:8px">Periode Token: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}</div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
+          <div class="prod-header" style="color:#92400e">🆓 Free Tier</div>
+          <div style="font-size:12px;color:#888">50 poin/hari · tanpa total limit</div>
+        </div>
+      `;
+    }
+
     html += '</div></div>';
 
     html += `
@@ -306,6 +361,97 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('refresh-prod')?.addEventListener('click', renderProduktifitas);
+
+  // --- License Tab Logic ---
+  async function renderLicense() {
+    const container = document.getElementById('license-page-content');
+    if (!container) return;
+
+    const status = getStatus();
+    const remaining = await getRemainingToday();
+    const jwt = await getToken();
+
+    const isFree = status.isFreePlan;
+    const badge = isFree
+      ? '<span class="license-badge free">FREE</span>'
+      : '<span class="license-badge pro">PRO</span>';
+    const statusText = isFree ? 'Free Tier (50 poin/hari)' : 'Pro Tier';
+    const statusClass = isFree ? 'free' : 'pro';
+
+    let infoHtml = '';
+    if (!isFree && status.payload) {
+      const p = status.payload;
+      const expDate = p.exp ? new Date(p.exp * 1000).toLocaleDateString('id-ID') : '-';
+      const featList =
+        Array.isArray(p.features) && p.features.length > 0 ? p.features.join(', ') : '-';
+      const verList =
+        Array.isArray(p.version_allowed) && p.version_allowed.length > 0
+          ? p.version_allowed.join(', ')
+          : '-';
+      infoHtml = `
+        <div class="license-info-grid">
+          <div class="license-info-item"><div class="label">Total Limit</div><div class="value">${(p.total_limit ?? 0).toLocaleString()}</div></div>
+          <div class="license-info-item"><div class="label">Grace Daily</div><div class="value">${(p.daily_limit ?? 100).toLocaleString()}</div></div>
+          <div class="license-info-item"><div class="label">Berlaku Sampai</div><div class="value">${expDate}</div></div>
+          <div class="license-info-item"><div class="label">Sisa Hari Ini</div><div class="value">${remaining.toLocaleString()}</div></div>
+          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Fitur</div><div class="value">${featList}</div></div>
+          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Versi Diizinkan</div><div class="value">${verList}</div></div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="license-status ${statusClass}">${badge} ${statusText}</div>
+      ${infoHtml}
+      <div class="pane-title">Aktifkan Token</div>
+      <textarea class="license-jwt-input" id="quota-jwt-input" placeholder="Tempel token (JWT) di sini...">${jwt || ''}</textarea>
+      <div class="license-actions">
+        <button class="license-btn activate" id="quota-activate-btn">Aktifkan</button>
+        <button class="license-btn remove" id="quota-remove-btn" ${isFree ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>Hapus Token</button>
+      </div>
+      <div class="license-message" id="quota-message"></div>
+    `;
+
+    document.getElementById('quota-activate-btn')?.addEventListener('click', async () => {
+      const input = document.getElementById('quota-jwt-input');
+      const msg = document.getElementById('quota-message');
+      if (!input || !msg) return;
+      const val = input.value.trim();
+      if (!val) {
+        msg.className = 'license-message error';
+        msg.textContent = 'Masukkan token terlebih dahulu.';
+        return;
+      }
+      try {
+        await saveToken(val);
+        msg.className = 'license-message success';
+        msg.textContent = 'Token berhasil diaktifkan!';
+        setTimeout(renderLicense, 1000);
+      } catch (error) {
+        msg.className = 'license-message error';
+        msg.textContent = `Gagal: ${error.message}`;
+      }
+    });
+
+    document.getElementById('quota-remove-btn')?.addEventListener('click', async () => {
+      const msg = document.getElementById('quota-message');
+      await removeToken();
+      msg.className = 'license-message success';
+      msg.textContent = 'Token dihapus, kembali ke Free Tier.';
+      setTimeout(renderLicense, 1000);
+    });
+  }
+
+  const quotaTab = document.querySelector('.tab-btn[data-tab="quota"]');
+  if (quotaTab) {
+    quotaTab.addEventListener('click', () => {
+      setTimeout(renderLicense, 50);
+    });
+  }
+
+  if (document.getElementById('tab-quota')?.classList.contains('active')) {
+    renderLicense();
+  }
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();

@@ -61,6 +61,15 @@
               <span class="tab-label">Lainnya</span>
             </button>
           </div>
+
+          <div class="tab-divider"></div>
+
+          <div class="tab-group">
+            <button class="tab-btn" data-tab="quota">
+              <span class="tab-icon">🔑</span>
+              <span class="tab-label">Batas Pemakaian</span>
+            </button>
+          </div>
         </nav>
 
         <div class="main">
@@ -252,6 +261,11 @@
 
               <input type="file" id="import-file-input" style="display: none" accept=".json" />
             </div>
+          </section>
+
+          <section class="tab-pane" id="tab-quota">
+            <div class="pane-header">🔑 Batas Pemakaian</div>
+            <div class="pane-body" id="license-page-content"></div>
           </section>
 
           <footer class="app-footer">

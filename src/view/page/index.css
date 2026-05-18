@@ -264,6 +264,136 @@ body {
   margin-bottom: 0.5rem;
 }
 
+/* ── License Tab ── */
+.license-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+.license-status.free {
+  background: #fef3c7;
+  color: #92400e;
+}
+.license-status.pro {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.license-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.license-badge.free {
+  background: #f59e0b;
+  color: #fff;
+}
+.license-badge.pro {
+  background: #10b981;
+  color: #fff;
+}
+
+.license-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.license-info-item {
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.license-info-item .label {
+  color: #888;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.license-info-item .value {
+  color: #111;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.license-jwt-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+}
+.license-jwt-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.license-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.license-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.license-btn:hover {
+  transform: translateY(-1px);
+}
+.license-btn.activate {
+  background: #4f46e5;
+  color: #fff;
+}
+.license-btn.activate:hover {
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+.license-btn.remove {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.license-btn.remove:hover {
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.25);
+}
+
+.license-message {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  display: none;
+}
+.license-message.success {
+  display: block;
+  background: #d1fae5;
+  color: #065f46;
+}
+.license-message.error {
+  display: block;
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 /* ── States ── */
 .blurred {
   filter: blur(6px) brightness(0.95);

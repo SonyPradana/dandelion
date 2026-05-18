@@ -24,6 +24,7 @@
     "verify:firefox": "web-ext lint --source-dir dist/firefox"
   },
   "dependencies": {
+    "jose": "^6.2.3",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
