@@ -16,11 +16,11 @@ import {
 import {
   init,
   getStatus,
-  getLicenseJWT,
-  saveLicense,
-  removeLicense,
+  getToken,
+  saveToken,
+  removeToken,
   getRemainingToday,
-} from '../../license/license-manager.js';
+} from '../../quota/quota-manager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   await init();
@@ -310,16 +310,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       };
       html += `
         <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
-          <div class="prod-header" style="color:#065f46">🏅 Total Limit (PRO)</div>
+          <div class="prod-header" style="color:#065f46">🏅 Total Limit (Pro Tier)</div>
           <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${totalPct}%"></div></div>
           <div style="font-size:12px;color:#888;margin-top:4px">${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)</div>
-          <div style="font-size:12px;color:#888;margin-top:8px">Periode Lisensi: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}</div>
+          <div style="font-size:12px;color:#888;margin-top:8px">Periode Token: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}</div>
         </div>
       `;
     } else {
       html += `
         <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
-          <div class="prod-header" style="color:#92400e">🆓 Free Plan</div>
+          <div class="prod-header" style="color:#92400e">🆓 Free Tier</div>
           <div style="font-size:12px;color:#888">100 poin/hari · tanpa total limit</div>
         </div>
       `;
@@ -369,13 +369,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const status = getStatus();
     const remaining = await getRemainingToday();
-    const jwt = await getLicenseJWT();
+    const jwt = await getToken();
 
     const isFree = status.isFreePlan;
     const badge = isFree
       ? '<span class="license-badge free">FREE</span>'
       : '<span class="license-badge pro">PRO</span>';
-    const statusText = isFree ? 'Free Plan (100 poin/hari)' : 'Pro Plan';
+    const statusText = isFree ? 'Free Tier (100 poin/hari)' : 'Pro Tier';
     const statusClass = isFree ? 'free' : 'pro';
 
     let infoHtml = '';
@@ -403,29 +403,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.innerHTML = `
       <div class="license-status ${statusClass}">${badge} ${statusText}</div>
       ${infoHtml}
-      <div class="pane-title">Aktifkan Lisensi</div>
-      <textarea class="license-jwt-input" id="license-jwt-input" placeholder="Tempel kode lisensi (JWT) di sini...">${jwt || ''}</textarea>
+      <div class="pane-title">Aktifkan Token</div>
+      <textarea class="license-jwt-input" id="quota-jwt-input" placeholder="Tempel token (JWT) di sini...">${jwt || ''}</textarea>
       <div class="license-actions">
-        <button class="license-btn activate" id="license-activate-btn">Aktifkan</button>
-        <button class="license-btn remove" id="license-remove-btn" ${isFree ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>Hapus Lisensi</button>
+        <button class="license-btn activate" id="quota-activate-btn">Aktifkan</button>
+        <button class="license-btn remove" id="quota-remove-btn" ${isFree ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>Hapus Token</button>
       </div>
-      <div class="license-message" id="license-message"></div>
+      <div class="license-message" id="quota-message"></div>
     `;
 
-    document.getElementById('license-activate-btn')?.addEventListener('click', async () => {
-      const input = document.getElementById('license-jwt-input');
-      const msg = document.getElementById('license-message');
+    document.getElementById('quota-activate-btn')?.addEventListener('click', async () => {
+      const input = document.getElementById('quota-jwt-input');
+      const msg = document.getElementById('quota-message');
       if (!input || !msg) return;
       const val = input.value.trim();
       if (!val) {
         msg.className = 'license-message error';
-        msg.textContent = 'Masukkan kode lisensi terlebih dahulu.';
+        msg.textContent = 'Masukkan token terlebih dahulu.';
         return;
       }
       try {
-        await saveLicense(val);
+        await saveToken(val);
         msg.className = 'license-message success';
-        msg.textContent = 'Lisensi berhasil diaktifkan!';
+        msg.textContent = 'Token berhasil diaktifkan!';
         setTimeout(renderLicense, 1000);
       } catch (error) {
         msg.className = 'license-message error';
@@ -433,23 +433,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 
-    document.getElementById('license-remove-btn')?.addEventListener('click', async () => {
-      const msg = document.getElementById('license-message');
-      await removeLicense();
+    document.getElementById('quota-remove-btn')?.addEventListener('click', async () => {
+      const msg = document.getElementById('quota-message');
+      await removeToken();
       msg.className = 'license-message success';
-      msg.textContent = 'Lisensi dihapus, kembali ke Free Plan.';
+      msg.textContent = 'Token dihapus, kembali ke Free Tier.';
       setTimeout(renderLicense, 1000);
     });
   }
 
-  const licenseTab = document.querySelector('.tab-btn[data-tab="license"]');
-  if (licenseTab) {
-    licenseTab.addEventListener('click', () => {
+  const quotaTab = document.querySelector('.tab-btn[data-tab="quota"]');
+  if (quotaTab) {
+    quotaTab.addEventListener('click', () => {
       setTimeout(renderLicense, 50);
     });
   }
 
-  if (document.getElementById('tab-license')?.classList.contains('active')) {
+  if (document.getElementById('tab-quota')?.classList.contains('active')) {
     renderLicense();
   }
 

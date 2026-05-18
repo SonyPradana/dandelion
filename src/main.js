@@ -3,10 +3,10 @@ import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { getAgreement, getActiveConfig } from './configuration.js';
 import { validateChain } from './utils/productivityTracker.js';
-import { init as licenseInit, getStatus, isFeatureEnabled } from './license/license-manager.js';
+import { init as quotaInit, getStatus, isFeatureEnabled } from './quota/quota-manager.js';
 
 getAgreement().then(async (agreed) => {
-  await licenseInit();
+  await quotaInit();
   if (agreed) {
     initialize();
   }

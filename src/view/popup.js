@@ -13,7 +13,7 @@ import {
   MONTHLY_TARGET,
   TARGET_MODE,
 } from '../utils/productivityTracker';
-import { init, getStatus, getLicenseJWT } from '../license/license-manager.js';
+import { init, getStatus, getToken } from '../quota/quota-manager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   await init();

@@ -114,15 +114,21 @@ Known lint warnings (not actionable):
 | `UNSAFE_VAR_ASSIGNMENT`                  | innerHTML usage in existing code                                                                        |
 | `KEY_FIREFOX_UNSUPPORTED_BY_MIN_VERSION` | `data_collection_permissions` requires FF 140+, but `strict_min_version` is 109 for Windows 8.1 support |
 
-## Offline License System
+## Quota & Tier System
 
-Extension ships with an embedded EC public key (`src/license/public-key.js`) for verifying offline JWT licenses (ES256 signed). Licenses grant a `total_limit` of weighted productivity points; once exhausted, a `daily_limit` from the JWT applies as a grace cap.
+Extension ships with an embedded EC public key (`src/quota/public-key.js`) for verifying offline JWT quota tokens (ES256 signed). Tokens grant a `total_limit` of weighted productivity points; once exhausted, a `daily_limit` from the token applies as a grace cap.
+
+| UI label                 | Code namespace    | Description              |
+| ------------------------ | ----------------- | ------------------------ |
+| "Batas Pemakaian"        | `src/quota/`      | Tab name on options page |
+| "Free Tier" / "Pro Tier" | —                 | Plan labels              |
+| "Token"                  | `QUOTA_TOKEN_KEY` | Storage key for the JWT  |
 
 ### Generator
 
 ```bash
-# Generate a license JWT
-node scripts/gen-license.mjs \
+# Generate a quota token
+node scripts/gen-quota-token.mjs \
   -k keys/license-priv.pem \
   -e 90d \
   -p 30000 \
@@ -139,7 +145,7 @@ node scripts/gen-license.mjs \
 | `-d, --daily-limit`    | Grace daily limit after total exhausted (default: 100)   |
 | `--version-allowed`    | Comma-separated allowed extension versions               |
 | `--features`           | Comma-separated feature names                            |
-| `--license-id`         | Custom license ID (default: auto-generated)              |
+| `--token-id`           | Custom token ID (default: auto-generated)                |
 
 ### Key Pair
 
@@ -148,59 +154,59 @@ node scripts/gen-license.mjs \
 node scripts/generate-license-keys.js
 
 # Output:
-#   keys/license-priv.pem  → PRIVATE (keep secure, sign licenses)
+#   keys/license-priv.pem  → PRIVATE (keep secure, sign tokens)
 #   keys/license-pub.pem   → PUBLIC  (embed in extension)
 
-# The public key is already embedded in src/license/public-key.js.
+# The public key is already embedded in src/quota/public-key.js.
 # To update for a new release, replace the PEM and update version.
 ```
 
-The public key is **committed** (`src/license/public-key.js`) — it is not a secret. No build-time injection or `.env` variable is needed.
+The public key is **committed** (`src/quota/public-key.js`) — it is not a secret. No build-time injection or `.env` variable is needed.
 
 **Key rolling is rarely needed.** One key pair can serve the project's lifetime. Only generate a new pair if:
 
-| Scenario | Action |
-|----------|--------|
-| Private key leaked/committed | **Mandatory** — all existing licenses become invalid; users must re-activate |
-| Intentional revocation of all licenses | Can be done — new key rejects all old signatures |
-| Routine release | Not needed — use `version_allowed` in JWT instead |
-| Minor update / bugfix | Not needed |
+| Scenario                             | Action                                                                     |
+| ------------------------------------ | -------------------------------------------------------------------------- |
+| Private key leaked/committed         | **Mandatory** — all existing tokens become invalid; users must re-activate |
+| Intentional revocation of all tokens | Can be done — new key rejects all old signatures                           |
+| Routine release                      | Not needed — use `version_allowed` in JWT instead                          |
+| Minor update / bugfix                | Not needed                                                                 |
 
-`version_allowed` in the JWT controls which extension versions accept the license — this is the primary mechanism for version gating, not key rotation.
+`version_allowed` in the JWT controls which extension versions accept the token — this is the primary mechanism for version gating, not key rotation.
 
 ### Feature Routing
 
 Auto handlers in `main.js` are gated by `isFeatureEnabled(name)`:
 
-| Feature string        | Handler               | Description      |
-| --------------------- | --------------------- | ---------------- |
-| `skriningform`        | `initializeSkriningForm` | Form skrining |
-| `skrining`            | `initializeSkrining`     | Halaman skrining |
-| `skrining-form-not-checked` | `initializeNotChecked` | Tidak periksa |
+| Feature string              | Handler                  | Description      |
+| --------------------------- | ------------------------ | ---------------- |
+| `skriningform`              | `initializeSkriningForm` | Form skrining    |
+| `skrining`                  | `initializeSkrining`     | Halaman skrining |
+| `skrining-form-not-checked` | `initializeNotChecked`   | Tidak periksa    |
 
-- **Free plan**: `isFeatureEnabled()` always returns `true` for all features.
-- **Pro plan**: only features listed in the JWT `features[]` array are enabled.
+- **Free Tier**: `isFeatureEnabled()` always returns `true` for all features.
+- **Pro Tier**: only features listed in the token `features[]` array are enabled.
 - Unlisted features are silently skipped — the handler does not run on matching URLs.
 
 ### Bundle Initialisation
 
-Each JS bundle is a separate IIFE with its own `license-manager` module scope. `init()` must be called explicitly in each entry point:
+Each JS bundle is a separate IIFE with its own `quota-manager` module scope. `init()` must be called explicitly in each entry point:
 
-| Bundle | Entry | `init()` required? |
-|--------|-------|--------------------|
-| `main.js` | Content script | Yes — `await licenseInit()` |
-| `popup.js` | Popup page | Yes — `await init()` |
-| `index.js` | Config page | Yes — `await init()` |
+| Bundle     | Entry          | `init()` call       |
+| ---------- | -------------- | ------------------- |
+| `main.js`  | Content script | `await quotaInit()` |
+| `popup.js` | Popup page     | `await init()`      |
+| `index.js` | Config page    | `await init()`      |
 
-Without `await init()`, `getStatus()` returns `isFreePlan: true` (default state) and the PRO UI / feature gates will not work.
+Without `await init()`, `getStatus()` returns `isFreePlan: true` (default state) and the Pro Tier UI / feature gates will not work.
 
 ### Limit Behaviour
 
-| Scenario                     | Total limit | Daily cap              |
-| ---------------------------- | ----------- | ---------------------- |
-| Free plan (no JWT / invalid) | Unlimited   | 100/day                |
-| Pro, within total limit      | From JWT    | Unlimited              |
-| Pro, total exhausted         | —           | `daily_limit` from JWT |
+| Scenario                       | Total limit | Daily cap                |
+| ------------------------------ | ----------- | ------------------------ |
+| Free Tier (no token / invalid) | Unlimited   | 100/day                  |
+| Pro Tier, within total limit   | From token  | Unlimited                |
+| Pro Tier, total exhausted      | —           | `daily_limit` from token |
 
 ## Project Structure
 
@@ -212,7 +218,7 @@ scripts/
   build-firefox-manifest.js — Firefox manifest injector
   build-chrome-manifest.js  — Chrome manifest injector
   copy-static.js        — copies HTML/CSS/icons
-  gen-license.mjs       — license JWT generator
+  gen-quota-token.mjs   — quota token generator
   generate-license-keys.js — EC key pair generator
   package.js            — Chrome zip + Firefox XPI copy
   remove-static.js      — rm -rf equivalent (fs.rmSync)
@@ -220,11 +226,11 @@ scripts/
 src/
   manifest.json         — Chrome manifest template
   manifest.firefox.json — Firefox manifest template
-  license/              — Offline license system
+  quota/                — Offline quota system
     public-key.js       — Embedded EC public key
     verify.js           — JWT verification (jose + ES256)
     cache.js            — Verification result cache (10 min TTL)
-    license-manager.js  — Public API (init, canUseTokens, etc.)
+    quota-manager.js    — Public API (init, getStatus, canUseTokens, isFeatureEnabled, saveToken, removeToken, getToken)
 rolldown.config.js      — shared bundler config
 package.json            — scripts & dependencies
 .env.example            — documented env vars
