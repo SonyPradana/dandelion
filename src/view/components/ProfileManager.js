@@ -82,6 +82,30 @@ export class ProfileManager {
     if (this.callbacks.onChange) this.callbacks.onChange();
   }
 
+  duplicateProfile(key) {
+    const keys = Object.keys(this.profiles);
+    if (keys.length >= 5) return;
+
+    let i = 1;
+    while (this.profiles[`profile${i}`]) i++;
+    const newKey = `profile${i}`;
+
+    const source = this.profiles[key];
+    const clone = structuredClone(source);
+
+    let newName = `${source.name} (copy)`;
+    let counter = 2;
+    while (Object.values(this.profiles).some((p) => p.name === newName)) {
+      newName = `${source.name} (copy ${counter})`;
+      counter++;
+    }
+    clone.name = newName;
+
+    this.profiles[newKey] = clone;
+    this.render();
+    if (this.callbacks.onChange) this.callbacks.onChange();
+  }
+
   switchProfile(key) {
     if (key === this.activeProfile) return;
     this.activeProfile = key;
@@ -115,19 +139,34 @@ export class ProfileManager {
       editBtn.textContent = '✏️';
       editBtn.title = 'Ubah nama';
 
+      const duplicateBtn = document.createElement('button');
+      duplicateBtn.className = 'pm-btn-duplicate';
+      duplicateBtn.textContent = '📋';
+      duplicateBtn.title = 'Duplikat profile';
+
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'pm-btn-delete';
       deleteBtn.textContent = '🗑️';
       deleteBtn.title = 'Hapus profile';
 
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.pm-btn-edit') || e.target.closest('.pm-btn-delete')) return;
+        if (
+          e.target.closest('.pm-btn-edit') ||
+          e.target.closest('.pm-btn-duplicate') ||
+          e.target.closest('.pm-btn-delete')
+        )
+          return;
         this.switchProfile(key);
       });
 
       editBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         this.startInlineRename(card, nameSpan, key);
+      });
+
+      duplicateBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.handleDuplicate(key);
       });
 
       deleteBtn.addEventListener('click', (e) => {
@@ -138,6 +177,7 @@ export class ProfileManager {
       card.appendChild(indicator);
       card.appendChild(nameSpan);
       card.appendChild(editBtn);
+      card.appendChild(duplicateBtn);
       card.appendChild(deleteBtn);
       cardList.appendChild(card);
     });
@@ -216,6 +256,10 @@ export class ProfileManager {
         this.render();
       }
     });
+  }
+
+  handleDuplicate(key) {
+    this.duplicateProfile(key);
   }
 
   handleDelete(key) {

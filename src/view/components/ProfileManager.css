@@ -52,6 +52,7 @@
 }
 
 .pm-btn-edit,
+.pm-btn-duplicate,
 .pm-btn-delete {
   background: none;
   border: none;
@@ -66,11 +67,13 @@
 }
 
 .pm-card:hover .pm-btn-edit,
+.pm-card:hover .pm-btn-duplicate,
 .pm-card:hover .pm-btn-delete {
   opacity: 0.7;
 }
 
 .pm-btn-edit:hover,
+.pm-btn-duplicate:hover,
 .pm-btn-delete:hover {
   opacity: 1 !important;
   transform: scale(1.15);
