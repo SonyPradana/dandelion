@@ -117,6 +117,11 @@ export async function getRemainingToday() {
   return Infinity;
 }
 
+export async function isLimitReached() {
+  const remaining = await getRemainingToday();
+  return remaining <= 0;
+}
+
 function calcWeightedCount(counts) {
   let total = 0;
   for (const cat of CATEGORIES) {

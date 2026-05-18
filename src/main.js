@@ -3,7 +3,7 @@ import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { getAgreement, getActiveConfig } from './configuration.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
-import { init as quotaInit, isFeatureEnabled } from './quota/quota-manager.js';
+import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quota-manager.js';
 
 async function main() {
   const agreed = await getAgreement();
@@ -17,7 +17,7 @@ async function main() {
     return;
   }
 
-  if (await isDailyLimitReached()) return;
+  if ((await isDailyLimitReached()) || (await isLimitReached())) return;
 
   initialize();
 }
