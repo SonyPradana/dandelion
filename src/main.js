@@ -48,5 +48,3 @@ async function initialize() {
     initializeSkrining();
   }
 }
-
-  if (await isDailyLimitReached()) return;
