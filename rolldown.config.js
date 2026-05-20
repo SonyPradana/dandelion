@@ -22,8 +22,7 @@ export default [
     input: 'src/view/page/index.js',
     output: {
       file: `${outDir}/view/page/index.js`,
-      format: 'iife',
-      name: 'DandelionConfigPage',
+      format: 'es',
       minify: true,
     },
   },
