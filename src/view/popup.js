@@ -1,5 +1,6 @@
 import browser from 'webextension-polyfill';
 import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
+import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
 import { ProfileManager } from './components/ProfileManager.js';
@@ -16,6 +17,25 @@ import {
 import { init, getStatus, getToken } from '../quota/quota-manager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const agreement = document.getElementById('agreement');
+  if (agreement) {
+    agreement.innerHTML = `
+      <div class="header">
+        <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
+      </div>
+      <div class="content">
+        ${AGREEMENT_SECTIONS_HTML}
+        <div class="checkbox-group">
+          <h3 style="margin-bottom: 16px; font-size: 15px; color: #333">KONFIRMASI</h3>
+          <div class="checkbox-item">
+            <input type="checkbox" id="agree-checkbox" />
+            <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   await init();
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');

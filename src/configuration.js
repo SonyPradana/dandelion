@@ -48,11 +48,17 @@ const DEFAULT_CONFIG = {
   },
 };
 
+const TERMS_KEY = 'dandelion_terms';
+
 /**
  * @returns {Promise<boolean>}
  */
 export function getAgreement() {
-  return browser.storage.local.get('termsAgreed').then((result) => result?.termsAgreed ?? false);
+  return browser.storage.local.get(TERMS_KEY).then((result) => {
+    const data = result[TERMS_KEY];
+    if (!data || !data.agreed) return false;
+    return data.version === browser.runtime.getManifest().version;
+  });
 }
 
 /**
@@ -60,7 +66,13 @@ export function getAgreement() {
  * @returns {void}
  */
 export function setAgreement(value) {
-  browser.storage.local.set({ termsAgreed: value });
+  if (value) {
+    browser.storage.local.set({
+      [TERMS_KEY]: { agreed: true, version: browser.runtime.getManifest().version },
+    });
+  } else {
+    browser.storage.local.set({ [TERMS_KEY]: { agreed: false } });
+  }
 }
 
 /**

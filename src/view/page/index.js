@@ -1,4 +1,5 @@
-import { getAgreement, getFullConfig, setConfig } from '../../configuration';
+import { getAgreement, setAgreement, getFullConfig, setConfig } from '../../configuration';
+import { showAgreementPopup } from '../../components/agreementPopup';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
@@ -24,14 +25,9 @@ import {
 
 document.addEventListener('DOMContentLoaded', async () => {
   await init();
-  const agreed = await getAgreement();
-  const overlay = document.getElementById('agreement-overlay');
-  const configBody = document.getElementById('config-body');
 
-  if (!agreed) {
-    overlay.classList.remove('hidden');
-    configBody.classList.add('blurred');
-    return;
+  if (!(await getAgreement())) {
+    await showAgreementPopup();
   }
 
   // Tab switching
