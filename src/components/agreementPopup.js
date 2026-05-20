@@ -184,11 +184,21 @@ export function showAgreementPopup() {
     btn.classList.toggle('enabled', checked);
   });
 
-  return new Promise((resolve) => {
-    btn.addEventListener('click', async () => {
-      await setAgreement(true);
-      overlay.remove();
-      resolve();
-    });
+  let resolvePromise = null;
+  const promise = new Promise((resolve) => {
+    resolvePromise = resolve;
   });
+
+  function remove() {
+    const el = document.getElementById(POPUP_ID);
+    if (el) el.remove();
+    if (resolvePromise) resolvePromise();
+  }
+
+  btn.addEventListener('click', async () => {
+    await setAgreement(true);
+    remove();
+  });
+
+  return { promise, remove };
 }
