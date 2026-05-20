@@ -11,19 +11,15 @@ export default [
     },
   },
   {
-    input: 'src/view/popup.js',
-    output: {
-      file: `${outDir}/view/popup.js`,
-      format: 'es',
-      minify: true,
+    input: {
+      'view/popup': 'src/view/popup.js',
+      'view/page/index': 'src/view/page/index.js',
     },
-  },
-  {
-    input: 'src/view/page/index.js',
     output: {
-      file: `${outDir}/view/page/index.js`,
+      dir: outDir,
       format: 'es',
       minify: true,
+      entryFileNames: '[name].js',
     },
   },
 ];
