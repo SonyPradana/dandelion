@@ -4,6 +4,7 @@ import { getCache, setCache, clearCache } from './cache.js';
 import { getTodaySummary } from '../utils/productivityTracker.js';
 
 const QUOTA_TOKEN_KEY = 'dandelion_quota_token';
+const DEVICE_ID_KEY = 'device_id';
 
 const FREE_PLAN = {
   features: [],
@@ -18,9 +19,40 @@ const _state = {
   status: 'none',
   payload: null,
   isFreePlan: true,
+  deviceId: null,
 };
 
+async function getOrCreateDeviceId() {
+  try {
+    const result = await browser.storage.local.get(DEVICE_ID_KEY);
+    const existing = result[DEVICE_ID_KEY];
+    if (existing) {
+      _state.deviceId = existing;
+      return;
+    }
+    const CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    let id = '';
+    for (let i = 0; i < 8; i++) {
+      id += CHARS[Math.floor(Math.random() * 62)];
+    }
+    await browser.storage.local.set({ [DEVICE_ID_KEY]: id });
+    _state.deviceId = id;
+  } catch {
+    _state.deviceId = null;
+  }
+}
+
+function versionMatch(pattern, version) {
+  if (pattern === '*') return true;
+  if (pattern.endsWith('.*')) {
+    return version.startsWith(pattern.slice(0, -1));
+  }
+  return pattern === version;
+}
+
 export async function init() {
+  await getOrCreateDeviceId();
+
   const cached = await getCache();
   if (cached) {
     _state.status = cached.status;
@@ -58,7 +90,7 @@ export async function init() {
     if (
       Array.isArray(payload.version_allowed) &&
       payload.version_allowed.length > 0 &&
-      !payload.version_allowed.includes(currentVersion)
+      !payload.version_allowed.some((p) => versionMatch(p, currentVersion))
     ) {
       _state.status = 'none';
       _state.payload = { ...FREE_PLAN };
@@ -67,6 +99,14 @@ export async function init() {
       console.log(
         `[Dandelion] Quota: version mismatch (${currentVersion} not in [${payload.version_allowed.join(',')}]) (free tier)`,
       );
+      return;
+    }
+
+    if (payload.license_id && payload.license_id !== _state.deviceId) {
+      _state.status = 'none';
+      _state.payload = { ...FREE_PLAN };
+      _state.isFreePlan = true;
+      await setCache({ status: 'none', payload: null });
       return;
     }
 
@@ -89,7 +129,12 @@ export function getStatus() {
     isFreePlan: _state.isFreePlan,
     payload: _state.payload,
     tokenId: _state.payload?.license_id || null,
+    deviceId: _state.deviceId,
   };
+}
+
+export function getDeviceId() {
+  return _state.deviceId;
 }
 
 export function isFeatureEnabled(name) {
@@ -171,6 +216,14 @@ export async function canUseTokens(counts) {
 export async function saveToken(jwtString) {
   if (typeof jwtString !== 'string' || jwtString.trim().length === 0) {
     throw new Error('Invalid token string');
+  }
+  await getOrCreateDeviceId();
+  const payload = await verifyLicense(jwtString.trim());
+  if (!payload) {
+    throw new Error('Token tidak valid atau sudah kadaluarsa');
+  }
+  if (payload.license_id && payload.license_id !== _state.deviceId) {
+    throw new Error('Token tidak terikat dengan device ini');
   }
   await browser.storage.local.set({ [QUOTA_TOKEN_KEY]: jwtString.trim() });
   await clearCache();

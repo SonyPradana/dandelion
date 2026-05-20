@@ -16,6 +16,7 @@ import {
 import {
   init,
   getStatus,
+  getDeviceId,
   getToken,
   saveToken,
   removeToken,
@@ -400,8 +401,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       `;
     }
 
+    const deviceId = getDeviceId();
+
     container.innerHTML = `
       <div class="license-status ${statusClass}">${badge} ${statusText}</div>
+      <div class="device-id-section">
+        <div class="device-id-label">Device ID</div>
+        <div class="device-id-row">
+          <span class="device-id-value">${deviceId || '-'}</span>
+          <button class="device-id-copy" id="device-id-copy-btn">Salin</button>
+        </div>
+        <div class="device-id-hint">Gunakan ID ini untuk mendapatkan token</div>
+      </div>
       ${infoHtml}
       <div class="pane-title">Aktifkan Token</div>
       <textarea class="license-jwt-input" id="quota-jwt-input" placeholder="Tempel token (JWT) di sini...">${jwt || ''}</textarea>
@@ -412,11 +423,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       <div class="license-message" id="quota-message"></div>
     `;
 
+    document.getElementById('device-id-copy-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('device-id-copy-btn');
+      try {
+        await navigator.clipboard.writeText(deviceId || '');
+        btn.textContent = 'Tersalin!';
+        setTimeout(() => {
+          btn.textContent = 'Salin';
+        }, 1500);
+      } catch {
+        btn.textContent = 'Gagal';
+        setTimeout(() => {
+          btn.textContent = 'Salin';
+        }, 1500);
+      }
+    });
+
     document.getElementById('quota-activate-btn')?.addEventListener('click', async () => {
       const input = document.getElementById('quota-jwt-input');
       const msg = document.getElementById('quota-message');
       if (!input || !msg) return;
-      const val = input.value.trim();
+      const val = input.value.trim().split('\n')[0].trim();
       if (!val) {
         msg.className = 'license-message error';
         msg.textContent = 'Masukkan token terlebih dahulu.';
