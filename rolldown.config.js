@@ -7,6 +7,7 @@ export default [
       file: `${outDir}/main.js`,
       format: 'iife',
       name: 'DandelionContentScript',
+      minify: true,
     },
   },
   {
@@ -23,6 +24,7 @@ export default [
       file: `${outDir}/view/page/index.js`,
       format: 'iife',
       name: 'DandelionConfigPage',
+      minify: true,
     },
   },
 ];
