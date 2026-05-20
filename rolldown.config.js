@@ -14,8 +14,8 @@ export default [
     input: 'src/view/popup.js',
     output: {
       file: `${outDir}/view/popup.js`,
-      format: 'iife',
-      name: 'DandelionPopup',
+      format: 'es',
+      minify: true,
     },
   },
   {
