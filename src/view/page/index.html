@@ -12,14 +12,6 @@
   </head>
   <body>
     <div id="config-container">
-      <div id="agreement-overlay" class="overlay hidden">
-        <div class="overlay-card">
-          <h2>Belum Menyetujui Syarat &amp; Ketentuan</h2>
-          <p>Anda harus menyetujui syarat dan ketentuan terlebih dahulu.</p>
-          <p>Buka popup extension dan centang persetujuan di tab "Persetujuan".</p>
-        </div>
-      </div>
-
       <div id="config-body">
         <nav class="sidebar">
           <div class="tab-group">
@@ -68,6 +60,15 @@
             <button class="tab-btn" data-tab="quota">
               <span class="tab-icon">🔑</span>
               <span class="tab-label">Batas Pemakaian</span>
+            </button>
+          </div>
+
+          <div class="tab-divider"></div>
+
+          <div class="tab-group">
+            <button class="tab-btn" data-tab="persetujuan">
+              <span class="tab-icon">🛡️</span>
+              <span class="tab-label">Persetujuan</span>
             </button>
           </div>
         </nav>
@@ -266,6 +267,11 @@
           <section class="tab-pane" id="tab-quota">
             <div class="pane-header">🔑 Batas Pemakaian</div>
             <div class="pane-body" id="license-page-content"></div>
+          </section>
+
+          <section class="tab-pane" id="tab-persetujuan">
+            <div class="pane-header">🛡️ Persetujuan</div>
+            <div class="pane-body" id="persetujuan-content"></div>
           </section>
 
           <footer class="app-footer">

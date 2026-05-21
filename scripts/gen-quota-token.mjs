@@ -14,7 +14,7 @@ for (let i = 0; i < raw.length; i++) {
   if (key === 'd' || key === 'daily-limit') args.dailyLimit = parseInt(val, 10) || 100;
   if (key === 'version-allowed') args.versionAllowed = val;
   if (key === 'features') args.features = val;
-  if (key === 'license-id') args.licenseId = val;
+  if (key === 'token-id' || key === 'license-id') args.licenseId = val;
 }
 
 if (!args.privateKey || !args.expiry) {
@@ -28,6 +28,14 @@ if (!args.privateKey || !args.expiry) {
   console.error('  --version-allowed      Comma-separated version list (e.g. "1.0.0,1.1.0")');
   console.error('  --features             Comma-separated feature names');
   console.error('  --token-id             Custom token ID (default: auto-generated)');
+  console.error('');
+  console.error('Examples:');
+  console.error(
+    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 90d -p 30000 --token-id aB3xK9mQ',
+  );
+  console.error(
+    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 12m -p 0 -d 200 --features skriningform --token-id X7pL2nR8',
+  );
   process.exit(1);
 }
 
@@ -60,7 +68,7 @@ const versionAllowed = args.versionAllowed
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
-  : [];
+  : ['*'];
 
 const privateKey = await importPKCS8(privateKeyPEM, 'ES256');
 
