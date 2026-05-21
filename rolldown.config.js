@@ -6,23 +6,22 @@ export default [
     output: {
       file: `${outDir}/main.js`,
       format: 'iife',
-      name: 'DandelionContentScript',
+      minify: {
+        mangle: { toplevel: true },
+        compress: true,
+      },
     },
   },
   {
-    input: 'src/view/popup.js',
-    output: {
-      file: `${outDir}/view/popup.js`,
-      format: 'iife',
-      name: 'DandelionPopup',
+    input: {
+      'view/popup': 'src/view/popup.js',
+      'view/page/index': 'src/view/page/index.js',
     },
-  },
-  {
-    input: 'src/view/page/index.js',
     output: {
-      file: `${outDir}/view/page/index.js`,
-      format: 'iife',
-      name: 'DandelionConfigPage',
+      dir: outDir,
+      format: 'es',
+      minify: true,
+      entryFileNames: '[name].js',
     },
   },
 ];
