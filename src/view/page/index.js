@@ -1,4 +1,7 @@
-import { getAgreement, getFullConfig, setConfig } from '../../configuration';
+import browser from 'webextension-polyfill';
+import { getAgreement, setAgreement, getFullConfig, setConfig } from '../../configuration';
+import { showAgreementPopup } from '../../components/agreementPopup';
+import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
@@ -23,16 +26,31 @@ import {
   getRemainingToday,
 } from '../../quota/quota-manager.js';
 
+let activePopup = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
   await init();
-  const agreed = await getAgreement();
-  const overlay = document.getElementById('agreement-overlay');
-  const configBody = document.getElementById('config-body');
 
-  if (!agreed) {
-    overlay.classList.remove('hidden');
-    configBody.classList.add('blurred');
-    return;
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.dandelion_terms) {
+      const terms = changes.dandelion_terms.newValue;
+      const version = browser.runtime.getManifest().version;
+      if (!terms?.agreed || terms.version !== version) {
+        if (!activePopup) {
+          activePopup = showAgreementPopup();
+          activePopup.promise.then(() => { activePopup = null; });
+        }
+      } else if (activePopup) {
+        activePopup.remove();
+        activePopup = null;
+      }
+    }
+  });
+
+  if (!(await getAgreement())) {
+    activePopup = showAgreementPopup();
+    await activePopup.promise;
+    activePopup = null;
   }
 
   // Tab switching
@@ -478,6 +496,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (document.getElementById('tab-quota')?.classList.contains('active')) {
     renderLicense();
+  }
+
+  const persetujuanContent = document.getElementById('persetujuan-content');
+  if (persetujuanContent) {
+    persetujuanContent.innerHTML = `
+      <div class="overview">
+        ${AGREEMENT_SECTIONS_HTML}
+      </div>
+    `;
   }
 
   exportLink.addEventListener('click', (event) => {
