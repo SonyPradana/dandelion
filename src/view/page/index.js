@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!terms?.agreed || terms.version !== version) {
         if (!activePopup) {
           activePopup = showAgreementPopup();
-          activePopup.promise.then(() => { activePopup = null; });
+          activePopup.promise.then(() => {
+            activePopup = null;
+          });
         }
       } else if (activePopup) {
         activePopup.remove();
