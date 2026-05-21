@@ -59,9 +59,9 @@ export function debugMarker(identifier) {
   const field = questionElement ? detectFieldType(questionElement) : null;
 
   if (field) {
-    createPinToggle(identifier, field.getValue).then(function (pinToggle) {
-      marker.insertBefore(pinToggle, excludeToggle);
-    });
+    createPinToggle(identifier, field.getValue).then((pinToggle) =>
+      marker.insertBefore(pinToggle, excludeToggle),
+    );
   }
 
   const excludeToggle = createExcludeToggle(identifier);
