@@ -6,8 +6,10 @@ export default [
     output: {
       file: `${outDir}/main.js`,
       format: 'iife',
-      name: 'DandelionContentScript',
-      minify: true,
+      minify: {
+        mangle: { toplevel: true },
+        compress: true,
+      },
     },
   },
   {
