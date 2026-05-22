@@ -41,18 +41,22 @@ form.addEventListener('submit', async (e) => {
     return;
   }
 
-  const features = [...document.querySelectorAll('#featuresGroup input[type="checkbox"]:checked')]
-    .map(cb => cb.value);
+  const features = [
+    ...document.querySelectorAll('#featuresGroup input[type="checkbox"]:checked'),
+  ].map((cb) => cb.value);
 
   const versionAllowed = versionAllowedRaw
-    ? versionAllowedRaw.split(',').map(s => s.trim()).filter(Boolean)
+    ? versionAllowedRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
     : ['*'];
 
-  let expDate;
+  let expDate = null;
   try {
     expDate = parseExpiry(expiry);
-  } catch (err) {
-    alert(err.message);
+  } catch (error) {
+    alert(error.message);
     return;
   }
 
@@ -86,8 +90,8 @@ form.addEventListener('submit', async (e) => {
       </table>
     `;
     output.classList.remove('hidden');
-  } catch (err) {
-    alert('Error generating token: ' + (err.message || err));
+  } catch (error) {
+    alert('Error generating token: ' + (error.message || error));
   }
 });
 
