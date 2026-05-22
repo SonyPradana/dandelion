@@ -1,39 +1,42 @@
-export class ProfileManager {
-  constructor(containerId, profiles, activeProfile, callbacks) {
-    this.container = document.getElementById(containerId);
-    this.profiles = profiles;
-    this.activeProfile = activeProfile;
-    this.callbacks = callbacks || {};
+import { html } from 'htm/preact';
+import { useState } from 'preact/hooks';
 
-    if (!this.container) {
-      throw new Error(`Container element with id "${containerId}" not found`);
+function getDisplayName(profiles, key) {
+  const p = profiles[key];
+  if (p && p.name) return p.name;
+  if (key === 'profile1') return 'Profile 1';
+  if (key === 'profile2') return 'Profile 2';
+  return key;
+}
+
+export function ProfileManager({ profiles = {}, activeProfile, onSwitch, onChange }) {
+  const [renaming, setRenaming] = useState(null);
+  const [renameVal, setRenameVal] = useState('');
+  const [addVal, setAddVal] = useState('');
+
+  const keys = Object.keys(profiles);
+
+  const handleRenameStart = (key) => {
+    setRenaming(key);
+    setRenameVal(getDisplayName(profiles, key));
+  };
+
+  const handleRenameFinish = () => {
+    if (renaming && renameVal.trim() && renameVal.trim() !== getDisplayName(profiles, renaming)) {
+      profiles[renaming].name = renameVal.trim();
+      if (onChange) onChange();
     }
+    setRenaming(null);
+  };
 
-    this.init();
-  }
-
-  init() {
-    this.render();
-  }
-
-  getProfileDisplayName(key) {
-    const profile = this.profiles[key];
-    if (profile && profile.name) return profile.name;
-    if (key === 'profile1') return 'Profile 1';
-    if (key === 'profile2') return 'Profile 2';
-    return key;
-  }
-
-  addProfile(name) {
-    const keys = Object.keys(this.profiles);
-    if (keys.length >= 5) return;
-
+  const addProfile = () => {
+    const name = addVal.trim();
+    if (!name || keys.length >= 5) return;
     let i = 1;
-    while (this.profiles[`profile${i}`]) i++;
+    while (profiles[`profile${i}`]) i++;
     const key = `profile${i}`;
-
-    this.profiles[key] = {
-      name: name.trim(),
+    profiles[key] = {
+      name,
       formSkrining: {
         url: '',
         scrollToButton: true,
@@ -53,217 +56,134 @@ export class ProfileManager {
       skrining: { url: '' },
       zenMode: { domTimeout: 5000 },
     };
+    setAddVal('');
+    if (onChange) onChange();
+  };
 
-    this.render();
-    if (this.callbacks.onChange) this.callbacks.onChange();
-  }
-
-  removeProfile(key) {
-    const keys = Object.keys(this.profiles);
+  const removeProfile = (key) => {
     if (keys.length <= 1) return;
+    const wasActive = key === activeProfile;
+    delete profiles[key];
+    if (wasActive && onSwitch) onSwitch(Object.keys(profiles)[0]);
+    if (onChange) onChange();
+  };
 
-    const wasActive = this.activeProfile === key;
-    delete this.profiles[key];
-
-    if (wasActive) {
-      this.activeProfile = Object.keys(this.profiles)[0];
-    }
-
-    this.render();
-    if (this.callbacks.onChange) this.callbacks.onChange();
-    if (wasActive && this.callbacks.onSwitch) {
-      this.callbacks.onSwitch(this.activeProfile);
-    }
-  }
-
-  renameProfile(key, newName) {
-    this.profiles[key].name = newName.trim();
-    this.render();
-    if (this.callbacks.onChange) this.callbacks.onChange();
-  }
-
-  duplicateProfile(key) {
-    const keys = Object.keys(this.profiles);
+  const duplicateProfile = (key) => {
     if (keys.length >= 5) return;
-
     let i = 1;
-    while (this.profiles[`profile${i}`]) i++;
+    while (profiles[`profile${i}`]) i++;
     const newKey = `profile${i}`;
-
-    const source = this.profiles[key];
+    const source = profiles[key];
     const clone = structuredClone(source);
-
     let newName = `${source.name} (copy)`;
     let counter = 2;
-    while (Object.values(this.profiles).some((p) => p.name === newName)) {
+    while (Object.values(profiles).some((p) => p.name === newName)) {
       newName = `${source.name} (copy ${counter})`;
       counter++;
     }
     clone.name = newName;
+    profiles[newKey] = clone;
+    if (onChange) onChange();
+  };
 
-    this.profiles[newKey] = clone;
-    this.render();
-    if (this.callbacks.onChange) this.callbacks.onChange();
-  }
-
-  switchProfile(key) {
-    if (key === this.activeProfile) return;
-    this.activeProfile = key;
-    this.render();
-    if (this.callbacks.onSwitch) this.callbacks.onSwitch(key);
-  }
-
-  render() {
-    this.container.innerHTML = '';
-
-    const keys = Object.keys(this.profiles);
-
-    const cardList = document.createElement('div');
-    cardList.className = 'pm-card-list';
-
-    keys.forEach((key) => {
-      const card = document.createElement('div');
-      card.className = 'pm-card' + (key === this.activeProfile ? ' active' : '');
-      card.dataset.profile = key;
-
-      const indicator = document.createElement('span');
-      indicator.className = 'pm-indicator';
-      indicator.textContent = '●';
-
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'pm-name';
-      nameSpan.textContent = this.getProfileDisplayName(key);
-
-      const editBtn = document.createElement('button');
-      editBtn.className = 'pm-btn-edit';
-      editBtn.textContent = '✏️';
-      editBtn.title = 'Ubah nama';
-
-      const duplicateBtn = document.createElement('button');
-      duplicateBtn.className = 'pm-btn-duplicate';
-      duplicateBtn.textContent = '📋';
-      duplicateBtn.title = 'Duplikat profile';
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'pm-btn-delete';
-      deleteBtn.textContent = '🗑️';
-      deleteBtn.title = 'Hapus profile';
-
-      card.addEventListener('click', (e) => {
-        if (
-          e.target.closest('.pm-btn-edit') ||
-          e.target.closest('.pm-btn-duplicate') ||
-          e.target.closest('.pm-btn-delete')
-        )
-          return;
-        this.switchProfile(key);
-      });
-
-      editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.startInlineRename(card, nameSpan, key);
-      });
-
-      duplicateBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.handleDuplicate(key);
-      });
-
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.handleDelete(key);
-      });
-
-      card.appendChild(indicator);
-      card.appendChild(nameSpan);
-      card.appendChild(editBtn);
-      card.appendChild(duplicateBtn);
-      card.appendChild(deleteBtn);
-      cardList.appendChild(card);
-    });
-
-    this.container.appendChild(cardList);
-
-    if (keys.length < 5) {
-      const addRow = document.createElement('div');
-      addRow.className = 'pm-add-row';
-
-      const addInput = document.createElement('input');
-      addInput.type = 'text';
-      addInput.className = 'pm-add-input';
-      addInput.placeholder = 'Nama profile baru...';
-      addInput.maxLength = 30;
-
-      const addBtn = document.createElement('button');
-      addBtn.className = 'pm-btn-add';
-      addBtn.textContent = '+';
-      addBtn.title = 'Tambah profile';
-
-      const handleAdd = () => {
-        const name = addInput.value.trim();
-        if (!name) return;
-        this.addProfile(name);
-        addInput.value = '';
-        addInput.focus();
-      };
-
-      addBtn.addEventListener('click', handleAdd);
-      addInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          handleAdd();
-        }
-      });
-
-      addRow.appendChild(addInput);
-      addRow.appendChild(addBtn);
-      this.container.appendChild(addRow);
-    }
-  }
-
-  startInlineRename(card, nameSpan, key) {
-    const currentName = this.getProfileDisplayName(key);
-
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'pm-rename-input';
-    input.value = currentName;
-    input.maxLength = 30;
-
-    nameSpan.replaceWith(input);
-    input.focus();
-    input.select();
-
-    const finishRename = () => {
-      const newName = input.value.trim();
-      if (newName && newName !== currentName) {
-        this.renameProfile(key, newName);
-      } else {
-        this.render();
-      }
-    };
-
-    input.addEventListener('blur', finishRename);
-    input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        input.blur();
-      }
-    });
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        this.render();
-      }
-    });
-  }
-
-  handleDuplicate(key) {
-    this.duplicateProfile(key);
-  }
-
-  handleDelete(key) {
-    if (!confirm(`Hapus profile "${this.getProfileDisplayName(key)}"?`)) return;
-    this.removeProfile(key);
-  }
+  return html`
+    <div class="pm-card-list">
+      ${keys.map(
+        (key) => html`
+          <div
+            class="pm-card${key === activeProfile ? ' active' : ''}"
+            data-profile=${key}
+            onClick=${(e) => {
+              if (
+                e.target.closest('.pm-btn-edit') ||
+                e.target.closest('.pm-btn-duplicate') ||
+                e.target.closest('.pm-btn-delete')
+              )
+                return;
+              if (onSwitch) onSwitch(key);
+            }}
+          >
+            <span class="pm-indicator">●</span>
+            ${renaming === key
+              ? html`
+                  <input
+                    type="text"
+                    class="pm-rename-input"
+                    value=${renameVal}
+                    maxlength="30"
+                    autofocus
+                    onInput=${(e) => setRenameVal(e.target.value)}
+                    onBlur=${handleRenameFinish}
+                    onKeyPress=${(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleRenameFinish();
+                      }
+                    }}
+                    onKeyDown=${(e) => {
+                      if (e.key === 'Escape') {
+                        e.preventDefault();
+                        setRenaming(null);
+                      }
+                    }}
+                  />
+                `
+              : html` <span class="pm-name">${getDisplayName(profiles, key)}</span> `}
+            <button
+              class="pm-btn-edit"
+              title="Ubah nama"
+              onClick=${(e) => {
+                e.stopPropagation();
+                handleRenameStart(key);
+              }}
+            >
+              ✏️
+            </button>
+            <button
+              class="pm-btn-duplicate"
+              title="Duplikat profile"
+              onClick=${(e) => {
+                e.stopPropagation();
+                duplicateProfile(key);
+              }}
+            >
+              📋
+            </button>
+            <button
+              class="pm-btn-delete"
+              title="Hapus profile"
+              onClick=${(e) => {
+                e.stopPropagation();
+                if (confirm(`Hapus profile "${getDisplayName(profiles, key)}"?`))
+                  removeProfile(key);
+              }}
+            >
+              🗑️
+            </button>
+          </div>
+        `,
+      )}
+    </div>
+    ${keys.length < 5
+      ? html`
+          <div class="pm-add-row">
+            <input
+              type="text"
+              class="pm-add-input"
+              placeholder="Nama profile baru..."
+              maxlength="30"
+              value=${addVal}
+              onInput=${(e) => setAddVal(e.target.value)}
+              onKeyPress=${(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addProfile();
+                }
+              }}
+            />
+            <button class="pm-btn-add" title="Tambah profile" onClick=${addProfile}>+</button>
+          </div>
+        `
+      : ''}
+  `;
 }

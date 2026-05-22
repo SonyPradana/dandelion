@@ -1,10 +1,14 @@
+import { html } from 'htm/preact';
+import { render } from 'preact';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import browser from 'webextension-polyfill';
-import { getAgreement, setAgreement, getFullConfig, setConfig } from '../../configuration';
+import { getAgreement, getFullConfig, setConfig as saveConfig } from '../../configuration';
 import { showAgreementPopup } from '../../components/agreementPopup';
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
+import { Pane, FormGroup, SaveButton, FeedbackMsg } from '../components/ui.js';
 import {
   getTodaySummary,
   getYesterdaySummary,
@@ -26,533 +30,834 @@ import {
   getRemainingToday,
 } from '../../quota/quota-manager.js';
 
-let activePopup = null;
+function useTabs(initialHash) {
+  const [activeTab, setActiveTab] = useState(initialHash || 'profile');
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await init();
+  useEffect(() => {
+    const onHash = () => {
+      const hash = window.location.hash.replace('#', '') || 'profile';
+      setActiveTab(hash);
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
 
-  browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.dandelion_terms) {
-      const terms = changes.dandelion_terms.newValue;
-      const version = browser.runtime.getManifest().version;
-      if (!terms?.agreed || terms.version !== version) {
-        if (!activePopup) {
-          activePopup = showAgreementPopup();
-          activePopup.promise.then(() => {
-            activePopup = null;
-          });
-        }
-      } else if (activePopup) {
-        activePopup.remove();
-        activePopup = null;
-      }
-    }
+  const switchTab = (tab) => {
+    window.location.hash = tab;
+    setActiveTab(tab);
+  };
+
+  return [activeTab, switchTab];
+}
+
+function renderDiff(current, prev) {
+  if (prev === null || prev === undefined) return html`<span class="pv">${current}</span>`;
+  if (prev === 0 && current === 0) return html`<span class="pv zero">0</span>`;
+  if (prev === 0)
+    return html`<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
+  const diff = current - prev;
+  if (diff === 0) return html`<span class="pv">${current}</span>`;
+  if (diff > 0)
+    return html`<span class="pv">${current}</span> <span class="pd pos">(+${diff})</span>`;
+  return html`<span class="pv">${current}</span> <span class="pd neg">(${diff})</span>`;
+}
+
+function doExport() {
+  getFullConfig().then((cfg) => {
+    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dandelion-config.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   });
+}
 
-  if (!(await getAgreement())) {
-    activePopup = showAgreementPopup();
-    await activePopup.promise;
-    activePopup = null;
-  }
+function ProfileTab({ configRef, onChange }) {
+  if (!configRef.current) return null;
+  return html`
+    <div class="pane-header">👤 Profil</div>
+    <div class="pane-body">
+      <${ProfileManager}
+        profiles=${configRef.current.profiles}
+        activeProfile=${configRef.current.activeProfile}
+        onSwitch=${(key) => {
+          configRef.current.activeProfile = key;
+          onChange();
+        }}
+        onChange=${onChange}
+      />
+    </div>
+  `;
+}
 
-  // Tab switching
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const tabPanes = document.querySelectorAll('.tab-pane');
-  tabBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      tabBtns.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      const tabId = btn.dataset.tab;
-      tabPanes.forEach((pane) => {
-        pane.classList.toggle('active', pane.id === `tab-${tabId}`);
-      });
+function FormSkriningTab({ configRef, activeProfile, onChange }) {
+  const [form, setForm] = useState(null);
+  const [pinned, setPinned] = useState({});
+
+  useEffect(() => {
+    if (!configRef.current) return;
+    const fs = configRef.current.profiles[activeProfile]?.formSkrining || {};
+    setForm({
+      url: fs.url || '',
+      scrollToButton: fs.scrollToButton ?? true,
+      radioButtonKeywords: fs.radioButtonKeywords || '',
+      dropdownKeywords: fs.dropdownKeywords || '',
+      excludes: fs.excludes || '',
     });
-  });
+    setPinned(fs.pinneds || {});
+  }, [activeProfile]);
 
-  const hash = window.location.hash.replace('#', '');
-  if (hash) {
-    const targetBtn = document.querySelector(`.tab-btn[data-tab="${hash}"]`);
-    if (targetBtn) targetBtn.click();
-  }
+  if (!form) return null;
+  const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
-  let loadedConfig = null;
+  const save = () => {
+    const ps = configRef.current.profiles[activeProfile];
+    if (!ps.formSkrining) ps.formSkrining = {};
+    Object.assign(ps.formSkrining, form);
+    ps.formSkrining.pinneds = pinned;
+    onChange();
+  };
 
-  const radioButtonKeywordsList = new KeywordList(
-    'form-skrining-radio-keywords-input',
-    'form-skrining-radio-keywords-list',
-    'form-skrining-radio-keywords-add-input',
-    'form-skrining-radio-keywords-add',
-  );
-
-  const dropdownKeywordsList = new KeywordList(
-    'form-skrining-dropdown-keywords-input',
-    'form-skrining-dropdown-keywords-list',
-    'form-skrining-dropdown-keywords-add-input',
-    'form-skrining-dropdown-keywords-add',
-  );
-
-  const notCheckedList = new KeywordList(
-    'not-checked-list-input',
-    'not-checked-list-container',
-    'not-checked-list-add-input',
-    'not-checked-list-add',
-  );
-
-  window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList, notCheckedList };
-  let pinnedValuesList = null;
-
-  const formSkriningUrlInput = document.getElementById('form-skrining-url');
-  const scrollToButtonCheckbox = document.getElementById('form-skrining-scroll-to-button');
-  const radioButtonKeywordsInput = document.getElementById('form-skrining-radio-keywords-input');
-  const dropdownKeywordsInput = document.getElementById('form-skrining-dropdown-keywords-input');
-  const excludesInput = document.getElementById('form-skrining-excludes');
-  const notCheckedUrlInput = document.getElementById('not-checked-url');
-  const notCheckedListInput = document.getElementById('not-checked-list-input');
-  const notCheckedAutomationDelayInput = document.getElementById('not-checked-automation-delay');
-  const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
-  const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
-  const skriningUrlInput = document.getElementById('skrining-url');
-
-  function updateFormForProfile(selectedProfile) {
-    if (!loadedConfig) return;
-
-    const profileSettings = loadedConfig.profiles[selectedProfile];
-
-    const fs = profileSettings.formSkrining || {};
-    formSkriningUrlInput.value = fs.url || '';
-    scrollToButtonCheckbox.checked = fs.scrollToButton ?? true;
-    radioButtonKeywordsInput.value = fs.radioButtonKeywords || '';
-    dropdownKeywordsInput.value = fs.dropdownKeywords || '';
-    excludesInput.value = fs.excludes || '';
-
-    radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
-    dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-    if (pinnedValuesList) {
-      pinnedValuesList.setData(fs.pinneds || {});
-    }
-
-    const nc = profileSettings.notChecked || {};
-    notCheckedUrlInput.value = nc.url || '';
-    notCheckedListInput.value = nc.notCheckedList || '';
-    notCheckedAutomationDelayInput.value = nc.automationDelay || 2000;
-    notCheckedItemDelayInput.value = nc.itemDelay || 1000;
-    notCheckedReloadDelayInput.value = nc.reloadDelay || 1000;
-
-    notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-    const sk = profileSettings.skrining || {};
-    skriningUrlInput.value = sk.url || '';
-  }
-
-  getFullConfig().then((config) => {
-    loadedConfig = config;
-
-    const activeProfileSettings = config.profiles[config.activeProfile];
-    pinnedValuesList = new KeyValueList(
-      'form-skrining-pinned-values',
-      activeProfileSettings.formSkrining?.pinneds || {},
-      (newPinneds) => {
-        if (loadedConfig) {
-          const selectedProfile = loadedConfig.activeProfile;
-          if (!loadedConfig.profiles[selectedProfile].formSkrining) {
-            loadedConfig.profiles[selectedProfile].formSkrining = {};
-          }
-          loadedConfig.profiles[selectedProfile].formSkrining.pinneds = newPinneds;
-        }
-      },
-    );
-
-    updateFormForProfile(config.activeProfile);
-
-    void new ProfileManager('profile-manager-container', config.profiles, config.activeProfile, {
-      onSwitch: (newActiveProfile) => {
-        loadedConfig.activeProfile = newActiveProfile;
-        updateFormForProfile(newActiveProfile);
-        setConfig(loadedConfig);
-      },
-      onChange: () => {
-        setConfig(loadedConfig);
-      },
-    });
-  });
-
-  const saveConfigBtn = document.getElementById('save-config-btn');
-  if (saveConfigBtn) {
-    saveConfigBtn.addEventListener('click', () => {
-      if (!loadedConfig) return;
-
-      const selectedProfile = loadedConfig.activeProfile;
-      const profileSettings = loadedConfig.profiles[selectedProfile];
-
-      loadedConfig.activeProfile = selectedProfile;
-
-      if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
-      profileSettings.formSkrining.url = formSkriningUrlInput.value;
-      profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
-      profileSettings.formSkrining.radioButtonKeywords = radioButtonKeywordsInput.value;
-      profileSettings.formSkrining.dropdownKeywords = dropdownKeywordsInput.value;
-      profileSettings.formSkrining.excludes = excludesInput.value;
-
-      if (pinnedValuesList) {
-        profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
-      }
-
-      if (!profileSettings.skrining) profileSettings.skrining = {};
-      profileSettings.skrining.url = skriningUrlInput.value;
-
-      if (!profileSettings.notChecked) profileSettings.notChecked = {};
-      profileSettings.notChecked.url = notCheckedUrlInput.value;
-      profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
-      profileSettings.notChecked.automationDelay =
-        parseInt(notCheckedAutomationDelayInput.value) || 2000;
-      profileSettings.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
-      profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
-
-      setConfig(loadedConfig);
-
-      saveConfigBtn.textContent = 'Tersimpan!';
-      setTimeout(() => {
-        saveConfigBtn.textContent = 'Simpan';
-      }, 1500);
-    });
-  }
-
-  const exportLink = document.getElementById('export-link');
-  const importLink = document.getElementById('import-link');
-  const importFileInput = document.getElementById('import-file-input');
-
-  // --- Produktifitas Tab Logic ---
-  function rd(current, prev) {
-    if (prev === null || prev === undefined) return `<span class="pv">${current}</span>`;
-    if (prev === 0 && current === 0) return '<span class="pv zero">0</span>';
-    if (prev === 0)
-      return `<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
-    const d = current - prev;
-    if (d === 0) return `<span class="pv">${current}</span>`;
-    if (d > 0) return `<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
-    return `<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
-  }
-
-  async function renderProduktifitas() {
-    const container = document.getElementById('produktifitas-page-content');
-    if (!container) return;
-
-    const [today, yesterday, overall, history] = await Promise.all([
-      getTodaySummary(),
-      getYesterdaySummary(),
-      getOverallBreakdown(),
-      getFullHistory(),
-    ]);
-
-    const periodLabel = TARGET_MODE === 'weekly' ? 'Minggu' : 'Bulan';
-    const periodTotal = TARGET_MODE === 'weekly' ? await getWeekTotal() : await getMonthTotal();
-    const prev = yesterday ? yesterday.counts : null;
-
-    const dataDays = Object.values(history).filter((d) => d.dayTotal > 0).length;
-    let chartDays = 7;
-    if (dataDays >= 30) chartDays = 30;
-    else if (dataDays >= 14) chartDays = 14;
-
-    const now = new Date();
-    const from = new Date(now);
-    from.setDate(from.getDate() - (chartDays - 1));
-    const y1 = from.getFullYear();
-    const m1 = String(from.getMonth() + 1).padStart(2, '0');
-    const d1 = String(from.getDate()).padStart(2, '0');
-    const y2 = now.getFullYear();
-    const m2 = String(now.getMonth() + 1).padStart(2, '0');
-    const d2 = String(now.getDate()).padStart(2, '0');
-    const rangeData = await getRange(`${y1}-${m1}-${d1}`, `${y2}-${m2}-${d2}`);
-
-    const maxVal = Math.max(1, ...rangeData.map((d) => (d ? d.dayTotal : 0)));
-
-    // --- Layout: Grid 2 kolom ---
-    let html = '<div class="prod-grid"><div class="prod-col">';
-
-    // Kolom kiri: Hari Ini
-    html += '<div class="prod-col-header">Hari Ini</div>';
-    if (today) {
-      html += `
-        <div class="prod-row"><span class="label">📻 Radio</span><span class="value">${rd(today.counts.radio, prev?.radio ?? null)}<span class="po">/ ${overall.counts.radio.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">📝 Teks</span><span class="value">${rd(today.counts.freetext, prev?.freetext ?? null)}<span class="po">/ ${overall.counts.freetext.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po">/ ${overall.counts.dropdown.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span class="po">/ ${overall.counts.formNotChecked.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}<span class="po">/ ${overall.counts.formZen.toLocaleString()}</span></span></div>
-        <div class="prod-total"><span>Total</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po">/ ${overall.grandTotal.toLocaleString()}</span></span></div>
-      `;
-    } else {
-      html += '<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>';
-    }
-
-    html += '</div><div class="prod-col">';
-
-    // Kolom kanan: Progress + Ringkasan
-    html += '<div class="prod-col-header">Ringkasan</div>';
-    html += `
-      <div class="prod-row"><span class="label">🏆 Grand Total</span><span class="value">${overall.grandTotal.toLocaleString()}</span></div>
-      <div class="prod-row"><span class="label">📆 Hari Aktif</span><span class="value">${overall.activeDays}</span></div>
-      <div class="prod-row"><span class="label">⚡ Rata-rata/hari</span><span class="value">${overall.average}</span></div>
-      <div style="margin-top:12px">
-        <div class="prod-header">Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)</div>
-        <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%"></div></div>
-        <div style="font-size:12px;color:#888;margin-top:4px">${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin</div>
+  return html`
+    <div class="pane-header">📋 Form Skrining</div>
+    <div class="pane-body">
+      <div class="form-group">
+        <label for="form-skrining-url">URL</label>
+        <input
+          type="text"
+          id="form-skrining-url"
+          placeholder="Masukkan pola URL form skrining"
+          value=${form.url}
+          onInput=${(e) => update('url', e.target.value)}
+        />
       </div>
+      <div class="form-group">
+        <div class="checkbox-item">
+          <input
+            type="checkbox"
+            id="form-skrining-scroll-to-button"
+            checked=${form.scrollToButton}
+            onChange=${(e) => update('scrollToButton', e.target.checked)}
+          />
+          <label for="form-skrining-scroll-to-button">Scroll ke tombol setelah selesai</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Kata Kunci Tombol Radio</label>
+        <${KeywordList}
+          id="form-skrining-radio-keywords"
+          value=${form.radioButtonKeywords}
+          onChange=${(v) => update('radioButtonKeywords', v)}
+        />
+      </div>
+      <div class="form-group">
+        <label>Kata Kunci Dropdown</label>
+        <${KeywordList}
+          id="form-skrining-dropdown-keywords"
+          value=${form.dropdownKeywords}
+          onChange=${(v) => update('dropdownKeywords', v)}
+        />
+      </div>
+      <div class="form-group">
+        <label for="form-skrining-excludes">Data dikecualikan</label>
+        <input
+          type="text"
+          id="form-skrining-excludes"
+          placeholder="Kecualikan atau lewati survei"
+          value=${form.excludes}
+          onInput=${(e) => update('excludes', e.target.value)}
+        />
+      </div>
+      <div class="form-group">
+        <label>Nilai Tersemat</label>
+        <${KeyValueList} data=${pinned} onChange=${setPinned} />
+      </div>
+      <button class="btn btn-primary" onClick=${save}>Simpan</button>
+    </div>
+  `;
+}
+
+function SkriningTab({ configRef, activeProfile, onChange }) {
+  const [val, setVal] = useState('');
+
+  if (!configRef.current) return null;
+
+  useEffect(() => {
+    setVal(configRef.current.profiles[activeProfile]?.skrining?.url || '');
+  }, [activeProfile]);
+
+  const save = () => {
+    const ps = configRef.current.profiles[activeProfile];
+    if (!ps.skrining) ps.skrining = {};
+    ps.skrining.url = val;
+    onChange();
+  };
+
+  return html`
+    <${Pane} header="🔗 Skrining">
+      <${FormGroup} label="URL Halaman Skrining" htmlFor="skrining-url">
+        <input
+          type="text"
+          id="skrining-url"
+          placeholder="Masukkan pola URL skrining"
+          value=${val}
+          onInput=${(e) => setVal(e.target.value)}
+        />
+      </${FormGroup}>
+      <${SaveButton} onSave=${save} />
+    </${Pane}>
+  `;
+}
+
+function NotCheckedTab({ configRef, activeProfile, onChange }) {
+  const [form, setForm] = useState(null);
+
+  useEffect(() => {
+    if (!configRef.current) return;
+    const nc = configRef.current.profiles[activeProfile]?.notChecked || {};
+    setForm({
+      url: nc.url || '',
+      list: nc.notCheckedList || '',
+      automationDelay: nc.automationDelay || 2000,
+      itemDelay: nc.itemDelay || 1000,
+      reloadDelay: nc.reloadDelay || 1000,
+    });
+  }, [activeProfile]);
+
+  if (!form) return null;
+  const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
+  const save = () => {
+    const ps = configRef.current.profiles[activeProfile];
+    if (!ps.notChecked) ps.notChecked = {};
+    Object.assign(ps.notChecked, {
+      url: form.url,
+      notCheckedList: form.list,
+      automationDelay: parseInt(form.automationDelay) || 2000,
+      itemDelay: parseInt(form.itemDelay) || 1000,
+      reloadDelay: parseInt(form.reloadDelay) || 1000,
+    });
+    onChange();
+  };
+
+  return html`
+    <${Pane} header="✅ Tidak Periksa">
+      <${FormGroup} label="URL" htmlFor="not-checked-url">
+        <input
+          type="text"
+          id="not-checked-url"
+          placeholder="Masukkan pola URL (pemeriksaan)"
+          value=${form.url}
+          onInput=${(e) => update('url', e.target.value)}
+        />
+      </${FormGroup}>
+      <${FormGroup} label="Daftar Master 'Tidak Periksa'">
+        <${KeywordList}
+          id="not-checked-list"
+          value=${form.list}
+          placeholder="Tambah ID baris (rowfrm...)"
+          onChange=${(v) => update('list', v)}
+        />
+      </${FormGroup}>
+      <div class="delay-settings-grid">
+        <div class="form-group-sm">
+          <label for="not-checked-automation-delay">Jeda Awal</label>
+          <input
+            type="number"
+            id="not-checked-automation-delay"
+            min="500"
+            max="10000"
+            value=${form.automationDelay}
+            onInput=${(e) => update('automationDelay', e.target.value)}
+          />
+        </div>
+        <div class="form-group-sm">
+          <label for="not-checked-item-delay">Jeda Item</label>
+          <input
+            type="number"
+            id="not-checked-item-delay"
+            min="100"
+            max="5000"
+            value=${form.itemDelay}
+            onInput=${(e) => update('itemDelay', e.target.value)}
+          />
+        </div>
+        <div class="form-group-sm">
+          <label for="not-checked-reload-delay">Jeda Reload</label>
+          <input
+            type="number"
+            id="not-checked-reload-delay"
+            min="500"
+            max="15000"
+            value=${form.reloadDelay}
+            onInput=${(e) => update('reloadDelay', e.target.value)}
+          />
+        </div>
+      </div>
+      <${SaveButton} onSave=${save} />
+    </${Pane}>
+  `;
+}
+
+function ProduktifitasPage() {
+  const [pd, setPd] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = () => {
+    setLoading(true);
+    (async () => {
+      const [today, yesterday, overall, history, periodTotal] = await Promise.all([
+        getTodaySummary(),
+        getYesterdaySummary(),
+        getOverallBreakdown(),
+        getFullHistory(),
+        TARGET_MODE === 'weekly' ? getWeekTotal() : getMonthTotal(),
+      ]);
+      const dataDays = Object.values(history).filter((d) => d.dayTotal > 0).length;
+      let chartDays = 7;
+      if (dataDays >= 30) chartDays = 30;
+      else if (dataDays >= 14) chartDays = 14;
+      const now = new Date();
+      const from = new Date(now);
+      from.setDate(from.getDate() - (chartDays - 1));
+      const fm = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
+      const to = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const rangeData = await getRange(fm, to);
+      const maxVal = Math.max(1, ...rangeData.map((d) => (d ? d.dayTotal : 0)));
+      const status = getStatus();
+      let licenseInfo = null;
+      if (!status.isFreePlan && status.payload) {
+        const payload = status.payload;
+        const lf = new Date(payload.iat * 1000);
+        const lt = new Date();
+        const lfs = `${lf.getFullYear()}-${String(lf.getMonth() + 1).padStart(2, '0')}-${String(lf.getDate()).padStart(2, '0')}`;
+        const lts = `${lt.getFullYear()}-${String(lt.getMonth() + 1).padStart(2, '0')}-${String(lt.getDate()).padStart(2, '0')}`;
+        const lrd = await getRange(lfs, lts);
+        const used = lrd.reduce((s, d) => s + (d ? d.dayTotal : 0), 0);
+        const pct = Math.min(100, Math.round((used / (payload.total_limit || 1)) * 100));
+        const months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'Mei',
+          'Jun',
+          'Jul',
+          'Agu',
+          'Sep',
+          'Okt',
+          'Nov',
+          'Des',
+        ];
+        const fmt = (ts) => {
+          const date = new Date(ts * 1000);
+          return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+        };
+        licenseInfo = {
+          pct,
+          used,
+          limit: payload.total_limit,
+          from: fmt(payload.iat),
+          to: fmt(payload.exp),
+        };
+      }
+      setPd({ today, yesterday, overall, periodTotal, chartDays, rangeData, maxVal, licenseInfo });
+      setLoading(false);
+    })();
+  };
+
+  useEffect(fetchData, []);
+
+  if (loading || !pd) {
+    return html`
+      <div class="pane-header">
+        Produktivitas<button class="pane-header-btn" onClick=${fetchData} title="Refresh">↻</button>
+      </div>
+      <div class="pane-body"><div class="prod-row" style="color:#999">Memuat...</div></div>
     `;
+  }
 
-    const licStatus = getStatus();
-    if (!licStatus.isFreePlan && licStatus.payload) {
-      const p = licStatus.payload;
-      const totalLimit = p.total_limit || 0;
-      const from = new Date(p.iat * 1000);
-      const to = new Date();
-      const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
-      const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`;
-      const rangeData = await getRange(fromStr, toStr);
-      const usedInLicense = rangeData.reduce((sum, d) => sum + (d ? d.dayTotal : 0), 0);
-      const totalPct = Math.min(100, Math.round((usedInLicense / totalLimit) * 100));
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'Mei',
-        'Jun',
-        'Jul',
-        'Agu',
-        'Sep',
-        'Okt',
-        'Nov',
-        'Des',
-      ];
-      const fmtDate = (ts) => {
-        const d = new Date(ts * 1000);
-        return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-      };
-      html += `
-        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
-          <div class="prod-header" style="color:#065f46">🏅 Total Limit (Pro Tier)</div>
-          <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${totalPct}%"></div></div>
-          <div style="font-size:12px;color:#888;margin-top:4px">${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)</div>
-          <div style="font-size:12px;color:#888;margin-top:8px">Periode Token: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}</div>
+  const { today, yesterday, overall, periodTotal, chartDays, rangeData, maxVal, licenseInfo } = pd;
+  const prev = yesterday ? yesterday.counts : null;
+  const periodLabel = TARGET_MODE === 'weekly' ? 'Minggu' : 'Bulan';
+
+  return html`
+    <div class="pane-header">
+      Produktivitas<button class="pane-header-btn" onClick=${fetchData} title="Refresh">↻</button>
+    </div>
+    <div class="pane-body" id="produktifitas-page-content">
+      <div class="prod-grid">
+        <div class="prod-col">
+          <div class="prod-col-header">Hari Ini</div>
+          ${today
+            ? html`
+                <div class="prod-row">
+                  <span class="label">📻 Radio</span
+                  ><span class="value"
+                    >${renderDiff(today.counts.radio, prev?.radio ?? null)}<span class="po"
+                      >/ ${overall.counts.radio.toLocaleString()}</span
+                    ></span
+                  >
+                </div>
+                <div class="prod-row">
+                  <span class="label">📝 Teks</span
+                  ><span class="value"
+                    >${renderDiff(today.counts.freetext, prev?.freetext ?? null)}<span class="po"
+                      >/ ${overall.counts.freetext.toLocaleString()}</span
+                    ></span
+                  >
+                </div>
+                <div class="prod-row">
+                  <span class="label">📋 Dropdown</span
+                  ><span class="value"
+                    >${renderDiff(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po"
+                      >/ ${overall.counts.dropdown.toLocaleString()}</span
+                    ></span
+                  >
+                </div>
+                <div class="prod-row">
+                  <span class="label">❌ Tidak Periksa</span
+                  ><span class="value"
+                    >${renderDiff(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span
+                      class="po"
+                      >/ ${overall.counts.formNotChecked.toLocaleString()}</span
+                    ></span
+                  >
+                </div>
+                <div class="prod-row">
+                  <span class="label">🧘 Zen</span
+                  ><span class="value"
+                    >${renderDiff(today.counts.formZen, prev?.formZen ?? null)}<span class="po"
+                      >/ ${overall.counts.formZen.toLocaleString()}</span
+                    ></span
+                  >
+                </div>
+                <div class="prod-total">
+                  <span>Total</span
+                  ><span
+                    >${renderDiff(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po"
+                      >/ ${overall.grandTotal.toLocaleString()}</span
+                    ></span
+                  >
+                </div>
+              `
+            : html`<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>`}
         </div>
-      `;
-    } else {
-      html += `
-        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
-          <div class="prod-header" style="color:#92400e">🆓 Free Tier</div>
-          <div style="font-size:12px;color:#888">50 poin/hari · tanpa total limit</div>
+        <div class="prod-col">
+          <div class="prod-col-header">Ringkasan</div>
+          <div class="prod-row">
+            <span class="label">🏆 Grand Total</span
+            ><span class="value">${overall.grandTotal.toLocaleString()}</span>
+          </div>
+          <div class="prod-row">
+            <span class="label">📆 Hari Aktif</span><span class="value">${overall.activeDays}</span>
+          </div>
+          <div class="prod-row">
+            <span class="label">⚡ Rata-rata/hari</span
+            ><span class="value">${overall.average}</span>
+          </div>
+          <div style="margin-top:12px">
+            <div class="prod-header">
+              Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)
+            </div>
+            <div class="prod-bar-track">
+              <div
+                class="prod-bar-fill"
+                style="width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%"
+              ></div>
+            </div>
+            <div style="font-size:12px;color:#888;margin-top:4px">
+              ${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin
+            </div>
+          </div>
+          ${licenseInfo
+            ? html`
+                <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
+                  <div class="prod-header" style="color:#065f46">🏅 Total Limit (Pro Tier)</div>
+                  <div class="prod-bar-track">
+                    <div class="prod-bar-fill" style="width:${licenseInfo.pct}%"></div>
+                  </div>
+                  <div style="font-size:12px;color:#888;margin-top:4px">
+                    ${licenseInfo.used.toLocaleString()} / ${licenseInfo.limit.toLocaleString()}
+                    poin (sejak lisensi)
+                  </div>
+                  <div style="font-size:12px;color:#888;margin-top:8px">
+                    Periode Token: ${licenseInfo.from} - ${licenseInfo.to}
+                  </div>
+                </div>
+              `
+            : html`
+                <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
+                  <div class="prod-header" style="color:#92400e">🆓 Free Tier</div>
+                  <div style="font-size:12px;color:#888">50 poin/hari · tanpa total limit</div>
+                </div>
+              `}
         </div>
-      `;
-    }
-
-    html += '</div></div>';
-
-    html += `
+      </div>
       <div class="prod-chart-section">
         <h3>Grafik Produktivitas ${chartDays}H Terakhir</h3>
         <div class="prod-chart">
-    `;
-
-    for (const day of rangeData) {
-      const pct = day ? Math.round((day.dayTotal / maxVal) * 100) : 0;
-      const label = day ? day.date.slice(5) : '';
-      html += `
-        <div class="prod-chart-bar-wrapper">
-          <div class="prod-chart-bar" style="height:${Math.max(pct, 2)}%"></div>
-          <div class="prod-chart-label">${label}</div>
+          ${rangeData.map((day) => {
+            const pct = day ? Math.round((day.dayTotal / maxVal) * 100) : 0;
+            const label = day ? day.date.slice(5) : '';
+            return html`<div class="prod-chart-bar-wrapper">
+              <div class="prod-chart-bar" style="height:${Math.max(pct, 2)}%"></div>
+              <div class="prod-chart-label">${label}</div>
+            </div>`;
+          })}
         </div>
-      `;
-    }
+      </div>
+    </div>
+  `;
+}
 
-    html += '</div></div>';
+function LainnyaTab({ onChange }) {
+  const [importMsg, setImportMsg] = useState(null);
 
-    container.innerHTML = html;
-  }
+  return html`
+    <${Pane} header="⚙️ Lainnya">
+      <h3 class="pane-title">Ekspor &amp; Impor Konfigurasi</h3>
+      <div class="action-group">
+        <a
+          href="#"
+          class="action-btn"
+          onClick=${(e) => {
+            e.preventDefault();
+            doExport();
+          }}
+          >📥 Ekspor Konfigurasi</a
+        >
+        <a
+          href="#"
+          class="action-btn"
+          onClick=${(e) => {
+            e.preventDefault();
+            document.getElementById('page-import-file-input').click();
+          }}
+          >📤 Impor Konfigurasi</a
+        >
+      </div>
+      <${FeedbackMsg} msg=${importMsg} />
+      <input
+        type="file"
+        id="page-import-file-input"
+        style="display:none"
+        accept=".json"
+        onChange=${async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+          try {
+            const text = await file.text();
+            const imported = JSON.parse(text);
+            if (!imported.profiles || !imported.activeProfile)
+              throw new Error('Invalid config file format.');
+            saveConfig(imported);
+            onChange();
+            setImportMsg({ type: 'success', text: 'Konfigurasi berhasil diimpor.' });
+            setTimeout(() => setImportMsg(null), 3000);
+          } catch {
+            setImportMsg({ type: 'error', text: 'Gagal mengimpor. Pastikan format file valid.' });
+            setTimeout(() => setImportMsg(null), 3000);
+          }
+        }}
+      />
+    </${Pane}>
+  `;
+}
 
-  const produktifitasTab = document.querySelector('.tab-btn[data-tab="produktifitas"]');
-  if (produktifitasTab) {
-    produktifitasTab.addEventListener('click', () => {
-      setTimeout(renderProduktifitas, 50);
-    });
-  }
+function QuotaTab() {
+  const [state, setState] = useState(null);
+  const [jwtInput, setJwtInput] = useState('');
+  const [msg, setMsg] = useState(null);
+  const [copyLabel, setCopyLabel] = useState('Salin');
 
-  if (document.getElementById('tab-produktifitas')?.classList.contains('active')) {
-    renderProduktifitas();
-  }
-
-  document.getElementById('refresh-prod')?.addEventListener('click', renderProduktifitas);
-
-  // --- License Tab Logic ---
-  async function renderLicense() {
-    const container = document.getElementById('license-page-content');
-    if (!container) return;
-
+  const refresh = useCallback(() => {
     const status = getStatus();
-    const remaining = await getRemainingToday();
-    const jwt = await getToken();
+    getRemainingToday().then((remaining) => {
+      getToken().then((jwt) => {
+        setState({ status, remaining, jwt });
+        setJwtInput(jwt || '');
+      });
+    });
+  }, []);
 
-    const isFree = status.isFreePlan;
-    const badge = isFree
-      ? '<span class="license-badge free">FREE</span>'
-      : '<span class="license-badge pro">PRO</span>';
-    const statusText = isFree ? 'Free Tier (50 poin/hari)' : 'Pro Tier';
-    const statusClass = isFree ? 'free' : 'pro';
+  useEffect(refresh, [refresh]);
 
-    let infoHtml = '';
-    if (!isFree && status.payload) {
-      const p = status.payload;
-      const expDate = p.exp ? new Date(p.exp * 1000).toLocaleDateString('id-ID') : '-';
-      const featList =
-        Array.isArray(p.features) && p.features.length > 0 ? p.features.join(', ') : '-';
-      const verList =
-        Array.isArray(p.version_allowed) && p.version_allowed.length > 0
-          ? p.version_allowed.join(', ')
-          : '-';
-      infoHtml = `
-        <div class="license-info-grid">
-          <div class="license-info-item"><div class="label">Total Limit</div><div class="value">${(p.total_limit ?? 0).toLocaleString()}</div></div>
-          <div class="license-info-item"><div class="label">Grace Daily</div><div class="value">${(p.daily_limit ?? 100).toLocaleString()}</div></div>
-          <div class="license-info-item"><div class="label">Berlaku Sampai</div><div class="value">${expDate}</div></div>
-          <div class="license-info-item"><div class="label">Sisa Hari Ini</div><div class="value">${remaining.toLocaleString()}</div></div>
-          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Fitur</div><div class="value">${featList}</div></div>
-          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Versi Diizinkan</div><div class="value">${verList}</div></div>
-        </div>
-      `;
+  if (!state)
+    return html`<div class="pane-header">🔑 Batas Pemakaian</div>
+      <div class="pane-body">Memuat...</div>`;
+
+  const { status, remaining } = state;
+  const isFree = status.isFreePlan;
+  const deviceId = getDeviceId();
+
+  const copyDeviceId = async () => {
+    try {
+      await navigator.clipboard.writeText(deviceId || '');
+      setCopyLabel('Tersalin!');
+      setTimeout(() => setCopyLabel('Salin'), 1500);
+    } catch {
+      setCopyLabel('Gagal');
+      setTimeout(() => setCopyLabel('Salin'), 1500);
     }
+  };
 
-    const deviceId = getDeviceId();
+  const activateToken = async () => {
+    const val = jwtInput.trim().split('\n')[0].trim();
+    if (!val) {
+      setMsg({ type: 'error', text: 'Masukkan token terlebih dahulu.' });
+      return;
+    }
+    try {
+      await saveToken(val);
+      setMsg({ type: 'success', text: 'Token berhasil diaktifkan!' });
+      setTimeout(refresh, 1000);
+    } catch (error) {
+      setMsg({ type: 'error', text: `Gagal: ${error.message}` });
+    }
+  };
 
-    container.innerHTML = `
-      <div class="license-status ${statusClass}">${badge} ${statusText}</div>
+  const removeTokenAction = async () => {
+    await removeToken();
+    setMsg({ type: 'success', text: 'Token dihapus, kembali ke Free Tier.' });
+    setTimeout(refresh, 1000);
+  };
+
+  let infoHtml = '';
+  if (!isFree && status.payload) {
+    const payload = status.payload;
+    const expDate = payload.exp ? new Date(payload.exp * 1000).toLocaleDateString('id-ID') : '-';
+    const featList =
+      Array.isArray(payload.features) && payload.features.length > 0
+        ? payload.features.join(', ')
+        : '-';
+    const verList =
+      Array.isArray(payload.version_allowed) && payload.version_allowed.length > 0
+        ? payload.version_allowed.join(', ')
+        : '-';
+    infoHtml = html`
+      <div class="license-info-grid">
+        <div class="license-info-item">
+          <div class="label">Total Limit</div>
+          <div class="value">${(payload.total_limit ?? 0).toLocaleString()}</div>
+        </div>
+        <div class="license-info-item">
+          <div class="label">Grace Daily</div>
+          <div class="value">${(payload.daily_limit ?? 100).toLocaleString()}</div>
+        </div>
+        <div class="license-info-item">
+          <div class="label">Berlaku Sampai</div>
+          <div class="value">${expDate}</div>
+        </div>
+        <div class="license-info-item">
+          <div class="label">Sisa Hari Ini</div>
+          <div class="value">${remaining.toLocaleString()}</div>
+        </div>
+        <div class="license-info-item" style="grid-column:1/-1">
+          <div class="label">Fitur</div>
+          <div class="value">${featList}</div>
+        </div>
+        <div class="license-info-item" style="grid-column:1/-1">
+          <div class="label">Versi Diizinkan</div>
+          <div class="value">${verList}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  return html`
+    <div class="pane-header">🔑 Batas Pemakaian</div>
+    <div class="pane-body" id="license-page-content">
+      <div class="license-status ${isFree ? 'free' : 'pro'}">
+        ${isFree
+          ? html`<span class="license-badge free">FREE</span>`
+          : html`<span class="license-badge pro">PRO</span>`}
+        ${isFree ? 'Free Tier (50 poin/hari)' : 'Pro Tier'}
+      </div>
       <div class="device-id-section">
         <div class="device-id-label">Device ID</div>
         <div class="device-id-row">
           <span class="device-id-value">${deviceId || '-'}</span>
-          <button class="device-id-copy" id="device-id-copy-btn">Salin</button>
+          <button class="device-id-copy" onClick=${copyDeviceId}>${copyLabel}</button>
         </div>
         <div class="device-id-hint">Gunakan ID ini untuk mendapatkan token</div>
       </div>
       ${infoHtml}
       <div class="pane-title">Aktifkan Token</div>
-      <textarea class="license-jwt-input" id="quota-jwt-input" placeholder="Tempel token (JWT) di sini...">${jwt || ''}</textarea>
+      <textarea
+        class="license-jwt-input"
+        id="quota-jwt-input"
+        placeholder="Tempel token (JWT) di sini..."
+        value=${jwtInput}
+        onInput=${(e) => setJwtInput(e.target.value)}
+      ></textarea>
       <div class="license-actions">
-        <button class="license-btn activate" id="quota-activate-btn">Aktifkan</button>
-        <button class="license-btn remove" id="quota-remove-btn" ${isFree ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>Hapus Token</button>
+        <button class="license-btn activate" onClick=${activateToken}>Aktifkan</button>
+        <button
+          class="license-btn remove"
+          onClick=${removeTokenAction}
+          disabled=${isFree}
+          style=${isFree ? 'opacity:0.4;cursor:not-allowed' : ''}
+        >
+          Hapus Token
+        </button>
       </div>
-      <div class="license-message" id="quota-message"></div>
-    `;
+      ${msg ? html`<div class="license-message ${msg.type}">${msg.text}</div>` : ''}
+    </div>
+  `;
+}
 
-    document.getElementById('device-id-copy-btn')?.addEventListener('click', async () => {
-      const btn = document.getElementById('device-id-copy-btn');
-      try {
-        await navigator.clipboard.writeText(deviceId || '');
-        btn.textContent = 'Tersalin!';
-        setTimeout(() => {
-          btn.textContent = 'Salin';
-        }, 1500);
-      } catch {
-        btn.textContent = 'Gagal';
-        setTimeout(() => {
-          btn.textContent = 'Salin';
-        }, 1500);
-      }
+function PersetujuanTab() {
+  return html`
+    <div class="pane-header">🛡️ Persetujuan</div>
+    <div class="pane-body" id="persetujuan-content">
+      <div class="overview" dangerouslySetInnerHTML=${{ __html: AGREEMENT_SECTIONS_HTML }} />
+    </div>
+  `;
+}
+
+function PageApp() {
+  const [activeTab, switchTab] = useTabs(window.location.hash.replace('#', ''));
+  const configRef = useRef(null);
+  const [, forceRender] = useState(0);
+
+  const refresh = () =>
+    getFullConfig().then((c) => {
+      configRef.current = c;
+      forceRender((n) => n + 1);
     });
 
-    document.getElementById('quota-activate-btn')?.addEventListener('click', async () => {
-      const input = document.getElementById('quota-jwt-input');
-      const msg = document.getElementById('quota-message');
-      if (!input || !msg) return;
-      const val = input.value.trim().split('\n')[0].trim();
-      if (!val) {
-        msg.className = 'license-message error';
-        msg.textContent = 'Masukkan token terlebih dahulu.';
-        return;
-      }
-      try {
-        await saveToken(val);
-        msg.className = 'license-message success';
-        msg.textContent = 'Token berhasil diaktifkan!';
-        setTimeout(renderLicense, 1000);
-      } catch (error) {
-        msg.className = 'license-message error';
-        msg.textContent = `Gagal: ${error.message}`;
-      }
-    });
+  useEffect(() => {
+    init();
+    refresh();
+  }, []);
 
-    document.getElementById('quota-remove-btn')?.addEventListener('click', async () => {
-      const msg = document.getElementById('quota-message');
-      await removeToken();
-      msg.className = 'license-message success';
-      msg.textContent = 'Token dihapus, kembali ke Free Tier.';
-      setTimeout(renderLicense, 1000);
-    });
-  }
+  const activePopupRef = useRef(null);
 
-  const quotaTab = document.querySelector('.tab-btn[data-tab="quota"]');
-  if (quotaTab) {
-    quotaTab.addEventListener('click', () => {
-      setTimeout(renderLicense, 50);
-    });
-  }
-
-  if (document.getElementById('tab-quota')?.classList.contains('active')) {
-    renderLicense();
-  }
-
-  const persetujuanContent = document.getElementById('persetujuan-content');
-  if (persetujuanContent) {
-    persetujuanContent.innerHTML = `
-      <div class="overview">
-        ${AGREEMENT_SECTIONS_HTML}
-      </div>
-    `;
-  }
-
-  exportLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    getFullConfig().then((config) => {
-      const configStr = JSON.stringify(config, null, 2);
-      const blob = new Blob([configStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'dandelion-config.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-  });
-
-  importLink.addEventListener('click', (event) => {
-    event.preventDefault();
-    importFileInput.click();
-  });
-
-  importFileInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (!file) {
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const importedConfig = JSON.parse(e.target.result);
-
-        if (!importedConfig.profiles || !importedConfig.activeProfile) {
-          throw new Error('Invalid config file format.');
+  useEffect(() => {
+    const handler = (changes, area) => {
+      if (area === 'local' && changes.dandelion_terms) {
+        const terms = changes.dandelion_terms.newValue;
+        const version = browser.runtime.getManifest().version;
+        const shouldShow = !terms?.agreed || terms.version !== version;
+        if (shouldShow && !activePopupRef.current) {
+          const popup = showAgreementPopup();
+          activePopupRef.current = popup;
+          popup.promise.then(() => {
+            activePopupRef.current = null;
+          });
+        } else if (!shouldShow && activePopupRef.current) {
+          activePopupRef.current.remove();
+          activePopupRef.current = null;
         }
-
-        setConfig(importedConfig);
-        loadedConfig = await getFullConfig();
-        updateFormForProfile(loadedConfig.activeProfile);
-      } catch (error) {
-      } finally {
-        importFileInput.value = '';
       }
     };
-    reader.readAsText(file);
-  });
-});
+    browser.storage.onChanged.addListener(handler);
+    return () => browser.storage.onChanged.removeListener(handler);
+  }, []);
+
+  useEffect(() => {
+    getAgreement().then((agreed) => {
+      if (!agreed) showAgreementPopup();
+    });
+  }, []);
+
+  const sidebarTab = (tab, icon, label) => html`
+    <button
+      class="tab-btn${activeTab === tab ? ' active' : ''}"
+      data-tab=${tab}
+      onClick=${() => switchTab(tab)}
+    >
+      <span class="tab-icon">${icon}</span>
+      <span class="tab-label">${label}</span>
+    </button>
+  `;
+
+  const onChange = () => {
+    saveConfig(configRef.current);
+    refresh();
+  };
+
+  const renderTab = (tab, component) => html`
+    <section class="tab-pane${activeTab === tab ? ' active' : ''}" id="tab-${tab}">
+      ${component}
+    </section>
+  `;
+
+  if (!configRef.current) {
+    return html`
+      <div id="config-container">
+        <div id="config-body">
+          <div class="main"><div class="pane-body">Memuat...</div></div>
+        </div>
+      </div>
+    `;
+  }
+
+  return html`
+    <div id="config-container">
+      <div id="config-body">
+        <nav class="sidebar">
+          <div class="tab-group">${sidebarTab('profile', '👤', 'Profil')}</div>
+          <div class="tab-divider"></div>
+          <div class="tab-group">
+            ${sidebarTab('form-skrining', '📋', 'Form Skrining')}
+            ${sidebarTab('skrining', '🔗', 'Skrining')}
+            ${sidebarTab('not-checked', '✅', 'Tidak Periksa')}
+          </div>
+          <div class="tab-divider"></div>
+          <div class="tab-group">${sidebarTab('produktifitas', '📊', 'Produktivitas')}</div>
+          <div class="tab-group">${sidebarTab('lainnya', '⚙️', 'Lainnya')}</div>
+          <div class="tab-divider"></div>
+          <div class="tab-group">${sidebarTab('quota', '🔑', 'Batas Pemakaian')}</div>
+          <div class="tab-divider"></div>
+          <div class="tab-group">${sidebarTab('persetujuan', '🛡️', 'Persetujuan')}</div>
+        </nav>
+        <div class="main">
+          <header class="app-header"><h1>Konfigurasi Dandelion</h1></header>
+          ${renderTab(
+            'profile',
+            html`<${ProfileTab} configRef=${configRef} onChange=${onChange} />`,
+          )}
+          ${renderTab(
+            'form-skrining',
+            html`<${FormSkriningTab}
+              configRef=${configRef}
+              activeProfile=${configRef.current.activeProfile}
+              onChange=${onChange}
+            />`,
+          )}
+          ${renderTab(
+            'skrining',
+            html`<${SkriningTab}
+              configRef=${configRef}
+              activeProfile=${configRef.current.activeProfile}
+              onChange=${onChange}
+            />`,
+          )}
+          ${renderTab(
+            'not-checked',
+            html`<${NotCheckedTab}
+              configRef=${configRef}
+              activeProfile=${configRef.current.activeProfile}
+              onChange=${onChange}
+            />`,
+          )}
+          ${renderTab(
+            'produktifitas',
+            activeTab === 'produktifitas' ? html`<${ProduktifitasPage} />` : '',
+          )}
+          ${renderTab('lainnya', html`<${LainnyaTab} onChange=${onChange} />`)}
+          ${renderTab('quota', html`<${QuotaTab} />`)}
+          ${renderTab('persetujuan', html`<${PersetujuanTab} />`)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+render(html`<${PageApp} />`, document.getElementById('app'));
