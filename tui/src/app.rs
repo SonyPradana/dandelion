@@ -40,12 +40,7 @@ impl TextField {
 
     fn display(&self) -> String {
         if self.value.is_empty() {
-            return self.default_value().to_string();
-        }
-        if self.value.contains('\n') {
-            let first = self.value.lines().next().unwrap_or("");
-            let count = self.value.lines().count();
-            format!("{first} (...{count} lines)")
+            self.default_value().to_string()
         } else {
             self.value.clone()
         }
@@ -84,7 +79,7 @@ pub struct App {
 impl App {
     pub fn new() -> Self {
         let mut app = Self {
-            private_key: TextField::new("Private Key (PEM or path)", false),
+            private_key: TextField::new("Private Key (PEM)", false),
             token_id: TextField::new("Token ID", true),
             expiry: TextField::new("Expiry", false),
             total_limit: TextField::new("Total Limit (points)", false),
@@ -99,9 +94,8 @@ impl App {
             feature_cursor: 0,
         };
 
-        let default_path = std::path::Path::new("keys/license-priv.pem");
-        if default_path.exists() {
-            app.private_key.value = default_path.to_string_lossy().to_string();
+        if let Ok(content) = std::fs::read_to_string("keys/license-priv.pem") {
+            app.private_key.value = content;
         }
 
         app
@@ -109,7 +103,7 @@ impl App {
 
     pub fn new_with_path(pem_path: &str) -> Self {
         let mut app = Self::new();
-        app.private_key.value = pem_path.to_string();
+        app.private_key.value = std::fs::read_to_string(pem_path).unwrap_or_default();
         app
     }
 
@@ -293,6 +287,25 @@ impl App {
         ];
     }
 
+    pub fn handle_mouse(&mut self, row: u16, _col: u16, area_width: u16) {
+        // Title is 3 rows, form starts at Y=3 with margin(1)
+        let rel = row.saturating_sub(4);
+        match rel {
+            0..=9 => self.focus = Focus::PrivateKey,
+            10..=12 => self.focus = Focus::TokenId,
+            13..=15 => self.focus = Focus::Expiry,
+            16..=18 => self.focus = Focus::TotalLimit,
+            19..=21 => self.focus = Focus::DailyLimit,
+            22..=24 => self.focus = Focus::VersionAllowed,
+            25..=30 => self.focus = Focus::Features,
+            31..=33 => {
+                let mid = area_width / 4;
+                self.focus = if _col < mid { Focus::Generate } else { Focus::Copy };
+            }
+            _ => {}
+        }
+    }
+
     pub fn copy_result(&mut self) {
         if let Some(ref token) = self.result.clone() {
             if cli_clipboard::set_contents(token.to_string()).is_ok() {
@@ -327,7 +340,7 @@ impl App {
         let field_areas = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(3),
+                Constraint::Length(10),
                 Constraint::Length(3),
                 Constraint::Length(3),
                 Constraint::Length(3),
@@ -365,7 +378,10 @@ impl App {
                     Style::new().fg(Color::DarkGray)
                 });
 
-            let para = Paragraph::new(field.display()).block(block);
+            let mut para = Paragraph::new(field.display()).block(block);
+            if i == 0 {
+                para = para.wrap(Wrap { trim: false });
+            }
             f.render_widget(para, field_areas[i]);
         }
 

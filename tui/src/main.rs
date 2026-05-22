@@ -2,14 +2,19 @@ mod app;
 mod jwt;
 
 use std::io;
-use crossterm::event::{self, Event, KeyCode, KeyEventKind};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::event::{
+    self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, MouseButton, MouseEventKind,
+};
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, size, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use crossterm::ExecutableCommand;
 use ratatui::{backend::CrosstermBackend, Terminal};
 
 fn main() -> io::Result<()> {
     enable_raw_mode()?;
     io::stdout().execute(EnterAlternateScreen)?;
+    io::stdout().execute(EnableMouseCapture)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
 
     let mut app = if let Some(path) = std::env::args().nth(1) {
@@ -20,6 +25,7 @@ fn main() -> io::Result<()> {
     let res = run_app(&mut terminal, &mut app);
 
     disable_raw_mode()?;
+    io::stdout().execute(DisableMouseCapture)?;
     io::stdout().execute(LeaveAlternateScreen)?;
     terminal.show_cursor()?;
 
@@ -33,11 +39,9 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut app:
     loop {
         terminal.draw(|f| app.render(f))?;
 
-        if let Ok(Event::Key(key)) = event::read() {
-            if key.kind != KeyEventKind::Press {
-                continue;
-            }
-            match key.code {
+        let event = event::read();
+        match event {
+            Ok(Event::Key(key)) if key.kind == KeyEventKind::Press => match key.code {
                 KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                 KeyCode::Char('c') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
                     return Ok(());
@@ -57,7 +61,12 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut app:
                 }
                 KeyCode::Backspace => app.handle_backspace(),
                 _ => {}
+            },
+            Ok(Event::Mouse(mouse)) if mouse.kind == MouseEventKind::Down(MouseButton::Left) => {
+                let (area_width, _) = size().unwrap_or((80, 24));
+                app.handle_mouse(mouse.row, mouse.column, area_width);
             }
+            _ => {}
         }
     }
 }
