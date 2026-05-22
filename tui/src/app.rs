@@ -50,6 +50,7 @@ impl TextField {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Focus {
     PrivateKey,
+    Paste,
     TokenId,
     Expiry,
     TotalLimit,
@@ -109,7 +110,8 @@ impl App {
 
     pub fn focus_next(&mut self) {
         self.focus = match self.focus {
-            Focus::PrivateKey => Focus::TokenId,
+            Focus::PrivateKey => Focus::Paste,
+            Focus::Paste => Focus::TokenId,
             Focus::TokenId => Focus::Expiry,
             Focus::Expiry => Focus::TotalLimit,
             Focus::TotalLimit => Focus::DailyLimit,
@@ -124,7 +126,8 @@ impl App {
     pub fn focus_prev(&mut self) {
         self.focus = match self.focus {
             Focus::PrivateKey => Focus::Copy,
-            Focus::TokenId => Focus::PrivateKey,
+            Focus::Paste => Focus::PrivateKey,
+            Focus::TokenId => Focus::Paste,
             Focus::Expiry => Focus::TokenId,
             Focus::TotalLimit => Focus::Expiry,
             Focus::DailyLimit => Focus::TotalLimit,
@@ -208,6 +211,7 @@ impl App {
     pub fn handle_enter(&mut self) {
         match self.focus {
             Focus::PrivateKey => self.private_key.value.push('\n'),
+            Focus::Paste => self.paste_pem(),
             Focus::Generate => self.generate(),
             Focus::Copy => self.copy_result(),
             _ => {}
@@ -287,22 +291,33 @@ impl App {
         ];
     }
 
-    pub fn handle_mouse(&mut self, row: u16, _col: u16, area_width: u16) {
-        // Title is 3 rows, form starts at Y=3 with margin(1)
+    pub fn handle_mouse(&mut self, row: u16, col: u16, area_width: u16) {
         let rel = row.saturating_sub(4);
         match rel {
             0..=9 => self.focus = Focus::PrivateKey,
-            10..=12 => self.focus = Focus::TokenId,
+            10..=12 => self.focus = {
+                let third = area_width / 6;
+                if col < third { self.paste_pem(); return; }
+                Focus::TokenId
+            },
             13..=15 => self.focus = Focus::Expiry,
             16..=18 => self.focus = Focus::TotalLimit,
             19..=21 => self.focus = Focus::DailyLimit,
             22..=24 => self.focus = Focus::VersionAllowed,
             25..=30 => self.focus = Focus::Features,
             31..=33 => {
-                let mid = area_width / 4;
-                self.focus = if _col < mid { Focus::Generate } else { Focus::Copy };
+                let third = area_width / 6;
+                if col < third { self.paste_pem(); return; }
+                if col < third * 2 { self.generate(); return; }
+                self.copy_result(); return;
             }
             _ => {}
+        }
+    }
+
+    pub fn paste_pem(&mut self) {
+        if let Ok(text) = cli_clipboard::get_contents() {
+            self.private_key.value = text;
         }
     }
 
@@ -422,33 +437,30 @@ impl App {
         // Action buttons
         let action_areas = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .constraints([
+                Constraint::Percentage(33),
+                Constraint::Percentage(33),
+                Constraint::Percentage(34),
+            ])
             .split(field_areas[7]);
 
-        let gen_active = self.focus == Focus::Generate;
-        let gen_style = if gen_active {
-            Style::new().bg(Color::Cyan).fg(Color::Black).add_modifier(Modifier::BOLD)
-        } else {
-            Style::new().bg(Color::DarkGray).fg(Color::White)
+        let render_btn = |f: &mut Frame, area: Rect, label: &str, active: bool| {
+            let style = if active {
+                Style::new().bg(Color::Cyan).fg(Color::Black).add_modifier(Modifier::BOLD)
+            } else {
+                Style::new().bg(Color::DarkGray).fg(Color::White)
+            };
+            f.render_widget(
+                Paragraph::new(Line::from(Span::styled(label, style)))
+                    .alignment(ratatui::layout::Alignment::Center),
+                area,
+            );
         };
-        f.render_widget(
-            Paragraph::new(Line::from(Span::styled(" Generate ", gen_style)))
-                .alignment(ratatui::layout::Alignment::Center),
-            action_areas[0],
-        );
 
+        render_btn(f, action_areas[0], " Paste ", self.focus == Focus::Paste);
+        render_btn(f, action_areas[1], " Generate ", self.focus == Focus::Generate);
         let copy_label = if self.copied { " Copied! " } else { " Copy " };
-        let copy_active = self.focus == Focus::Copy;
-        let copy_style = if copy_active {
-            Style::new().bg(Color::Cyan).fg(Color::Black).add_modifier(Modifier::BOLD)
-        } else {
-            Style::new().bg(Color::DarkGray).fg(Color::White)
-        };
-        f.render_widget(
-            Paragraph::new(Line::from(Span::styled(copy_label, copy_style)))
-                .alignment(ratatui::layout::Alignment::Center),
-            action_areas[1],
-        );
+        render_btn(f, action_areas[2], copy_label, self.focus == Focus::Copy);
     }
 
     fn render_result(&self, f: &mut Frame, area: Rect) {
