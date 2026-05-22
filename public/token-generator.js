@@ -1,10 +1,48 @@
 import { SignJWT, importPKCS8 } from 'https://esm.sh/jose@6.2.3';
 
+const privateKeyEl = document.getElementById('privateKey');
 const form = document.getElementById('tokenForm');
 const output = document.getElementById('output');
 const jwtOutput = document.getElementById('jwtOutput');
 const summary = document.getElementById('summary');
 const copyBtn = document.getElementById('copyBtn');
+const pastePemBtn = document.getElementById('pastePemBtn');
+const importPemBtn = document.getElementById('importPemBtn');
+const pemFileInput = document.getElementById('pemFileInput');
+const pemIndicator = document.getElementById('pemIndicator');
+
+function updateIndicator() {
+  if (privateKeyEl.value.trim()) {
+    pemIndicator.textContent = '\u2713 PEM loaded';
+    pemIndicator.className = 'pem-indicator loaded';
+  } else {
+    pemIndicator.textContent = '(no key loaded)';
+    pemIndicator.className = 'pem-indicator';
+  }
+}
+
+pastePemBtn.addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    privateKeyEl.value = text;
+    updateIndicator();
+  } catch {
+    alert('Unable to read from clipboard. Paste manually.');
+  }
+});
+
+importPemBtn.addEventListener('click', () => pemFileInput.click());
+
+pemFileInput.addEventListener('change', () => {
+  const file = pemFileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    privateKeyEl.value = reader.result;
+    updateIndicator();
+  };
+  reader.readAsText(file);
+});
 
 function parseExpiry(value) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -24,7 +62,7 @@ function parseExpiry(value) {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const privateKeyPEM = document.getElementById('privateKey').value.trim();
+  const privateKeyPEM = privateKeyEl.value.trim();
   const tokenId = document.getElementById('tokenId').value.trim();
   const expiry = document.getElementById('expiry').value.trim();
   const totalLimit = parseInt(document.getElementById('totalLimit').value, 10) || 0;

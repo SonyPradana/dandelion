@@ -88,6 +88,35 @@ textarea {
   font-size: 0.813rem;
 }
 
+.pem-line {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.pem-indicator {
+  flex: 1;
+  font-size: 0.813rem;
+  color: #484f58;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+.pem-indicator.loaded {
+  color: #3fb950;
+}
+
+.pem-line button {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.813rem;
+  white-space: nowrap;
+  background: #21262d;
+  border-color: #30363d;
+}
+
+.pem-line button:hover {
+  background: #30363d;
+}
+
 .row {
   display: flex;
   gap: 1rem;

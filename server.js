@@ -7,7 +7,6 @@ serve({
     let pathname = url.pathname;
     if (pathname === '/') pathname = '/token-generator.html';
 
-    const f = file(`./public${pathname}`);
-    return new Response(f);
+    return new Response(file(`./public${pathname}`));
   },
 });

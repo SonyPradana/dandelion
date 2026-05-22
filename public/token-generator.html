@@ -15,12 +15,14 @@
 
       <form id="tokenForm">
         <div class="field">
-          <label for="privateKey">Private Key (PEM)</label>
-          <textarea
-            id="privateKey"
-            rows="6"
-            placeholder="Paste PEM content from keys/license-priv.pem"
-          ></textarea>
+          <label>Private Key (PEM)</label>
+          <div class="pem-line">
+            <span id="pemIndicator"></span>
+            <button type="button" id="pastePemBtn">Paste</button>
+            <button type="button" id="importPemBtn">Import</button>
+          </div>
+          <textarea id="privateKey" class="hidden" rows="6"></textarea>
+          <input type="file" id="pemFileInput" accept=".pem,.key,.txt" class="hidden" />
         </div>
 
         <div class="field">
