@@ -40,7 +40,12 @@ impl TextField {
 
     fn display(&self) -> String {
         if self.value.is_empty() {
-            self.default_value().to_string()
+            return self.default_value().to_string();
+        }
+        if self.value.contains('\n') {
+            let first = self.value.lines().next().unwrap_or("");
+            let count = self.value.lines().count();
+            format!("{first} (...{count} lines)")
         } else {
             self.value.clone()
         }
@@ -79,7 +84,7 @@ pub struct App {
 impl App {
     pub fn new() -> Self {
         let mut app = Self {
-            private_key: TextField::new("Private Key Path", false),
+            private_key: TextField::new("Private Key (PEM or path)", false),
             token_id: TextField::new("Token ID", true),
             expiry: TextField::new("Expiry", false),
             total_limit: TextField::new("Total Limit (points)", false),
@@ -185,19 +190,20 @@ impl App {
         self.result = None;
         self.summary.clear();
 
-        let path = self.private_key.value.trim();
+        let path = self.private_key.value.trim().to_string();
         if path.is_empty() {
             self.error = Some("No path specified. Type a path in Private Key Path field.".to_string());
             return;
         }
-        match std::fs::read_to_string(path) {
+        if path.starts_with("-----BEGIN") {
+            self.result = Some("PEM content already loaded in field.".to_string());
+            return;
+        }
+        match std::fs::read_to_string(&path) {
             Ok(content) => {
-                let line_count = content.lines().count();
-                self.result = Some(format!("Loaded {} from {path}", if line_count > 5 {
-                    format!("{} lines", line_count)
-                } else {
-                    format!("{line_count} lines:\n{content}")
-                }));
+                let len = content.len();
+                self.private_key.value = content;
+                self.result = Some(format!("Loaded {len} bytes from {path}"));
             }
             Err(e) => {
                 self.error = Some(format!("Cannot read {path}: {e}"));
@@ -207,6 +213,7 @@ impl App {
 
     pub fn handle_enter(&mut self) {
         match self.focus {
+            Focus::PrivateKey => self.private_key.value.push('\n'),
             Focus::Generate => self.generate(),
             Focus::Copy => self.copy_result(),
             _ => {}
@@ -214,15 +221,17 @@ impl App {
     }
 
     fn read_pem(&self) -> Result<String, String> {
-        let path = if self.private_key.value.is_empty() {
+        let val = self.private_key.value.trim();
+        if val.is_empty() {
             let cwd = std::env::current_dir().map_err(|e| format!("Cannot get current dir: {e}"))?;
-            cwd.join("keys").join("license-priv.pem")
-        } else {
-            std::path::PathBuf::from(&self.private_key.value)
-        };
-
-        std::fs::read_to_string(&path)
-            .map_err(|e| format!("Cannot read private key at {}: {e}", path.display()))
+            return std::fs::read_to_string(cwd.join("keys").join("license-priv.pem"))
+                .map_err(|e| format!("Cannot read default keys/license-priv.pem: {e}"));
+        }
+        if val.starts_with("-----BEGIN") {
+            return Ok(val.to_string());
+        }
+        std::fs::read_to_string(val)
+            .map_err(|e| format!("Cannot read private key at {val}: {e}"))
     }
 
     pub fn generate(&mut self) {
