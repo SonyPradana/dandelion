@@ -49,27 +49,27 @@ function useTabs(initialHash) {
   return [activeTab, switchTab];
 }
 
-function rd(current, prev) {
+function renderDiff(current, prev) {
   if (prev === null || prev === undefined) return html`<span class="pv">${current}</span>`;
   if (prev === 0 && current === 0) return html`<span class="pv zero">0</span>`;
   if (prev === 0)
     return html`<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
-  const d = current - prev;
-  if (d === 0) return html`<span class="pv">${current}</span>`;
-  if (d > 0) return html`<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
-  return html`<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
+  const diff = current - prev;
+  if (diff === 0) return html`<span class="pv">${current}</span>`;
+  if (diff > 0) return html`<span class="pv">${current}</span> <span class="pd pos">(+${diff})</span>`;
+  return html`<span class="pv">${current}</span> <span class="pd neg">(${diff})</span>`;
 }
 
 function doExport() {
   getFullConfig().then((cfg) => {
     const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'dandelion-config.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'dandelion-config.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
   });
 }
@@ -99,15 +99,15 @@ function FormSkriningTab({ configRef, activeProfile, onChange }) {
   if (!configRef.current) return null;
 
   useEffect(() => {
-    const f = configRef.current.profiles[activeProfile]?.formSkrining || {};
+    const fs = configRef.current.profiles[activeProfile]?.formSkrining || {};
     setForm({
-      url: f.url || '',
-      scrollToButton: f.scrollToButton ?? true,
-      radioButtonKeywords: f.radioButtonKeywords || '',
-      dropdownKeywords: f.dropdownKeywords || '',
-      excludes: f.excludes || '',
+      url: fs.url || '',
+      scrollToButton: fs.scrollToButton ?? true,
+      radioButtonKeywords: fs.radioButtonKeywords || '',
+      dropdownKeywords: fs.dropdownKeywords || '',
+      excludes: fs.excludes || '',
     });
-    setPinned(f.pinneds || {});
+    setPinned(fs.pinneds || {});
   }, [activeProfile]);
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -218,13 +218,13 @@ function NotCheckedTab({ configRef, activeProfile, onChange }) {
   if (!configRef.current) return null;
 
   useEffect(() => {
-    const n = configRef.current.profiles[activeProfile]?.notChecked || {};
+    const nc = configRef.current.profiles[activeProfile]?.notChecked || {};
     setForm({
-      url: n.url || '',
-      list: n.notCheckedList || '',
-      automationDelay: n.automationDelay || 2000,
-      itemDelay: n.itemDelay || 1000,
-      reloadDelay: n.reloadDelay || 1000,
+      url: nc.url || '',
+      list: nc.notCheckedList || '',
+      automationDelay: nc.automationDelay || 2000,
+      itemDelay: nc.itemDelay || 1000,
+      reloadDelay: nc.reloadDelay || 1000,
     });
   }, [activeProfile]);
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
@@ -332,14 +332,14 @@ function ProduktifitasPage() {
       const status = getStatus();
       let licenseInfo = null;
       if (!status.isFreePlan && status.payload) {
-        const p = status.payload;
-        const lf = new Date(p.iat * 1000);
+        const payload = status.payload;
+        const lf = new Date(payload.iat * 1000);
         const lt = new Date();
         const lfs = `${lf.getFullYear()}-${String(lf.getMonth() + 1).padStart(2, '0')}-${String(lf.getDate()).padStart(2, '0')}`;
         const lts = `${lt.getFullYear()}-${String(lt.getMonth() + 1).padStart(2, '0')}-${String(lt.getDate()).padStart(2, '0')}`;
         const lrd = await getRange(lfs, lts);
         const used = lrd.reduce((s, d) => s + (d ? d.dayTotal : 0), 0);
-        const pct = Math.min(100, Math.round((used / (p.total_limit || 1)) * 100));
+        const pct = Math.min(100, Math.round((used / (payload.total_limit || 1)) * 100));
         const months = [
           'Jan',
           'Feb',
@@ -355,10 +355,10 @@ function ProduktifitasPage() {
           'Des',
         ];
         const fmt = (ts) => {
-          const d = new Date(ts * 1000);
-          return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+          const date = new Date(ts * 1000);
+          return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
         };
-        licenseInfo = { pct, used, limit: p.total_limit, from: fmt(p.iat), to: fmt(p.exp) };
+        licenseInfo = { pct, used, limit: payload.total_limit, from: fmt(payload.iat), to: fmt(payload.exp) };
       }
       setPd({ today, yesterday, overall, periodTotal, chartDays, rangeData, maxVal, licenseInfo });
       setLoading(false);
@@ -393,7 +393,7 @@ function ProduktifitasPage() {
                 <div class="prod-row">
                   <span class="label">📻 Radio</span
                   ><span class="value"
-                    >${rd(today.counts.radio, prev?.radio ?? null)}<span class="po"
+                    >${renderDiff(today.counts.radio, prev?.radio ?? null)}<span class="po"
                       >/ ${overall.counts.radio.toLocaleString()}</span
                     ></span
                   >
@@ -401,7 +401,7 @@ function ProduktifitasPage() {
                 <div class="prod-row">
                   <span class="label">📝 Teks</span
                   ><span class="value"
-                    >${rd(today.counts.freetext, prev?.freetext ?? null)}<span class="po"
+                    >${renderDiff(today.counts.freetext, prev?.freetext ?? null)}<span class="po"
                       >/ ${overall.counts.freetext.toLocaleString()}</span
                     ></span
                   >
@@ -409,7 +409,7 @@ function ProduktifitasPage() {
                 <div class="prod-row">
                   <span class="label">📋 Dropdown</span
                   ><span class="value"
-                    >${rd(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po"
+                    >${renderDiff(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po"
                       >/ ${overall.counts.dropdown.toLocaleString()}</span
                     ></span
                   >
@@ -417,7 +417,7 @@ function ProduktifitasPage() {
                 <div class="prod-row">
                   <span class="label">❌ Tidak Periksa</span
                   ><span class="value"
-                    >${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span
+                    >${renderDiff(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span
                       class="po"
                       >/ ${overall.counts.formNotChecked.toLocaleString()}</span
                     ></span
@@ -426,7 +426,7 @@ function ProduktifitasPage() {
                 <div class="prod-row">
                   <span class="label">🧘 Zen</span
                   ><span class="value"
-                    >${rd(today.counts.formZen, prev?.formZen ?? null)}<span class="po"
+                    >${renderDiff(today.counts.formZen, prev?.formZen ?? null)}<span class="po"
                       >/ ${overall.counts.formZen.toLocaleString()}</span
                     ></span
                   >
@@ -434,7 +434,7 @@ function ProduktifitasPage() {
                 <div class="prod-total">
                   <span>Total</span
                   ><span
-                    >${rd(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po"
+                    >${renderDiff(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po"
                       >/ ${overall.grandTotal.toLocaleString()}</span
                     ></span
                   >
@@ -627,23 +627,23 @@ function QuotaTab() {
 
   let infoHtml = '';
   if (!isFree && status.payload) {
-    const p = status.payload;
-    const expDate = p.exp ? new Date(p.exp * 1000).toLocaleDateString('id-ID') : '-';
+    const payload = status.payload;
+    const expDate = payload.exp ? new Date(payload.exp * 1000).toLocaleDateString('id-ID') : '-';
     const featList =
-      Array.isArray(p.features) && p.features.length > 0 ? p.features.join(', ') : '-';
+      Array.isArray(payload.features) && payload.features.length > 0 ? payload.features.join(', ') : '-';
     const verList =
-      Array.isArray(p.version_allowed) && p.version_allowed.length > 0
-        ? p.version_allowed.join(', ')
+      Array.isArray(payload.version_allowed) && payload.version_allowed.length > 0
+        ? payload.version_allowed.join(', ')
         : '-';
     infoHtml = html`
       <div class="license-info-grid">
         <div class="license-info-item">
           <div class="label">Total Limit</div>
-          <div class="value">${(p.total_limit ?? 0).toLocaleString()}</div>
+          <div class="value">${(payload.total_limit ?? 0).toLocaleString()}</div>
         </div>
         <div class="license-info-item">
           <div class="label">Grace Daily</div>
-          <div class="value">${(p.daily_limit ?? 100).toLocaleString()}</div>
+          <div class="value">${(payload.daily_limit ?? 100).toLocaleString()}</div>
         </div>
         <div class="license-info-item">
           <div class="label">Berlaku Sampai</div>

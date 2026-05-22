@@ -24,15 +24,15 @@ import {
 } from '../utils/productivityTracker';
 import { init, getStatus } from '../quota/quota-manager.js';
 
-function rd(current, prev) {
+function renderDiff(current, prev) {
   if (prev === null || prev === undefined) return html`<span class="pv">${current}</span>`;
   if (prev === 0 && current === 0) return html`<span class="pv zero">0</span>`;
   if (prev === 0)
     return html`<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
-  const d = current - prev;
-  if (d === 0) return html`<span class="pv">${current}</span>`;
-  if (d > 0) return html`<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
-  return html`<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
+  const diff = current - prev;
+  if (diff === 0) return html`<span class="pv">${current}</span>`;
+  if (diff > 0) return html`<span class="pv">${current}</span> <span class="pd pos">(+${diff})</span>`;
+  return html`<span class="pv">${current}</span> <span class="pd neg">(${diff})</span>`;
 }
 
 function AgreementTab() {
@@ -159,12 +159,12 @@ function ConfigTab() {
     getFullConfig().then((cfg) => {
       const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'dandelion-config.json';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'dandelion-config.json';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       URL.revokeObjectURL(url);
     });
   };
@@ -380,16 +380,16 @@ function ProduktivitasTab() {
       const status = getStatus();
       let licenseInfo = null;
       if (!status.isFreePlan && status.payload) {
-        const p = status.payload;
-        const from = new Date(p.iat * 1000);
+        const payload = status.payload;
+        const from = new Date(payload.iat * 1000);
         const to = new Date();
-        const f = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
-        const t = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`;
-        const rangeData = await getRange(f, t);
+        const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
+        const toStr = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`;
+        const rangeData = await getRange(fromStr, toStr);
         const used = rangeData.reduce((s, d) => s + (d ? d.dayTotal : 0), 0);
-        const pct = Math.min(100, Math.round((used / (p.total_limit || 1)) * 100));
-        const daysLeft = Math.ceil((p.exp * 1000 - Date.now()) / 86_400_000);
-        licenseInfo = { pct, daysLeft, used, limit: p.total_limit };
+        const pct = Math.min(100, Math.round((used / (payload.total_limit || 1)) * 100));
+        const daysLeft = Math.ceil((payload.exp * 1000 - Date.now()) / 86_400_000);
+        licenseInfo = { pct, daysLeft, used, limit: payload.total_limit };
       }
       setPd({ today, yesterday, overall, periodTotal, licenseInfo });
     })();
@@ -426,29 +426,29 @@ function ProduktivitasTab() {
       ? html`
             <div class="prod-row">
               <span class="label">📻 Radio</span
-              ><span class="value">${rd(today.counts.radio, prev?.radio ?? null)}</span>
+              ><span class="value">${renderDiff(today.counts.radio, prev?.radio ?? null)}</span>
             </div>
             <div class="prod-row">
               <span class="label">📝 Teks</span
-              ><span class="value">${rd(today.counts.freetext, prev?.freetext ?? null)}</span>
+              ><span class="value">${renderDiff(today.counts.freetext, prev?.freetext ?? null)}</span>
             </div>
             <div class="prod-row">
               <span class="label">📋 Dropdown</span
-              ><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}</span>
+              ><span class="value">${renderDiff(today.counts.dropdown, prev?.dropdown ?? null)}</span>
             </div>
             <div class="prod-row">
               <span class="label">❌ Tidak Periksa</span
               ><span class="value"
-                >${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}</span
+                >${renderDiff(today.counts.formNotChecked, prev?.formNotChecked ?? null)}</span
               >
             </div>
             <div class="prod-row">
               <span class="label">🧘 Zen</span
-              ><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}</span>
+              ><span class="value">${renderDiff(today.counts.formZen, prev?.formZen ?? null)}</span>
             </div>
             <div class="prod-total">
               <span>Total Hari Ini</span
-              ><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}</span>
+              ><span>${renderDiff(today.dayTotal, yesterday?.dayTotal ?? null)}</span>
             </div>
           `
       : html`<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>`}
