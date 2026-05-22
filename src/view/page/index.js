@@ -8,6 +8,7 @@ import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
+import { Pane, FormGroup, SaveButton, FeedbackMsg } from '../components/ui.js';
 import {
   getTodaySummary,
   getYesterdaySummary,
@@ -56,7 +57,8 @@ function renderDiff(current, prev) {
     return html`<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
   const diff = current - prev;
   if (diff === 0) return html`<span class="pv">${current}</span>`;
-  if (diff > 0) return html`<span class="pv">${current}</span> <span class="pd pos">(+${diff})</span>`;
+  if (diff > 0)
+    return html`<span class="pv">${current}</span> <span class="pd pos">(+${diff})</span>`;
   return html`<span class="pv">${current}</span> <span class="pd neg">(${diff})</span>`;
 }
 
@@ -96,9 +98,8 @@ function FormSkriningTab({ configRef, activeProfile, onChange }) {
   const [form, setForm] = useState(null);
   const [pinned, setPinned] = useState({});
 
-  if (!configRef.current) return null;
-
   useEffect(() => {
+    if (!configRef.current) return;
     const fs = configRef.current.profiles[activeProfile]?.formSkrining || {};
     setForm({
       url: fs.url || '',
@@ -109,6 +110,8 @@ function FormSkriningTab({ configRef, activeProfile, onChange }) {
     });
     setPinned(fs.pinneds || {});
   }, [activeProfile]);
+
+  if (!form) return null;
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const save = () => {
@@ -195,10 +198,8 @@ function SkriningTab({ configRef, activeProfile, onChange }) {
   };
 
   return html`
-    <div class="pane-header">🔗 Skrining</div>
-    <div class="pane-body">
-      <div class="form-group">
-        <label for="skrining-url">URL Halaman Skrining</label>
+    <${Pane} header="🔗 Skrining">
+      <${FormGroup} label="URL Halaman Skrining" htmlFor="skrining-url">
         <input
           type="text"
           id="skrining-url"
@@ -206,18 +207,17 @@ function SkriningTab({ configRef, activeProfile, onChange }) {
           value=${val}
           onInput=${(e) => setVal(e.target.value)}
         />
-      </div>
-      <button class="btn btn-primary" onClick=${save}>Simpan</button>
-    </div>
+      </${FormGroup}>
+      <${SaveButton} onSave=${save} />
+    </${Pane}>
   `;
 }
 
 function NotCheckedTab({ configRef, activeProfile, onChange }) {
   const [form, setForm] = useState(null);
 
-  if (!configRef.current) return null;
-
   useEffect(() => {
+    if (!configRef.current) return;
     const nc = configRef.current.profiles[activeProfile]?.notChecked || {};
     setForm({
       url: nc.url || '',
@@ -227,6 +227,8 @@ function NotCheckedTab({ configRef, activeProfile, onChange }) {
       reloadDelay: nc.reloadDelay || 1000,
     });
   }, [activeProfile]);
+
+  if (!form) return null;
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const save = () => {
@@ -243,10 +245,8 @@ function NotCheckedTab({ configRef, activeProfile, onChange }) {
   };
 
   return html`
-    <div class="pane-header">✅ Tidak Periksa</div>
-    <div class="pane-body">
-      <div class="form-group">
-        <label for="not-checked-url">URL</label>
+    <${Pane} header="✅ Tidak Periksa">
+      <${FormGroup} label="URL" htmlFor="not-checked-url">
         <input
           type="text"
           id="not-checked-url"
@@ -254,16 +254,15 @@ function NotCheckedTab({ configRef, activeProfile, onChange }) {
           value=${form.url}
           onInput=${(e) => update('url', e.target.value)}
         />
-      </div>
-      <div class="form-group">
-        <label>Daftar Master 'Tidak Periksa'</label>
+      </${FormGroup}>
+      <${FormGroup} label="Daftar Master 'Tidak Periksa'">
         <${KeywordList}
           id="not-checked-list"
           value=${form.list}
           placeholder="Tambah ID baris (rowfrm...)"
           onChange=${(v) => update('list', v)}
         />
-      </div>
+      </${FormGroup}>
       <div class="delay-settings-grid">
         <div class="form-group-sm">
           <label for="not-checked-automation-delay">Jeda Awal</label>
@@ -299,8 +298,8 @@ function NotCheckedTab({ configRef, activeProfile, onChange }) {
           />
         </div>
       </div>
-      <button class="btn btn-primary" onClick=${save}>Simpan</button>
-    </div>
+      <${SaveButton} onSave=${save} />
+    </${Pane}>
   `;
 }
 
@@ -358,7 +357,13 @@ function ProduktifitasPage() {
           const date = new Date(ts * 1000);
           return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
         };
-        licenseInfo = { pct, used, limit: payload.total_limit, from: fmt(payload.iat), to: fmt(payload.exp) };
+        licenseInfo = {
+          pct,
+          used,
+          limit: payload.total_limit,
+          from: fmt(payload.iat),
+          to: fmt(payload.exp),
+        };
       }
       setPd({ today, yesterday, overall, periodTotal, chartDays, rangeData, maxVal, licenseInfo });
       setLoading(false);
@@ -514,8 +519,7 @@ function LainnyaTab({ onChange }) {
   const [importMsg, setImportMsg] = useState(null);
 
   return html`
-    <div class="pane-header">⚙️ Lainnya</div>
-    <div class="pane-body">
+    <${Pane} header="⚙️ Lainnya">
       <h3 class="pane-title">Ekspor &amp; Impor Konfigurasi</h3>
       <div class="action-group">
         <a
@@ -537,9 +541,7 @@ function LainnyaTab({ onChange }) {
           >📤 Impor Konfigurasi</a
         >
       </div>
-      ${importMsg
-        ? html`<div class="license-message ${importMsg.type}">${importMsg.text}</div>`
-        : ''}
+      <${FeedbackMsg} msg=${importMsg} />
       <input
         type="file"
         id="page-import-file-input"
@@ -563,7 +565,7 @@ function LainnyaTab({ onChange }) {
           }
         }}
       />
-    </div>
+    </${Pane}>
   `;
 }
 
@@ -630,7 +632,9 @@ function QuotaTab() {
     const payload = status.payload;
     const expDate = payload.exp ? new Date(payload.exp * 1000).toLocaleDateString('id-ID') : '-';
     const featList =
-      Array.isArray(payload.features) && payload.features.length > 0 ? payload.features.join(', ') : '-';
+      Array.isArray(payload.features) && payload.features.length > 0
+        ? payload.features.join(', ')
+        : '-';
     const verList =
       Array.isArray(payload.version_allowed) && payload.version_allowed.length > 0
         ? payload.version_allowed.join(', ')
@@ -678,9 +682,7 @@ function QuotaTab() {
         <div class="device-id-label">Device ID</div>
         <div class="device-id-row">
           <span class="device-id-value">${deviceId || '-'}</span>
-          <button class="device-id-copy" onClick=${copyDeviceId}>
-            ${copyLabel}
-          </button>
+          <button class="device-id-copy" onClick=${copyDeviceId}>${copyLabel}</button>
         </div>
         <div class="device-id-hint">Gunakan ID ini untuk mendapatkan token</div>
       </div>
@@ -823,17 +825,32 @@ function PageApp() {
           )}
           ${renderTab(
             'form-skrining',
-            html`<${FormSkriningTab} configRef=${configRef} activeProfile=${configRef.current.activeProfile} onChange=${onChange} />`,
+            html`<${FormSkriningTab}
+              configRef=${configRef}
+              activeProfile=${configRef.current.activeProfile}
+              onChange=${onChange}
+            />`,
           )}
           ${renderTab(
             'skrining',
-            html`<${SkriningTab} configRef=${configRef} activeProfile=${configRef.current.activeProfile} onChange=${onChange} />`,
+            html`<${SkriningTab}
+              configRef=${configRef}
+              activeProfile=${configRef.current.activeProfile}
+              onChange=${onChange}
+            />`,
           )}
           ${renderTab(
             'not-checked',
-            html`<${NotCheckedTab} configRef=${configRef} activeProfile=${configRef.current.activeProfile} onChange=${onChange} />`,
+            html`<${NotCheckedTab}
+              configRef=${configRef}
+              activeProfile=${configRef.current.activeProfile}
+              onChange=${onChange}
+            />`,
           )}
-          ${renderTab('produktifitas', activeTab === 'produktifitas' ? html`<${ProduktifitasPage} />` : '')}
+          ${renderTab(
+            'produktifitas',
+            activeTab === 'produktifitas' ? html`<${ProduktifitasPage} />` : '',
+          )}
           ${renderTab('lainnya', html`<${LainnyaTab} onChange=${onChange} />`)}
           ${renderTab('quota', html`<${QuotaTab} />`)}
           ${renderTab('persetujuan', html`<${PersetujuanTab} />`)}

@@ -31,7 +31,8 @@ function renderDiff(current, prev) {
     return html`<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
   const diff = current - prev;
   if (diff === 0) return html`<span class="pv">${current}</span>`;
-  if (diff > 0) return html`<span class="pv">${current}</span> <span class="pd pos">(+${diff})</span>`;
+  if (diff > 0)
+    return html`<span class="pv">${current}</span> <span class="pd pos">(+${diff})</span>`;
   return html`<span class="pv">${current}</span> <span class="pd neg">(${diff})</span>`;
 }
 
@@ -312,17 +313,17 @@ function ConfigTab() {
         <a
           href="#"
           onClick=${(e) => {
-      e.preventDefault();
-      doExport();
-    }}
+            e.preventDefault();
+            doExport();
+          }}
           >Ekspor</a
         >
         <a
           href="#"
           onClick=${(e) => {
-      e.preventDefault();
-      document.getElementById('import-file-input').click();
-    }}
+            e.preventDefault();
+            document.getElementById('import-file-input').click();
+          }}
           >Impor</a
         >
       </div>
@@ -331,9 +332,9 @@ function ConfigTab() {
         href="#"
         class="open-page-link"
         onClick=${(e) => {
-      e.preventDefault();
-      browser.tabs.create({ url: browser.runtime.getURL('view/page/index.html#profile') });
-    }}
+          e.preventDefault();
+          browser.tabs.create({ url: browser.runtime.getURL('view/page/index.html#profile') });
+        }}
         >⚙️ Konfigurasi Lengkap</a
       >
       <input
@@ -342,25 +343,25 @@ function ConfigTab() {
         style="display:none"
         accept=".json"
         onChange=${async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      try {
-        const text = await file.text();
-        const imported = JSON.parse(text);
-        if (!imported.profiles || !imported.activeProfile)
-          throw new Error('Invalid config file format.');
-        saveConfig(imported);
-        getFullConfig().then((c) => {
-          configRef.current = c;
-          setConfig(c);
-        });
-        setImportMsg({ type: 'success', text: 'Konfigurasi berhasil diimpor.' });
-        setTimeout(() => setImportMsg(null), 3000);
-      } catch {
-        setImportMsg({ type: 'error', text: 'Gagal mengimpor. Pastikan format file valid.' });
-        setTimeout(() => setImportMsg(null), 3000);
-      }
-    }}
+          const file = e.target.files[0];
+          if (!file) return;
+          try {
+            const text = await file.text();
+            const imported = JSON.parse(text);
+            if (!imported.profiles || !imported.activeProfile)
+              throw new Error('Invalid config file format.');
+            saveConfig(imported);
+            getFullConfig().then((c) => {
+              configRef.current = c;
+              setConfig(c);
+            });
+            setImportMsg({ type: 'success', text: 'Konfigurasi berhasil diimpor.' });
+            setTimeout(() => setImportMsg(null), 3000);
+          } catch {
+            setImportMsg({ type: 'error', text: 'Gagal mengimpor. Pastikan format file valid.' });
+            setTimeout(() => setImportMsg(null), 3000);
+          }
+        }}
       />
     </div>
   `;
@@ -408,33 +409,37 @@ function ProduktivitasTab() {
     <div class="header"><h1>Produktivitas</h1></div>
     <div class="content" id="produktifitas-content">
       ${licenseInfo
-      ? html`
+        ? html`
             <div class="prod-license pro">
               <span class="license-badge-sm pro">PRO</span>
               <span class="license-text">${licenseInfo.pct}% digunakan</span>
               <span class="license-sep">·</span>
               <span class="license-text"
                 >${licenseInfo.daysLeft <= 0
-          ? 'Kedaluwarsa'
-          : `Berakhir dalam ${licenseInfo.daysLeft} hari`}</span
+                  ? 'Kedaluwarsa'
+                  : `Berakhir dalam ${licenseInfo.daysLeft} hari`}</span
               >
             </div>
           `
-      : ''}
+        : ''}
       <div class="prod-header">Hari Ini</div>
       ${today
-      ? html`
+        ? html`
             <div class="prod-row">
               <span class="label">📻 Radio</span
               ><span class="value">${renderDiff(today.counts.radio, prev?.radio ?? null)}</span>
             </div>
             <div class="prod-row">
               <span class="label">📝 Teks</span
-              ><span class="value">${renderDiff(today.counts.freetext, prev?.freetext ?? null)}</span>
+              ><span class="value"
+                >${renderDiff(today.counts.freetext, prev?.freetext ?? null)}</span
+              >
             </div>
             <div class="prod-row">
               <span class="label">📋 Dropdown</span
-              ><span class="value">${renderDiff(today.counts.dropdown, prev?.dropdown ?? null)}</span>
+              ><span class="value"
+                >${renderDiff(today.counts.dropdown, prev?.dropdown ?? null)}</span
+              >
             </div>
             <div class="prod-row">
               <span class="label">❌ Tidak Periksa</span
@@ -451,7 +456,7 @@ function ProduktivitasTab() {
               ><span>${renderDiff(today.dayTotal, yesterday?.dayTotal ?? null)}</span>
             </div>
           `
-      : html`<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>`}
+        : html`<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>`}
       <div class="prod-grand">
         <span>Grand Total</span><span>${overall.grandTotal.toLocaleString()}</span>
       </div>
@@ -470,11 +475,11 @@ function ProduktivitasTab() {
         href="#"
         class="open-page-link"
         onClick=${(e) => {
-      e.preventDefault();
-      browser.tabs.create({
-        url: browser.runtime.getURL('view/page/index.html#produktifitas'),
-      });
-    }}
+          e.preventDefault();
+          browser.tabs.create({
+            url: browser.runtime.getURL('view/page/index.html#produktifitas'),
+          });
+        }}
         >⚙️ Konfigurasi Lanjutan</a
       >
     </div>
@@ -517,8 +522,8 @@ function PopupApp() {
         <${ConfigTab} />
       </div>
       ${activeTab === 'produktifitas'
-      ? html`<div id="produktifitas" class="tab-content active"><${ProduktivitasTab} /></div>`
-      : ''}
+        ? html`<div id="produktifitas" class="tab-content active"><${ProduktivitasTab} /></div>`
+        : ''}
     </div>
   `;
 }
