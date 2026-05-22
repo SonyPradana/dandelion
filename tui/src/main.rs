@@ -12,7 +12,11 @@ fn main() -> io::Result<()> {
     io::stdout().execute(EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(io::stdout()))?;
 
-    let mut app = app::App::new();
+    let mut app = if let Some(path) = std::env::args().nth(1) {
+        app::App::new_with_path(&path)
+    } else {
+        app::App::new()
+    };
     let res = run_app(&mut terminal, &mut app);
 
     disable_raw_mode()?;
@@ -29,7 +33,7 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut app:
     loop {
         terminal.draw(|f| app.render(f))?;
 
-        if let Event::Key(key) = event::read()? {
+        if let Ok(Event::Key(key)) = event::read() {
             if key.kind != KeyEventKind::Press {
                 continue;
             }
@@ -37,6 +41,9 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>, app: &mut app:
                 KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                 KeyCode::Char('c') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
                     return Ok(());
+                }
+                KeyCode::Char('o') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
+                    app.handle_ctrl_o();
                 }
                 KeyCode::Enter => app.handle_enter(),
                 KeyCode::Tab => app.focus_next(),

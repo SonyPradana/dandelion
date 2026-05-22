@@ -78,7 +78,7 @@ pub struct App {
 
 impl App {
     pub fn new() -> Self {
-        Self {
+        let mut app = Self {
             private_key: TextField::new("Private Key Path", false),
             token_id: TextField::new("Token ID", true),
             expiry: TextField::new("Expiry", false),
@@ -92,7 +92,20 @@ impl App {
             summary: Vec::new(),
             copied: false,
             feature_cursor: 0,
+        };
+
+        let default_path = std::path::Path::new("keys/license-priv.pem");
+        if default_path.exists() {
+            app.private_key.value = default_path.to_string_lossy().to_string();
         }
+
+        app
+    }
+
+    pub fn new_with_path(pem_path: &str) -> Self {
+        let mut app = Self::new();
+        app.private_key.value = pem_path.to_string();
+        app
     }
 
     pub fn focus_next(&mut self) {
@@ -164,6 +177,31 @@ impl App {
             self.features.remove(name);
         } else {
             self.features.insert(name.to_string());
+        }
+    }
+
+    pub fn handle_ctrl_o(&mut self) {
+        self.error = None;
+        self.result = None;
+        self.summary.clear();
+
+        let path = self.private_key.value.trim();
+        if path.is_empty() {
+            self.error = Some("No path specified. Type a path in Private Key Path field.".to_string());
+            return;
+        }
+        match std::fs::read_to_string(path) {
+            Ok(content) => {
+                let line_count = content.lines().count();
+                self.result = Some(format!("Loaded {} from {path}", if line_count > 5 {
+                    format!("{} lines", line_count)
+                } else {
+                    format!("{line_count} lines:\n{content}")
+                }));
+            }
+            Err(e) => {
+                self.error = Some(format!("Cannot read {path}: {e}"));
+            }
         }
     }
 
