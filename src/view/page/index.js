@@ -2,7 +2,7 @@ import { html } from 'htm/preact';
 import { render } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import browser from 'webextension-polyfill';
-import { getAgreement, setAgreement, getFullConfig, setConfig as saveConfig } from '../../configuration';
+import { getAgreement, getFullConfig, setConfig as saveConfig } from '../../configuration';
 import { showAgreementPopup } from '../../components/agreementPopup';
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
 import { KeywordList } from '../components/KeywordList.js';
@@ -46,29 +46,39 @@ function rd(current, prev) {
   return html`<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
 }
 
-function ProfileTab({ config, onChange }) {
-  if (!config) return null;
+function doExport() {
+  getFullConfig().then((cfg) => {
+    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dandelion-config.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+function ProfileTab({ configRef, onChange }) {
+  if (!configRef.current) return null;
   return html`
     <div class="pane-header">👤 Profil</div>
     <div class="pane-body">
-      <${ProfileManager} profiles=${config.profiles} activeProfile=${config.activeProfile}
-        onSwitch=${(key) => { config.activeProfile = key; onChange(); }}
+      <${ProfileManager} profiles=${configRef.current.profiles} activeProfile=${configRef.current.activeProfile}
+        onSwitch=${(key) => { configRef.current.activeProfile = key; onChange(); }}
         onChange=${onChange} />
     </div>
   `;
 }
 
-function FormSkriningTab({ config, onChange }) {
+function FormSkriningTab({ configRef, onChange }) {
   const [form, setForm] = useState(null);
   const [pinned, setPinned] = useState({});
 
-  const activeProfile = config?.activeProfile;
-  const ps = config?.profiles?.[activeProfile];
-  const fs = ps?.formSkrining || {};
-
   useEffect(() => {
-    if (!config) return;
-    const f = ps?.formSkrining || {};
+    if (!configRef.current) return;
+    const f = configRef.current.profiles[configRef.current.activeProfile]?.formSkrining || {};
     setForm({
       url: f.url || '',
       scrollToButton: f.scrollToButton ?? true,
@@ -77,13 +87,16 @@ function FormSkriningTab({ config, onChange }) {
       excludes: f.excludes || '',
     });
     setPinned(f.pinneds || {});
-  }, [config, activeProfile]);
+  }, [configRef.current?.activeProfile]);
 
   if (!form) return null;
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
   const save = () => {
-    Object.assign(fs, form);
-    saveConfig(config);
+    const ps = configRef.current.profiles[configRef.current.activeProfile];
+    if (!ps.formSkrining) ps.formSkrining = {};
+    Object.assign(ps.formSkrining, form);
+    ps.formSkrining.pinneds = pinned;
     onChange();
   };
 
@@ -121,34 +134,38 @@ function FormSkriningTab({ config, onChange }) {
   `;
 }
 
-function SkriningTab({ config, onChange }) {
+function SkriningTab({ configRef, onChange }) {
   const [val, setVal] = useState('');
-  const ps = config?.profiles?.[config?.activeProfile]?.skrining || {};
 
-  useEffect(() => { setVal(ps.url || ''); }, [config?.activeProfile]);
+  useEffect(() => {
+    setVal(configRef.current?.profiles?.[configRef.current?.activeProfile]?.skrining?.url || '');
+  }, [configRef.current?.activeProfile]);
+
+  const save = () => {
+    const ps = configRef.current.profiles[configRef.current.activeProfile];
+    if (!ps.skrining) ps.skrining = {};
+    ps.skrining.url = val;
+    onChange();
+  };
 
   return html`
     <div class="pane-header">🔗 Skrining</div>
     <div class="pane-body">
       <div class="form-group">
         <label for="skrining-url">URL Halaman Skrining</label>
-        <input type="text" id="skrining-url" placeholder="Masukkan pola URL skrining" value=${val}
-          onInput=${(e) => setVal(e.target.value)}
-          onBlur=${() => { if (config) { config.profiles[config.activeProfile].skrining.url = val; saveConfig(config); onChange(); } }} />
+        <input type="text" id="skrining-url" placeholder="Masukkan pola URL skrining" value=${val} onInput=${(e) => setVal(e.target.value)} />
       </div>
+      <button class="btn btn-primary" onClick=${save}>Simpan</button>
     </div>
   `;
 }
 
-function NotCheckedTab({ config, onChange }) {
+function NotCheckedTab({ configRef, onChange }) {
   const [form, setForm] = useState(null);
-  const activeProfile = config?.activeProfile;
-  const ps = config?.profiles?.[activeProfile];
-  const nc = ps?.notChecked || {};
 
   useEffect(() => {
-    if (!config) return;
-    const n = ps?.notChecked || {};
+    if (!configRef.current) return;
+    const n = configRef.current.profiles[configRef.current.activeProfile]?.notChecked || {};
     setForm({
       url: n.url || '',
       list: n.notCheckedList || '',
@@ -156,18 +173,20 @@ function NotCheckedTab({ config, onChange }) {
       itemDelay: n.itemDelay || 1000,
       reloadDelay: n.reloadDelay || 1000,
     });
-  }, [config, activeProfile]);
+  }, [configRef.current?.activeProfile]);
 
   if (!form) return null;
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
+
   const save = () => {
-    Object.assign(nc, {
+    const ps = configRef.current.profiles[configRef.current.activeProfile];
+    if (!ps.notChecked) ps.notChecked = {};
+    Object.assign(ps.notChecked, {
       url: form.url, notCheckedList: form.list,
       automationDelay: parseInt(form.automationDelay) || 2000,
       itemDelay: parseInt(form.itemDelay) || 1000,
       reloadDelay: parseInt(form.reloadDelay) || 1000,
     });
-    saveConfig(config);
     onChange();
   };
 
@@ -310,7 +329,9 @@ function ProduktifitasPage() {
   `;
 }
 
-function LainnyaTab({ config, onChange }) {
+function LainnyaTab({ onChange }) {
+  const [importMsg, setImportMsg] = useState(null);
+
   return html`
     <div class="pane-header">⚙️ Lainnya</div>
     <div class="pane-body">
@@ -319,33 +340,25 @@ function LainnyaTab({ config, onChange }) {
         <a href="#" class="action-btn" onClick=${(e) => { e.preventDefault(); doExport(); }}>📥 Ekspor Konfigurasi</a>
         <a href="#" class="action-btn" onClick=${(e) => { e.preventDefault(); document.getElementById('page-import-file-input').click(); }}>📤 Impor Konfigurasi</a>
       </div>
+      ${importMsg ? html`<div class="license-message ${importMsg.type}">${importMsg.text}</div>` : ''}
       <input type="file" id="page-import-file-input" style="display:none" accept=".json" onChange=${async (e) => {
         const file = e.target.files[0];
         if (!file) return;
         try {
           const text = await file.text();
           const imported = JSON.parse(text);
-          if (!imported.profiles || !imported.activeProfile) throw new Error();
+          if (!imported.profiles || !imported.activeProfile) throw new Error('Invalid config file format.');
           saveConfig(imported);
           onChange();
-        } catch {}
+          setImportMsg({ type: 'success', text: 'Konfigurasi berhasil diimpor.' });
+          setTimeout(() => setImportMsg(null), 3000);
+        } catch {
+          setImportMsg({ type: 'error', text: 'Gagal mengimpor. Pastikan format file valid.' });
+          setTimeout(() => setImportMsg(null), 3000);
+        }
       }} />
     </div>
   `;
-}
-
-function doExport() {
-  getFullConfig().then((cfg) => {
-    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'dandelion-config.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
 }
 
 function QuotaTab() {
@@ -367,7 +380,7 @@ function QuotaTab() {
 
   if (!state) return html`<div class="pane-header">🔑 Batas Pemakaian</div><div class="pane-body">Memuat...</div>`;
 
-  const { status, remaining, jwt } = state;
+  const { status, remaining } = state;
   const isFree = status.isFreePlan;
   const deviceId = getDeviceId();
 
@@ -390,8 +403,8 @@ function QuotaTab() {
       await saveToken(val);
       setMsg({ type: 'success', text: 'Token berhasil diaktifkan!' });
       setTimeout(refresh, 1000);
-    } catch (err) {
-      setMsg({ type: 'error', text: `Gagal: ${err.message}` });
+    } catch (error) {
+      setMsg({ type: 'error', text: `Gagal: ${error.message}` });
     }
   };
 
@@ -457,10 +470,10 @@ function PersetujuanTab() {
 
 function PageApp() {
   const [activeTab, switchTab] = useTabs(window.location.hash.replace('#', ''));
-  const [config, setConfig] = useState(null);
   const configRef = useRef(null);
+  const [, forceRender] = useState(0);
 
-  const refresh = () => getFullConfig().then((c) => { configRef.current = c; setConfig(c); });
+  const refresh = () => getFullConfig().then((c) => { configRef.current = c; forceRender((n) => n + 1); });
 
   useEffect(() => {
     init();
@@ -503,10 +516,23 @@ function PageApp() {
   `;
 
   const onChange = () => {
-    configRef.current = config;
-    saveConfig(config);
+    saveConfig(configRef.current);
     refresh();
   };
+
+  const renderTab = (tab, component) => html`
+    <section class="tab-pane${activeTab === tab ? ' active' : ''}" id="tab-${tab}">${component}</section>
+  `;
+
+  if (!configRef.current) {
+    return html`
+      <div id="config-container">
+        <div id="config-body">
+          <div class="main"><div class="pane-body">Memuat...</div></div>
+        </div>
+      </div>
+    `;
+  }
 
   return html`
     <div id="config-container">
@@ -520,7 +546,7 @@ function PageApp() {
             ${sidebarTab('not-checked', '✅', 'Tidak Periksa')}
           </div>
           <div class="tab-divider"></div>
-          <div class="tab-group">${sidebarTab('produktifitas', '📋', 'Produktivitas')}</div>
+          <div class="tab-group">${sidebarTab('produktifitas', '📊', 'Produktivitas')}</div>
           <div class="tab-group">${sidebarTab('lainnya', '⚙️', 'Lainnya')}</div>
           <div class="tab-divider"></div>
           <div class="tab-group">${sidebarTab('quota', '🔑', 'Batas Pemakaian')}</div>
@@ -529,33 +555,14 @@ function PageApp() {
         </nav>
         <div class="main">
           <header class="app-header"><h1>Konfigurasi Dandelion</h1></header>
-          <section class="tab-pane${activeTab === 'profile' ? ' active' : ''}" id="tab-profile">
-            <${ProfileTab} config=${config} onChange=${onChange} />
-          </section>
-          <section class="tab-pane${activeTab === 'form-skrining' ? ' active' : ''}" id="tab-form-skrining">
-            <${FormSkriningTab} config=${config} onChange=${onChange} />
-          </section>
-          <section class="tab-pane${activeTab === 'skrining' ? ' active' : ''}" id="tab-skrining">
-            <${SkriningTab} config=${config} onChange=${onChange} />
-          </section>
-          <section class="tab-pane${activeTab === 'not-checked' ? ' active' : ''}" id="tab-not-checked">
-            <${NotCheckedTab} config=${config} onChange=${onChange} />
-          </section>
-          <section class="tab-pane${activeTab === 'produktifitas' ? ' active' : ''}" id="tab-produktifitas">
-            <${ProduktifitasPage} />
-          </section>
-          <section class="tab-pane${activeTab === 'lainnya' ? ' active' : ''}" id="tab-lainnya">
-            <${LainnyaTab} config=${config} onChange=${onChange} />
-          </section>
-          <section class="tab-pane${activeTab === 'quota' ? ' active' : ''}" id="tab-quota">
-            <${QuotaTab} />
-          </section>
-          <section class="tab-pane${activeTab === 'persetujuan' ? ' active' : ''}" id="tab-persetujuan">
-            <${PersetujuanTab} />
-          </section>
-          <footer class="app-footer">
-            <button class="btn-primary" onClick=${() => saveConfig(config)}>Simpan</button>
-          </footer>
+          ${renderTab('profile', html`<${ProfileTab} configRef=${configRef} onChange=${onChange} />`)}
+          ${renderTab('form-skrining', html`<${FormSkriningTab} configRef=${configRef} onChange=${onChange} />`)}
+          ${renderTab('skrining', html`<${SkriningTab} configRef=${configRef} onChange=${onChange} />`)}
+          ${renderTab('not-checked', html`<${NotCheckedTab} configRef=${configRef} onChange=${onChange} />`)}
+          ${renderTab('produktifitas', html`<${ProduktifitasPage} />`)}
+          ${renderTab('lainnya', html`<${LainnyaTab} onChange=${onChange} />`)}
+          ${renderTab('quota', html`<${QuotaTab} />`)}
+          ${renderTab('persetujuan', html`<${PersetujuanTab} />`)}
         </div>
       </div>
     </div>

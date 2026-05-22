@@ -54,6 +54,7 @@ function ConfigTab() {
   const [form, setForm] = useState(null);
   const [pinned, setPinned] = useState({});
   const [saved, setSaved] = useState(false);
+  const [importMsg, setImportMsg] = useState(null);
   const configRef = useRef(null);
 
   useEffect(() => { getFullConfig().then((c) => { configRef.current = c; setConfig(c); }); }, []);
@@ -84,24 +85,25 @@ function ConfigTab() {
 
   if (!config || !form) return html`<div class="header"><h1>Konfigurasi</h1></div><div class="content">Memuat...</div>`;
 
-  const update = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
+  const update = (key, val) => {
+    if (key.endsWith('Delay')) val = parseInt(val) || 0;
+    setForm((prev) => ({ ...prev, [key]: val }));
+  };
   const refresh = () => setConfig({ ...configRef.current });
 
   const handleSwitchProfile = (key) => {
-    config.activeProfile = key;
-    configRef.current = config;
-    saveConfig(config);
+    configRef.current.activeProfile = key;
+    saveConfig(configRef.current);
     refresh();
   };
 
   const handleChangeProfiles = () => {
-    configRef.current = config;
-    saveConfig(config);
+    saveConfig(configRef.current);
     refresh();
   };
 
   const handleSave = () => {
-    const ps = config.profiles[config.activeProfile];
+    const ps = configRef.current.profiles[configRef.current.activeProfile];
     if (!ps.formSkrining) ps.formSkrining = {};
     if (!ps.notChecked) ps.notChecked = {};
     if (!ps.skrining) ps.skrining = {};
@@ -114,13 +116,26 @@ function ConfigTab() {
     ps.skrining.url = form.skUrl;
     ps.notChecked.url = form.ncUrl;
     ps.notChecked.notCheckedList = form.ncList;
-    ps.notChecked.automationDelay = parseInt(form.ncAutomationDelay) || 2000;
-    ps.notChecked.itemDelay = parseInt(form.ncItemDelay) || 1000;
-    ps.notChecked.reloadDelay = parseInt(form.ncReloadDelay) || 1000;
-    configRef.current = config;
-    saveConfig(config);
+    ps.notChecked.automationDelay = form.ncAutomationDelay || 2000;
+    ps.notChecked.itemDelay = form.ncItemDelay || 1000;
+    ps.notChecked.reloadDelay = form.ncReloadDelay || 1000;
+    saveConfig(configRef.current);
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
+  };
+
+  const doExport = () => {
+    getFullConfig().then((cfg) => {
+      const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dandelion-config.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
   };
 
   return html`
@@ -128,7 +143,7 @@ function ConfigTab() {
     <div class="content">
       <div class="form-group">
         <label>Profile</label>
-        <${ProfileManager} profiles=${config.profiles} activeProfile=${config.activeProfile}
+        <${ProfileManager} profiles=${configRef.current.profiles} activeProfile=${configRef.current.activeProfile}
           onSwitch=${handleSwitchProfile} onChange=${handleChangeProfiles} />
       </div>
       <details class="config-group" open>
@@ -197,6 +212,7 @@ function ConfigTab() {
         <a href="#" onClick=${(e) => { e.preventDefault(); doExport(); }}>Ekspor</a>
         <a href="#" onClick=${(e) => { e.preventDefault(); document.getElementById('import-file-input').click(); }}>Impor</a>
       </div>
+      ${importMsg ? html`<div class="import-msg ${importMsg.type}">${importMsg.text}</div>` : ''}
       <a href="#" class="open-page-link" onClick=${(e) => { e.preventDefault(); browser.tabs.create({ url: browser.runtime.getURL('view/page/index.html#profile') }); }}>⚙️ Konfigurasi Lengkap</a>
       <input type="file" id="import-file-input" style="display:none" accept=".json" onChange=${async (e) => {
         const file = e.target.files[0];
@@ -204,27 +220,18 @@ function ConfigTab() {
         try {
           const text = await file.text();
           const imported = JSON.parse(text);
-          if (!imported.profiles || !imported.activeProfile) throw new Error();
+          if (!imported.profiles || !imported.activeProfile) throw new Error('Invalid config file format.');
           saveConfig(imported);
           getFullConfig().then((c) => { configRef.current = c; setConfig(c); });
-        } catch {}
+          setImportMsg({ type: 'success', text: 'Konfigurasi berhasil diimpor.' });
+          setTimeout(() => setImportMsg(null), 3000);
+        } catch {
+          setImportMsg({ type: 'error', text: 'Gagal mengimpor. Pastikan format file valid.' });
+          setTimeout(() => setImportMsg(null), 3000);
+        }
       }} />
     </div>
   `;
-}
-
-function doExport() {
-  getFullConfig().then((cfg) => {
-    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'dandelion-config.json';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
 }
 
 function ProduktifitasTab() {
@@ -244,10 +251,10 @@ function ProduktifitasTab() {
         const to = new Date();
         const f = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, '0')}-${String(from.getDate()).padStart(2, '0')}`;
         const t = `${to.getFullYear()}-${String(to.getMonth() + 1).padStart(2, '0')}-${String(to.getDate()).padStart(2, '0')}`;
-        const rd = await getRange(f, t);
-        const used = rd.reduce((s, d) => s + (d ? d.dayTotal : 0), 0);
+        const rangeData = await getRange(f, t);
+        const used = rangeData.reduce((s, d) => s + (d ? d.dayTotal : 0), 0);
         const pct = Math.min(100, Math.round((used / (p.total_limit || 1)) * 100));
-        const daysLeft = Math.ceil((p.exp * 1000 - Date.now()) / 86400000);
+        const daysLeft = Math.ceil((p.exp * 1000 - Date.now()) / 86_400_000);
         licenseInfo = { pct, daysLeft, used, limit: p.total_limit };
       }
       setPd({ today, yesterday, overall, periodTotal, licenseInfo });
@@ -304,12 +311,12 @@ function PopupApp() {
     <div class="container">
       <div class="tab-nav">
         <button class="tab-button${activeTab === 'agreement' ? ' active' : ''}" onClick=${() => setActiveTab('agreement')}>Persetujuan</button>
-        <button class="tab-button${activeTab === 'config' ? ' active' : ''}" onClick=${() => { if (!config) getFullConfig().then(setConfig); setActiveTab('config'); }}>Konfigurasi</button>
+        <button class="tab-button${activeTab === 'config' ? ' active' : ''}" onClick=${() => setActiveTab('config')}>Konfigurasi</button>
         <button class="tab-button${activeTab === 'produktifitas' ? ' active' : ''}" onClick=${() => setActiveTab('produktifitas')}>Produktivitas</button>
       </div>
       <div id="agreement" class="tab-content${activeTab === 'agreement' ? ' active' : ''}"><${AgreementTab} /></div>
       <div id="config" class="tab-content${activeTab === 'config' ? ' active' : ''}"><${ConfigTab} /></div>
-      <div id="produktifitas" class="tab-content${activeTab === 'produktifitas' ? ' active' : ''}"><${ProduktifitasTab} /></div>
+      ${activeTab === 'produktifitas' ? html`<div id="produktifitas" class="tab-content active"><${ProduktifitasTab} /></div>` : ''}
     </div>
   `;
 }
