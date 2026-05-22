@@ -837,7 +837,7 @@ function PageApp() {
             'not-checked',
             html`<${NotCheckedTab} configRef=${configRef} onChange=${onChange} />`,
           )}
-          ${renderTab('produktifitas', html`<${ProduktifitasPage} />`)}
+          ${renderTab('produktifitas', activeTab === 'produktifitas' ? html`<${ProduktifitasPage} />` : '')}
           ${renderTab('lainnya', html`<${LainnyaTab} onChange=${onChange} />`)}
           ${renderTab('quota', html`<${QuotaTab} />`)}
           ${renderTab('persetujuan', html`<${PersetujuanTab} />`)}
