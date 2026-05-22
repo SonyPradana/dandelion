@@ -288,7 +288,7 @@ async function toggleHelperMode() {
     },
   });
 
-  const rowIdElements = document.querySelectorAll('[id^="rowfrm"]');
+  const rowIdElements = document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]');
   rowIdElements.forEach((el) => {
     const gridRow = el.closest('.grid');
     if (!gridRow) return;

@@ -28,7 +28,7 @@ export function initializeZenMode() {
  * Scans the page for any available and active form buttons.
  */
 export async function startZenAutomation() {
-  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"]'));
+  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]'));
   const pendingIds = [];
 
   rowElements.forEach((el) => {
