@@ -37,10 +37,17 @@ function rd(current, prev) {
 
 function AgreementTab() {
   const [checked, setChecked] = useState(false);
+  const mounted = useRef(false);
+
   useEffect(() => {
-    getAgreement().then(setChecked);
+    getAgreement().then((v) => {
+      mounted.current = true;
+      setChecked(v);
+    });
   }, []);
+
   useEffect(() => {
+    if (!mounted.current) return;
     setAgreement(checked);
   }, [checked]);
 
@@ -359,7 +366,7 @@ function ConfigTab() {
   `;
 }
 
-function ProduktifitasTab() {
+function ProduktivitasTab() {
   const [pd, setPd] = useState(null);
 
   useEffect(() => {
@@ -389,7 +396,7 @@ function ProduktifitasTab() {
   }, []);
 
   if (!pd)
-    return html`<div class="header"><h1>Produktifitas</h1></div>
+    return html`<div class="header"><h1>Produktivitas</h1></div>
       <div class="content"><div class="prod-row" style="color:#999">Memuat...</div></div>`;
 
   const { today, yesterday, overall, periodTotal, licenseInfo } = pd;
@@ -398,7 +405,7 @@ function ProduktifitasTab() {
   const barPct = Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100));
 
   return html`
-    <div class="header"><h1>Produktifitas</h1></div>
+    <div class="header"><h1>Produktivitas</h1></div>
     <div class="content" id="produktifitas-content">
       ${licenseInfo
       ? html`
@@ -476,11 +483,9 @@ function ProduktifitasTab() {
 
 function PopupApp() {
   const [activeTab, setActiveTab] = useState('agreement');
-  const [config, setConfig] = useState(null);
 
   useEffect(() => {
     init();
-    getFullConfig().then(setConfig);
   }, []);
 
   return html`
@@ -512,7 +517,7 @@ function PopupApp() {
         <${ConfigTab} />
       </div>
       ${activeTab === 'produktifitas'
-      ? html`<div id="produktifitas" class="tab-content active"><${ProduktifitasTab} /></div>`
+      ? html`<div id="produktifitas" class="tab-content active"><${ProduktivitasTab} /></div>`
       : ''}
     </div>
   `;

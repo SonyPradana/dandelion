@@ -1,6 +1,6 @@
 import { html } from 'htm/preact';
 import { render } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import browser from 'webextension-polyfill';
 import { getAgreement, getFullConfig, setConfig as saveConfig } from '../../configuration';
 import { showAgreementPopup } from '../../components/agreementPopup';
@@ -92,13 +92,14 @@ function ProfileTab({ configRef, onChange }) {
   `;
 }
 
-function FormSkriningTab({ configRef, onChange }) {
+function FormSkriningTab({ configRef, activeProfile, onChange }) {
   const [form, setForm] = useState(null);
   const [pinned, setPinned] = useState({});
 
+  if (!configRef.current) return null;
+
   useEffect(() => {
-    if (!configRef.current) return;
-    const f = configRef.current.profiles[configRef.current.activeProfile]?.formSkrining || {};
+    const f = configRef.current.profiles[activeProfile]?.formSkrining || {};
     setForm({
       url: f.url || '',
       scrollToButton: f.scrollToButton ?? true,
@@ -107,13 +108,11 @@ function FormSkriningTab({ configRef, onChange }) {
       excludes: f.excludes || '',
     });
     setPinned(f.pinneds || {});
-  }, [configRef.current?.activeProfile]);
-
-  if (!form) return null;
+  }, [activeProfile]);
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const save = () => {
-    const ps = configRef.current.profiles[configRef.current.activeProfile];
+    const ps = configRef.current.profiles[activeProfile];
     if (!ps.formSkrining) ps.formSkrining = {};
     Object.assign(ps.formSkrining, form);
     ps.formSkrining.pinneds = pinned;
@@ -179,15 +178,17 @@ function FormSkriningTab({ configRef, onChange }) {
   `;
 }
 
-function SkriningTab({ configRef, onChange }) {
+function SkriningTab({ configRef, activeProfile, onChange }) {
   const [val, setVal] = useState('');
 
+  if (!configRef.current) return null;
+
   useEffect(() => {
-    setVal(configRef.current?.profiles?.[configRef.current?.activeProfile]?.skrining?.url || '');
-  }, [configRef.current?.activeProfile]);
+    setVal(configRef.current.profiles[activeProfile]?.skrining?.url || '');
+  }, [activeProfile]);
 
   const save = () => {
-    const ps = configRef.current.profiles[configRef.current.activeProfile];
+    const ps = configRef.current.profiles[activeProfile];
     if (!ps.skrining) ps.skrining = {};
     ps.skrining.url = val;
     onChange();
@@ -211,12 +212,13 @@ function SkriningTab({ configRef, onChange }) {
   `;
 }
 
-function NotCheckedTab({ configRef, onChange }) {
+function NotCheckedTab({ configRef, activeProfile, onChange }) {
   const [form, setForm] = useState(null);
 
+  if (!configRef.current) return null;
+
   useEffect(() => {
-    if (!configRef.current) return;
-    const n = configRef.current.profiles[configRef.current.activeProfile]?.notChecked || {};
+    const n = configRef.current.profiles[activeProfile]?.notChecked || {};
     setForm({
       url: n.url || '',
       list: n.notCheckedList || '',
@@ -224,13 +226,11 @@ function NotCheckedTab({ configRef, onChange }) {
       itemDelay: n.itemDelay || 1000,
       reloadDelay: n.reloadDelay || 1000,
     });
-  }, [configRef.current?.activeProfile]);
-
-  if (!form) return null;
+  }, [activeProfile]);
   const update = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
   const save = () => {
-    const ps = configRef.current.profiles[configRef.current.activeProfile];
+    const ps = configRef.current.profiles[activeProfile];
     if (!ps.notChecked) ps.notChecked = {};
     Object.assign(ps.notChecked, {
       url: form.url,
@@ -571,8 +571,9 @@ function QuotaTab() {
   const [state, setState] = useState(null);
   const [jwtInput, setJwtInput] = useState('');
   const [msg, setMsg] = useState(null);
+  const [copyLabel, setCopyLabel] = useState('Salin');
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     const status = getStatus();
     getRemainingToday().then((remaining) => {
       getToken().then((jwt) => {
@@ -580,9 +581,9 @@ function QuotaTab() {
         setJwtInput(jwt || '');
       });
     });
-  };
+  }, []);
 
-  useEffect(refresh, []);
+  useEffect(refresh, [refresh]);
 
   if (!state)
     return html`<div class="pane-header">🔑 Batas Pemakaian</div>
@@ -593,18 +594,13 @@ function QuotaTab() {
   const deviceId = getDeviceId();
 
   const copyDeviceId = async () => {
-    const btn = document.getElementById('device-id-copy-btn');
     try {
       await navigator.clipboard.writeText(deviceId || '');
-      if (btn) btn.textContent = 'Tersalin!';
-      setTimeout(() => {
-        if (btn) btn.textContent = 'Salin';
-      }, 1500);
+      setCopyLabel('Tersalin!');
+      setTimeout(() => setCopyLabel('Salin'), 1500);
     } catch {
-      if (btn) btn.textContent = 'Gagal';
-      setTimeout(() => {
-        if (btn) btn.textContent = 'Salin';
-      }, 1500);
+      setCopyLabel('Gagal');
+      setTimeout(() => setCopyLabel('Salin'), 1500);
     }
   };
 
@@ -682,8 +678,8 @@ function QuotaTab() {
         <div class="device-id-label">Device ID</div>
         <div class="device-id-row">
           <span class="device-id-value">${deviceId || '-'}</span>
-          <button class="device-id-copy" id="device-id-copy-btn" onClick=${copyDeviceId}>
-            Salin
+          <button class="device-id-copy" onClick=${copyDeviceId}>
+            ${copyLabel}
           </button>
         </div>
         <div class="device-id-hint">Gunakan ID ini untuk mendapatkan token</div>
@@ -827,15 +823,15 @@ function PageApp() {
           )}
           ${renderTab(
             'form-skrining',
-            html`<${FormSkriningTab} configRef=${configRef} onChange=${onChange} />`,
+            html`<${FormSkriningTab} configRef=${configRef} activeProfile=${configRef.current.activeProfile} onChange=${onChange} />`,
           )}
           ${renderTab(
             'skrining',
-            html`<${SkriningTab} configRef=${configRef} onChange=${onChange} />`,
+            html`<${SkriningTab} configRef=${configRef} activeProfile=${configRef.current.activeProfile} onChange=${onChange} />`,
           )}
           ${renderTab(
             'not-checked',
-            html`<${NotCheckedTab} configRef=${configRef} onChange=${onChange} />`,
+            html`<${NotCheckedTab} configRef=${configRef} activeProfile=${configRef.current.activeProfile} onChange=${onChange} />`,
           )}
           ${renderTab('produktifitas', activeTab === 'produktifitas' ? html`<${ProduktifitasPage} />` : '')}
           ${renderTab('lainnya', html`<${LainnyaTab} onChange=${onChange} />`)}
