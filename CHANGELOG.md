@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-05-23
+
+### Added
+
+- Device binding for JWT tokens with device ID generation, wildcard version support, and auto-trim on paste (#42)
+- Reactive agreement blocker via storage.onChanged with persetujuan configuration tab (#43)
+
+### Changed
+
+- Migrate builds to ESM format with native minification and shared rolldown configuration (#44)
+
+### Fixed
+
+- Support row-FRM id format in addition to rowfrm for structure 2 (#48)
+
 ## [1.2.0] - 2026-05-19
 
 ### Added
