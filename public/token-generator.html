@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dandelion — Token Generator</title>
+    <link rel="stylesheet" href="token-generator.css" />
+    <style>
+      .back-link {
+        display: inline-block;
+        margin-bottom: 0.5rem;
+        color: #6366f1;
+        text-decoration: none;
+        font-size: 0.85rem;
+      }
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <a href="/" class="back-link">← Home</a>
+        <h1>Dandelion</h1>
+        <p class="subtitle">Quota Token Generator</p>
+      </header>
+
+      <form id="tokenForm">
+        <div class="field">
+          <label>Private Key (PEM)</label>
+          <div class="pem-line">
+            <span id="pemIndicator"></span>
+            <button type="button" id="pastePemBtn">Paste</button>
+            <button type="button" id="importPemBtn">Import</button>
+          </div>
+          <textarea id="privateKey" class="hidden" rows="6"></textarea>
+          <input type="file" id="pemFileInput" accept=".pem,.key,.txt" class="hidden" />
+        </div>
+
+        <div class="field">
+          <label for="tokenId">Token ID <span class="required">*</span></label>
+          <input type="text" id="tokenId" required placeholder="e.g. lic_abc12345" />
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="expiry">Expiry</label>
+            <input type="text" id="expiry" value="7d" placeholder="90d, 12m, 1y, or 2027-01-01" />
+          </div>
+          <div class="field">
+            <label for="totalLimit">Total Limit (points)</label>
+            <input type="number" id="totalLimit" value="30000" min="0" />
+          </div>
+          <div class="field">
+            <label for="dailyLimit">Daily Limit</label>
+            <input type="number" id="dailyLimit" value="150" min="0" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="versionAllowed">Version Allowed</label>
+          <input
+            type="text"
+            id="versionAllowed"
+            value="1.*"
+            placeholder="Comma-separated, leave blank for all"
+          />
+        </div>
+
+        <div class="field">
+          <label>Features</label>
+          <div class="checkboxes" id="featuresGroup">
+            <label class="checkbox"
+              ><input type="checkbox" value="skriningform" checked /> skriningform</label
+            >
+            <label class="checkbox"
+              ><input type="checkbox" value="skrining" checked /> skrining</label
+            >
+            <label class="checkbox"
+              ><input type="checkbox" value="skrining-form-not-checked" checked />
+              skrining-form-not-checked</label
+            >
+            <label class="checkbox"
+              ><input type="checkbox" value="zen-mode" checked /> zen-mode</label
+            >
+          </div>
+        </div>
+
+        <button type="submit" id="generateBtn">Generate Token</button>
+      </form>
+
+      <div id="output" class="hidden">
+        <h2>Generated Token</h2>
+        <div class="output-row">
+          <textarea id="jwtOutput" rows="4" readonly></textarea>
+          <button id="copyBtn">Copy</button>
+        </div>
+        <div id="summary" class="summary"></div>
+      </div>
+    </div>
+
+    <script type="module" src="token-generator.js"></script>
+  </body>
+</html>

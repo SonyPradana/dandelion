@@ -22,6 +22,7 @@ function compress(sourceDir, outputPath) {
       console.error(`Build directory not found: ${absSource}. Run build first.`);
       process.exit(1);
     }
+
     const output = fs.createWriteStream(outputPath);
     const archive = new ZipArchive({ zlib: { level: 9 } });
 
@@ -59,14 +60,14 @@ function copySignedXpi() {
   console.log(`  ${dest} (${size} KB)`);
 }
 
-// Chrome
+// Chrome (.zip — Load Unpacked)
 if (!target || target === 'all' || target === 'chrome') {
   const zipPath = path.join(artifactsDir, `${name}-chrome-v${version}.zip`);
   console.log(`Packaging Chrome: ${zipPath}`);
   await compress('dist/chrome', zipPath);
 }
 
-// Firefox
+// Firefox (signed .xpi — auto-update via server)
 if (!target || target === 'all' || target === 'firefox') {
   copySignedXpi();
 }

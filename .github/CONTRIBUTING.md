@@ -39,12 +39,17 @@ pnpm verify:firefox    # runs web-ext lint
 
 Copy `.env.example` to `.env` and fill in:
 
-| Variable               | Required for  | Description                                                                     |
-| ---------------------- | ------------- | ------------------------------------------------------------------------------- |
-| `TARGET_HOST`          | build         | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`) |
-| `FIREFOX_EXTENSION_ID` | build:firefox | Addon ID (e.g. `@dandelion`)                                                    |
-| `AMO_JWT_ISSUER`       | sign:firefox  | AMO API key issuer                                                              |
-| `AMO_JWT_SECRET`       | sign:firefox  | AMO API key secret                                                              |
+| Variable               | Required for         | Description                                                                     |
+| ---------------------- | -------------------- | ------------------------------------------------------------------------------- |
+| `TARGET_HOST`          | build                | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`) |
+| `FIREFOX_EXTENSION_ID` | build:firefox        | Addon ID (e.g. `@dandelion`)                                                    |
+| `AMO_JWT_ISSUER`       | sign:firefox         | AMO API key issuer                                                              |
+| `AMO_JWT_SECRET`       | sign:firefox         | AMO API key secret                                                              |
+| `CHROME_EXTENSION_KEY` | build:chrome         | Base64-encoded public key (extension ID derivation)                             |
+| `HOST`                 | build:firefox, serve | Server hostname (default: `localhost`) — Firefox update_url derivs from this    |
+| `PORT`                 | serve                | Starting port for incremental scan (default: `3000`)                            |
+| `TLS_CERT`             | serve                | TLS certificate path (default: `keys/localhost.pem`)                            |
+| `TLS_KEY`              | serve                | TLS private key path (default: `keys/localhost-key.pem`)                        |
 
 Get AMO API keys at: https://addons.mozilla.org/en-US/developers/addon/api/key/
 
@@ -81,7 +86,7 @@ pnpm release:chrome
 
 Output: `artifacts/dandelion-chrome-v<version>.zip`
 
-Submit to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+Chrome auto-update is not supported for self-hosted extensions since v117+. Users install via `chrome://extensions` (developer mode) → Load unpacked from `dist/chrome/`. The `.zip` serves as a distribution archive for manual installation.
 
 ### Firefox
 
@@ -94,6 +99,133 @@ Requires `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` in `.env`.
 Output: `artifacts/dandelion-firefox-v<version>-signed.xpi`
 
 The extension must be registered on [AMO](https://addons.mozilla.org/) first.
+
+## Server (`serve.ts`)
+
+The Bun server hosts the update manifest, artifact downloads (`.zip` / `.xpi`), and the token generator.
+
+### Setup
+
+```bash
+cp .env.example .env   # ensure HOST, PORT are configured
+```
+
+### Run
+
+```bash
+bun run serve.ts
+```
+
+### TLS Setup
+
+The server auto-detects TLS certs at `keys/localhost.pem` and `keys/localhost-key.pem`.
+Generate them with [mkcert](https://github.com/FiloSottile/mkcert) for local development:
+
+```bash
+mkcert -install                          # one-time CA install
+mkcert -key-file keys/localhost-key.pem -cert-file keys/localhost.pem localhost 127.0.0.1
+```
+
+For production, see [Deployment](#deployment) below.
+
+### Endpoints
+
+| Endpoint                | Description                             |
+| ----------------------- | --------------------------------------- |
+| `/`                     | Landing page (sitemap + download links) |
+| `/token-generator.html` | Token generator UI page                 |
+| `/update.json`          | Firefox addon auto-update manifest      |
+| `/manifest.json`        | Artifact listing + latest version       |
+| `/api/versions`         | Alias for `/manifest.json`              |
+| `/artifacts/<file>`     | Download `.zip` or `.xpi`               |
+| `/<any public file>`    | Static files from `public/`             |
+
+### Auto-Update Flow
+
+Firefox declares `gecko.update_url` in its manifest → Firefox polls `/update.json` → downloads new signed `.xpi` if available. Chrome does not support auto-update for self-hosted extensions since v117+.
+
+### Production
+
+The server must be served over HTTPS — required by Firefox for extension auto-updates.
+See [Deployment](#deployment) below for recommended setups.
+
+## Deployment
+
+### PM2 + Bun
+
+Keep the server alive across reboots with [PM2](https://pm2.keymetrics.io/):
+
+````bash
+npm install -g pm2
+pm2 start serve.ts --interpreter bun --name dandelion
+pm2 save
+pm2 startup       # generates systemd boot command
+
+#### Maintenance
+
+Stop, pull updates, and restart (graceful):
+
+```bash
+pm2 stop dandelion                 # stop server
+git pull origin main               # pull latest code
+pm2 start dandelion                # start server again
+pm2 save                           # persist process list
+````
+
+Or restart in one step (no need to stop first):
+
+```bash
+git pull origin main
+pm2 restart dandelion
+pm2 save
+```
+
+### Cloudflare Tunnel
+
+[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) exposes your local server at a public HTTPS URL without opening any firewall ports.
+
+1. Install `cloudflared` from the [official downloads page](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/).
+
+2. Authenticate and create a tunnel:
+
+   ```bash
+   cloudflared tunnel login
+   cloudflared tunnel create dandelion
+   ```
+
+3. Configure `~/.cloudflared/config.yml`:
+
+   ```yaml
+   tunnel: <tunnel-id>
+   credentials-file: ~/.cloudflared/<tunnel-id>.json
+
+   ingress:
+     - hostname: your-domain.com
+       service: http://localhost:3000
+     - service: http_status:404
+   ```
+
+4. Route DNS and test:
+
+   ```bash
+   cloudflared tunnel route dandelion your-domain.com
+   cloudflared tunnel run dandelion    # Ctrl+C to stop
+   ```
+
+5. Install as a system service (auto-start on boot):
+
+   ```bash
+   sudo cloudflared service install
+   sudo systemctl enable --now cloudflared
+   ```
+
+6. Set your `.env`:
+   ```env
+   HOST=localhost
+   PORT=3000
+   ```
+
+The tunnel serves your server at `https://your-domain.com` — no ports to open.
 
 ## Versioning
 
@@ -130,22 +262,22 @@ Extension ships with an embedded EC public key (`src/quota/public-key.js`) for v
 # Generate a quota token
 node scripts/gen-quota-token.mjs \
   -k keys/license-priv.pem \
-  -e 90d \
+  -e 7d \
   -p 30000 \
   -d 150 \
-  --version-allowed "1.0.0,1.1.0" \
+  --version-allowed "1.*" \
   --features "skriningform,skrining"
 ```
 
-| Flag                   | Description                                              |
-| ---------------------- | -------------------------------------------------------- |
-| `-k, --private-key`    | Path to ES256 private key PEM (required)                 |
-| `-e, --expiry`         | Duration: `90d`, `12m`, `1y`, or `2027-01-01` (required) |
-| `-p, --point, --token` | Total limit (0 = unlimited)                              |
-| `-d, --daily-limit`    | Grace daily limit after total exhausted (default: 100)   |
-| `--version-allowed`    | Comma-separated allowed extension versions               |
-| `--features`           | Comma-separated feature names                            |
-| `--token-id`           | Custom token ID (default: auto-generated)                |
+| Flag                   | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `-k, --private-key`    | Path to ES256 private key PEM (required)               |
+| `-e, --expiry`         | Duration: `7d`, `12m`, `1y`, or date (required)        |
+| `-p, --point, --token` | Total limit (0 = unlimited)                            |
+| `-d, --daily-limit`    | Grace daily limit after total exhausted (default: 100) |
+| `--version-allowed`    | Comma-separated allowed extension versions             |
+| `--features`           | Comma-separated feature names                          |
+| `--token-id`           | Custom token ID (default: auto-generated)              |
 
 ### Key Pair
 
