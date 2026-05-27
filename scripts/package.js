@@ -3,6 +3,7 @@ import { ZipArchive } from 'archiver';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { packCrx3 } from './crx3.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -15,25 +16,20 @@ fs.mkdirSync(artifactsDir, { recursive: true });
 
 const target = process.argv[2];
 
-function compress(sourceDir, outputPath) {
+function zipToBuffer(sourceDir) {
   return new Promise((resolve, reject) => {
     const absSource = path.resolve(root, sourceDir);
     if (!fs.existsSync(absSource)) {
       console.error(`Build directory not found: ${absSource}. Run build first.`);
       process.exit(1);
     }
-    const output = fs.createWriteStream(outputPath);
+    const chunks = [];
     const archive = new ZipArchive({ zlib: { level: 9 } });
 
-    output.on('close', () => {
-      const size = (fs.statSync(outputPath).size / 1024).toFixed(1);
-      console.log(`  ${outputPath} (${size} KB)`);
-      resolve();
-    });
-
+    archive.on('data', (chunk) => chunks.push(chunk));
+    archive.on('end', () => resolve(Buffer.concat(chunks)));
     archive.on('error', reject);
 
-    archive.pipe(output);
     archive.directory(absSource, false);
     archive.finalize();
   });
@@ -61,9 +57,16 @@ function copySignedXpi() {
 
 // Chrome
 if (!target || target === 'all' || target === 'chrome') {
-  const zipPath = path.join(artifactsDir, `${name}-chrome-v${version}.zip`);
-  console.log(`Packaging Chrome: ${zipPath}`);
-  await compress('dist/chrome', zipPath);
+  const crxPath = path.join(artifactsDir, `${name}-chrome-v${version}.crx`);
+  console.log(`Packaging Chrome: ${crxPath}`);
+
+  const zipBuffer = await zipToBuffer('dist/chrome');
+  const privPem = fs.readFileSync(path.join(root, 'keys', 'development.pem'), 'utf-8');
+  const crxBuffer = packCrx3(zipBuffer, privPem);
+
+  fs.writeFileSync(crxPath, crxBuffer);
+  const size = (fs.statSync(crxPath).size / 1024).toFixed(1);
+  console.log(`  ${crxPath} (${size} KB)`);
 }
 
 // Firefox

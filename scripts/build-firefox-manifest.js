@@ -33,9 +33,13 @@ if (!firefoxId) {
   console.error('FIREFOX_EXTENSION_ID not set in .env');
   process.exit(1);
 }
-manifest.browser_specific_settings ||= {};
-manifest.browser_specific_settings.gecko ||= {};
-manifest.browser_specific_settings.gecko.id = firefoxId;
+  manifest.browser_specific_settings ||= {};
+  manifest.browser_specific_settings.gecko ||= {};
+  manifest.browser_specific_settings.gecko.id = firefoxId;
+
+  if (process.env.UPDATE_URL) {
+    manifest.browser_specific_settings.gecko.update_url = process.env.UPDATE_URL;
+  }
 
 mkdirSync(outDir, { recursive: true });
 writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));

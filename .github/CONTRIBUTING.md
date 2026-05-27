@@ -39,12 +39,16 @@ pnpm verify:firefox    # runs web-ext lint
 
 Copy `.env.example` to `.env` and fill in:
 
-| Variable               | Required for  | Description                                                                     |
-| ---------------------- | ------------- | ------------------------------------------------------------------------------- |
-| `TARGET_HOST`          | build         | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`) |
-| `FIREFOX_EXTENSION_ID` | build:firefox | Addon ID (e.g. `@dandelion`)                                                    |
-| `AMO_JWT_ISSUER`       | sign:firefox  | AMO API key issuer                                                              |
-| `AMO_JWT_SECRET`       | sign:firefox  | AMO API key secret                                                              |
+| Variable               | Required for    | Description                                                                     |
+| ---------------------- | --------------- | ------------------------------------------------------------------------------- |
+| `TARGET_HOST`          | build           | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`) |
+| `FIREFOX_EXTENSION_ID` | build:firefox   | Addon ID (e.g. `@dandelion`)                                                    |
+| `AMO_JWT_ISSUER`       | sign:firefox    | AMO API key issuer                                                              |
+| `AMO_JWT_SECRET`       | sign:firefox    | AMO API key secret                                                              |
+| `CHROME_EXTENSION_KEY` | build:chrome    | Base64-encoded public key (extension ID derivation)                             |
+| `UPDATE_URL`           | build, serve    | Extension update manifest URL (e.g. `https://example.com/update.json`)          |
+| `BASE_URL`             | serve           | Server public base URL (default: `http://localhost:3000`)                       |
+| `PORT`                 | serve           | Server port (default: `3000`)                                                   |
 
 Get AMO API keys at: https://addons.mozilla.org/en-US/developers/addon/api/key/
 
@@ -79,9 +83,9 @@ The JavaScript bundles are identical for both browsers — only the manifests di
 pnpm release:chrome
 ```
 
-Output: `artifacts/dandelion-chrome-v<version>.zip`
+Output: `artifacts/dandelion-chrome-v<version>.crx` (signed CRX3)
 
-Submit to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole).
+The `.crx` is signed with `keys/development.pem`. Users install by dragging it to `chrome://extensions` (developer mode). After install, Chrome auto-updates via the server's `update.json`.
 
 ### Firefox
 
@@ -94,6 +98,40 @@ Requires `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` in `.env`.
 Output: `artifacts/dandelion-firefox-v<version>-signed.xpi`
 
 The extension must be registered on [AMO](https://addons.mozilla.org/) first.
+
+## Server (`serve.ts`)
+
+The Bun server hosts the update manifest, artifact downloads (`.crx` / `.xpi`), and the token generator.
+
+### Setup
+
+```bash
+cp .env.example .env   # ensure UPDATE_URL, BASE_URL, PORT are configured
+```
+
+### Run
+
+```bash
+bun run serve.ts
+```
+
+### Endpoints
+
+| Endpoint               | Description                              |
+| ---------------------- | ---------------------------------------- |
+| `/`                    | Redirects to `token-generator.html`      |
+| `/update.json`         | Auto-update manifest (Chrome + Firefox)  |
+| `/manifest.json`       | Artifact listing + latest version        |
+| `/artifacts/<file>`    | Download `.crx` or `.xpi`                |
+
+### Auto-Update Flow
+
+1. **Chrome**: extension declares `update_url` in manifest → Chrome polls `/update.json` → downloads new `.crx` if available
+2. **Firefox**: extension declares `gecko.update_url` → Firefox polls `/update.json` → downloads new `.xpi` if available
+
+### Production
+
+For production, run behind a reverse proxy (nginx, Caddy, Cloudflare Tunnel) to add HTTPS — required by both Chrome and Firefox for extension auto-updates. See [systemd + Cloudflare Tunnel](#) setup below.
 
 ## Versioning
 
