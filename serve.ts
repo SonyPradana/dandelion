@@ -2,6 +2,15 @@ import { createHash } from 'node:crypto';
 import { readdirSync, existsSync, readFileSync, statSync } from 'fs';
 import { join, extname } from 'path';
 
+// ── Routes ──
+//   /                     → Token generator UI (redirects to /token-generator.html)
+//   /token-generator.html → Token generator page
+//   /update.json          → Auto-update manifest (Firefox addon update)
+//   /manifest.json        → Version listing of all artifacts
+//   /api/versions         → Alias for /manifest.json
+//   /artifacts/<file>     → Artifact download (.zip, .xpi)
+//   /<any public file>    → Static files served from public/
+
 // --- types ---
 
 interface Artifact {
