@@ -118,15 +118,15 @@ bun run serve.ts
 
 ### Endpoints
 
-| Endpoint                | Description                         |
-| ----------------------- | ----------------------------------- |
-| `/`                     | Redirects to `token-generator.html` |
-| `/token-generator.html` | Token generator UI page             |
-| `/update.json`          | Firefox addon auto-update manifest  |
-| `/manifest.json`        | Artifact listing + latest version   |
-| `/api/versions`         | Alias for `/manifest.json`          |
-| `/artifacts/<file>`     | Download `.zip` or `.xpi`           |
-| `/<any public file>`    | Static files from `public/`         |
+| Endpoint                | Description                             |
+| ----------------------- | --------------------------------------- |
+| `/`                     | Landing page (sitemap + download links) |
+| `/token-generator.html` | Token generator UI page                 |
+| `/update.json`          | Firefox addon auto-update manifest      |
+| `/manifest.json`        | Artifact listing + latest version       |
+| `/api/versions`         | Alias for `/manifest.json`              |
+| `/artifacts/<file>`     | Download `.zip` or `.xpi`               |
+| `/<any public file>`    | Static files from `public/`             |
 
 ### Auto-Update Flow
 

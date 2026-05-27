@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dandelion</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #0a0a0f;
+        color: #e4e4e7;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 3rem 1rem;
+      }
+      .wrapper {
+        max-width: 640px;
+        width: 100%;
+      }
+      header {
+        margin-bottom: 2.5rem;
+        text-align: center;
+      }
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      .tagline {
+        color: #71717a;
+        margin-top: 0.25rem;
+        font-size: 0.9rem;
+      }
+      .section-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #71717a;
+        margin-bottom: 1rem;
+      }
+      .downloads {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+      }
+      .card {
+        flex: 1;
+        background: #14141f;
+        border: 1px solid #2a2a3a;
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-align: center;
+      }
+      .card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      .card .version {
+        font-size: 0.85rem;
+        color: #71717a;
+        margin-bottom: 1rem;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.55rem 1.2rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: 0.15s;
+        cursor: pointer;
+        border: none;
+      }
+      .btn-primary {
+        background: #6366f1;
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #5558e6;
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-outline {
+        background: transparent;
+        color: #e4e4e7;
+        border: 1px solid #2a2a3a;
+      }
+      .btn-outline:hover {
+        border-color: #6366f1;
+        color: #6366f1;
+      }
+      .card-solo {
+        background: #14141f;
+        border: 1px solid #2a2a3a;
+        border-radius: 12px;
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+      .card-solo h3 {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+      .card-solo p {
+        font-size: 0.85rem;
+        color: #71717a;
+        margin-top: 0.15rem;
+      }
+      .endpoint-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 2.5rem;
+      }
+      .entry {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        padding: 0.45rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        transition: 0.1s;
+      }
+      .entry:hover {
+        background: #14141f;
+      }
+      .entry-path {
+        font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+        color: #6366f1;
+        font-size: 0.82rem;
+        white-space: nowrap;
+        min-width: 200px;
+      }
+      .entry-desc {
+        color: #71717a;
+      }
+      a {
+        color: #6366f1;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .status {
+        margin-bottom: 2.5rem;
+        text-align: center;
+        color: #71717a;
+        font-size: 0.85rem;
+      }
+      @media (max-width: 500px) {
+        .downloads {
+          flex-direction: column;
+        }
+        .entry {
+          flex-direction: column;
+          gap: 0.15rem;
+        }
+        .entry-path {
+          min-width: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Dandelion</h1>
+        <p class="tagline">Clean UX you might like</p>
+      </header>
+
+      <section id="downloads-section">
+        <p class="section-title">Download Latest</p>
+        <div class="downloads" id="downloads">
+          <div class="card" id="chrome-card">
+            <h3>Chrome</h3>
+            <p class="version" id="chrome-version">Loading...</p>
+            <a
+              class="btn btn-primary"
+              id="chrome-link"
+              aria-label="Download Chrome extension"
+              disabled
+              >Download .zip</a
+            >
+          </div>
+          <div class="card" id="firefox-card">
+            <h3>Firefox</h3>
+            <p class="version" id="firefox-version">Loading...</p>
+            <a
+              class="btn btn-primary"
+              id="firefox-link"
+              aria-label="Download Firefox extension"
+              disabled
+              >Download .xpi</a
+            >
+          </div>
+        </div>
+      </section>
+
+      <section id="endpoints-section">
+        <p class="section-title">Server Endpoints</p>
+        <div class="endpoint-list">
+          <div class="entry">
+            <span class="entry-path">/</span><span class="entry-desc">Landing page</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/token-generator.html</span
+            ><span class="entry-desc">Token generator</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/update.json</span
+            ><span class="entry-desc">Firefox addon auto-update manifest</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/manifest.json</span
+            ><span class="entry-desc">Version listing of all artifacts</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/api/versions</span
+            ><span class="entry-desc">Alias for /manifest.json</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/artifacts/&lt;file&gt;</span
+            ><span class="entry-desc">Download .zip or .xpi</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/&lt;public file&gt;</span
+            ><span class="entry-desc">Static files from <code>public/</code></span>
+          </div>
+        </div>
+      </section>
+
+      <div class="card-solo">
+        <div>
+          <h3>Token Generator</h3>
+          <p>Generate and manage quota tokens</p>
+        </div>
+        <a class="btn btn-outline" href="/token-generator.html">Open</a>
+      </div>
+
+      <p class="status" id="status"></p>
+    </div>
+
+    <script>
+      (async () => {
+        const status = document.getElementById('status');
+        try {
+          const res = await fetch('/manifest.json');
+          if (!res.ok) throw new Error('Not found');
+          const data = await res.json();
+          const { latest } = data;
+
+          const chromeEl = document.getElementById('chrome-link');
+          const chromeVer = document.getElementById('chrome-version');
+          if (latest.chrome) {
+            chromeEl.href = latest.chrome.url;
+            chromeEl.removeAttribute('disabled');
+            chromeVer.textContent = `v${latest.chrome.version}`;
+          } else {
+            chromeVer.textContent = 'Not available';
+          }
+
+          const firefoxEl = document.getElementById('firefox-link');
+          const firefoxVer = document.getElementById('firefox-version');
+          if (latest.firefox) {
+            firefoxEl.href = latest.firefox.url;
+            firefoxEl.removeAttribute('disabled');
+            firefoxVer.textContent = `v${latest.firefox.version}`;
+          } else {
+            firefoxVer.textContent = 'Not available';
+          }
+        } catch {
+          document.getElementById('chrome-version').textContent = 'Not available';
+          document.getElementById('firefox-version').textContent = 'Not available';
+          status.textContent = 'No artifacts found. Run pnpm release to build.';
+        }
+      })();
+    </script>
+  </body>
+</html>

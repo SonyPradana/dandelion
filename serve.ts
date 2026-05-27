@@ -3,7 +3,7 @@ import { readdirSync, existsSync, readFileSync, statSync } from 'fs';
 import { join, extname } from 'path';
 
 // ── Routes ──
-//   /                     → Token generator UI (redirects to /token-generator.html)
+//   /                     → Landing page (index.html)
 //   /token-generator.html → Token generator page
 //   /update.json          → Auto-update manifest (Firefox addon update)
 //   /manifest.json        → Version listing of all artifacts
@@ -157,7 +157,7 @@ async function handleRequest(req: Request): Promise<Response> {
   }
 
   // static files (token generator)
-  const staticPath = pathname === '/' ? '/token-generator.html' : pathname;
+  const staticPath = pathname === '/' ? '/index.html' : pathname;
   const publicFile = join(PUBLIC_DIR, staticPath);
   if (existsSync(publicFile)) {
     return new Response(Bun.file(publicFile));
