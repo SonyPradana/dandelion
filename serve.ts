@@ -16,10 +16,15 @@ interface Artifact {
 // --- config ---
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const ROOT = import.meta.dir!;
 const ARTIFACTS_DIR = join(ROOT, 'artifacts');
 const PUBLIC_DIR = join(ROOT, 'public');
+
+const TLS_CERT = process.env.TLS_CERT || join(ROOT, 'keys', 'localhost.pem');
+const TLS_KEY = process.env.TLS_KEY || join(ROOT, 'keys', 'localhost-key.pem');
+const hasTls = existsSync(TLS_CERT) && existsSync(TLS_KEY);
+const PROTOCOL = hasTls ? 'https' : 'http';
+const BASE_URL = process.env.BASE_URL || `${PROTOCOL}://localhost:${PORT}`;
 
 const ARTIFACT_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(crx|xpi)$/;
 
@@ -171,6 +176,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
 Bun.serve({
   port: PORT,
+  tls: hasTls ? { cert: Bun.file(TLS_CERT), key: Bun.file(TLS_KEY) } : undefined,
   async fetch(req: Request): Promise<Response> {
     const { pathname } = new URL(req.url);
     const res = await handleRequest(req);
@@ -180,7 +186,8 @@ Bun.serve({
 });
 
 console.log(`\n  Dandelion Server`);
-console.log(`  Local:   http://localhost:${PORT}/`);
+console.log(`  Local:   ${PROTOCOL}://localhost:${PORT}/`);
 console.log(`  Update:  ${BASE_URL}/update.json`);
+console.log(`  TLS:     ${hasTls ? 'enabled' : 'disabled (HTTP fallback)'}`);
 console.log(`  Chrome:  ${CHROME_ID || '(not configured)'}`);
 console.log(`  Firefox: ${FIREFOX_ID || '(not configured)'}\n`);
