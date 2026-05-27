@@ -16,18 +16,7 @@ interface Artifact {
 // --- config ---
 
 const PREFERRED_PORT = parseInt(process.env.PORT || '3000', 10);
-function findAvailablePort(preferred: number): number {
-  for (let i = 0; i < 20; i++) {
-    const port = preferred + i;
-    try {
-      const listener = Bun.listen({ port, hostname: '0.0.0.0', socket: {} });
-      listener.stop();
-      return port;
-    } catch {}
-  }
-  throw new Error(`No available port after 20 attempts starting from ${preferred}`);
-}
-const PORT = findAvailablePort(PREFERRED_PORT);
+let PORT = 0;
 const ROOT = import.meta.dir!;
 const ARTIFACTS_DIR = join(ROOT, 'artifacts');
 const PUBLIC_DIR = join(ROOT, 'public');
@@ -37,7 +26,7 @@ const TLS_KEY = process.env.TLS_KEY || join(ROOT, 'keys', 'localhost-key.pem');
 const hasTls = existsSync(TLS_CERT) && existsSync(TLS_KEY);
 const PROTOCOL = hasTls ? 'https' : 'http';
 const HOST = process.env.HOST || 'localhost';
-const BASE_URL = `${PROTOCOL}://${HOST}:${PORT}`;
+let BASE_URL = '';
 
 const ARTIFACT_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi)$/;
 
@@ -177,16 +166,27 @@ async function handleRequest(req: Request): Promise<Response> {
   return new Response('Not found', { status: 404 });
 }
 
-Bun.serve({
-  port: PORT,
-  tls: hasTls ? { cert: Bun.file(TLS_CERT), key: Bun.file(TLS_KEY) } : undefined,
-  async fetch(req: Request): Promise<Response> {
-    const { pathname } = new URL(req.url);
-    const res = await handleRequest(req);
-    console.log(`  ${req.method} ${pathname} → ${res.status}`);
-    return res;
-  },
-});
+for (let i = 0; i < 20; i++) {
+  const port = PREFERRED_PORT + i;
+  try {
+    PORT = port;
+    BASE_URL = `${PROTOCOL}://${HOST}:${port}`;
+    const server = Bun.serve({
+      port,
+      tls: hasTls ? { cert: Bun.file(TLS_CERT), key: Bun.file(TLS_KEY) } : undefined,
+      async fetch(req: Request): Promise<Response> {
+        const { pathname } = new URL(req.url);
+        const res = await handleRequest(req);
+        console.log(`  ${req.method} ${pathname} → ${res.status}`);
+        return res;
+      },
+    });
+    break;
+  } catch {
+    if (i === 19)
+      throw new Error(`No available port after 20 attempts starting from ${PREFERRED_PORT}`);
+  }
+}
 
 console.log(`\n  Dandelion Server`);
 console.log(`  Local:   ${PROTOCOL}://localhost:${PORT}/`);
