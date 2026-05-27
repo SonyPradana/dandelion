@@ -185,23 +185,20 @@ pm2 save
 [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) exposes your local server at a public HTTPS URL without opening any firewall ports.
 
 1. Install `cloudflared`:
-
    ```bash
    # https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
    ```
 
 2. Authenticate and create a tunnel:
-
    ```bash
    cloudflared tunnel login
    cloudflared tunnel create dandelion
    ```
 
 3. Configure `~/.cloudflared/config.yml`:
-
    ```yaml
    tunnel: <tunnel-id>
-   credentials-file: /root/.cloudflared/<tunnel-id>.json
+   credentials-file: ~/.cloudflared/<tunnel-id>.json
 
    ingress:
      - hostname: your-domain.com
@@ -209,17 +206,20 @@ pm2 save
      - service: http_status:404
    ```
 
-4. Route DNS and run:
-
+4. Route DNS and test:
    ```bash
    cloudflared tunnel route dandelion your-domain.com
-   cloudflared tunnel run dandelion
+   cloudflared tunnel run dandelion    # Ctrl+C to stop
    ```
 
-5. Install as a system service:
-
+5. Install as a system service (auto-start on boot):
    ```bash
-   cloudflared service install
+   sudo mkdir -p /etc/cloudflared
+   sudo cp ~/.cloudflared/config.yml /etc/cloudflared/
+   sudo cp ~/.cloudflared/<tunnel-id>.json /etc/cloudflared/
+   # edit /etc/cloudflared/config.yml → change credentials-file path to /etc/cloudflared/
+   sudo cloudflared service install
+   sudo systemctl enable --now cloudflared
    ```
 
 6. Set your `.env`:
