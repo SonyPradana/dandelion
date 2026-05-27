@@ -109,15 +109,6 @@ async function handleRequest(req: Request): Promise<Response> {
     const artifacts = scanArtifacts();
     const body: Record<string, unknown> = {};
 
-    if (CHROME_ID) {
-      const updates = artifacts
-        .filter((a) => a.browser === 'chrome')
-        .map((a) => ({ version: a.version, update_link: a.url }));
-      if (updates.length > 0) {
-        body.extensions = { [CHROME_ID]: { updates } };
-      }
-    }
-
     if (FIREFOX_ID) {
       const updates = artifacts
         .filter((a) => a.browser === 'firefox')
