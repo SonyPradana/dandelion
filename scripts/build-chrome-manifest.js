@@ -40,10 +40,6 @@ try {
     manifest.key = process.env.CHROME_EXTENSION_KEY;
   }
 
-  if (process.env.UPDATE_URL) {
-    manifest.update_url = process.env.UPDATE_URL;
-  }
-
   fs.writeFileSync(distManifestPath, JSON.stringify(manifest, null, 2));
 
   const duration = (performance.now() - start).toFixed(2);
