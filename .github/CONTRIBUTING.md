@@ -155,11 +155,29 @@ See [Deployment](#deployment) below for recommended setups.
 
 Keep the server alive across reboots with [PM2](https://pm2.keymetrics.io/):
 
-```bash
+````bash
 npm install -g pm2
 pm2 start serve.ts --interpreter bun --name dandelion
 pm2 save
 pm2 startup       # generates systemd boot command
+
+#### Maintenance
+
+Stop, pull updates, and restart (graceful):
+
+```bash
+pm2 stop dandelion                 # stop server
+git pull origin main               # pull latest code
+pm2 start dandelion                # start server again
+pm2 save                           # persist process list
+````
+
+Or restart in one step (no need to stop first):
+
+```bash
+git pull origin main
+pm2 restart dandelion
+pm2 save
 ```
 
 ### Cloudflare Tunnel
