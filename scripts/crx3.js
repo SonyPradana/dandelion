@@ -41,14 +41,14 @@ export function packCrx3(zipBuffer, privateKeyPem) {
 
 function encLen(major, len) {
   if (len < 24) return Buffer.from([(major << 5) | len]);
-  if (len < 0x100) return Buffer.from([(major << 5) | 24, len]);
-  if (len < 0x10000) {
+  if (len < 0x01_00) return Buffer.from([(major << 5) | 24, len]);
+  if (len < 0x01_00_00) {
     const b = Buffer.alloc(3);
     b[0] = (major << 5) | 25;
     b.writeUInt16BE(len, 1);
     return b;
   }
-  if (len < 0x100000000) {
+  if (len < 0x01_00_00_00_00) {
     const b = Buffer.alloc(5);
     b[0] = (major << 5) | 26;
     b.writeUInt32BE(len, 1);
@@ -65,7 +65,7 @@ function encBytes(buf) {
 }
 
 function encStr(s) {
-  const buf = Buffer.from(s, 'utf-8');
+  const buf = Buffer.from(s, 'utf8');
   return Buffer.concat([encLen(3, buf.length), buf]);
 }
 

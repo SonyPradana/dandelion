@@ -71,7 +71,7 @@ function scanArtifacts(): Artifact[] {
       } satisfies Artifact;
     })
     .filter((a): a is Artifact => a !== null)
-    .sort((a, b) => {
+    .toSorted((a, b) => {
       if (a.browser !== b.browser) return a.browser.localeCompare(b.browser);
       return cmpVer(b.version, a.version);
     });
@@ -104,7 +104,7 @@ Bun.serve({
           }
         }
         const updates = Object.values(chromeArtifacts)
-          .sort((a, b) => cmpVer(b.version, a.version))
+          .toSorted((a, b) => cmpVer(b.version, a.version))
           .map((a) => ({ version: a.version, update_link: a.url }));
         if (updates.length > 0) {
           body.extensions = { [CHROME_ID]: { updates } };

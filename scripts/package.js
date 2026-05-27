@@ -61,7 +61,7 @@ if (!target || target === 'all' || target === 'chrome') {
   console.log(`Packaging Chrome: ${crxPath}`);
 
   const zipBuffer = await zipToBuffer('dist/chrome');
-  const privPem = fs.readFileSync(path.join(root, 'keys', 'development.pem'), 'utf-8');
+  const privPem = fs.readFileSync(path.join(root, 'keys', 'development.pem'), 'utf8');
   const crxBuffer = packCrx3(zipBuffer, privPem);
 
   fs.writeFileSync(crxPath, crxBuffer);

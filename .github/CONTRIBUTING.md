@@ -39,16 +39,16 @@ pnpm verify:firefox    # runs web-ext lint
 
 Copy `.env.example` to `.env` and fill in:
 
-| Variable               | Required for    | Description                                                                     |
-| ---------------------- | --------------- | ------------------------------------------------------------------------------- |
-| `TARGET_HOST`          | build           | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`) |
-| `FIREFOX_EXTENSION_ID` | build:firefox   | Addon ID (e.g. `@dandelion`)                                                    |
-| `AMO_JWT_ISSUER`       | sign:firefox    | AMO API key issuer                                                              |
-| `AMO_JWT_SECRET`       | sign:firefox    | AMO API key secret                                                              |
-| `CHROME_EXTENSION_KEY` | build:chrome    | Base64-encoded public key (extension ID derivation)                             |
-| `UPDATE_URL`           | build, serve    | Extension update manifest URL (e.g. `https://example.com/update.json`)          |
-| `BASE_URL`             | serve           | Server public base URL (default: `http://localhost:3000`)                       |
-| `PORT`                 | serve           | Server port (default: `3000`)                                                   |
+| Variable               | Required for  | Description                                                                     |
+| ---------------------- | ------------- | ------------------------------------------------------------------------------- |
+| `TARGET_HOST`          | build         | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`) |
+| `FIREFOX_EXTENSION_ID` | build:firefox | Addon ID (e.g. `@dandelion`)                                                    |
+| `AMO_JWT_ISSUER`       | sign:firefox  | AMO API key issuer                                                              |
+| `AMO_JWT_SECRET`       | sign:firefox  | AMO API key secret                                                              |
+| `CHROME_EXTENSION_KEY` | build:chrome  | Base64-encoded public key (extension ID derivation)                             |
+| `UPDATE_URL`           | build, serve  | Extension update manifest URL (e.g. `https://example.com/update.json`)          |
+| `BASE_URL`             | serve         | Server public base URL (default: `http://localhost:3000`)                       |
+| `PORT`                 | serve         | Server port (default: `3000`)                                                   |
 
 Get AMO API keys at: https://addons.mozilla.org/en-US/developers/addon/api/key/
 
@@ -117,12 +117,12 @@ bun run serve.ts
 
 ### Endpoints
 
-| Endpoint               | Description                              |
-| ---------------------- | ---------------------------------------- |
-| `/`                    | Redirects to `token-generator.html`      |
-| `/update.json`         | Auto-update manifest (Chrome + Firefox)  |
-| `/manifest.json`       | Artifact listing + latest version        |
-| `/artifacts/<file>`    | Download `.crx` or `.xpi`                |
+| Endpoint            | Description                             |
+| ------------------- | --------------------------------------- |
+| `/`                 | Redirects to `token-generator.html`     |
+| `/update.json`      | Auto-update manifest (Chrome + Firefox) |
+| `/manifest.json`    | Artifact listing + latest version       |
+| `/artifacts/<file>` | Download `.crx` or `.xpi`               |
 
 ### Auto-Update Flow
 
