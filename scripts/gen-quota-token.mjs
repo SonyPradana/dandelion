@@ -22,16 +22,16 @@ if (!args.privateKey || !args.expiry) {
     'Usage: node scripts/gen-quota-token.mjs -k <private-key.pem> -e <expiry> -p <total_limit>',
   );
   console.error('  -k, --private-key      Path to ES256 private key PEM (required)');
-  console.error('  -e, --expiry           Duration: 90d, 12m, 1y, or date 2027-01-01 (required)');
+  console.error('  -e, --expiry           Duration: 7d, 12m, 1y, or date (required)');
   console.error('  -p, --point, --token   Total limit (default: 0 = unlimited)');
   console.error('  -d, --daily-limit      Grace daily limit after total exhausted (default: 100)');
-  console.error('  --version-allowed      Comma-separated version list (e.g. "1.0.0,1.1.0")');
+  console.error('  --version-allowed      Comma-separated version list (e.g. "1.*")');
   console.error('  --features             Comma-separated feature names');
   console.error('  --token-id             Custom token ID (default: auto-generated)');
   console.error('');
   console.error('Examples:');
   console.error(
-    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 90d -p 30000 --token-id aB3xK9mQ',
+    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 7d -p 30000 --version-allowed "1.*" --token-id aB3xK9mQ',
   );
   console.error(
     '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 12m -p 0 -d 200 --features skriningform --token-id X7pL2nR8',

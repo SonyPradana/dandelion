@@ -247,22 +247,22 @@ Extension ships with an embedded EC public key (`src/quota/public-key.js`) for v
 # Generate a quota token
 node scripts/gen-quota-token.mjs \
   -k keys/license-priv.pem \
-  -e 90d \
+  -e 7d \
   -p 30000 \
   -d 150 \
-  --version-allowed "1.0.0,1.1.0" \
+  --version-allowed "1.*" \
   --features "skriningform,skrining"
 ```
 
-| Flag                   | Description                                              |
-| ---------------------- | -------------------------------------------------------- |
-| `-k, --private-key`    | Path to ES256 private key PEM (required)                 |
-| `-e, --expiry`         | Duration: `90d`, `12m`, `1y`, or `2027-01-01` (required) |
-| `-p, --point, --token` | Total limit (0 = unlimited)                              |
-| `-d, --daily-limit`    | Grace daily limit after total exhausted (default: 100)   |
-| `--version-allowed`    | Comma-separated allowed extension versions               |
-| `--features`           | Comma-separated feature names                            |
-| `--token-id`           | Custom token ID (default: auto-generated)                |
+| Flag                   | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `-k, --private-key`    | Path to ES256 private key PEM (required)               |
+| `-e, --expiry`         | Duration: `7d`, `12m`, `1y`, or date (required)        |
+| `-p, --point, --token` | Total limit (0 = unlimited)                            |
+| `-d, --daily-limit`    | Grace daily limit after total exhausted (default: 100) |
+| `--version-allowed`    | Comma-separated allowed extension versions             |
+| `--features`           | Comma-separated feature names                          |
+| `--token-id`           | Custom token ID (default: auto-generated)              |
 
 ### Key Pair
 
