@@ -84,90 +84,103 @@ const FIREFOX_ID = process.env.FIREFOX_EXTENSION_ID || null;
 
 // --- server ---
 
+async function handleRequest(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const pathname = url.pathname;
+
+  // update manifest for browser auto-update
+  if (pathname === '/update.json') {
+    const artifacts = scanArtifacts();
+    const body: Record<string, unknown> = {};
+
+    if (CHROME_ID) {
+      const chromeArtifacts: Record<string, Artifact> = {};
+      for (const a of artifacts.filter((a) => a.browser === 'chrome')) {
+        const prev = chromeArtifacts[a.version];
+        if (!prev || extname(a.fileName) === '.crx') {
+          chromeArtifacts[a.version] = a;
+        }
+      }
+      const updates = Object.values(chromeArtifacts)
+        .toSorted((a, b) => cmpVer(b.version, a.version))
+        .map((a) => ({ version: a.version, update_link: a.url }));
+      if (updates.length > 0) {
+        body.extensions = { [CHROME_ID]: { updates } };
+      }
+    }
+
+    if (FIREFOX_ID) {
+      const updates = artifacts
+        .filter((a) => a.browser === 'firefox')
+        .map((a) => ({
+          version: a.version,
+          update_link: a.url,
+          update_hash: a.hash,
+        }));
+      if (updates.length > 0) {
+        body.addons = { [FIREFOX_ID]: { updates } };
+      }
+    }
+
+    return new Response(JSON.stringify(body, null, 2), {
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  // artifact listing + latest version
+  if (pathname === '/manifest.json' || pathname === '/api/versions') {
+    const artifacts = scanArtifacts();
+    const latest: Record<string, Artifact> = {};
+    for (const a of artifacts) {
+      const prev = latest[a.browser];
+      const sameVer = prev && cmpVer(a.version, prev.version) === 0;
+      const prefer = sameVer && extname(a.fileName) === '.crx';
+      if (!prev || cmpVer(a.version, prev.version) > 0 || prefer) {
+        latest[a.browser] = a;
+      }
+    }
+    return new Response(JSON.stringify({ artifacts, latest }, null, 2), {
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
+  // serve artifact files
+  if (pathname.startsWith('/artifacts/')) {
+    const fileName = pathname.slice('/artifacts/'.length);
+    const filePath = join(ARTIFACTS_DIR, fileName);
+    if (!existsSync(filePath) || !ARTIFACT_RE.test(fileName)) {
+      return new Response('Not found', { status: 404 });
+    }
+    return new Response(Bun.file(filePath), {
+      headers: {
+        'content-disposition': `attachment; filename="${fileName}"`,
+        'content-type': CONTENT_TYPES[extname(fileName)] || 'application/octet-stream',
+      },
+    });
+  }
+
+  // static files (token generator)
+  const staticPath = pathname === '/' ? '/token-generator.html' : pathname;
+  const publicFile = join(PUBLIC_DIR, staticPath);
+  if (existsSync(publicFile)) {
+    return new Response(Bun.file(publicFile));
+  }
+
+  return new Response('Not found', { status: 404 });
+}
+
 Bun.serve({
   port: PORT,
   async fetch(req: Request): Promise<Response> {
-    const url = new URL(req.url);
-    const pathname = url.pathname;
-
-    // update manifest for browser auto-update
-    if (pathname === '/update.json') {
-      const artifacts = scanArtifacts();
-      const body: Record<string, unknown> = {};
-
-      if (CHROME_ID) {
-        const chromeArtifacts: Record<string, Artifact> = {};
-        for (const a of artifacts.filter((a) => a.browser === 'chrome')) {
-          const prev = chromeArtifacts[a.version];
-          if (!prev || extname(a.fileName) === '.crx') {
-            chromeArtifacts[a.version] = a;
-          }
-        }
-        const updates = Object.values(chromeArtifacts)
-          .toSorted((a, b) => cmpVer(b.version, a.version))
-          .map((a) => ({ version: a.version, update_link: a.url }));
-        if (updates.length > 0) {
-          body.extensions = { [CHROME_ID]: { updates } };
-        }
-      }
-
-      if (FIREFOX_ID) {
-        const updates = artifacts
-          .filter((a) => a.browser === 'firefox')
-          .map((a) => ({
-            version: a.version,
-            update_link: a.url,
-            update_hash: a.hash,
-          }));
-        if (updates.length > 0) {
-          body.addons = { [FIREFOX_ID]: { updates } };
-        }
-      }
-
-      return new Response(JSON.stringify(body, null, 2), {
-        headers: { 'content-type': 'application/json' },
-      });
-    }
-
-    // artifact listing + latest version
-    if (pathname === '/manifest.json' || pathname === '/api/versions') {
-      const artifacts = scanArtifacts();
-      const latest: Record<string, Artifact> = {};
-      for (const a of artifacts) {
-        const prev = latest[a.browser];
-        const sameVer = prev && cmpVer(a.version, prev.version) === 0;
-        const prefer = sameVer && extname(a.fileName) === '.crx';
-        if (!prev || cmpVer(a.version, prev.version) > 0 || prefer) {
-          latest[a.browser] = a;
-        }
-      }
-      return new Response(JSON.stringify({ artifacts, latest }, null, 2), {
-        headers: { 'content-type': 'application/json' },
-      });
-    }
-
-    // serve artifact files
-    if (pathname.startsWith('/artifacts/')) {
-      const fileName = pathname.slice('/artifacts/'.length);
-      const filePath = join(ARTIFACTS_DIR, fileName);
-      if (!existsSync(filePath) || !ARTIFACT_RE.test(fileName)) {
-        return new Response('Not found', { status: 404 });
-      }
-      return new Response(Bun.file(filePath), {
-        headers: {
-          'content-disposition': `attachment; filename="${fileName}"`,
-          'content-type': CONTENT_TYPES[extname(fileName)] || 'application/octet-stream',
-        },
-      });
-    }
-
-    // static files (token generator)
-    const staticPath = pathname === '/' ? '/token-generator.html' : pathname;
-    const publicFile = join(PUBLIC_DIR, staticPath);
-    if (existsSync(publicFile)) {
-      return new Response(Bun.file(publicFile));
-    }
-
-    return new Response('Not found', { status: 404 });
+    const { pathname } = new URL(req.url);
+    const res = await handleRequest(req);
+    console.log(`  ${req.method} ${pathname} → ${res.status}`);
+    return res;
   },
 });
+
+console.log(`\n  Dandelion Server`);
+console.log(`  Local:   http://localhost:${PORT}/`);
+console.log(`  Update:  ${BASE_URL}/update.json`);
+console.log(`  Chrome:  ${CHROME_ID || '(not configured)'}`);
+console.log(`  Firefox: ${FIREFOX_ID || '(not configured)'}\n`);
