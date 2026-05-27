@@ -37,8 +37,8 @@ manifest.browser_specific_settings ||= {};
 manifest.browser_specific_settings.gecko ||= {};
 manifest.browser_specific_settings.gecko.id = firefoxId;
 
-if (process.env.BASE_URL) {
-  manifest.browser_specific_settings.gecko.update_url = `${process.env.BASE_URL}/update.json`;
+if (process.env.HOST) {
+  manifest.browser_specific_settings.gecko.update_url = `https://${process.env.HOST}/update.json`;
 }
 
 mkdirSync(outDir, { recursive: true });

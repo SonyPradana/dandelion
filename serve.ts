@@ -36,7 +36,8 @@ const TLS_CERT = process.env.TLS_CERT || join(ROOT, 'keys', 'localhost.pem');
 const TLS_KEY = process.env.TLS_KEY || join(ROOT, 'keys', 'localhost-key.pem');
 const hasTls = existsSync(TLS_CERT) && existsSync(TLS_KEY);
 const PROTOCOL = hasTls ? 'https' : 'http';
-const BASE_URL = process.env.BASE_URL || `${PROTOCOL}://localhost:${PORT}`;
+const HOST = process.env.HOST || 'localhost';
+const BASE_URL = `${PROTOCOL}://${HOST}:${PORT}`;
 
 const ARTIFACT_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi)$/;
 
