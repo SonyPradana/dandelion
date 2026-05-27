@@ -15,7 +15,19 @@ interface Artifact {
 
 // --- config ---
 
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PREFERRED_PORT = parseInt(process.env.PORT || '3000', 10);
+function findAvailablePort(preferred: number): number {
+  for (let i = 0; i < 20; i++) {
+    const port = preferred + i;
+    try {
+      const listener = Bun.listen({ port, hostname: '0.0.0.0', socket: {} });
+      listener.stop();
+      return port;
+    } catch {}
+  }
+  throw new Error(`No available port after 20 attempts starting from ${preferred}`);
+}
+const PORT = findAvailablePort(PREFERRED_PORT);
 const ROOT = import.meta.dir!;
 const ARTIFACTS_DIR = join(ROOT, 'artifacts');
 const PUBLIC_DIR = join(ROOT, 'public');
