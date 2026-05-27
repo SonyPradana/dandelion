@@ -26,10 +26,10 @@ const hasTls = existsSync(TLS_CERT) && existsSync(TLS_KEY);
 const PROTOCOL = hasTls ? 'https' : 'http';
 const BASE_URL = process.env.BASE_URL || `${PROTOCOL}://localhost:${PORT}`;
 
-const ARTIFACT_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(crx|xpi)$/;
+const ARTIFACT_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi)$/;
 
 const CONTENT_TYPES: Record<string, string> = {
-  '.crx': 'application/x-chrome-extension',
+  '.zip': 'application/zip',
   '.xpi': 'application/x-xpinstall',
 };
 
@@ -99,15 +99,8 @@ async function handleRequest(req: Request): Promise<Response> {
     const body: Record<string, unknown> = {};
 
     if (CHROME_ID) {
-      const chromeArtifacts: Record<string, Artifact> = {};
-      for (const a of artifacts.filter((a) => a.browser === 'chrome')) {
-        const prev = chromeArtifacts[a.version];
-        if (!prev || extname(a.fileName) === '.crx') {
-          chromeArtifacts[a.version] = a;
-        }
-      }
-      const updates = Object.values(chromeArtifacts)
-        .toSorted((a, b) => cmpVer(b.version, a.version))
+      const updates = artifacts
+        .filter((a) => a.browser === 'chrome')
         .map((a) => ({ version: a.version, update_link: a.url }));
       if (updates.length > 0) {
         body.extensions = { [CHROME_ID]: { updates } };
@@ -137,10 +130,7 @@ async function handleRequest(req: Request): Promise<Response> {
     const artifacts = scanArtifacts();
     const latest: Record<string, Artifact> = {};
     for (const a of artifacts) {
-      const prev = latest[a.browser];
-      const sameVer = prev && cmpVer(a.version, prev.version) === 0;
-      const prefer = sameVer && extname(a.fileName) === '.crx';
-      if (!prev || cmpVer(a.version, prev.version) > 0 || prefer) {
+      if (!latest[a.browser] || cmpVer(a.version, latest[a.browser].version) > 0) {
         latest[a.browser] = a;
       }
     }
