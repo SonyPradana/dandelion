@@ -116,6 +116,18 @@ cp .env.example .env   # ensure HOST, PORT are configured
 bun run serve.ts
 ```
 
+### TLS Setup
+
+The server auto-detects TLS certs at `keys/localhost.pem` and `keys/localhost-key.pem`.
+Generate them with [mkcert](https://github.com/FiloSottile/mkcert) for local development:
+
+```bash
+mkcert -install                          # one-time CA install
+mkcert -key-file keys/localhost-key.pem -cert-file keys/localhost.pem localhost 127.0.0.1
+```
+
+For production, see [Deployment](#deployment) below.
+
 ### Endpoints
 
 | Endpoint                | Description                             |
@@ -134,7 +146,71 @@ Firefox declares `gecko.update_url` in its manifest → Firefox polls `/update.j
 
 ### Production
 
-For production, run behind a reverse proxy (nginx, Caddy, Cloudflare Tunnel) to add HTTPS — required by Firefox for extension auto-updates. See [systemd + Cloudflare Tunnel](#) setup below.
+The server must be served over HTTPS — required by Firefox for extension auto-updates.
+See [Deployment](#deployment) below for recommended setups.
+
+## Deployment
+
+### PM2 + Bun
+
+Keep the server alive across reboots with [PM2](https://pm2.keymetrics.io/):
+
+```bash
+npm install -g pm2
+pm2 start serve.ts --interpreter bun --name dandelion
+pm2 save
+pm2 startup       # generates systemd boot command
+```
+
+### Cloudflare Tunnel
+
+[Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) exposes your local server at a public HTTPS URL without opening any firewall ports.
+
+1. Install `cloudflared`:
+
+   ```bash
+   # https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+   ```
+
+2. Authenticate and create a tunnel:
+
+   ```bash
+   cloudflared tunnel login
+   cloudflared tunnel create dandelion
+   ```
+
+3. Configure `~/.cloudflared/config.yml`:
+
+   ```yaml
+   tunnel: <tunnel-id>
+   credentials-file: /root/.cloudflared/<tunnel-id>.json
+
+   ingress:
+     - hostname: your-domain.com
+       service: http://localhost:3000
+     - service: http_status:404
+   ```
+
+4. Route DNS and run:
+
+   ```bash
+   cloudflared tunnel route dandelion your-domain.com
+   cloudflared tunnel run dandelion
+   ```
+
+5. Install as a system service:
+
+   ```bash
+   cloudflared service install
+   ```
+
+6. Set your `.env`:
+   ```env
+   HOST=localhost
+   PORT=3000
+   ```
+
+The tunnel serves your server at `https://your-domain.com` — no ports to open.
 
 ## Versioning
 

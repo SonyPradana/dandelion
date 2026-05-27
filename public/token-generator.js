@@ -1,3 +1,20 @@
+if (!crypto.subtle) {
+  document.body.innerHTML = `
+    <div class="container" style="text-align:center;padding-top:4rem">
+      <h1>Dandelion</h1>
+      <p class="subtitle">Token Generator</p>
+      <p style="color:#f87171;margin-top:2rem">
+        Token generation requires a secure context (HTTPS or localhost).
+      </p>
+      <p style="color:#71717a;margin-top:.5rem">
+        Access via <a href="/" style="color:#6366f1">localhost</a>
+        or enable TLS / Cloudflare Tunnel.
+      </p>
+    </div>
+  `;
+  throw new Error('crypto.subtle unavailable — not a secure context');
+}
+
 import { SignJWT, importPKCS8 } from 'https://esm.sh/jose@6.2.3';
 
 const privateKeyEl = document.getElementById('privateKey');
