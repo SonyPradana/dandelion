@@ -35,6 +35,7 @@ const TLS_KEY = process.env.TLS_KEY || join(ROOT, 'keys', 'localhost-key.pem');
 const hasTls = existsSync(TLS_CERT) && existsSync(TLS_KEY);
 const PROTOCOL = hasTls ? 'https' : 'http';
 const HOST = process.env.HOST || 'localhost';
+const PUBLIC_URL = process.env.PUBLIC_URL || '';
 let BASE_URL = '';
 
 const ARTIFACT_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi)$/;
@@ -70,7 +71,7 @@ function fileHashHex(filePath: string): string {
   return createHash('sha256').update(readFileSync(filePath)).digest('hex');
 }
 
-function scanArtifacts(): Artifact[] {
+function scanArtifacts(origin: string): Artifact[] {
   if (!existsSync(ARTIFACTS_DIR)) return [];
   return readdirSync(ARTIFACTS_DIR)
     .map((f) => {
@@ -81,7 +82,7 @@ function scanArtifacts(): Artifact[] {
         fileName: f,
         browser: m[1],
         version: m[2],
-        url: `${BASE_URL}/artifacts/${encodeURIComponent(f)}`,
+        url: `${origin}/artifacts/${encodeURIComponent(f)}`,
         hash: `sha256:${fileHashHex(filePath)}`,
         size: statSync(filePath).size,
       } satisfies Artifact;
@@ -106,7 +107,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
   // update manifest for browser auto-update
   if (pathname === '/update.json') {
-    const artifacts = scanArtifacts();
+    const artifacts = scanArtifacts(PUBLIC_URL || BASE_URL);
     const body: Record<string, unknown> = {};
 
     if (FIREFOX_ID) {
@@ -129,7 +130,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
   // artifact listing + latest version
   if (pathname === '/manifest.json' || pathname === '/api/versions') {
-    const artifacts = scanArtifacts();
+    const artifacts = scanArtifacts(PUBLIC_URL || BASE_URL);
     const latest: Record<string, Artifact> = {};
     for (const a of artifacts) {
       if (!latest[a.browser] || cmpVer(a.version, latest[a.browser].version) > 0) {
