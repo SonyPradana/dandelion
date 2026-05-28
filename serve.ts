@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { readdirSync, existsSync, readFileSync, statSync } from 'fs';
+import { readdirSync, existsSync, readFileSync, statSync, watch } from 'fs';
 import { join, extname } from 'path';
 
 // ── Routes ──
@@ -35,6 +34,7 @@ const TLS_KEY = process.env.TLS_KEY || join(ROOT, 'keys', 'localhost-key.pem');
 const hasTls = existsSync(TLS_CERT) && existsSync(TLS_KEY);
 const PROTOCOL = hasTls ? 'https' : 'http';
 const HOST = process.env.HOST || 'localhost';
+
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 let BASE_URL = '';
 
@@ -44,6 +44,21 @@ const CONTENT_TYPES: Record<string, string> = {
   '.zip': 'application/zip',
   '.xpi': 'application/x-xpinstall',
 };
+
+const ALLOWED_STATIC_EXT = new Set([
+  '.html',
+  '.js',
+  '.css',
+  '.json',
+  '.ico',
+  '.png',
+  '.svg',
+  '.webp',
+  '.woff',
+  '.woff2',
+  '.txt',
+  '.map',
+]);
 
 // --- helpers ---
 
@@ -60,18 +75,33 @@ function cmpVer(a: string, b: string): number {
 function chromeExtensionId(): string | null {
   const key = process.env.CHROME_EXTENSION_KEY;
   if (!key) return null;
-  const bytes = Buffer.from(key, 'base64');
-  const hash = createHash('sha256').update(bytes).digest();
+  const hasher = new Bun.CryptoHasher('sha256');
+  hasher.update(Buffer.from(key, 'base64'));
+  const hash = Buffer.from(hasher.digest() as ArrayBuffer);
   return Array.from(hash.subarray(0, 16))
     .map((b) => String.fromCharCode(97 + (b >> 4)) + String.fromCharCode(97 + (b & 0xf)))
     .join('');
 }
 
 function fileHashHex(filePath: string): string {
-  return createHash('sha256').update(readFileSync(filePath)).digest('hex');
+  const hasher = new Bun.CryptoHasher('sha256');
+  hasher.update(readFileSync(filePath));
+  return hasher.digest('hex') as string;
 }
 
-function scanArtifacts(origin: string): Artifact[] {
+// --- artifact cache + fs.watch invalidation ---
+
+let _cache: Artifact[] | null = null;
+
+function invalidateCache(): void {
+  _cache = null;
+}
+
+if (existsSync(ARTIFACTS_DIR)) {
+  watch(ARTIFACTS_DIR, { persistent: false }, invalidateCache);
+}
+
+function buildArtifacts(origin: string): Artifact[] {
   if (!existsSync(ARTIFACTS_DIR)) return [];
   return readdirSync(ARTIFACTS_DIR)
     .map((f) => {
@@ -94,43 +124,51 @@ function scanArtifacts(origin: string): Artifact[] {
     });
 }
 
+function getArtifacts(): Artifact[] {
+  return (_cache ??= buildArtifacts(PUBLIC_URL || BASE_URL));
+}
+
+function findArtifact(fileName: string): Artifact | undefined {
+  return getArtifacts().find((a) => a.fileName === fileName);
+}
+
 // --- pre-computed IDs ---
 
 const CHROME_ID = chromeExtensionId();
 const FIREFOX_ID = process.env.FIREFOX_EXTENSION_ID || null;
 
+// --- response helpers ---
+
+function notFound(): Response {
+  return new Response('Not found', { status: 404 });
+}
+
 // --- server ---
 
 async function handleRequest(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const pathname = url.pathname;
+  const { pathname } = new URL(req.url);
 
-  // update manifest for browser auto-update
   if (pathname === '/update.json') {
-    const artifacts = scanArtifacts(PUBLIC_URL || BASE_URL);
     const body: Record<string, unknown> = {};
-
     if (FIREFOX_ID) {
-      const updates = artifacts
+      const updates = getArtifacts()
         .filter((a) => a.browser === 'firefox')
-        .map((a) => ({
-          version: a.version,
-          update_link: a.url,
-          update_hash: a.hash,
-        }));
+        .map(({ version, url, hash }) => ({ version, update_link: url, update_hash: hash }));
       if (updates.length > 0) {
         body.addons = { [FIREFOX_ID]: { updates } };
       }
     }
-
     return new Response(JSON.stringify(body, null, 2), {
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'application/json',
+        'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+      },
     });
   }
 
-  // artifact listing + latest version
+  // ── artifact listing + latest version ──────────────────────────────
   if (pathname === '/manifest.json' || pathname === '/api/versions') {
-    const artifacts = scanArtifacts(PUBLIC_URL || BASE_URL);
+    const artifacts = getArtifacts();
     const latest: Record<string, Artifact> = {};
     for (const a of artifacts) {
       if (!latest[a.browser] || cmpVer(a.version, latest[a.browser].version) > 0) {
@@ -138,33 +176,58 @@ async function handleRequest(req: Request): Promise<Response> {
       }
     }
     return new Response(JSON.stringify({ artifacts, latest }, null, 2), {
-      headers: { 'content-type': 'application/json' },
-    });
-  }
-
-  // serve artifact files
-  if (pathname.startsWith('/artifacts/')) {
-    const fileName = pathname.slice('/artifacts/'.length);
-    const filePath = join(ARTIFACTS_DIR, fileName);
-    if (!existsSync(filePath) || !ARTIFACT_RE.test(fileName)) {
-      return new Response('Not found', { status: 404 });
-    }
-    return new Response(Bun.file(filePath), {
       headers: {
-        'content-disposition': `attachment; filename="${fileName}"`,
-        'content-type': CONTENT_TYPES[extname(fileName)] || 'application/octet-stream',
+        'content-type': 'application/json',
+        'cache-control': 'public, max-age=300, stale-while-revalidate=60',
       },
     });
   }
 
-  // static files (token generator)
-  const staticPath = pathname === '/' ? '/index.html' : pathname;
-  const publicFile = join(PUBLIC_DIR, staticPath);
-  if (existsSync(publicFile)) {
-    return new Response(Bun.file(publicFile));
+  // ── serve artifact files ────────────────────────────────────────────
+  if (pathname.startsWith('/artifacts/')) {
+    const raw = pathname.slice('/artifacts/'.length);
+
+    // path traversal guard (raw catches unencoded, fileName catches encoded)
+    if (raw.includes('/') || raw.includes('..')) return notFound();
+    const fileName = decodeURIComponent(raw);
+    if (fileName.includes('/') || fileName.includes('..')) return notFound();
+    if (!ARTIFACT_RE.test(fileName)) return notFound();
+
+    const filePath = join(ARTIFACTS_DIR, fileName);
+    if (!existsSync(filePath)) return notFound();
+
+    // ── ETag ──
+    const artifact = findArtifact(fileName);
+    const etag = artifact ? `"${artifact.hash.replace('sha256:', '')}"` : null;
+
+    // Conditional GET — 304 Not Modified
+    if (etag && req.headers.get('if-none-match') === etag) {
+      return new Response(null, {
+        status: 304,
+        headers: { etag },
+      });
+    }
+
+    const ext = extname(fileName);
+    return new Response(Bun.file(filePath), {
+      headers: {
+        'content-type': CONTENT_TYPES[ext] ?? 'application/octet-stream',
+        'content-disposition': `attachment; filename="${fileName}"`,
+        'content-length': String(artifact?.size ?? statSync(filePath).size),
+        'cache-control': 'public, max-age=31536000, immutable',
+        ...(etag ? { etag } : {}),
+      },
+    });
   }
 
-  return new Response('Not found', { status: 404 });
+  const staticPath = pathname === '/' ? '/index.html' : pathname;
+
+  if (!ALLOWED_STATIC_EXT.has(extname(staticPath))) return notFound();
+
+  const publicFile = join(PUBLIC_DIR, staticPath);
+  if (existsSync(publicFile)) return new Response(Bun.file(publicFile));
+
+  return notFound();
 }
 
 for (let i = 0; i < 20; i++) {
@@ -172,7 +235,7 @@ for (let i = 0; i < 20; i++) {
   try {
     PORT = port;
     BASE_URL = `${PROTOCOL}://${HOST}:${port}`;
-    const server = Bun.serve({
+    Bun.serve({
       port,
       tls: hasTls ? { cert: Bun.file(TLS_CERT), key: Bun.file(TLS_KEY) } : undefined,
       async fetch(req: Request): Promise<Response> {
@@ -184,14 +247,16 @@ for (let i = 0; i < 20; i++) {
     });
     break;
   } catch {
-    if (i === 19)
+    if (i === 19) {
       throw new Error(`No available port after 20 attempts starting from ${PREFERRED_PORT}`);
+    }
   }
 }
 
 console.log(`\n  Dandelion Server`);
 console.log(`  Local:   ${PROTOCOL}://localhost:${PORT}/`);
-console.log(`  Update:  ${BASE_URL}/update.json`);
+console.log(`  Public:  ${PUBLIC_URL || '(not configured, using local URL)'}`);
+console.log(`  Update:  ${PUBLIC_URL || BASE_URL}/update.json`);
 console.log(`  TLS:     ${hasTls ? 'enabled' : 'disabled (HTTP fallback)'}`);
 console.log(`  Chrome:  ${CHROME_ID || '(not configured)'}`);
 console.log(`  Firefox: ${FIREFOX_ID || '(not configured)'}\n`);
