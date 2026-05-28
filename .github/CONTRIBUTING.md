@@ -355,7 +355,7 @@ Without `await init()`, `getStatus()` returns `isFreePlan: true` (default state)
 
 | Scenario                       | Total limit | Daily cap                |
 | ------------------------------ | ----------- | ------------------------ |
-| Free Tier (no token / invalid) | Unlimited   | 100/day                  |
+| Free Tier (no token / invalid) | Unlimited   | 50/day                   |
 | Pro Tier, within total limit   | From token  | Unlimited                |
 | Pro Tier, total exhausted      | —           | `daily_limit` from token |
 
