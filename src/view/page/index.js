@@ -175,6 +175,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         setConfig(loadedConfig);
       },
     });
+
+    const panelPosition = config.panelPosition || 'top-right';
+    const posBtns = document.querySelectorAll('.pos-option');
+    const activePosBtn = document.querySelector(`.pos-option[data-pos="${panelPosition}"]`);
+    if (activePosBtn) activePosBtn.classList.add('active');
+
+    posBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        posBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
   });
 
   const saveConfigBtn = document.getElementById('save-config-btn');
@@ -208,6 +220,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         parseInt(notCheckedAutomationDelayInput.value) || 2000;
       profileSettings.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
       profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
+
+      const activePosBtn = document.querySelector('.pos-option.active');
+      if (activePosBtn) {
+        loadedConfig.panelPosition = activePosBtn.dataset.pos;
+      }
 
       setConfig(loadedConfig);
 
