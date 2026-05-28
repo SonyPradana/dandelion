@@ -51,7 +51,7 @@ export class ProfileManager {
         domTimeout: 5000,
       },
       skrining: { url: '' },
-      zenMode: { domTimeout: 5000 },
+      zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
     };
 
     this.render();

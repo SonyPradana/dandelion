@@ -36,6 +36,10 @@
               <span class="tab-icon">✅</span>
               <span class="tab-label">Tidak Periksa</span>
             </button>
+            <button class="tab-btn" data-tab="zen-mode">
+              <span class="tab-icon">🧘</span>
+              <span class="tab-label">Mode Zen</span>
+            </button>
           </div>
 
           <div class="tab-divider"></div>
@@ -237,6 +241,28 @@
                     max="15000"
                   />
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="tab-pane" id="tab-zen-mode">
+            <div class="pane-header">🧘 Mode Zen</div>
+            <div class="pane-body">
+              <div class="form-group">
+                <div class="checkbox-item">
+                  <input type="checkbox" id="zen-mode-enabled" />
+                  <label for="zen-mode-enabled">Aktifkan Asisten Zen Mode</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="zen-mode-timeout">Waktu Tunggu (ms)</label>
+                <input
+                  type="number"
+                  id="zen-mode-timeout"
+                  placeholder="3500"
+                  min="500"
+                  max="30000"
+                />
               </div>
             </div>
           </section>

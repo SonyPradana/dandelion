@@ -112,6 +112,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
+  const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
+  const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
@@ -143,6 +145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
+
+    const zm = profileSettings.zenMode || {};
+    zenModeEnabledCheckbox.checked = zm.enabled !== false;
+    zenModeTimeoutInput.value = zm.timeout || 3500;
   }
 
   getFullConfig().then((config) => {
@@ -212,6 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
+
+      if (!profileSettings.zenMode) profileSettings.zenMode = {};
+      profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;
+      profileSettings.zenMode.timeout = Math.min(30_000, Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000));
 
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;

@@ -106,4 +106,101 @@ export const notify = {
 
     return { panel, remove };
   },
+
+  /**
+   * Countdown notification with progress bar and auto-OK on timeout.
+   * Returns { promise, dismiss } where promise resolves true (OK/timeout) or false (dismiss).
+   */
+  countdown(title, message, duration = 5000) {
+    let resolved = false;
+    let timer = null;
+    let _cleanup = null;
+    let _resolve = null;
+
+    const promise = new Promise((resolve) => {
+      _resolve = resolve;
+
+      const id = `dandelion-countdown-${Date.now()}`;
+      const { panel, setHeader, remove } = createBasePanel(id);
+      let remaining = Math.ceil(duration / 1000);
+
+      panel.innerHTML = `${setHeader(title, '#60a5fa')}`;
+
+      if (message) {
+        const msgEl = document.createElement('div');
+        msgEl.style.cssText =
+          'font-size: 11px; line-height: 1.4; opacity: 0.9;';
+        msgEl.textContent = message;
+        panel.appendChild(msgEl);
+      }
+
+      const progressContainer = document.createElement('div');
+      progressContainer.style.cssText =
+        'width: 100%; height: 3px; background: rgba(255,255,255,0.12); border-radius: 2px; margin: 6px 0; overflow: hidden;';
+
+      const progressFill = document.createElement('div');
+      progressFill.style.cssText =
+        'width: 100%; height: 100%; background: #60a5fa; border-radius: 2px; transition: width ' +
+        duration +
+        'ms linear;';
+
+      progressContainer.appendChild(progressFill);
+      panel.appendChild(progressContainer);
+
+      const btnContainer = document.createElement('div');
+      btnContainer.style.display = 'flex';
+      btnContainer.style.gap = '5px';
+
+      const okBtn = createPanelButton(`OK (${remaining}s)`, 'success');
+      okBtn.style.flex = '1';
+
+      const dismissBtn = createPanelButton('Dismiss', 'default');
+      dismissBtn.style.flex = '1';
+
+      btnContainer.appendChild(okBtn);
+      btnContainer.appendChild(dismissBtn);
+      panel.appendChild(btnContainer);
+
+      _cleanup = () => {
+        if (resolved) return;
+        resolved = true;
+        clearInterval(timer);
+        remove();
+      };
+
+      okBtn.onclick = () => {
+        if (resolved) return;
+        _cleanup();
+        _resolve(true);
+      };
+
+      dismissBtn.onclick = () => {
+        if (resolved) return;
+        _cleanup();
+        _resolve(false);
+      };
+
+      requestAnimationFrame(() => {
+        progressFill.style.width = '0%';
+      });
+
+      timer = setInterval(() => {
+        remaining--;
+        okBtn.textContent = `OK (${remaining}s)`;
+        if (remaining <= 0 && !resolved) {
+          _cleanup();
+          _resolve(true);
+        }
+      }, 1000);
+    });
+
+    return {
+      promise,
+      dismiss() {
+        if (resolved) return;
+        _cleanup();
+        _resolve(false);
+      },
+    };
+  },
 };
