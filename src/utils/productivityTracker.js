@@ -8,7 +8,7 @@ export const WEIGHT_VERSION = 1;
 export const WEIGHTS = { radio: 1, freetext: 1, dropdown: 1, formNotChecked: 5, formZen: 5 };
 export const MONTHLY_TARGET = 30_000;
 export const TARGET_MODE = 'weekly';
-export const DAILY_LIMIT = 6600;
+export const DAILY_LIMIT = 13_200;
 
 function getWeights(data) {
   return data._meta?.weights || WEIGHTS;
