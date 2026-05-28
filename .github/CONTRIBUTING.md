@@ -65,6 +65,25 @@ copy-static.js        → dist/chrome/ (HTML, CSS, icons)
 build-chrome-manifest.js → dist/chrome/manifest.json
 ```
 
+The `CHROME_EXTENSION_KEY` environment variable injects a `manifest.key` into
+`manifest.json` during this step. This makes the Chrome extension ID
+**deterministic** — without it Chrome generates a random ID on every load.
+
+The key lives in `keys/development.pem` (RSA private key). Generate it once:
+
+```bash
+# One-time: extract public key → base64 → paste into .env as CHROME_EXTENSION_KEY
+openssl rsa -pubout -in keys/development.pem | openssl base64 -A
+```
+
+After the value is saved in `.env`, the PEM file is no longer needed — only
+`CHROME_EXTENSION_KEY` is read at build time and by the update server for
+extension ID derivation.
+
+**If the PEM and/or `CHROME_EXTENSION_KEY` are both lost**, generate a new key
+pair — the extension ID will change and existing installs become a separate
+extension.
+
 ### Firefox
 
 ```
