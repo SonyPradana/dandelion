@@ -545,6 +545,90 @@ body {
   text-align: center;
 }
 
+/* ── Panel Position Selector ── */
+.panel-position-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-width: 260px;
+}
+
+.pos-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pos-option:hover {
+  border-color: #a5b4fc;
+  background: #f5f3ff;
+}
+
+.pos-option.active {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.pos-preview {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #f3f4f6;
+  border-radius: 6px;
+  display: flex;
+  padding: 8px;
+}
+
+.pos-option[data-pos='top-left'] .pos-preview {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.pos-option[data-pos='top-right'] .pos-preview {
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.pos-option[data-pos='bottom-left'] .pos-preview {
+  justify-content: flex-start;
+  align-items: flex-end;
+}
+
+.pos-option[data-pos='bottom-right'] .pos-preview {
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.pos-dot {
+  width: 22px;
+  height: 16px;
+  background: #4f46e5;
+  border-radius: 3px;
+  display: block;
+  transition: box-shadow 0.2s;
+}
+
+.pos-option.active .pos-dot {
+  box-shadow: 0 0 8px rgba(79, 70, 229, 0.6);
+}
+
+.pos-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+}
+
+.pos-option.active .pos-label {
+  color: #4f46e5;
+}
+
 /* ── Mobile ── */
 @media (max-width: 639px) {
   .sidebar {

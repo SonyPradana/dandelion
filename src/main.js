@@ -1,13 +1,17 @@
 import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
-import { getAgreement, getActiveConfig } from './configuration.js';
+import { getAgreement, getActiveConfig, getFullConfig } from './configuration.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
 import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quota-manager.js';
+import { controlPanel } from './components/controlPanel.js';
 
 async function main() {
   const agreed = await getAgreement();
   if (!agreed) return;
+
+  const config = await getFullConfig();
+  controlPanel.setPosition(config.panelPosition || 'top-right');
 
   await quotaInit();
 
