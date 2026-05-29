@@ -221,7 +221,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.zenMode) profileSettings.zenMode = {};
       profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;
-      profileSettings.zenMode.timeout = Math.min(30_000, Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000));
+      profileSettings.zenMode.timeout = Math.min(
+        30_000,
+        Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000),
+      );
 
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;
