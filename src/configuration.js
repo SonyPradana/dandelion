@@ -23,7 +23,7 @@ const DEFAULT_CONFIG = {
         domTimeout: 5000,
       },
       skrining: { url: '' },
-      zenMode: { domTimeout: 5000 },
+      zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
     },
     profile2: {
       name: 'Profile 2',
@@ -44,7 +44,7 @@ const DEFAULT_CONFIG = {
         domTimeout: 5000,
       },
       skrining: { url: '' },
-      zenMode: { domTimeout: 5000 },
+      zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
     },
   },
 };
@@ -117,6 +117,8 @@ export function migrateConfig(raw) {
         },
         zenMode: {
           domTimeout: 5000,
+          enabled: false,
+          timeout: 5000,
         },
       };
     }

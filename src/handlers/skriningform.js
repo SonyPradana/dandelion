@@ -14,11 +14,16 @@ import { notify } from '../components/notification';
 
 /**
  * ⚠️ Legal / UX Notice:
- * This button only trigger local form filling.
- * The use must consciously press the button to perform the action.
+ * This button only triggers local form filling.
+ * The user must consciously press the button to perform the action.
+ *
+ * Zen Mode Asist auto-fill is optional and can be disabled in settings.
+ * The countdown can be dismissed or overridden by manually pressing the button,
+ * so the user always retains control over the action.
  */
 export async function initializeSkriningForm() {
   let isDebugEnabled = false; // Initial state is off
+  let dismissCountdown = null;
 
   const tombol = button('dandelion-auto-fill');
   const profileIndicator = await createProfileComponent();
@@ -75,48 +80,69 @@ export async function initializeSkriningForm() {
 
     controlPanel.mount(zenToggle, 2);
     controlPanel.mount(skipBtn, 2);
+
+    const activeConfig = await getActiveConfig();
+    const zenConfig = activeConfig.zenMode || {};
+    if (zenConfig.enabled !== false) {
+      const timeout = Math.min(30_000, Math.max(500, zenConfig.timeout || 5000));
+      const cd = notify.countdown('Zen Mode Asist', '⏳ menunggu...', timeout);
+      dismissCountdown = cd.dismiss;
+      cd.promise.then(async (result) => {
+        dismissCountdown = null;
+        if (result) {
+          await performFormFill();
+        }
+      });
+    }
+  }
+
+  async function performFormFill() {
+    if (dismissCountdown) {
+      dismissCountdown();
+      dismissCountdown = null;
+    }
+
+    const config = await getActiveConfig();
+    const fs = config.formSkrining || {};
+    const radioButtonKeywords =
+      (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
+    const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
+    const pinneds = fs.pinneds || {};
+    const excludes = [
+      ...((fs.excludes && fs.excludes.split(';')) || []),
+      ...Object.keys(pinneds),
+    ];
+
+    const result = await processWithRecursion(
+      radioButtonKeywords,
+      dropdownKeywords,
+      pinneds,
+      excludes,
+    );
+
+    await incrementBatch({
+      radio: result.radio,
+      dropdown: result.dropdown,
+      freetext: result.freetext,
+    });
+
+    notify.info('Selesai', `Berhasil, ${result.total} ditemukan.`, 2500);
+
+    if (document.activeElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
+    if (result.total > 0) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth',
+        });
+      }, 100);
+    }
   }
 
   if (tombol) {
-    tombol.addEventListener('click', async () => {
-      const config = await getActiveConfig();
-      const fs = config.formSkrining || {};
-      const radioButtonKeywords =
-        (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
-      const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
-      const pinneds = fs.pinneds || {};
-      const excludes = [
-        ...((fs.excludes && fs.excludes.split(';')) || []),
-        ...Object.keys(pinneds),
-      ];
-
-      const result = await processWithRecursion(
-        radioButtonKeywords,
-        dropdownKeywords,
-        pinneds,
-        excludes,
-      );
-
-      await incrementBatch({
-        radio: result.radio,
-        dropdown: result.dropdown,
-        freetext: result.freetext,
-      });
-
-      notify.info('Selesai', `Berhasil, ${result.total} ditemukan.`, 2500);
-
-      if (document.activeElement && document.activeElement !== document.body) {
-        document.activeElement.blur();
-      }
-      if (result.total > 0) {
-        setTimeout(() => {
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth',
-          });
-        }, 100);
-      }
-    });
+    tombol.addEventListener('click', performFormFill);
     controlPanel.mount(tombol, 1);
     controlPanel.mount(profileIndicator, 4);
   }
