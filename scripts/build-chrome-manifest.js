@@ -16,7 +16,16 @@ const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), '
 try {
   const manifestString = fs.readFileSync(srcManifestPath, 'utf8');
   const manifest = JSON.parse(manifestString);
-  manifest.version = pkg.version.replace(/-.*$/, '');
+
+  if (process.env.NIGHTLY === 'true') {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    manifest.version = `${pkg.version.replace(/-.*$/, '')}.${y}${m}${d}`;
+  } else {
+    manifest.version = pkg.version.replace(/-.*$/, '');
+  }
 
   fs.mkdirSync(path.dirname(distManifestPath), { recursive: true });
 

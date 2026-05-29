@@ -164,6 +164,11 @@
         color: #71717a;
         font-size: 0.85rem;
       }
+      .nightly-desc {
+        font-size: 0.75rem;
+        color: #fbbf24;
+        margin-bottom: 1rem;
+      }
       @media (max-width: 500px) {
         .downloads {
           flex-direction: column;
@@ -210,6 +215,18 @@
               >Download .xpi</a
             >
           </div>
+        </div>
+      </section>
+
+      <section id="nightly-section">
+        <p class="section-title">Nightly Builds</p>
+        <p class="nightly-desc">Unstable — use at your own risk</p>
+        <div class="card-solo" id="chrome-nightly-card">
+          <div>
+            <h3>Chrome</h3>
+            <p class="version" id="chrome-nightly-version" style="margin-bottom: 0">Loading...</p>
+          </div>
+          <a class="btn btn-outline" id="chrome-nightly-link" disabled>Download Nightly</a>
         </div>
       </section>
 
@@ -285,9 +302,19 @@
           } else {
             firefoxVer.textContent = 'Not available';
           }
+          const chromeNtEl = document.getElementById('chrome-nightly-link');
+          const chromeNtVer = document.getElementById('chrome-nightly-version');
+          if (data.nightly?.chrome) {
+            chromeNtEl.href = data.nightly.chrome.url;
+            chromeNtEl.removeAttribute('disabled');
+            chromeNtVer.textContent = data.nightly.chrome.version;
+          } else {
+            chromeNtVer.textContent = 'Not available';
+          }
         } catch {
           document.getElementById('chrome-version').textContent = 'Not available';
           document.getElementById('firefox-version').textContent = 'Not available';
+          document.getElementById('chrome-nightly-version').textContent = 'Not available';
           status.textContent = 'No artifacts found. Run pnpm release to build.';
         }
       })();
