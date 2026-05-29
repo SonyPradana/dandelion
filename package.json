@@ -19,6 +19,7 @@
     "build": "pnpm build:chrome && pnpm build:firefox",
     "sign:firefox": "node scripts/sign-firefox.js",
     "release:chrome": "pnpm build:chrome && node scripts/package.js chrome",
+    "release:chrome:nightly": "pnpm clean:chrome && cross-env OUTPUT_DIR=dist/chrome NIGHTLY=true rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-chrome-manifest.js && node scripts/package.js chrome-nightly",
     "release:firefox": "pnpm build:firefox && pnpm sign:firefox && node scripts/package.js firefox",
     "release": "pnpm build && pnpm sign:firefox && node scripts/package.js all",
     "verify:firefox": "web-ext lint --source-dir dist/firefox"

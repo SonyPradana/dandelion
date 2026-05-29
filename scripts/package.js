@@ -67,6 +67,17 @@ if (!target || target === 'all' || target === 'chrome') {
   await compress('dist/chrome', zipPath);
 }
 
+// Chrome Nightly (no version in filename, date-stamped)
+if (target === 'chrome-nightly') {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  const zipPath = path.join(artifactsDir, `${name}-chrome-nightly-${y}${m}${d}.zip`);
+  console.log(`Packaging Chrome Nightly: ${zipPath}`);
+  await compress('dist/chrome', zipPath);
+}
+
 // Firefox (signed .xpi — auto-update via server)
 if (!target || target === 'all' || target === 'firefox') {
   copySignedXpi();

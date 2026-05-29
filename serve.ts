@@ -38,7 +38,8 @@ const HOST = process.env.HOST || 'localhost';
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 let BASE_URL = '';
 
-const ARTIFACT_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi)$/;
+const STABLE_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi)$/;
+const NIGHTLY_RE = /^dandelion-(chrome|firefox)-nightly-(\d{8})\.(zip|xpi)$/;
 
 const CONTENT_TYPES: Record<string, string> = {
   '.zip': 'application/zip',
@@ -105,13 +106,15 @@ function buildArtifacts(origin: string): Artifact[] {
   if (!existsSync(ARTIFACTS_DIR)) return [];
   return readdirSync(ARTIFACTS_DIR)
     .map((f) => {
-      const m = f.match(ARTIFACT_RE);
+      const stable = f.match(STABLE_RE);
+      const nightly = f.match(NIGHTLY_RE);
+      const m = stable || nightly;
       if (!m) return null;
       const filePath = join(ARTIFACTS_DIR, f);
       return {
         fileName: f,
         browser: m[1],
-        version: m[2],
+        version: stable ? stable[2] : `nightly-${nightly![2]}`,
         url: `${origin}/artifacts/${encodeURIComponent(f)}`,
         hash: `sha256:${fileHashHex(filePath)}`,
         size: statSync(filePath).size,
@@ -170,12 +173,19 @@ async function handleRequest(req: Request): Promise<Response> {
   if (pathname === '/manifest.json' || pathname === '/api/versions') {
     const artifacts = getArtifacts();
     const latest: Record<string, Artifact> = {};
+    const nightly: Record<string, Artifact> = {};
     for (const a of artifacts) {
-      if (!latest[a.browser] || cmpVer(a.version, latest[a.browser].version) > 0) {
-        latest[a.browser] = a;
+      if (a.version.startsWith('nightly-')) {
+        if (!nightly[a.browser] || cmpVer(a.version, nightly[a.browser].version) > 0) {
+          nightly[a.browser] = a;
+        }
+      } else {
+        if (!latest[a.browser] || cmpVer(a.version, latest[a.browser].version) > 0) {
+          latest[a.browser] = a;
+        }
       }
     }
-    return new Response(JSON.stringify({ artifacts, latest }, null, 2), {
+    return new Response(JSON.stringify({ artifacts, latest, nightly }, null, 2), {
       headers: {
         'content-type': 'application/json',
         'cache-control': 'public, max-age=300, stale-while-revalidate=60',
@@ -191,7 +201,7 @@ async function handleRequest(req: Request): Promise<Response> {
     if (raw.includes('/') || raw.includes('..')) return notFound();
     const fileName = decodeURIComponent(raw);
     if (fileName.includes('/') || fileName.includes('..')) return notFound();
-    if (!ARTIFACT_RE.test(fileName)) return notFound();
+    if (!STABLE_RE.test(fileName) && !NIGHTLY_RE.test(fileName)) return notFound();
 
     const filePath = join(ARTIFACTS_DIR, fileName);
     if (!existsSync(filePath)) return notFound();
@@ -217,6 +227,14 @@ async function handleRequest(req: Request): Promise<Response> {
         'cache-control': 'public, max-age=31536000, immutable',
         ...(etag ? { etag } : {}),
       },
+    });
+  }
+
+  if (pathname === '/favicon.ico') {
+    const faviconPath = join(ROOT, 'icons', 'icon48.png');
+    if (!existsSync(faviconPath)) return notFound();
+    return new Response(Bun.file(faviconPath), {
+      headers: { 'content-type': 'image/png' },
     });
   }
 
