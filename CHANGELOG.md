@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-05-30
+
+### Added
+
+- Web-based JWT quota token generator with landing page and standalone TypeScript server (#46)
+- PUBLIC_URL environment variable for production deployment behind tunnel (#49)
+- Configurable control panel position (4 corners) with interactive settings selector (#52)
+- Zen Mode Asist with configurable countdown timer, progress bar, and auto-fill on expiry (#54)
+- Chrome nightly build support with date-stamped artifacts (#55)
+
+### Changed
+
+- Increase default daily quota limit (#50)
+- Optimize development server with build caching, ETag/304 support, path traversal guard, and static file extension whitelist (#53)
+
 ## [1.3.0] - 2026-05-23
 
 ### Added
