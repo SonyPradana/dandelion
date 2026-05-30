@@ -104,14 +104,10 @@ export async function initializeSkriningForm() {
 
     const config = await getActiveConfig();
     const fs = config.formSkrining || {};
-    const radioButtonKeywords =
-      (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
+    const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
     const pinneds = fs.pinneds || {};
-    const excludes = [
-      ...((fs.excludes && fs.excludes.split(';')) || []),
-      ...Object.keys(pinneds),
-    ];
+    const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
 
     const result = await processWithRecursion(
       radioButtonKeywords,

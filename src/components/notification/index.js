@@ -128,8 +128,7 @@ export const notify = {
 
       if (message) {
         const msgEl = document.createElement('div');
-        msgEl.style.cssText =
-          'font-size: 11px; line-height: 1.4; opacity: 0.9;';
+        msgEl.style.cssText = 'font-size: 11px; line-height: 1.4; opacity: 0.9;';
         msgEl.textContent = message;
         panel.appendChild(msgEl);
       }
