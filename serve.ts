@@ -8,6 +8,7 @@ import { join, extname } from 'path';
 //   /manifest.json        → Version listing of all artifacts
 //   /api/versions         → Alias for /manifest.json
 //   /artifacts/<file>     → Artifact download (.zip, .xpi)
+//   /health               → Health check (GET & HEAD)
 //   /<any public file>    → Static files served from public/
 
 // --- types ---
@@ -60,6 +61,8 @@ const ALLOWED_STATIC_EXT = new Set([
   '.txt',
   '.map',
 ]);
+
+const startTime = Date.now();
 
 // --- helpers ---
 
@@ -226,6 +229,22 @@ async function handleRequest(req: Request): Promise<Response> {
         'content-length': String(artifact?.size ?? statSync(filePath).size),
         'cache-control': 'public, max-age=31536000, immutable',
         ...(etag ? { etag } : {}),
+      },
+    });
+  }
+
+  // ── health check ──────────────────────────────────────────────────
+  if (pathname === '/health') {
+    const t0 = performance.now();
+    const body = JSON.stringify({
+      status: 'ok',
+      uptime: (Date.now() - startTime) / 1000,
+      responseTime: Math.round(performance.now() - t0),
+    });
+    return new Response(req.method === 'HEAD' ? null : body, {
+      headers: {
+        'content-type': 'application/json',
+        'cache-control': 'no-cache',
       },
     });
   }
