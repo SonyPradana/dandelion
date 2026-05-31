@@ -170,15 +170,28 @@ See [Deployment](#deployment) below for recommended setups.
 
 ## Deployment
 
-### PM2 + Bun
+### PM2 + Bun (Production Ready)
 
-Keep the server alive across reboots with [PM2](https://pm2.keymetrics.io/):
+Keep the server alive across reboots with [PM2](https://pm2.keymetrics.io/).  
+An `ecosystem.config.cjs` is provided with production-ready defaults:
 
-````bash
+| Config                  | Value     | Description                          |
+| ----------------------- | --------- | ------------------------------------ |
+| `interpreter`           | `bun`     | Runtime                              |
+| `max_memory_restart`    | `500M`    | Auto-restart if memory exceeds 500MB |
+| `autorestart`           | `true`    | Restart on crash                     |
+| `restart_delay`         | `5000ms`  | Wait 5s before restarting            |
+| `max_restarts`          | `10`      | Limit consecutive restarts           |
+| `kill_timeout`          | `10000ms` | Graceful shutdown timeout            |
+| `listen_timeout`        | `3000ms`  | Wait for app to listen               |
+| `error_file`/`out_file` | `logs/`   | Rotated log files (gitignored)       |
+
+```bash
 npm install -g pm2
-pm2 start serve.ts --interpreter bun --name dandelion
+pm2 start ecosystem.config.cjs
 pm2 save
 pm2 startup       # generates systemd boot command
+```
 
 #### Maintenance
 
@@ -189,7 +202,7 @@ pm2 stop dandelion                 # stop server
 git pull origin main               # pull latest code
 pm2 start dandelion                # start server again
 pm2 save                           # persist process list
-````
+```
 
 Or restart in one step (no need to stop first):
 
