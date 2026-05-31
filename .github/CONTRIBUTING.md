@@ -151,7 +151,8 @@ For production, see [Deployment](#deployment) below.
 
 | Endpoint                | Description                             |
 | ----------------------- | --------------------------------------- |
-| `/`                     | Landing page (sitemap + download links) |
+| `/`                     | Landing page (GET & HEAD)               |
+| `/health`               | Health check endpoint (GET & HEAD)      |
 | `/token-generator.html` | Token generator UI page                 |
 | `/update.json`          | Firefox addon auto-update manifest      |
 | `/manifest.json`        | Artifact listing + latest version       |
