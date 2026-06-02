@@ -7,6 +7,7 @@ import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
+import { clearFlashData } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
 import { incrementBatch } from '../utils/productivityTracker';
@@ -21,7 +22,7 @@ import { notify } from '../components/notification';
  * The countdown can be dismissed or overridden by manually pressing the button,
  * so the user always retains control over the action.
  */
-export async function initializeSkriningForm() {
+export async function initializeSkriningForm(flashData = {}) {
   let isDebugEnabled = false; // Initial state is off
   let dismissCountdown = null;
 
@@ -58,6 +59,7 @@ export async function initializeSkriningForm() {
 
     zenToggle.addEventListener('click', async () => {
       await clearZenMode();
+      await clearFlashData();
       // Remove both buttons to signal Zen Mode is off
       controlPanel.remove(zenToggle);
       const skipBtnEl = document.getElementById('dandelion-zen-skip');
@@ -106,7 +108,12 @@ export async function initializeSkriningForm() {
     const fs = config.formSkrining || {};
     const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
-    const pinneds = fs.pinneds || {};
+
+    const flashPinneds = {};
+    for (const [k, v] of Object.entries(flashData.pinneds || {})) {
+      flashPinneds[k] = String(v);
+    }
+    const pinneds = { ...(fs.pinneds || {}), ...flashPinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
 
     const result = await processWithRecursion(
