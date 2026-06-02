@@ -8,7 +8,7 @@ import {
 import { waitForRow } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import { increment } from '../utils/productivityTracker';
-import { showFlashDataPanel } from '../utils/flashSessionUI';
+import { showFlashDataPanel, getLastFlashData, clearLastFlashData } from '../utils/flashSessionUI';
 import { setFlashData, clearFlashData } from '../utils/flashSession';
 
 let isAutomationActive = false;
@@ -58,20 +58,23 @@ export async function startZenAutomation() {
     return;
   }
 
-  const confirmPromise = notify.confirm(
+  showFlashDataPanel();
+
+  const confirmed = await notify.confirm(
     'Zen Mode',
     `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`,
   );
-  const flashPromise = showFlashDataPanel();
 
-  const confirmed = await confirmPromise;
+  const el = document.getElementById('dandelion-flash-data');
+  if (el) el.remove();
+
   if (!confirmed) {
-    const el = document.getElementById('dandelion-flash-data');
-    if (el) el.remove();
+    clearLastFlashData();
     return;
   }
 
-  const flashData = await flashPromise;
+  const flashData = getLastFlashData();
+  clearLastFlashData();
   if (flashData) {
     await setFlashData(flashData);
   }

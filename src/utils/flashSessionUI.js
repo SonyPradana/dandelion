@@ -3,9 +3,27 @@ import { notify } from '../components/notification';
 
 const PANEL_ID = 'dandelion-flash-data';
 
+let lastFlashData = null;
+
+/**
+ * Read saved flash data from the last panel interaction.
+ * @returns {Object|null}
+ */
+export function getLastFlashData() {
+  return lastFlashData;
+}
+
+/**
+ * Clear saved flash data reference.
+ */
+export function clearLastFlashData() {
+  lastFlashData = null;
+}
+
 /**
  * Optional panel to set flash data (pinneds).
- * Resolves null on dismiss, or { pinneds } on confirm.
+ * Only "Gunakan" saves data and closes the panel.
+ * Close with × also closes without saving.
  * @returns {Promise<{pinneds: Object.<string, string>}|null>}
  */
 export function showFlashDataPanel() {
@@ -154,12 +172,6 @@ export function showFlashDataPanel() {
     const btnContainer = document.createElement('div');
     btnContainer.style.cssText = 'display:flex;gap:5px;margin-top:6px;';
 
-    const dismissBtn = createPanelButton('Dismiss', 'default');
-    dismissBtn.onclick = () => {
-      remove();
-      resolve(null);
-    };
-
     const useBtn = createPanelButton('Gunakan', 'success');
     useBtn.onclick = () => {
       const pinneds = {};
@@ -197,12 +209,13 @@ export function showFlashDataPanel() {
         return;
       }
 
+      lastFlashData = { pinneds };
       remove();
       notify.info('Flash Data', 'Tersimpan', 1500);
       resolve({ pinneds });
     };
 
-    btnContainer.append(dismissBtn, useBtn);
+    btnContainer.appendChild(useBtn);
     contentArea.appendChild(btnContainer);
 
     const closeBtn = panel.querySelector('div');

@@ -33,13 +33,7 @@ async function initialize() {
   const currentURL = window.location.href;
   const config = await getActiveConfig();
 
-  // const flashData = await getFlashData();
-  const flashData = {
-    pinneds: {
-      'LPM000073|FRM000265|PPM00000012|number': '120',
-      'LPM000073|FRM000265|PPM00000019|number': '80',
-    },
-  };
+  const flashData = await getFlashData();
 
   if (
     config.notChecked?.url &&
