@@ -4,20 +4,19 @@ const STORAGE_KEY = 'flash_data';
 
 /**
  * @typedef {Object} FlashData
- * @property {Object.<string, string>} pinneds - Key-value pairs untuk override pinneds
+ * @property {Object.<string, string>} pinneds - Key-value pairs to override
  */
 
 /**
- * Simpan flash data ke storage
+ * Save flash data to storage
  * @param {FlashData} data
- * @returns {Promise<void>}
  */
 export async function setFlashData(data) {
   await browser.storage.local.set({ [STORAGE_KEY]: data });
 }
 
 /**
- * Ambil flash data dari storage
+ * Read flash data from storage
  * @returns {Promise<FlashData|null>}
  */
 export async function getFlashData() {
@@ -26,8 +25,7 @@ export async function getFlashData() {
 }
 
 /**
- * Hapus flash data dari storage
- * @returns {Promise<void>}
+ * Remove flash data from storage
  */
 export async function clearFlashData() {
   await browser.storage.local.remove(STORAGE_KEY);

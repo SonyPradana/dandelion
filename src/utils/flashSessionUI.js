@@ -1,8 +1,8 @@
 import { createBasePanel, createPanelButton } from '../components/notification/base';
 
 /**
- * Menampilkan panel opsional untuk set flash data (pinneds).
- * User bisa skip (return null) atau set data (return { pinneds: {...} }).
+ * Optional panel to set flash data (pinneds).
+ * Resolves null on skip, or { pinneds } on confirm.
  * @returns {Promise<{pinneds: Object.<string, string>}|null>}
  */
 export function showFlashDataPanel() {
@@ -53,8 +53,7 @@ export function showFlashDataPanel() {
 
     function addKvRow(key, value) {
       const row = document.createElement('div');
-      row.style.cssText =
-        'display:flex;gap:4px;margin-bottom:4px;align-items:center;';
+      row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;align-items:center;';
 
       const keyInput = document.createElement('input');
       keyInput.type = 'text';
@@ -158,7 +157,7 @@ export function showFlashDataPanel() {
 
     const useBtn = createPanelButton('Gunakan', 'success');
     useBtn.onclick = () => {
-      let pinneds = {};
+      const pinneds = {};
 
       if (jsonContainer.style.display !== 'none') {
         try {
