@@ -8,6 +8,8 @@ import {
 import { waitForRow } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import { increment } from '../utils/productivityTracker';
+import { showFlashDataPanel } from '../utils/flashSessionUI';
+import { setFlashData, clearFlashData } from '../utils/flashSession';
 
 let isAutomationActive = false;
 
@@ -56,18 +58,32 @@ export async function startZenAutomation() {
     return;
   }
 
-  if (
-    await notify.confirm('Zen Mode', `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`)
-  ) {
-    const state = {
-      active: true,
-      queue: pendingIds,
-      total: pendingIds.length,
-    };
-    await setZenModeState(state);
-    isAutomationActive = true;
-    processNextZenItem();
+  const confirmPromise = notify.confirm(
+    'Zen Mode',
+    `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`,
+  );
+  const flashPromise = showFlashDataPanel();
+
+  const confirmed = await confirmPromise;
+  if (!confirmed) {
+    const el = document.getElementById('dandelion-flash-data');
+    if (el) el.remove();
+    return;
   }
+
+  const flashData = await flashPromise;
+  if (flashData) {
+    await setFlashData(flashData);
+  }
+
+  const state = {
+    active: true,
+    queue: pendingIds,
+    total: pendingIds.length,
+  };
+  await setZenModeState(state);
+  isAutomationActive = true;
+  processNextZenItem();
 }
 
 /**
@@ -86,6 +102,7 @@ async function processNextZenItem() {
 
   if (!nextId) {
     await clearZenMode();
+    await clearFlashData();
     isAutomationActive = false;
     await notify.alert('Zen Mode', 'Zen Mode Selesai!');
     return;

@@ -1,14 +1,19 @@
 import { createBasePanel, createPanelButton } from '../components/notification/base';
+import { notify } from '../components/notification';
+
+const PANEL_ID = 'dandelion-flash-data';
 
 /**
  * Optional panel to set flash data (pinneds).
- * Resolves null on skip, or { pinneds } on confirm.
+ * Resolves null on dismiss, or { pinneds } on confirm.
  * @returns {Promise<{pinneds: Object.<string, string>}|null>}
  */
 export function showFlashDataPanel() {
+  const existing = document.getElementById(PANEL_ID);
+  if (existing) existing.remove();
+
   return new Promise((resolve) => {
-    const id = `dandelion-flash-data-${Date.now()}`;
-    const { panel, contentArea, setHeader, remove } = createBasePanel(id);
+    const { panel, contentArea, setHeader, remove } = createBasePanel(PANEL_ID);
 
     panel.style.maxWidth = '320px';
     panel.style.width = '320px';
@@ -149,8 +154,8 @@ export function showFlashDataPanel() {
     const btnContainer = document.createElement('div');
     btnContainer.style.cssText = 'display:flex;gap:5px;margin-top:6px;';
 
-    const skipBtn = createPanelButton('Skip', 'default');
-    skipBtn.onclick = () => {
+    const dismissBtn = createPanelButton('Dismiss', 'default');
+    dismissBtn.onclick = () => {
       remove();
       resolve(null);
     };
@@ -193,10 +198,11 @@ export function showFlashDataPanel() {
       }
 
       remove();
+      notify.info('Flash Data', 'Tersimpan', 1500);
       resolve({ pinneds });
     };
 
-    btnContainer.append(skipBtn, useBtn);
+    btnContainer.append(dismissBtn, useBtn);
     contentArea.appendChild(btnContainer);
 
     const closeBtn = panel.querySelector('div');
