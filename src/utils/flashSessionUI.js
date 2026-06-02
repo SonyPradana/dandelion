@@ -4,8 +4,71 @@ import { setFlashData, clearFlashData } from './flashSession';
 
 const PANEL_ID = 'dandelion-flash-data';
 
+function rebuildKvRows(container, data) {
+  container.innerHTML = '';
+  for (const [key, value] of Object.entries(data)) {
+    addKvRow(container, key, String(value));
+  }
+}
+
+function addKvRow(container, key, value) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;align-items:center;';
+
+  const keyInput = document.createElement('input');
+  keyInput.type = 'text';
+  keyInput.className = 'flash-kv-key';
+  keyInput.value = key;
+  keyInput.style.cssText =
+    'flex:2;padding:4px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;' +
+    'background:rgba(0,0,0,0.3);color:white;font-size:10px;font-family:inherit;outline:none;';
+  keyInput.placeholder = 'data-name...';
+
+  const valInput = document.createElement('input');
+  valInput.type = 'text';
+  valInput.className = 'flash-kv-val';
+  valInput.value = String(value);
+  valInput.style.cssText =
+    'flex:1;padding:4px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;' +
+    'background:rgba(0,0,0,0.3);color:white;font-size:10px;font-family:inherit;outline:none;';
+  valInput.placeholder = 'nilai...';
+
+  const rmBtn = document.createElement('button');
+  rmBtn.textContent = '×';
+  rmBtn.type = 'button';
+  rmBtn.style.cssText =
+    'padding:2px 6px;border:1px solid rgba(255,77,77,0.3);border-radius:4px;' +
+    'background:rgba(255,77,77,0.15);color:#ff4d4d;font-size:12px;cursor:pointer;' +
+    'font-family:inherit;line-height:1;';
+  rmBtn.onclick = () => row.remove();
+
+  row.append(keyInput, valInput, rmBtn);
+  container.appendChild(row);
+}
+
+function kvToJson(container) {
+  const data = {};
+  container.querySelectorAll('div').forEach((row) => {
+    const key = row.querySelector('.flash-kv-key');
+    const val = row.querySelector('.flash-kv-val');
+    if (key && val && key.value.trim()) {
+      data[key.value.trim()] = String(val.value);
+    }
+  });
+  return data;
+}
+
+function jsonToKv(container, jsonStr) {
+  try {
+    const parsed = JSON.parse(jsonStr || '{}');
+    if (typeof parsed !== 'object' || Array.isArray(parsed)) return;
+    rebuildKvRows(container, parsed);
+  } catch {}
+}
+
 /**
  * Optional panel to set flash data (pinneds).
+ * Two-way sync between Raw JSON and Tabel KV tabs.
  * "Gunakan" saves directly to storage without closing.
  * × closes the panel.
  */
@@ -17,10 +80,10 @@ export function showFlashDataPanel() {
 
   const { panel, contentArea, setHeader, remove } = createBasePanel(PANEL_ID);
 
-  panel.style.maxWidth = '320px';
-  panel.style.width = '320px';
+  panel.style.maxWidth = '380px';
+  panel.style.width = '100%';
 
-  contentArea.innerHTML = setHeader('Flash Data (Opsional)', '#a78bfa');
+  contentArea.innerHTML = setHeader('Flash Data', '#a78bfa');
 
   const tabBar = document.createElement('div');
   tabBar.style.cssText = 'display:flex;gap:4px;margin-bottom:6px;';
@@ -58,41 +121,6 @@ export function showFlashDataPanel() {
 
   const kvItemsDiv = document.createElement('div');
 
-  function addKvRow(key, value) {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;align-items:center;';
-
-    const keyInput = document.createElement('input');
-    keyInput.type = 'text';
-    keyInput.className = 'flash-kv-key';
-    keyInput.value = key;
-    keyInput.style.cssText =
-      'flex:1;padding:4px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;' +
-      'background:rgba(0,0,0,0.3);color:white;font-size:10px;font-family:inherit;outline:none;';
-    keyInput.placeholder = 'data-name...';
-
-    const valInput = document.createElement('input');
-    valInput.type = 'text';
-    valInput.className = 'flash-kv-val';
-    valInput.value = String(value);
-    valInput.style.cssText =
-      'flex:1;padding:4px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;' +
-      'background:rgba(0,0,0,0.3);color:white;font-size:10px;font-family:inherit;outline:none;';
-    valInput.placeholder = 'nilai...';
-
-    const rmBtn = document.createElement('button');
-    rmBtn.textContent = '×';
-    rmBtn.type = 'button';
-    rmBtn.style.cssText =
-      'padding:2px 6px;border:1px solid rgba(255,77,77,0.3);border-radius:4px;' +
-      'background:rgba(255,77,77,0.15);color:#ff4d4d;font-size:12px;cursor:pointer;' +
-      'font-family:inherit;line-height:1;';
-    rmBtn.onclick = () => row.remove();
-
-    row.append(keyInput, valInput, rmBtn);
-    kvItemsDiv.appendChild(row);
-  }
-
   kvContainer.appendChild(kvItemsDiv);
 
   const kvAddRow = document.createElement('div');
@@ -101,7 +129,7 @@ export function showFlashDataPanel() {
   const addKeyInput = document.createElement('input');
   addKeyInput.type = 'text';
   addKeyInput.style.cssText =
-    'flex:1;padding:4px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;' +
+    'flex:2;padding:4px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:4px;' +
     'background:rgba(0,0,0,0.3);color:white;font-size:10px;font-family:inherit;outline:none;';
   addKeyInput.placeholder = 'data-name baru...';
 
@@ -123,7 +151,7 @@ export function showFlashDataPanel() {
     const k = addKeyInput.value.trim();
     const v = addValInput.value;
     if (k) {
-      addKvRow(k, v);
+      addKvRow(kvItemsDiv, k, v);
       addKeyInput.value = '';
       addValInput.value = '';
       addKeyInput.focus();
@@ -141,6 +169,12 @@ export function showFlashDataPanel() {
   contentArea.appendChild(kvContainer);
 
   function activateTab(tab) {
+    if (tab === 'kv') {
+      jsonToKv(kvItemsDiv, jsonTextarea.value);
+    } else {
+      jsonTextarea.value = JSON.stringify(kvToJson(kvItemsDiv), null, 2);
+    }
+
     const dim = '0.4';
     const bright = '1';
     jsonTabBtn.style.opacity = tab === 'json' ? bright : dim;
@@ -164,7 +198,8 @@ export function showFlashDataPanel() {
       try {
         const parsed = JSON.parse(jsonTextarea.value);
         if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-          throw new Error('Harus object');
+          notify.info('Flash Data', 'Format harus object JSON', 2000);
+          return;
         }
         for (const k of Object.keys(parsed)) {
           const v = parsed[k];
@@ -173,6 +208,7 @@ export function showFlashDataPanel() {
           }
         }
       } catch {
+        notify.info('Flash Data', 'JSON tidak valid', 2000);
         return;
       }
     } else {
@@ -190,6 +226,7 @@ export function showFlashDataPanel() {
     }
 
     if (Object.keys(pinneds).length === 0) {
+      notify.info('Flash Data', 'Tidak ada data', 2000);
       return;
     }
 
