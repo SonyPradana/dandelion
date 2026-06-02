@@ -7,7 +7,7 @@ import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
-import { clearFlashData, getFlashData } from '../utils/flashSession';
+import { clearFlashData } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
 import { incrementBatch } from '../utils/productivityTracker';
@@ -98,33 +98,8 @@ export async function initializeSkriningForm(flashData = {}) {
     }
   }
 
-  const hasFlashData = flashData.pinneds && Object.keys(flashData.pinneds).length > 0;
-  if (hasFlashData) {
-    const flashBadge = document.createElement('div');
-    flashBadge.id = 'dandelion-flash-badge';
-    flashBadge.style.cssText =
-      'display:flex;align-items:center;gap:6px;padding:4px 8px;' +
-      'background:rgba(167,139,250,0.15);border:1px solid rgba(167,139,250,0.3);border-radius:6px;' +
-      'color:#a78bfa;font-size:9px;font-weight:bold;font-family:inherit;' +
-      'text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap;';
-
-    const badgeText = document.createElement('span');
-    badgeText.textContent = 'Flash Data ON';
-    flashBadge.appendChild(badgeText);
-
-    const hapusBtn = document.createElement('button');
-    hapusBtn.textContent = 'Hapus';
-    hapusBtn.style.cssText =
-      'padding:2px 6px;border:1px solid rgba(255,77,77,0.3);border-radius:4px;' +
-      'background:rgba(255,77,77,0.15);color:#ff4d4d;font-size:8px;cursor:pointer;' +
-      'font-family:inherit;font-weight:bold;text-transform:uppercase;letter-spacing:0.3px;line-height:1;';
-    hapusBtn.onclick = async () => {
-      await clearFlashData();
-      flashBadge.remove();
-    };
-    flashBadge.appendChild(hapusBtn);
-
-    controlPanel.mount(flashBadge, 2);
+  if (flashData.pinneds && Object.keys(flashData.pinneds).length > 0) {
+    notify.info('Flash Data', 'Flash data active for this session', 0);
   }
 
   async function performFormFill() {
