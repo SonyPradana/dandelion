@@ -171,6 +171,9 @@ export function showFlashDataPanel() {
   function activateTab(tab) {
     if (tab === 'kv') {
       jsonToKv(kvItemsDiv, jsonTextarea.value);
+      if (kvItemsDiv.children.length === 0) {
+        addKvRow(kvItemsDiv, '', '');
+      }
     } else {
       jsonTextarea.value = JSON.stringify(kvToJson(kvItemsDiv), null, 2);
     }
@@ -212,6 +215,13 @@ export function showFlashDataPanel() {
         return;
       }
     } else {
+      const pendingKey = addKeyInput.value.trim();
+      if (pendingKey) {
+        pinneds[pendingKey] = addValInput.value;
+        addKvRow(kvItemsDiv, pendingKey, addValInput.value);
+        addKeyInput.value = '';
+        addValInput.value = '';
+      }
       const rows = kvItemsDiv.querySelectorAll('div');
       rows.forEach((row) => {
         const keyInput = row.querySelector('.flash-kv-key');
