@@ -7,6 +7,7 @@ import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
+import { clearFlashData } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
 import { incrementBatch } from '../utils/productivityTracker';
@@ -21,7 +22,7 @@ import { notify } from '../components/notification';
  * The countdown can be dismissed or overridden by manually pressing the button,
  * so the user always retains control over the action.
  */
-export async function initializeSkriningForm() {
+export async function initializeSkriningForm(flashData = {}) {
   let isDebugEnabled = false; // Initial state is off
   let dismissCountdown = null;
 
@@ -58,6 +59,7 @@ export async function initializeSkriningForm() {
 
     zenToggle.addEventListener('click', async () => {
       await clearZenMode();
+      await clearFlashData();
       // Remove both buttons to signal Zen Mode is off
       controlPanel.remove(zenToggle);
       const skipBtnEl = document.getElementById('dandelion-zen-skip');
@@ -96,6 +98,10 @@ export async function initializeSkriningForm() {
     }
   }
 
+  if (flashData.pinneds && Object.keys(flashData.pinneds).length > 0) {
+    notify.info('Flash Data', 'Flash data active for this session', 2500);
+  }
+
   async function performFormFill() {
     if (dismissCountdown) {
       dismissCountdown();
@@ -106,7 +112,11 @@ export async function initializeSkriningForm() {
     const fs = config.formSkrining || {};
     const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
-    const pinneds = fs.pinneds || {};
+
+    const configPinneds = Object.fromEntries(
+      Object.entries(fs.pinneds || {}).filter(([k]) => !k.includes('|number')),
+    );
+    const pinneds = { ...configPinneds, ...flashData.pinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
 
     const result = await processWithRecursion(

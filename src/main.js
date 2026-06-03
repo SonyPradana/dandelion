@@ -2,6 +2,7 @@ import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { getAgreement, getActiveConfig, getFullConfig } from './configuration.js';
+import { getFlashData } from './utils/flashSession.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
 import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quota-manager.js';
 import { controlPanel } from './components/controlPanel.js';
@@ -32,6 +33,8 @@ async function initialize() {
   const currentURL = window.location.href;
   const config = await getActiveConfig();
 
+  const flashData = await getFlashData();
+
   if (
     config.notChecked?.url &&
     currentURL.includes(config.notChecked.url) &&
@@ -43,7 +46,7 @@ async function initialize() {
     currentURL.includes(config.formSkrining.url) &&
     isFeatureEnabled('skriningform')
   ) {
-    initializeSkriningForm();
+    initializeSkriningForm(flashData || {});
   } else if (
     config.skrining?.url &&
     currentURL.includes(config.skrining.url) &&
