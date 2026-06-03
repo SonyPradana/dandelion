@@ -8,7 +8,7 @@ import {
 import { waitForRow } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import { increment } from '../utils/productivityTracker';
-import { showFlashDataPanel } from '../utils/flashSessionUI';
+import { showFlashDataPanel } from '../components/flashPanel';
 import { clearFlashData } from '../utils/flashSession';
 
 let isAutomationActive = false;
