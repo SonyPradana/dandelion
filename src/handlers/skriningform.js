@@ -77,7 +77,7 @@ export async function initializeSkriningForm(flashData = {}) {
       try {
         const homeBtn = await waitForElement('button', 'Kembali ke Halaman Utama', 3000);
         homeBtn.click();
-      } catch { }
+      } catch {}
     });
 
     controlPanel.mount(zenToggle, 2);
@@ -99,7 +99,7 @@ export async function initializeSkriningForm(flashData = {}) {
   }
 
   if (flashData.pinneds && Object.keys(flashData.pinneds).length > 0) {
-    notify.info('Flash Data', 'Flash data active for this session', 0);
+    notify.info('Flash Data', 'Flash data active for this session', 2500);
   }
 
   async function performFormFill() {
