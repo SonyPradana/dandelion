@@ -10,34 +10,70 @@
  *   "LPM002-quest|freetext": "Tidak ada"
  * }
  */
+function keyToRegex(key) {
+  const pattern = key
+    .split('|')
+    .map((segment) => segment.replace(/[.+^${}()|[\]\\]/g, String.raw`\$&`).replace(/\*/g, '[^|]+'))
+    .join(String.raw`\|`);
+  return new RegExp('^' + pattern + '$');
+}
+
 export async function fillPinnedFields(pinneds) {
   let radio = 0;
   let freetext = 0;
   let dropdown = 0;
+  const filled = new Set();
+
+  const exactKeys = [];
+  const wildcardEntries = [];
 
   for (const key in pinneds) {
     if (Object.prototype.hasOwnProperty.call(pinneds, key)) {
-      const value = pinneds[key];
-      const questionElement = document.querySelector(`[data-name="${key}"]`);
+      if (key.includes('*')) {
+        wildcardEntries.push({ regex: keyToRegex(key), value: pinneds[key] });
+      } else {
+        exactKeys.push(key);
+      }
+    }
+  }
 
-      if (!questionElement) continue;
+  async function fillField(questionElement, value) {
+    const field = detectFieldType(questionElement);
+    if (!field) return;
 
-      const field = detectFieldType(questionElement);
+    if (field.type === 'text') {
+      fillTextarea(questionElement, value);
+      freetext++;
+    } else if (field.type === 'number') {
+      fillNumberInput(questionElement, value);
+      freetext++;
+    } else if (field.type === 'radio') {
+      fillRadioButton(questionElement, value);
+      radio++;
+    } else if (field.type === 'combobox') {
+      await fillDropdowns(questionElement, value);
+      dropdown++;
+    }
+  }
 
-      if (!field) continue;
+  for (const key of exactKeys) {
+    const value = pinneds[key];
+    const questionElement = document.querySelector(`[data-name="${CSS.escape(key)}"]`);
+    if (!questionElement) continue;
+    filled.add(key);
+    await fillField(questionElement, value);
+  }
 
-      if (field.type === 'text') {
-        fillTextarea(questionElement, value);
-        freetext++;
-      } else if (field.type === 'number') {
-        fillNumberInput(questionElement, value);
-        freetext++;
-      } else if (field.type === 'radio') {
-        fillRadioButton(questionElement, value);
-        radio++;
-      } else if (field.type === 'combobox') {
-        await fillDropdowns(questionElement, value);
-        dropdown++;
+  if (wildcardEntries.length > 0) {
+    const allElements = document.querySelectorAll('[data-name]');
+    for (const { regex, value } of wildcardEntries) {
+      for (const el of allElements) {
+        const dn = el.getAttribute('data-name');
+        if (!dn || filled.has(dn)) continue;
+        if (regex.test(dn)) {
+          filled.add(dn);
+          await fillField(el, value);
+        }
       }
     }
   }
