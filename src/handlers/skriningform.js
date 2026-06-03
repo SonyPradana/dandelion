@@ -99,7 +99,7 @@ export async function initializeSkriningForm(flashData = {}) {
   }
 
   if (flashData.pinneds && Object.keys(flashData.pinneds).length > 0) {
-    notify.info('Flash Data', 'Flash data active for this session', 2500);
+    notify.info('Flash Data', 'Data flash aktif untuk sesi ini', 2500);
   }
 
   async function performFormFill() {
@@ -271,15 +271,18 @@ export async function initializeSkriningForm(flashData = {}) {
       const dropdownCount = await fillDropdowns(dropdownKw, excludes);
       const pinnedCount = await fillPinnedFields(pinneds);
 
-      radioTotal += radioCount;
-      dropdownTotal += dropdownCount;
-      if (round === 0) {
-        radioTotal += pinnedCount.radio;
-        dropdownTotal += pinnedCount.dropdown;
-        freetextTotal += pinnedCount.freetext;
-      }
+      radioTotal += radioCount + pinnedCount.radio;
+      dropdownTotal += dropdownCount + pinnedCount.dropdown;
+      freetextTotal += pinnedCount.freetext;
 
-      if (radioCount === 0 && dropdownCount === 0) break;
+      if (
+        radioCount === 0 &&
+        dropdownCount === 0 &&
+        pinnedCount.radio === 0 &&
+        pinnedCount.dropdown === 0 &&
+        pinnedCount.freetext === 0
+      )
+        break;
 
       await new Promise((resolve) => setTimeout(resolve, DELAY));
 
