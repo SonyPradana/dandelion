@@ -149,16 +149,16 @@ For production, see [Deployment](#deployment) below.
 
 ### Endpoints
 
-| Endpoint                | Description                             |
-| ----------------------- | --------------------------------------- |
-| `/`                     | Landing page (GET & HEAD)               |
-| `/health`               | Health check endpoint (GET & HEAD)      |
-| `/token-generator.html` | Token generator UI page                 |
-| `/update.json`          | Firefox addon auto-update manifest      |
-| `/manifest.json`        | Artifact listing + latest version       |
-| `/api/versions`         | Alias for `/manifest.json`              |
-| `/artifacts/<file>`     | Download `.zip` or `.xpi`               |
-| `/<any public file>`    | Static files from `public/`             |
+| Endpoint                | Description                        |
+| ----------------------- | ---------------------------------- |
+| `/`                     | Landing page (GET & HEAD)          |
+| `/health`               | Health check endpoint (GET & HEAD) |
+| `/token-generator.html` | Token generator UI page            |
+| `/update.json`          | Firefox addon auto-update manifest |
+| `/manifest.json`        | Artifact listing + latest version  |
+| `/api/versions`         | Alias for `/manifest.json`         |
+| `/artifacts/<file>`     | Download `.zip` or `.xpi`          |
+| `/<any public file>`    | Static files from `public/`        |
 
 ### Auto-Update Flow
 

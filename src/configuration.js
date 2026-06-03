@@ -24,6 +24,7 @@ const DEFAULT_CONFIG = {
       },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
+      flashData: { enabled: false },
     },
     profile2: {
       name: 'Profile 2',
@@ -45,6 +46,7 @@ const DEFAULT_CONFIG = {
       },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
+      flashData: { enabled: false },
     },
   },
 };
@@ -120,6 +122,7 @@ export function migrateConfig(raw) {
           enabled: false,
           timeout: 5000,
         },
+        flashData: { enabled: false },
       };
     }
 
@@ -153,6 +156,7 @@ function applyConfigDefaults(raw) {
       notChecked: { ...defaultProfile.notChecked, ...(savedProfile.notChecked || {}) },
       skrining: { ...defaultProfile.skrining, ...(savedProfile.skrining || {}) },
       zenMode: { ...defaultProfile.zenMode, ...(savedProfile.zenMode || {}) },
+      flashData: { ...defaultProfile.flashData, ...(savedProfile.flashData || {}) },
     };
   }
 
@@ -200,6 +204,7 @@ export function getActiveConfig() {
       notChecked: activeProfileSettings.notChecked,
       skrining: activeProfileSettings.skrining,
       zenMode: activeProfileSettings.zenMode,
+      flashData: activeProfileSettings.flashData,
       activeProfile: config.activeProfile,
     };
   });
