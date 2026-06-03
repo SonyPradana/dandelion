@@ -29,6 +29,9 @@ export async function fillPinnedFields(pinneds) {
       if (field.type === 'text') {
         fillTextarea(questionElement, value);
         freetext++;
+      } else if (field.type === 'number') {
+        fillNumberInput(questionElement, value);
+        freetext++;
       } else if (field.type === 'radio') {
         fillRadioButton(questionElement, value);
         radio++;
@@ -73,6 +76,15 @@ export function detectFieldType(questionElement) {
     };
   }
 
+  // Check for number input
+  const numberInput = questionElement.querySelector('input[type="number"]');
+  if (numberInput) {
+    return {
+      type: 'number',
+      getValue: () => numberInput.value,
+    };
+  }
+
   // Check for radio button
   const radioInputs = questionElement.querySelectorAll('input[type="radio"]');
   if (radioInputs.length > 0) {
@@ -92,6 +104,20 @@ export function detectFieldType(questionElement) {
   }
 
   return null;
+}
+
+/**
+ * Fill number input with the given value
+ *
+ * @param {HTMLElement} questionElement - The question element containing number input
+ * @param {string} value - The value to fill
+ */
+function fillNumberInput(questionElement, value) {
+  const inputElement = questionElement.querySelector('input[type="number"]');
+  if (inputElement && inputElement.value !== value) {
+    inputElement.value = value;
+    inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+  }
 }
 
 /**

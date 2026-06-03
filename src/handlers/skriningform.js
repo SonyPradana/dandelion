@@ -113,25 +113,13 @@ export async function initializeSkriningForm(flashData = {}) {
     const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
 
-    const flashPinneds = {};
-    for (const [k, v] of Object.entries(flashData.pinneds || {})) {
-      flashPinneds[k] = String(v);
-    }
-
-    fillNumberFields(flashPinneds);
-
-    const pinneds = { ...(fs.pinneds || {}), ...flashPinneds };
+    const pinneds = { ...(fs.pinneds || {}), ...flashData.pinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
-
-    const filteredPinneds = {};
-    for (const [key, value] of Object.entries(pinneds)) {
-      if (!key.endsWith('|number')) filteredPinneds[key] = value;
-    }
 
     const result = await processWithRecursion(
       radioButtonKeywords,
       dropdownKeywords,
-      filteredPinneds,
+      pinneds,
       excludes,
     );
 
@@ -293,26 +281,6 @@ export async function initializeSkriningForm(flashData = {}) {
       freetext: freetextTotal,
       total: radioTotal + dropdownTotal + freetextTotal,
     };
-  }
-
-  /**
-   * Fill |number fields directly. Only runs on flash data.
-   * @param {Object.<string, string>} pinneds
-   * @returns {number} count of filled fields
-   */
-  function fillNumberFields(pinneds) {
-    let count = 0;
-    for (const [key, value] of Object.entries(pinneds)) {
-      if (!key.endsWith('|number')) continue;
-      const el = document.querySelector(`[data-name="${key}"]`);
-      if (!el) continue;
-      const input = el.querySelector('input[type="number"]');
-      if (!input) continue;
-      input.value = value;
-      input.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
-      count++;
-    }
-    return count;
   }
 
   /**
