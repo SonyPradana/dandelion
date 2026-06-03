@@ -113,7 +113,10 @@ export async function initializeSkriningForm(flashData = {}) {
     const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
 
-    const pinneds = { ...(fs.pinneds || {}), ...flashData.pinneds };
+    const configPinneds = Object.fromEntries(
+      Object.entries(fs.pinneds || {}).filter(([k]) => !k.includes('|number')),
+    );
+    const pinneds = { ...configPinneds, ...flashData.pinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
 
     const result = await processWithRecursion(
