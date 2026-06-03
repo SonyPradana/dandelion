@@ -77,7 +77,7 @@ export async function initializeSkriningForm(flashData = {}) {
       try {
         const homeBtn = await waitForElement('button', 'Kembali ke Halaman Utama', 3000);
         homeBtn.click();
-      } catch {}
+      } catch { }
     });
 
     controlPanel.mount(zenToggle, 2);
