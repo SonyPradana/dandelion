@@ -10,14 +10,6 @@
  *   "LPM002-quest|freetext": "Tidak ada"
  * }
  */
-function keyToRegex(key) {
-  const pattern = key
-    .split('|')
-    .map((segment) => segment.replace(/[.+^${}()|[\]\\]/g, String.raw`\$&`).replace(/\*/g, '[^|]+'))
-    .join(String.raw`\|`);
-  return new RegExp('^' + pattern + '$');
-}
-
 export async function fillPinnedFields(pinneds) {
   let radio = 0;
   let freetext = 0;
@@ -30,7 +22,7 @@ export async function fillPinnedFields(pinneds) {
   for (const key in pinneds) {
     if (Object.prototype.hasOwnProperty.call(pinneds, key)) {
       if (key.includes('*')) {
-        wildcardEntries.push({ regex: keyToRegex(key), value: pinneds[key] });
+        wildcardEntries.push({ parts: key.split('|'), value: pinneds[key] });
       } else {
         exactKeys.push(key);
       }
@@ -66,13 +58,18 @@ export async function fillPinnedFields(pinneds) {
 
   if (wildcardEntries.length > 0) {
     const allElements = document.querySelectorAll('[data-name]');
-    for (const { regex, value } of wildcardEntries) {
-      for (const el of allElements) {
-        const dn = el.getAttribute('data-name');
-        if (!dn || filled.has(dn)) continue;
-        if (regex.test(dn)) {
+    for (const el of allElements) {
+      const dn = el.getAttribute('data-name');
+      if (!dn || filled.has(dn)) continue;
+      const nameParts = dn.split('|');
+      for (const { parts, value } of wildcardEntries) {
+        if (
+          nameParts.length === parts.length &&
+          parts.every((p, i) => p === '*' || p === nameParts[i])
+        ) {
           filled.add(dn);
           await fillField(el, value);
+          break;
         }
       }
     }
@@ -150,7 +147,7 @@ export function detectFieldType(questionElement) {
  */
 function fillNumberInput(questionElement, value) {
   const inputElement = questionElement.querySelector('input[type="number"]');
-  if (inputElement && inputElement.value !== value) {
+  if (inputElement && inputElement.value !== String(value)) {
     inputElement.value = value;
     inputElement.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
   }
