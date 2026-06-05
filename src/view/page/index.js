@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const skriningUrlInput = document.getElementById('skrining-url');
   const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
   const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
+  const flashDataEnabledCheckbox = document.getElementById('flash-data-enabled');
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
@@ -149,6 +150,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const zm = profileSettings.zenMode || {};
     zenModeEnabledCheckbox.checked = zm.enabled !== false;
     zenModeTimeoutInput.value = zm.timeout || 3500;
+
+    const fd = profileSettings.flashData || {};
+    flashDataEnabledCheckbox.checked = fd.enabled !== false;
   }
 
   getFullConfig().then((config) => {
@@ -225,6 +229,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         30_000,
         Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000),
       );
+
+      if (!profileSettings.flashData) profileSettings.flashData = {};
+      profileSettings.flashData.enabled = flashDataEnabledCheckbox.checked;
 
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;

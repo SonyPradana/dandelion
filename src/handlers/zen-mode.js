@@ -8,7 +8,7 @@ import {
 import { waitForRow } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import { increment } from '../utils/productivityTracker';
-import { showFlashDataPanel } from '../components/flashPanel';
+import { showFlashDataPanelIfEnabled } from './flashData';
 import { clearFlashData } from '../utils/flashSession';
 
 let isAutomationActive = false;
@@ -62,7 +62,7 @@ export async function startZenAutomation() {
     'Zen Mode',
     `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`,
   );
-  showFlashDataPanel();
+  showFlashDataPanelIfEnabled();
 
   const confirmed = await confirmPromise;
 
