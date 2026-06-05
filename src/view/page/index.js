@@ -684,11 +684,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     keymapsError.classList.add('hidden');
 
+    const valueCount = {};
+    keymapInputs.forEach((input) => {
+      if (input.value) valueCount[input.value] = (valueCount[input.value] || 0) + 1;
+    });
+    const dupe = Object.entries(valueCount).find(([, count]) => count > 1);
+    if (dupe) {
+      if (!keymapsError.parentNode) {
+        const saveBtn = document.getElementById('save-config-btn');
+        saveBtn.parentNode.insertBefore(keymapsError, saveBtn);
+      }
+      keymapsError.textContent = `Tombol '${dupe[0]}' dipakai di lebih dari satu baris.`;
+      keymapsError.classList.remove('hidden');
+      return;
+    }
+
     const modChips = document.querySelectorAll('.shortcut-chip.active');
     const shortcutKey = document.getElementById('shortcut-key').value.trim().toLowerCase();
     if (!modChips.length || !shortcutKey) {
       return;
     }
+
     const shortcut = {
       alt: false,
       shift: false,
