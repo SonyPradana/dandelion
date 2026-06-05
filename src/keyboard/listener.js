@@ -52,48 +52,6 @@ export function register(cleanupFn) {
   document.addEventListener('keydown', handler, true);
 }
 
-export function register(cleanupFn) {
-  if (handler) return;
-
-  onDeactivate = cleanupFn;
-  const map = getKeymap();
-  const prfs = getProfileKeymap();
-
-  document.title = `[KB] register | profiles=[${Object.keys(prfs).join(',')}]`;
-
-  handler = (event) => {
-    document.title = `[KB] ${event.key}`;
-
-    if (isEditableElement(event.target)) return;
-
-    const key = event.key.toLowerCase();
-
-    if (key === 'escape') {
-      event.preventDefault();
-      onDeactivate?.();
-      return;
-    }
-
-    const profileIndex = prfs[key];
-    if (profileIndex) {
-      event.preventDefault();
-      event.stopPropagation();
-      onDeactivate?.();
-      switchToProfile(profileIndex);
-      return;
-    }
-
-    const mapping = map[key];
-    if (mapping && triggerById(mapping.ids)) {
-      event.preventDefault();
-      event.stopPropagation();
-      onDeactivate?.();
-    }
-  };
-
-  document.addEventListener('keydown', handler, true);
-}
-
 export function unregister() {
   if (!handler) return;
   document.removeEventListener('keydown', handler, true);
