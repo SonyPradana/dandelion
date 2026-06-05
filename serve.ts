@@ -67,8 +67,10 @@ const startTime = Date.now();
 // --- helpers ---
 
 function cmpVer(a: string, b: string): number {
-  const pa = a.split('.').map(Number);
-  const pb = b.split('.').map(Number);
+  const normalize = (v: string) =>
+    v.startsWith('nightly-') ? v.slice(8).replace(/^(\d{4})(\d{2})(\d{2})$/, '$1.$2.$3') : v;
+  const pa = normalize(a).split('.').map(Number);
+  const pb = normalize(b).split('.').map(Number);
   for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
     const d = (pa[i] || 0) - (pb[i] || 0);
     if (d !== 0) return d;
