@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 
 const CACHE_KEY = 'license-cache';
-const TTL_MS = 10 * 60 * 1000;
+const TTL_MS = 8 * 60 * 60 * 1000; // 8 hours
 
 export async function getCache() {
   try {
