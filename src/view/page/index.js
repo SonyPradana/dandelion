@@ -585,4 +585,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     reader.readAsText(file);
   });
+
+  // --- Keymaps Tab Logic ---
+  const keymapInputs = document.querySelectorAll('.keymap-input');
+  const keymapsTab = document.querySelector('.tab-btn[data-tab="keymaps"]');
+
+  async function loadKeymaps() {
+    const config = await getFullConfig();
+    const km = config.keymaps || {};
+    keymapInputs.forEach((input) => {
+      const id = input.dataset.id;
+      input.value = km[id] || '';
+    });
+  }
+
+  keymapInputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/[^a-zA-Z]/g, '').toLowerCase().slice(0, 1);
+    });
+  });
+
+  if (keymapsTab) {
+    keymapsTab.addEventListener('click', () => {
+      setTimeout(loadKeymaps, 50);
+    });
+  }
+
+  if (document.getElementById('tab-keymaps')?.classList.contains('active')) {
+    loadKeymaps();
+  }
+
+  document.getElementById('save-config-btn').addEventListener('click', () => {
+    const newKeymaps = {};
+    keymapInputs.forEach((input) => {
+      const id = input.dataset.id;
+      newKeymaps[id] = input.value || id;
+    });
+    browser.storage.local.set({ keymaps: newKeymaps });
+  });
 });

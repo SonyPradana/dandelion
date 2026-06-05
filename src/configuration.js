@@ -3,6 +3,12 @@ import browser from 'webextension-polyfill';
 const DEFAULT_CONFIG = {
   activeProfile: 'profile1',
   panelPosition: 'top-right',
+  keymaps: {
+    'dandelion-auto-fill': 'q',
+    'dandelion-debug-toggle': 'w',
+    'dandelion-zen-mode-toggle': 'e',
+    'dandelion-zen-skip': 'r',
+  },
   profiles: {
     profile1: {
       name: 'Profile 1',
@@ -126,6 +132,7 @@ export function migrateConfig(raw) {
     return {
       activeProfile: raw.activeProfile ?? DEFAULT_CONFIG.activeProfile,
       panelPosition: DEFAULT_CONFIG.panelPosition,
+      keymaps: { ...DEFAULT_CONFIG.keymaps },
       profiles,
     };
   }
@@ -159,6 +166,7 @@ function applyConfigDefaults(raw) {
   return {
     activeProfile: raw.activeProfile ?? DEFAULT_CONFIG.activeProfile,
     panelPosition: raw.panelPosition ?? DEFAULT_CONFIG.panelPosition,
+    keymaps: raw.keymaps ?? { ...DEFAULT_CONFIG.keymaps },
     profiles,
   };
 }

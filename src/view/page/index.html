@@ -52,6 +52,13 @@
           </div>
 
           <div class="tab-group">
+            <button class="tab-btn" data-tab="keymaps">
+              <span class="tab-icon">⌨️</span>
+              <span class="tab-label">Keymaps</span>
+            </button>
+          </div>
+
+          <div class="tab-group">
             <button class="tab-btn" data-tab="lainnya">
               <span class="tab-icon">⚙️</span>
               <span class="tab-label">Lainnya</span>
@@ -280,6 +287,61 @@
               </button>
             </div>
             <div class="pane-body" id="produktifitas-page-content"></div>
+          </section>
+
+          <section class="tab-pane" id="tab-keymaps">
+            <div class="pane-header">⌨️ Keymaps</div>
+            <div class="pane-body">
+              <div class="keymaps-panel">
+                <div class="keymaps-panel-content">
+                  <p>
+                    Tekan <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>Q</kbd> untuk mengaktifkan
+                    <strong>Mode Dandelion</strong>, lalu tekan salah satu tombol di bawah untuk
+                    menjalankan aksi. Tekan <kbd>Esc</kbd> untuk membatalkan.
+                  </p>
+                </div>
+              </div>
+
+              <table class="keymaps-table">
+                <thead>
+                  <tr>
+                    <th class="col-key">Tombol</th>
+                    <th class="col-action">Aksi</th>
+                    <th class="col-desc">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <input type="text" class="keymap-input" data-id="dandelion-auto-fill" maxlength="1" />
+                    </td>
+                    <td>🙈 Isi Form</td>
+                    <td>Isi form secara tepat</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="text" class="keymap-input" data-id="dandelion-debug-toggle" maxlength="1" />
+                    </td>
+                    <td>🐞 Debug</td>
+                    <td>Tampilkan/sembunyikan info debug</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="text" class="keymap-input" data-id="dandelion-zen-mode-toggle" maxlength="1" />
+                    </td>
+                    <td>⚡ Zen Mode</td>
+                    <td>Aktifkan/nonaktifkan zen mode</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input type="text" class="keymap-input" data-id="dandelion-zen-skip" maxlength="1" />
+                    </td>
+                    <td>⏩ Skip</td>
+                    <td>Lanjut ke item berikutnya</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <section class="tab-pane" id="tab-lainnya">
