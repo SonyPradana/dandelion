@@ -42,20 +42,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   let loadedConfig = null;
 
   // Initialize KeywordList components
-  const radioButtonKeywordsList = new KeywordList(
-    'form-skrining-radio-keywords-input',
-    'form-skrining-radio-keywords-list',
-    'form-skrining-radio-keywords-add-input',
-    'form-skrining-radio-keywords-add',
-  );
-
-  const dropdownKeywordsList = new KeywordList(
-    'form-skrining-dropdown-keywords-input',
-    'form-skrining-dropdown-keywords-list',
-    'form-skrining-dropdown-keywords-add-input',
-    'form-skrining-dropdown-keywords-add',
-  );
-
   const notCheckedList = new KeywordList(
     'not-checked-list-input',
     'not-checked-list-container',
@@ -63,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'not-checked-list-add',
   );
 
-  window.keywordLists = { radioButtonKeywordsList, dropdownKeywordsList, notCheckedList };
+  window.keywordLists = { notCheckedList };
   let pinnedValuesList = null;
 
   function updateConfigState(isAgreed) {
@@ -114,9 +100,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveConfigBtn = document.getElementById('save-config-btn');
   const formSkriningUrlInput = document.getElementById('form-skrining-url');
   const scrollToButtonCheckbox = document.getElementById('form-skrining-scroll-to-button');
-  const radioButtonKeywordsInput = document.getElementById('form-skrining-radio-keywords-input');
-  const dropdownKeywordsInput = document.getElementById('form-skrining-dropdown-keywords-input');
-  const excludesInput = document.getElementById('form-skrining-excludes');
   const notCheckedUrlInput = document.getElementById('not-checked-url');
   const notCheckedListInput = document.getElementById('not-checked-list-input');
   const notCheckedAutomationDelayInput = document.getElementById('not-checked-automation-delay');
@@ -131,12 +114,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
     scrollToButtonCheckbox.checked = fs.scrollToButton ?? true;
-    radioButtonKeywordsInput.value = fs.radioButtonKeywords || '';
-    dropdownKeywordsInput.value = fs.dropdownKeywords || '';
-    excludesInput.value = fs.excludes || '';
-
-    radioButtonKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
-    dropdownKeywordsInput.dispatchEvent(new Event('input', { bubbles: true }));
 
     if (pinnedValuesList) pinnedValuesList.setData(fs.pinneds || {});
 
@@ -196,9 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
       profileSettings.formSkrining.url = formSkriningUrlInput.value;
       profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
-      profileSettings.formSkrining.radioButtonKeywords = radioButtonKeywordsInput.value;
-      profileSettings.formSkrining.dropdownKeywords = dropdownKeywordsInput.value;
-      profileSettings.formSkrining.excludes = excludesInput.value;
+
       if (pinnedValuesList) profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
 
       if (!profileSettings.skrining) profileSettings.skrining = {};
