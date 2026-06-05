@@ -36,7 +36,10 @@ export function showKeyHints() {
   for (const [, mapping] of Object.entries(keymap)) {
     for (const id of mapping.ids) {
       const btn = document.getElementById(id);
-      if (btn) { mountBadge(btn, mapping.label); break; }
+      if (btn) {
+        mountBadge(btn, mapping.label);
+        break;
+      }
     }
   }
 }
@@ -48,7 +51,10 @@ export function hideKeyHints() {
 export function triggerById(buttonIds) {
   for (const id of buttonIds) {
     const btn = document.getElementById(id);
-    if (btn) { btn.click(); return true; }
+    if (btn) {
+      btn.click();
+      return true;
+    }
   }
   return false;
 }

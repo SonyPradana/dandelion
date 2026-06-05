@@ -20,12 +20,7 @@ export async function init() {
   });
 
   document.addEventListener('keydown', (event) => {
-    if (
-      event.altKey &&
-      event.shiftKey &&
-      event.key.toLowerCase() === 'q' &&
-      !isActive()
-    ) {
+    if (event.altKey && event.shiftKey && event.key.toLowerCase() === 'q' && !isActive()) {
       const target = event.target;
       if (
         target &&

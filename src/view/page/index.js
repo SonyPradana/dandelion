@@ -611,7 +611,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   keymapInputs.forEach((input) => {
     input.addEventListener('input', () => {
-      input.value = input.value.replace(/[^a-zA-Z]/g, '').toLowerCase().slice(0, 1);
+      input.value = input.value
+        .replace(/[^a-zA-Z]/g, '')
+        .toLowerCase()
+        .slice(0, 1);
     });
   });
 
@@ -649,7 +652,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const newKeymaps = {};
     keymapInputs.forEach((input) => {
       const ids = (input.dataset.ids || input.dataset.id || '').split(',');
-      ids.forEach((id) => { newKeymaps[id] = input.value || id; });
+      ids.forEach((id) => {
+        newKeymaps[id] = input.value || id;
+      });
     });
     browser.storage.local.set({ keymaps: newKeymaps });
   });
