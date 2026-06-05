@@ -1,4 +1,4 @@
-import { getKeymap, triggerById } from './actions.js';
+import { getKeymap, triggerById, getProfileKeymap, switchToProfile } from './actions.js';
 
 let handler = null;
 let onDeactivate = null;
@@ -19,6 +19,7 @@ export function register(cleanupFn) {
 
   onDeactivate = cleanupFn;
   const keymap = getKeymap();
+  const profiles = getProfileKeymap();
 
   handler = (event) => {
     if (isEditableElement(event.target)) return;
@@ -27,6 +28,15 @@ export function register(cleanupFn) {
 
     if (key === 'escape') {
       event.preventDefault();
+      onDeactivate?.();
+      return;
+    }
+
+    const profileIndex = profiles[key];
+    if (profileIndex) {
+      event.preventDefault();
+      event.stopPropagation();
+      switchToProfile(profileIndex);
       onDeactivate?.();
       return;
     }

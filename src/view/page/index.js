@@ -589,6 +589,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // --- Keymaps Tab Logic ---
   const keymapInputs = document.querySelectorAll('.keymap-input');
   const keymapsTab = document.querySelector('.tab-btn[data-tab="keymaps"]');
+  const RESERVED_DIGITS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+  const keymapsError = document.createElement('div');
+  keymapsError.className = 'keymaps-error hidden';
+  keymapsError.textContent = 'Angka 0-9 tidak bisa digunakan — reserved untuk pilihan profil.';
 
   async function loadKeymaps() {
     const config = await getFullConfig();
@@ -597,6 +601,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       const id = input.dataset.id;
       input.value = km[id] || '';
     });
+
+    const range = document.querySelector('.keymaps-range');
+    if (range) {
+      const count = Object.keys(config.profiles || {}).length;
+      range.innerHTML = `<kbd>1</kbd>–<kbd>${count}</kbd>`;
+    }
   }
 
   keymapInputs.forEach((input) => {
@@ -616,6 +626,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   document.getElementById('save-config-btn').addEventListener('click', () => {
+    let hasError = false;
+    keymapInputs.forEach((input) => {
+      input.style.borderColor = '';
+      if (RESERVED_DIGITS.has(input.value)) {
+        input.style.borderColor = '#ef4444';
+        hasError = true;
+      }
+    });
+
+    if (hasError) {
+      if (!keymapsError.parentNode) {
+        const saveBtn = document.getElementById('save-config-btn');
+        saveBtn.parentNode.insertBefore(keymapsError, saveBtn);
+      }
+      keymapsError.classList.remove('hidden');
+      return;
+    }
+
+    keymapsError.classList.add('hidden');
+
     const newKeymaps = {};
     keymapInputs.forEach((input) => {
       const id = input.dataset.id;

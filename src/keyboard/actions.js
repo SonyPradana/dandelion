@@ -1,6 +1,8 @@
-let keymap = {};
+import { mountBadge, removeBadges } from '../components/keyboardBadge.js';
+import { setActiveProfile } from '../configuration.js';
 
-let badgeStylesInjected = false;
+let keymap = {};
+let profileKeymap = {};
 
 const MAPPING_ORDER = [
   'dandelion-auto-fill',
@@ -9,60 +11,6 @@ const MAPPING_ORDER = [
   'dandelion-zen-skip',
 ];
 
-function injectBadgeStyles() {
-  if (badgeStylesInjected) return;
-
-  const style = document.createElement('style');
-  style.textContent = `
-    .dandelion-kb-wrapper {
-      position: relative;
-      display: inline-block;
-    }
-    .dandelion-kb-badge {
-      position: absolute;
-      top: -8px;
-      left: -4px;
-      background: rgba(253, 255, 153, 0.95);
-      color: #171717;
-      padding: 0 4px;
-      font-size: 10px;
-      font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
-      font-weight: 600;
-      line-height: 1.4;
-      border-radius: 3px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      pointer-events: none;
-      z-index: 1;
-    }
-  `;
-  document.head.appendChild(style);
-  badgeStylesInjected = true;
-}
-
-function addBadge(buttonId, label) {
-  const btn = document.getElementById(buttonId);
-  if (!btn) return;
-
-  const wrapper = document.createElement('div');
-  wrapper.className = 'dandelion-kb-wrapper';
-
-  btn.parentNode.insertBefore(wrapper, btn);
-  wrapper.appendChild(btn);
-
-  const badge = document.createElement('div');
-  badge.className = 'dandelion-kb-badge';
-  badge.textContent = label;
-  wrapper.appendChild(badge);
-}
-
-function removeBadges() {
-  document.querySelectorAll('.dandelion-kb-wrapper').forEach((wrapper) => {
-    const btn = wrapper.querySelector('button');
-    if (btn) wrapper.parentNode.insertBefore(btn, wrapper);
-    wrapper.remove();
-  });
-}
-
 export function buildKeymap(configKeymaps) {
   keymap = {};
   for (const [id, key] of Object.entries(configKeymaps || {})) {
@@ -70,12 +18,21 @@ export function buildKeymap(configKeymaps) {
   }
 }
 
+export function buildProfileKeymap(profileCount) {
+  profileKeymap = {};
+  for (let i = 1; i <= profileCount; i++) {
+    profileKeymap[String(i)] = i;
+  }
+}
+
+export function switchToProfile(index) {
+  return setActiveProfile(`profile${index}`);
+}
+
 export function showKeyHints() {
-  injectBadgeStyles();
   for (const [, mapping] of Object.entries(keymap)) {
-    if (document.getElementById(mapping.id)) {
-      addBadge(mapping.id, mapping.label);
-    }
+    const btn = document.getElementById(mapping.id);
+    if (btn) mountBadge(btn, mapping.label);
   }
 }
 
@@ -92,6 +49,10 @@ export function triggerById(buttonId) {
 
 export function getKeymap() {
   return keymap;
+}
+
+export function getProfileKeymap() {
+  return profileKeymap;
 }
 
 export { MAPPING_ORDER };

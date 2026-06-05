@@ -733,6 +733,43 @@ body {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
 }
 
+.keymaps-table tr.keymaps-fixed {
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.keymaps-table tr.keymaps-fixed td {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.keymaps-range kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-weight: 600;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #555;
+}
+
+.keymaps-error {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.keymaps-error.hidden {
+  display: none;
+}
+
 /* ── Mobile ── */
 @media (max-width: 639px) {
   .sidebar {

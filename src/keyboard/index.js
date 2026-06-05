@@ -1,5 +1,5 @@
 import { activate, deactivate, isActive } from './mode.js';
-import { showKeyHints, hideKeyHints, buildKeymap } from './actions.js';
+import { showKeyHints, hideKeyHints, buildKeymap, buildProfileKeymap } from './actions.js';
 import { register, unregister } from './listener.js';
 import { getFullConfig } from '../configuration.js';
 import browser from 'webextension-polyfill';
@@ -7,10 +7,15 @@ import browser from 'webextension-polyfill';
 export async function init() {
   const config = await getFullConfig();
   buildKeymap(config.keymaps);
+  buildProfileKeymap(Object.keys(config.profiles || {}).length);
 
   browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.keymaps) {
+    if (area !== 'local') return;
+    if (changes.keymaps) {
       buildKeymap(changes.keymaps.newValue);
+    }
+    if (changes.profiles) {
+      buildProfileKeymap(Object.keys(changes.profiles.newValue || {}).length);
     }
   });
 
