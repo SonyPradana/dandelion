@@ -4,13 +4,29 @@ import { register, unregister } from './listener.js';
 import { getFullConfig } from '../configuration.js';
 import browser from 'webextension-polyfill';
 
+let currentShortcut = null;
+
+export function matchesShortcut(event, s) {
+  return (
+    event.altKey === !!s.alt &&
+    event.shiftKey === !!s.shift &&
+    event.ctrlKey === !!s.ctrl &&
+    !event.metaKey &&
+    event.key.toLowerCase() === s.key
+  );
+}
+
 export async function init() {
   const config = await getFullConfig();
+  currentShortcut = config.shortcut || { key: 'q', alt: true, shift: false, ctrl: false };
   buildKeymap(config.keymaps);
   buildProfileKeymap(Object.keys(config.profiles || {}).length);
 
   browser.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
+    if (changes.shortcut) {
+      currentShortcut = changes.shortcut.newValue;
+    }
     if (changes.keymaps) {
       buildKeymap(changes.keymaps.newValue);
     }
@@ -20,20 +36,20 @@ export async function init() {
   });
 
   document.addEventListener('keydown', (event) => {
-    if (event.altKey && event.shiftKey && event.key.toLowerCase() === 'q' && !isActive()) {
-      const target = event.target;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      )
-        return;
+    if (!currentShortcut || !matchesShortcut(event, currentShortcut) || isActive()) return;
 
-      event.preventDefault();
-      activateMode();
-    }
+    const target = event.target;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable)
+    )
+      return;
+
+    event.preventDefault();
+    activateMode();
   });
 }
 

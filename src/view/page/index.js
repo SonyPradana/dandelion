@@ -607,7 +607,42 @@ document.addEventListener('DOMContentLoaded', async () => {
       const count = Object.keys(config.profiles || {}).length;
       range.innerHTML = `<kbd>1</kbd>–<kbd>${count}</kbd>`;
     }
+
+    const sc = config.shortcut || { key: 'q', alt: true, shift: false, ctrl: false };
+    document.querySelectorAll('.shortcut-chip').forEach((chip) => {
+      const mod = chip.dataset.mod;
+      chip.classList.toggle('active', !!sc[mod]);
+    });
+    document.getElementById('shortcut-key').value = sc.key || '';
+    updateShortcutPreview();
   }
+
+  function updateShortcutPreview() {
+    const mods = [];
+    document.querySelectorAll('.shortcut-chip.active').forEach((chip) => {
+      mods.push(chip.textContent);
+    });
+    const key = document.getElementById('shortcut-key').value.toUpperCase() || '?';
+    document.getElementById('shortcut-preview').textContent =
+      mods.length ? `${mods.join(' + ')} + ${key}` : key;
+  }
+
+  document.querySelectorAll('.shortcut-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('active');
+      updateShortcutPreview();
+    });
+  });
+
+  document.getElementById('shortcut-key').addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' || e.key === 'Escape') return;
+    e.preventDefault();
+    const k = e.key.toLowerCase();
+    if (k.length === 1 && k >= 'a' && k <= 'z') {
+      e.target.value = k;
+      updateShortcutPreview();
+    }
+  });
 
   keymapInputs.forEach((input) => {
     input.addEventListener('input', () => {
@@ -648,6 +683,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     keymapsError.classList.add('hidden');
+
+    const modChips = document.querySelectorAll('.shortcut-chip.active');
+    const shortcutKey = document.getElementById('shortcut-key').value.trim().toLowerCase();
+    if (!modChips.length || !shortcutKey) {
+      return;
+    }
+    const shortcut = {
+      alt: false,
+      shift: false,
+      ctrl: false,
+    };
+    modChips.forEach((chip) => {
+      shortcut[chip.dataset.mod] = true;
+    });
+    shortcut.key = shortcutKey;
+    browser.storage.local.set({ shortcut });
 
     const newKeymaps = {};
     keymapInputs.forEach((input) => {
