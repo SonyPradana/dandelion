@@ -149,16 +149,16 @@ For production, see [Deployment](#deployment) below.
 
 ### Endpoints
 
-| Endpoint                | Description                             |
-| ----------------------- | --------------------------------------- |
-| `/`                     | Landing page (GET & HEAD)               |
-| `/health`               | Health check endpoint (GET & HEAD)      |
-| `/token-generator.html` | Token generator UI page                 |
-| `/update.json`          | Firefox addon auto-update manifest      |
-| `/manifest.json`        | Artifact listing + latest version       |
-| `/api/versions`         | Alias for `/manifest.json`              |
-| `/artifacts/<file>`     | Download `.zip` or `.xpi`               |
-| `/<any public file>`    | Static files from `public/`             |
+| Endpoint                | Description                        |
+| ----------------------- | ---------------------------------- |
+| `/`                     | Landing page (GET & HEAD)          |
+| `/health`               | Health check endpoint (GET & HEAD) |
+| `/token-generator.html` | Token generator UI page            |
+| `/update.json`          | Firefox addon auto-update manifest |
+| `/manifest.json`        | Artifact listing + latest version  |
+| `/api/versions`         | Alias for `/manifest.json`         |
+| `/artifacts/<file>`     | Download `.zip` or `.xpi`          |
+| `/<any public file>`    | Static files from `public/`        |
 
 ### Auto-Update Flow
 
@@ -262,8 +262,8 @@ The tunnel serves your server at `https://your-domain.com` — no ports to open.
 
 ## Versioning
 
-- `package.json` version uses a pre-release tag: `1.0.0-alfa.1`
-- Extension manifests (Chrome + Firefox) require purely numeric versions (`1.0.0`), so the pre-release suffix is stripped automatically during build
+- `package.json` version uses a Semantic Versioning
+- Extension manifests (Chrome + Firefox) require purely numeric versions (`1.0.0`)
 - When bumping, only edit `version` in `package.json` — manifests are updated automatically
 
 ## Code Quality
@@ -394,7 +394,7 @@ src/
   quota/                — Offline quota system
     public-key.js       — Embedded EC public key
     verify.js           — JWT verification (jose + ES256)
-    cache.js            — Verification result cache (10 min TTL)
+    cache.js            — Verification result cache (8 hours TTL)
     quota-manager.js    — Public API (init, getStatus, canUseTokens, isFeatureEnabled, saveToken, removeToken, getToken)
 rolldown.config.js      — shared bundler config
 package.json            — scripts & dependencies
