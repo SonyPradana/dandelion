@@ -5,6 +5,7 @@ const DEFAULT_CONFIG = {
   panelPosition: 'top-right',
   keymaps: {
     'dandelion-auto-fill': 'q',
+    'dandelion-not-checked-automation': 'q',
     'dandelion-debug-toggle': 'w',
     'dandelion-zen-mode-toggle': 'e',
     'dandelion-zen-skip': 'r',
@@ -166,7 +167,7 @@ function applyConfigDefaults(raw) {
   return {
     activeProfile: raw.activeProfile ?? DEFAULT_CONFIG.activeProfile,
     panelPosition: raw.panelPosition ?? DEFAULT_CONFIG.panelPosition,
-    keymaps: raw.keymaps ?? { ...DEFAULT_CONFIG.keymaps },
+    keymaps: { ...DEFAULT_CONFIG.keymaps, ...(raw.keymaps || {}) },
     profiles,
   };
 }

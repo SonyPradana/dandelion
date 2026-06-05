@@ -598,8 +598,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const config = await getFullConfig();
     const km = config.keymaps || {};
     keymapInputs.forEach((input) => {
-      const id = input.dataset.id;
-      input.value = km[id] || '';
+      const ids = (input.dataset.ids || input.dataset.id || '').split(',');
+      input.value = km[ids[0]] || '';
     });
 
     const range = document.querySelector('.keymaps-range');
@@ -648,8 +648,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const newKeymaps = {};
     keymapInputs.forEach((input) => {
-      const id = input.dataset.id;
-      newKeymaps[id] = input.value || id;
+      const ids = (input.dataset.ids || input.dataset.id || '').split(',');
+      ids.forEach((id) => { newKeymaps[id] = input.value || id; });
     });
     browser.storage.local.set({ keymaps: newKeymaps });
   });

@@ -6,6 +6,7 @@ let profileKeymap = {};
 
 const MAPPING_ORDER = [
   'dandelion-auto-fill',
+  'dandelion-not-checked-automation',
   'dandelion-debug-toggle',
   'dandelion-zen-mode-toggle',
   'dandelion-zen-skip',
@@ -14,7 +15,8 @@ const MAPPING_ORDER = [
 export function buildKeymap(configKeymaps) {
   keymap = {};
   for (const [id, key] of Object.entries(configKeymaps || {})) {
-    keymap[key] = { id, label: key };
+    if (!keymap[key]) keymap[key] = { ids: [], label: key };
+    keymap[key].ids.push(id);
   }
 }
 
@@ -25,14 +27,17 @@ export function buildProfileKeymap(profileCount) {
   }
 }
 
-export function switchToProfile(index) {
-  return setActiveProfile(`profile${index}`);
+export async function switchToProfile(index) {
+  await setActiveProfile(`profile${index}`);
+  window.location.reload();
 }
 
 export function showKeyHints() {
   for (const [, mapping] of Object.entries(keymap)) {
-    const btn = document.getElementById(mapping.id);
-    if (btn) mountBadge(btn, mapping.label);
+    for (const id of mapping.ids) {
+      const btn = document.getElementById(id);
+      if (btn) { mountBadge(btn, mapping.label); break; }
+    }
   }
 }
 
@@ -40,11 +45,12 @@ export function hideKeyHints() {
   removeBadges();
 }
 
-export function triggerById(buttonId) {
-  const btn = document.getElementById(buttonId);
-  if (!btn) return false;
-  btn.click();
-  return true;
+export function triggerById(buttonIds) {
+  for (const id of buttonIds) {
+    const btn = document.getElementById(id);
+    if (btn) { btn.click(); return true; }
+  }
+  return false;
 }
 
 export function getKeymap() {
