@@ -127,10 +127,6 @@ export async function initializeSkriningForm(flashData = {}) {
     );
 
     bus.emit('skriningForm:didFill', { result });
-
-    if (document.activeElement && document.activeElement !== document.body) {
-      document.activeElement.blur();
-    }
   }
 
   if (tombol) {

@@ -11,6 +11,10 @@ bus.on('skriningForm:didFill', async (ctx) => {
     freetext: result.freetext,
   });
 
+  if (document.activeElement && document.activeElement !== document.body) {
+    document.activeElement.blur();
+  }
+
   notify.info('Selesai', `Berhasil, ${result.total} ditemukan.`, 2500);
 
   if (result.total > 0) {
