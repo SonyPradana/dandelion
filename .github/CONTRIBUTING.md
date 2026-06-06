@@ -2,8 +2,9 @@
 
 ## Prerequisites
 
-- [pnpm](https://pnpm.io/) 9+
-- Node.js 20+
+- [pnpm](https://pnpm.io/) 11+
+- Node.js 22+
+- [Bun](https://bun.sh/) (for `bun run serve.ts`)
 - Firefox (for `web-ext lint` and `web-ext sign`)
 
 ## Quick Start
