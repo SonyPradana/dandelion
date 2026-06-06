@@ -3,19 +3,19 @@
     "date": "30 Mei 2026",
     "version": "1.4",
     "details": [
-      "Generator token kuota berbasis web — buat token langsung dari halaman khusus tanpa repot",
-      "Posisi panel kontrol bisa diubah ke 4 sudut layar, sesuaikan dengan kebiasaan kamu",
-      "Zen Mode Asist — mode fokus dengan timer hitung mundur dan pengisian langsung saat waktu habis",
-      "Chrome nightly build sekarang tersedia — dapatkan fitur terbaru lebih cepat (update harian)"
+      "Generator token kuota berbasis web — buat token secara mandiri dari halaman khusus",
+      "Posisi panel kontrol dapat diubah ke 4 sudut layar, sesuaikan dengan preferensi pengguna",
+      "Zen Mode Asist — mode fokus dengan penghitung waktu mundur dan pengisian langsung saat waktu habis",
+      "Chrome nightly build tersedia dalam format harian untuk pengguna yang menginginkan pembaruan lebih awal"
     ]
   },
   {
     "date": "23 Mei 2026",
     "version": "1.3",
     "details": [
-      "Token JWT sekarang terikat ke perangkat (device binding) — lebih aman dan tidak bisa dipakai sembarangan",
-      "Blokir persetujuan (agreement blocker) jadi lebih responsif — bereaksi cepat saat pengaturan berubah",
-      "Performa build lebih ringan dan cepat berkat format ESM terbaru",
+      "Token JWT kini terikat ke perangkat (device binding) — lebih aman dan tidak dapat digunakan secara sembarangan",
+      "Blokir persetujuan (agreement blocker) kini lebih responsif — bereaksi secara langsung saat pengaturan berubah",
+      "Performa build lebih ringan dan cepat dengan penerapan format ESM terkini",
       "Perbaikan: dukungan format penulisan id form yang lebih beragam"
     ]
   },
@@ -23,9 +23,9 @@
     "date": "19 Mei 2026",
     "version": "1.2",
     "details": [
-      "Token JWT lokal — sistem lisensi berjalan penuh di perangkat tanpa perlu akses internet sama sekali",
-      "Formulir SurveyJS dinamis bisa diisi — termasuk item yang muncul belakangan",
-      "Fitur duplikat profil — duplikasi profil yang sudah ada dengan cepat",
+      "Token JWT lokal — sistem lisensi berjalan penuh di perangkat tanpa akses internet sepenuhnya",
+      "Formulir SurveyJS dinamis dapat diisi — termasuk elemen yang muncul secara dinamis",
+      "Fitur duplikat profil — duplikasi profil yang telah tersedia dengan cepat",
       "Batas pemakaian harian (daily limit) — kendalikan seberapa sering ekstensi digunakan"
     ]
   },
@@ -33,9 +33,9 @@
     "date": "17 Mei 2026",
     "version": "1.1",
     "details": [
-      "Sistem produktivitas berbobot — makin rajin makin tinggi skor, lengkap dengan grafik",
-      "Perbaikan: dropdown di perangkat mobile sekarang bisa dipilih dengan mudah",
-      "Data antrian dipindah ke penyimpanan lokal browser — lebih aman dan tidak gampang hilang"
+      "Sistem produktivitas berbobot yang menilai konsistensi pengguna, dilengkapi grafik adaptif",
+      "Perbaikan: dropdown di perangkat mobile kini dapat dipilih dengan mudah",
+      "Data antrian dipindah ke penyimpanan lokal browser — lebih aman dan tidak mudah hilang"
     ]
   },
   {
@@ -44,11 +44,10 @@
     "details": [
       "Rilis perdana Dandelion untuk Chrome dan Firefox",
       "Mode Zen — layar fokus agar entri form lebih nyaman",
-      "Panel kontrol bisa diciutkan — tidak mengganggu tampilan halaman",
-      "Panel informasi debug — bantu cek apa yang terjadi di belakang layar",
-      "Ekspor & impor konfigurasi — pindahkan pengaturan antar perangkat",
-      "Dropdown dan input yang sering dipakai bisa di-pin",
-      "Sistem notifikasi — tahu apa yang sedang dikerjakan ekstensi",
+      "Panel kontrol dapat diminimalkan — tidak mengganggu tampilan halaman",
+      "Panel informasi debug — membantu memantau aktivitas ekstensi",
+      "Dropdown dan input yang sering digunakan dapat disematkan (pin)",
+      "Sistem notifikasi — memberikan informasi mengenai aktivitas ekstensi",
       "Gulir ke bawah setelah form terisi penuh",
       "Halaman konfigurasi lengkap dengan tab navigasi",
       "Firefox didukung penuh — build dan penandatanganan via AMO"
