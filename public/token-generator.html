@@ -98,6 +98,15 @@
         <div class="output-row">
           <textarea id="jwtOutput" rows="4" readonly></textarea>
           <button id="copyBtn">Copy</button>
+          <button id="sendBtn">Send</button>
+        </div>
+        <div id="shareResult" class="hidden">
+          <div class="share-link-row">
+            <span class="share-label">Link:</span>
+            <input type="text" id="shareUrl" readonly />
+            <button id="copyShareBtn">Copy Link</button>
+          </div>
+          <p id="shareInfo" class="share-info"></p>
         </div>
         <div id="summary" class="summary"></div>
       </div>

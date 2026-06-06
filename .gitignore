@@ -22,6 +22,9 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Database
+/data
+
 # OS generated files
 .DS_Store
 Thumbs.db
