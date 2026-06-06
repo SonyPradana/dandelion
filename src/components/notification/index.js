@@ -4,10 +4,18 @@ import { createBasePanel, createPanelButton } from './base';
  * Custom Notification API
  */
 export const notify = {
+  _silenceInfo: false,
+
+  setConfig(config) {
+    this._silenceInfo = Boolean(config.silenceInfoNotification);
+  },
+
   /**
    * Simple flash info notification
    */
   info(title, message, duration = 3000) {
+    if (this._silenceInfo) return;
+
     const id = `dandelion-info-${Date.now()}`;
     const { contentArea, setHeader, remove } = createBasePanel(id);
 

@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 const DEFAULT_CONFIG = {
   activeProfile: 'profile1',
   panelPosition: 'top-right',
+  silenceInfoNotification: false,
   profiles: {
     profile1: {
       name: 'Profile 1',
@@ -129,6 +130,7 @@ export function migrateConfig(raw) {
     return {
       activeProfile: raw.activeProfile ?? DEFAULT_CONFIG.activeProfile,
       panelPosition: DEFAULT_CONFIG.panelPosition,
+      silenceInfoNotification: DEFAULT_CONFIG.silenceInfoNotification,
       profiles,
     };
   }
@@ -163,6 +165,7 @@ function applyConfigDefaults(raw) {
   return {
     activeProfile: raw.activeProfile ?? DEFAULT_CONFIG.activeProfile,
     panelPosition: raw.panelPosition ?? DEFAULT_CONFIG.panelPosition,
+    silenceInfoNotification: raw.silenceInfoNotification ?? DEFAULT_CONFIG.silenceInfoNotification,
     profiles,
   };
 }
