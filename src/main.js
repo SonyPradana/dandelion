@@ -7,12 +7,14 @@ import { getFlashDataIfEnabled } from './handlers/flashData.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
 import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quota-manager.js';
 import { controlPanel } from './components/controlPanel.js';
+import { notify } from './components/notification';
 
 async function main() {
   const agreed = await getAgreement();
   if (!agreed) return;
 
   const config = await getFullConfig();
+  notify.setConfig(config);
   controlPanel.setPosition(config.panelPosition || 'top-right');
 
   await quotaInit();

@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
   const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
   const flashDataEnabledCheckbox = document.getElementById('flash-data-enabled');
+  const silenceInfoNotificationCheckbox = document.getElementById('silence-info-notification');
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
@@ -197,6 +198,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.classList.add('active');
       });
     });
+
+    silenceInfoNotificationCheckbox.checked = config.silenceInfoNotification ?? false;
   });
 
   const saveConfigBtn = document.getElementById('save-config-btn');
@@ -232,6 +235,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.flashData) profileSettings.flashData = {};
       profileSettings.flashData.enabled = flashDataEnabledCheckbox.checked;
+
+      loadedConfig.silenceInfoNotification = silenceInfoNotificationCheckbox.checked;
 
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;
