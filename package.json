@@ -36,10 +36,5 @@
     "oxlint": "^1.66.0",
     "rolldown": "^1.0.2",
     "web-ext": "^10.3.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "yauzl": ">=3.2.1"
-    }
   }
 }
