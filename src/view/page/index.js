@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sc = config.shortcut || { key: 'q', alt: true, shift: false, ctrl: false };
     document.querySelectorAll('.shortcut-chip').forEach((chip) => {
       const mod = chip.dataset.mod;
-      chip.classList.toggle('active', !!sc[mod]);
+      chip.classList.toggle('active', Boolean(sc[mod]));
     });
     document.getElementById('shortcut-key').value = sc.key || '';
     updateShortcutPreview();
@@ -623,8 +623,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       mods.push(chip.textContent);
     });
     const key = document.getElementById('shortcut-key').value.toUpperCase() || '?';
-    document.getElementById('shortcut-preview').textContent =
-      mods.length ? `${mods.join(' + ')} + ${key}` : key;
+    document.getElementById('shortcut-preview').textContent = mods.length
+      ? `${mods.join(' + ')} + ${key}`
+      : key;
   }
 
   document.querySelectorAll('.shortcut-chip').forEach((chip) => {

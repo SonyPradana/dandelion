@@ -6,13 +6,13 @@ import browser from 'webextension-polyfill';
 
 let currentShortcut = null;
 
-export function matchesShortcut(event, s) {
+export function matchesShortcut(event, shortcut) {
   return (
-    event.altKey === !!s.alt &&
-    event.shiftKey === !!s.shift &&
-    event.ctrlKey === !!s.ctrl &&
+    event.altKey === Boolean(shortcut.alt) &&
+    event.shiftKey === Boolean(shortcut.shift) &&
+    event.ctrlKey === Boolean(shortcut.ctrl) &&
     !event.metaKey &&
-    event.key.toLowerCase() === s.key
+    event.key.toLowerCase() === shortcut.key
   );
 }
 

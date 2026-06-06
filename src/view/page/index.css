@@ -836,7 +836,9 @@ body {
   border: 1px solid #d1d5db;
   border-radius: 6px;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
   text-transform: lowercase;
 }
 
