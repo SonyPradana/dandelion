@@ -10,7 +10,6 @@ import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
 import { clearFlashData } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
-import { incrementBatch } from '../utils/productivityTracker';
 import bus from '../utils/hooks';
 import { notify } from '../components/notification';
 
@@ -127,26 +126,10 @@ export async function initializeSkriningForm(flashData = {}) {
       excludes,
     );
 
-    await incrementBatch({
-      radio: result.radio,
-      dropdown: result.dropdown,
-      freetext: result.freetext,
-    });
-
     bus.emit('skriningForm:didFill', { result });
-
-    notify.info('Selesai', `Berhasil, ${result.total} ditemukan.`, 2500);
 
     if (document.activeElement && document.activeElement !== document.body) {
       document.activeElement.blur();
-    }
-    if (result.total > 0) {
-      setTimeout(() => {
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: 'smooth',
-        });
-      }, 100);
     }
   }
 

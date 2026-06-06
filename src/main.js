@@ -2,6 +2,7 @@ import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkriningSend } from './handlers/skrining-send.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
+import './handlers/skrining-events.js';
 import { getAgreement, getActiveConfig, getFullConfig } from './configuration.js';
 import { getFlashDataIfEnabled } from './handlers/flashData.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
