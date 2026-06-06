@@ -164,11 +164,68 @@
         color: #71717a;
         font-size: 0.85rem;
       }
-      .nightly-desc {
-        font-size: 0.75rem;
-        color: #fbbf24;
-        margin-bottom: 1rem;
-      }
+        .nightly-desc {
+          font-size: 0.75rem;
+          color: #fbbf24;
+          margin-bottom: 1rem;
+        }
+        .changelog-empty {
+          text-align: center;
+          color: #71717a;
+          font-size: 0.85rem;
+          padding: 1rem;
+        }
+        .changelog-entry {
+          background: #14141f;
+          border: 1px solid #2a2a3a;
+          border-radius: 12px;
+          padding: 1.25rem;
+          margin-bottom: 1rem;
+        }
+        .changelog-entry:last-child {
+          margin-bottom: 0;
+        }
+        .changelog-header {
+          display: flex;
+          align-items: baseline;
+          gap: 0.75rem;
+          margin-bottom: 0.75rem;
+        }
+        .changelog-header-title {
+          font-size: 1rem;
+          font-weight: 600;
+        }
+        .changelog-version {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: #6366f1;
+          background: #1e1b4b;
+          padding: 0.15rem 0.5rem;
+          border-radius: 4px;
+        }
+        .changelog-date {
+          font-size: 0.8rem;
+          color: #71717a;
+          margin-left: auto;
+        }
+        .changelog-entry ul {
+          list-style: none;
+          padding: 0;
+        }
+        .changelog-entry li {
+          font-size: 0.85rem;
+          color: #a1a1aa;
+          padding: 0.25rem 0;
+          padding-left: 1.25rem;
+          position: relative;
+          line-height: 1.4;
+        }
+        .changelog-entry li::before {
+          content: '—';
+          position: absolute;
+          left: 0;
+          color: #6366f1;
+        }
       @media (max-width: 500px) {
         .downloads {
           flex-direction: column;
@@ -275,6 +332,11 @@
         <a class="btn btn-outline" href="/token-generator.html">Open</a>
       </div>
 
+      <section id="changelog-section" style="margin-bottom: 2.5rem">
+        <p class="section-title">Latest Updates</p>
+        <div id="changelog"></div>
+      </section>
+
       <p class="status" id="status"></p>
     </div>
 
@@ -320,6 +382,39 @@
           document.getElementById('firefox-version').textContent = 'Not available';
           document.getElementById('chrome-nightly-version').textContent = 'Not available';
           status.textContent = 'No artifacts found. Run pnpm release to build.';
+        }
+
+        try {
+          const changelogRes = await fetch('/changelog.json');
+          if (!changelogRes.ok) throw new Error('Not found');
+          const changelog = await changelogRes.json();
+          const container = document.getElementById('changelog');
+          if (!changelog || changelog.length === 0) {
+            container.innerHTML = '<p class="changelog-empty">Belum ada pembaruan</p>';
+          } else {
+            container.innerHTML = changelog
+              .slice(0, 3)
+              .map(
+                (entry) => `
+              <div class="changelog-entry">
+                <div class="changelog-header">
+                  <span class="changelog-version">v${entry.version}</span>
+                  <span class="changelog-header-title">Version ${entry.version}</span>
+                  <span class="changelog-date">${entry.date}</span>
+                </div>
+                <ul>
+                  ${entry.details.map((d) => `<li>${d}</li>`).join('')}
+                </ul>
+              </div>
+            `
+              )
+              .join('');
+          }
+        } catch {
+          const container = document.getElementById('changelog');
+          if (container) {
+            container.innerHTML = '<p class="changelog-empty">Gagal memuat pembaruan</p>';
+          }
         }
       })();
     </script>
