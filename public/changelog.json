@@ -16,7 +16,7 @@
       "Token JWT sekarang terikat ke perangkat (device binding) — lebih aman dan tidak bisa dipakai sembarangan",
       "Blokir persetujuan (agreement blocker) jadi lebih responsif — bereaksi cepat saat pengaturan berubah",
       "Performa build lebih ringan dan cepat berkat format ESM terbaru",
-      "Perbaikan: form dengan format id row-FRM sekarang didukung"
+      "Perbaikan: dukungan format penulisan id form yang lebih beragam"
     ]
   },
   {
