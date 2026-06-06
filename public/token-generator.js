@@ -23,6 +23,11 @@ const output = document.getElementById('output');
 const jwtOutput = document.getElementById('jwtOutput');
 const summary = document.getElementById('summary');
 const copyBtn = document.getElementById('copyBtn');
+const sendBtn = document.getElementById('sendBtn');
+const shareResult = document.getElementById('shareResult');
+const shareUrl = document.getElementById('shareUrl');
+const copyShareBtn = document.getElementById('copyShareBtn');
+const shareInfo = document.getElementById('shareInfo');
 const pastePemBtn = document.getElementById('pastePemBtn');
 const importPemBtn = document.getElementById('importPemBtn');
 const pemFileInput = document.getElementById('pemFileInput');
@@ -145,6 +150,10 @@ form.addEventListener('submit', async (e) => {
       </table>
     `;
     output.classList.remove('hidden');
+    shareResult.classList.add('hidden');
+    sendBtn.textContent = 'Send';
+    sendBtn.disabled = false;
+    sendBtn.classList.remove('sent');
   } catch (error) {
     alert('Error generating token: ' + (error.message || error));
   }
@@ -161,6 +170,49 @@ copyBtn.addEventListener('click', async () => {
     }, 2000);
   } catch {
     jwtOutput.select();
+    document.execCommand('copy');
+  }
+});
+
+sendBtn.addEventListener('click', async () => {
+  const jwt = jwtOutput.value;
+  if (!jwt) return;
+  sendBtn.textContent = 'Sending...';
+  sendBtn.disabled = true;
+  try {
+    const res = await fetch('/api/share', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ jwt }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Failed to create share link');
+    }
+    const data = await res.json();
+    shareUrl.value = data.url;
+    shareInfo.textContent = 'Link valid for 24 hours / 10 views';
+    shareResult.classList.remove('hidden');
+    sendBtn.textContent = 'Sent!';
+    sendBtn.classList.add('sent');
+  } catch (error) {
+    alert('Error: ' + (error.message || error));
+    sendBtn.textContent = 'Send';
+    sendBtn.disabled = false;
+  }
+});
+
+copyShareBtn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(shareUrl.value);
+    copyShareBtn.textContent = 'Copied!';
+    copyShareBtn.classList.add('copied');
+    setTimeout(() => {
+      copyShareBtn.textContent = 'Copy Link';
+      copyShareBtn.classList.remove('copied');
+    }, 2000);
+  } catch {
+    shareUrl.select();
     document.execCommand('copy');
   }
 });

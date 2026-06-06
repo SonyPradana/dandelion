@@ -1,5 +1,6 @@
-import { readdirSync, existsSync, readFileSync, statSync, watch } from 'fs';
+import { readdirSync, existsSync, readFileSync, statSync, watch, mkdirSync } from 'fs';
 import { join, extname } from 'path';
+import { Database } from 'bun:sqlite';
 
 // ── Routes ──
 //   /                     → Landing page (index.html)
@@ -9,6 +10,8 @@ import { join, extname } from 'path';
 //   /api/versions         → Alias for /manifest.json
 //   /artifacts/<file>     → Artifact download (.zip, .xpi)
 //   /health               → Health check (GET & HEAD)
+//   /api/share            → Create a share link (POST)
+//   /share/<id>           → View a shared token (GET)
 //   /<any public file>    → Static files served from public/
 
 // --- types ---
@@ -64,6 +67,44 @@ const ALLOWED_STATIC_EXT = new Set([
 
 const startTime = Date.now();
 
+// --- database ---
+
+const DATA_DIR = join(ROOT, 'data');
+if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true });
+const db = new Database(join(DATA_DIR, 'shares.db'));
+
+db.run(`CREATE TABLE IF NOT EXISTS shared_tokens (
+  id TEXT PRIMARY KEY,
+  jwt TEXT NOT NULL,
+  views INTEGER NOT NULL DEFAULT 0,
+  max_views INTEGER NOT NULL DEFAULT 10,
+  created_at INTEGER NOT NULL,
+  expires_at INTEGER NOT NULL
+)`);
+
+db.run(`DELETE FROM shared_tokens WHERE expires_at < ?`, [Date.now()]);
+setInterval(() => {
+  db.run(`DELETE FROM shared_tokens WHERE expires_at < ?`, [Date.now()]);
+}, 60 * 60 * 1000);
+
+// --- rate limiter ---
+
+const rateMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 20;
+const RATE_WINDOW = 60_000;
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateMap.get(ip);
+  if (!entry || entry.resetAt < now) {
+    rateMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
 // --- helpers ---
 
 function cmpVer(a: string, b: string): number {
@@ -93,6 +134,121 @@ function fileHashHex(filePath: string): string {
   const hasher = new Bun.CryptoHasher('sha256');
   hasher.update(readFileSync(filePath));
   return hasher.digest('hex') as string;
+}
+
+// --- share helpers ---
+
+interface ShareRow {
+  id: string;
+  jwt: string;
+  views: number;
+  max_views: number;
+  created_at: number;
+  expires_at: number;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function base64urlDecode(s: string): string {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  while (s.length % 4) s += '=';
+  return atob(s);
+}
+
+function decodeJWTPayload(jwt: string): Record<string, unknown> {
+  try {
+    return JSON.parse(base64urlDecode(jwt.split('.')[1]));
+  } catch {
+    return {};
+  }
+}
+
+function renderSharePage(row: ShareRow): string {
+  const payload = decodeJWTPayload(row.jwt);
+  const remaining = Math.max(0, row.expires_at - Date.now());
+  const remainingH = Math.floor(remaining / 3_600_000);
+  const remainingM = Math.floor((remaining % 3_600_000) / 60_000);
+  const remainingS = Math.floor((remaining % 60_000) / 1000);
+  const remainingText = remainingH > 0
+    ? `${remainingH}h ${remainingM}m`
+    : remainingM > 0
+      ? `${remainingM}m ${remainingS}s`
+      : `${remainingS}s`;
+
+  const viewPercent = Math.min(100, Math.round((row.views / row.max_views) * 100));
+  const features = Array.isArray(payload.features) ? (payload.features as string[]).join(', ') : '-';
+  const versionAllowed = Array.isArray(payload.version_allowed)
+    ? (payload.version_allowed as string[]).join(', ')
+    : '-';
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Token — Dandelion</title>
+  <link rel="stylesheet" href="/token-generator.css" />
+  <style>
+    .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; }
+    .badge.active { background:#238636; color:#fff; }
+    .view-bar { height:6px; background:#21262d; border-radius:3px; margin-top:0.75rem; overflow:hidden; }
+    .view-bar-fill { height:100%; background:#1f6feb; border-radius:3px; transition:width .3s; }
+    .view-text { font-size:0.75rem; color:#8b949e; margin-top:0.375rem; }
+    .meta-row { display:flex; gap:1rem; margin-top:0.75rem; font-size:0.75rem; color:#8b949e; flex-wrap:wrap; }
+    .meta-row span { flex:1; min-width:140px; }
+    #jwtOutput { font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace; font-size:0.813rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Dandelion</h1>
+      <p class="subtitle">Shared Quota Token <span class="badge active">Active</span></p>
+    </header>
+
+    <table class="summary">
+      <tr><td>Token ID</td><td>${escapeHtml(String(payload.license_id ?? '-'))}</td></tr>
+      <tr><td>Features</td><td>${escapeHtml(features)}</td></tr>
+      <tr><td>Total Limit</td><td>${escapeHtml(String(payload.total_limit ?? '-'))}</td></tr>
+      <tr><td>Daily Limit</td><td>${escapeHtml(String(payload.daily_limit ?? '-'))}</td></tr>
+      <tr><td>Version Allowed</td><td>${escapeHtml(versionAllowed)}</td></tr>
+      <tr><td>Expires (JWT)</td><td>${payload.exp ? escapeHtml(new Date((payload.exp as number) * 1000).toISOString().replace('T', ' ').slice(0, 19) + ' UTC') : '-'}</td></tr>
+    </table>
+
+    <div class="view-bar">
+      <div class="view-bar-fill" style="width:${viewPercent}%"></div>
+    </div>
+    <p class="view-text">Viewed ${row.views} of ${row.max_views} times</p>
+
+    <div class="meta-row">
+      <span>Created: ${new Date(row.created_at).toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
+      <span>Expires: ${new Date(row.expires_at).toISOString().replace('T', ' ').slice(0, 19)} UTC</span>
+      <span>Time remaining: ${remainingText}</span>
+    </div>
+
+    <div class="output-row" style="margin-top:1rem">
+      <textarea id="jwtOutput" rows="4" readonly>${escapeHtml(row.jwt)}</textarea>
+      <button id="copyBtn">Copy</button>
+    </div>
+  </div>
+  <script>
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('copyBtn');
+      try {
+        await navigator.clipboard.writeText(document.getElementById('jwtOutput').value);
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+      } catch {
+        document.getElementById('jwtOutput').select();
+        document.execCommand('copy');
+      }
+    });
+  </script>
+</body>
+</html>`;
 }
 
 // --- artifact cache + fs.watch invalidation ---
@@ -256,6 +412,103 @@ async function handleRequest(req: Request): Promise<Response> {
     if (!existsSync(faviconPath)) return notFound();
     return new Response(Bun.file(faviconPath), {
       headers: { 'content-type': 'image/png' },
+    });
+  }
+
+  // ── share link ──────────────────────────────────────────────────────
+  if (pathname === '/api/share' && req.method === 'POST') {
+    try {
+      // ── rate limit ──
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+        || req.headers.get('cf-connecting-ip')
+        || 'unknown';
+      if (!checkRateLimit(ip)) {
+        return new Response(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      const body = await req.json();
+      if (!body.jwt || typeof body.jwt !== 'string') {
+        return new Response(JSON.stringify({ error: 'Invalid JWT' }), {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      // ── JWT size limit (10KB) ──
+      if (body.jwt.length > 10_000) {
+        return new Response(JSON.stringify({ error: 'JWT too large' }), {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      // ── JWT format: 3 parts ──
+      const parts = body.jwt.split('.');
+      if (parts.length !== 3) {
+        return new Response(JSON.stringify({ error: 'Invalid JWT format' }), {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      // ── JWT payload valid JSON ──
+      try {
+        const decoded = base64urlDecode(parts[1]);
+        const payload = JSON.parse(decoded);
+        if (!payload || typeof payload !== 'object') throw new Error();
+      } catch {
+        return new Response(JSON.stringify({ error: 'Invalid JWT payload' }), {
+          status: 400,
+          headers: { 'content-type': 'application/json' },
+        });
+      }
+
+      // ── max active rows ──
+      const count = (db.query('SELECT COUNT(*) as c FROM shared_tokens').get() as { c: number }).c;
+      if (count >= 500) {
+        db.run(
+          `DELETE FROM shared_tokens WHERE id IN (SELECT id FROM shared_tokens ORDER BY created_at ASC LIMIT ?)`,
+          [count - 500 + 1],
+        );
+      }
+
+      const id = Array.from(crypto.getRandomValues(new Uint8Array(4)))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+      const now = Date.now();
+      db.run(
+        `INSERT INTO shared_tokens (id, jwt, views, max_views, created_at, expires_at) VALUES (?, ?, 0, 10, ?, ?)`,
+        [id, body.jwt, now, now + 24 * 60 * 60 * 1000],
+      );
+      return new Response(JSON.stringify({ url: `${PUBLIC_URL || BASE_URL}/share/${id}` }), {
+        headers: { 'content-type': 'application/json' },
+      });
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      });
+    }
+  }
+
+  const shareMatch = pathname.match(/^\/share\/([a-f0-9]{8})$/);
+  if (shareMatch) {
+    const row = db.query('SELECT * FROM shared_tokens WHERE id = ?').get(shareMatch[1]) as ShareRow | null;
+    if (!row) return notFound();
+    const now = Date.now();
+    if (row.expires_at < now) {
+      db.run('DELETE FROM shared_tokens WHERE id = ?', [row.id]);
+      return new Response('Link expired', { status: 410 });
+    }
+    if (row.views >= row.max_views) {
+      return new Response('View limit reached', { status: 410 });
+    }
+    db.run('UPDATE shared_tokens SET views = views + 1 WHERE id = ?', [row.id]);
+    return new Response(renderSharePage(row), {
+      headers: { 'content-type': 'text/html' },
     });
   }
 
