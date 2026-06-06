@@ -83,9 +83,12 @@ db.run(`CREATE TABLE IF NOT EXISTS shared_tokens (
 )`);
 
 db.run(`DELETE FROM shared_tokens WHERE expires_at < ?`, [Date.now()]);
-setInterval(() => {
-  db.run(`DELETE FROM shared_tokens WHERE expires_at < ?`, [Date.now()]);
-}, 60 * 60 * 1000);
+setInterval(
+  () => {
+    db.run(`DELETE FROM shared_tokens WHERE expires_at < ?`, [Date.now()]);
+  },
+  60 * 60 * 1000,
+);
 
 // --- rate limiter ---
 
@@ -148,7 +151,11 @@ interface ShareRow {
 }
 
 function escapeHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function base64urlDecode(s: string): string {
@@ -171,14 +178,19 @@ function renderSharePage(row: ShareRow): string {
   const remainingH = Math.floor(remaining / 3_600_000);
   const remainingM = Math.floor((remaining % 3_600_000) / 60_000);
   const remainingS = Math.floor((remaining % 60_000) / 1000);
-  const remainingText = remainingH > 0
-    ? `${remainingH}h ${remainingM}m`
-    : remainingM > 0
-      ? `${remainingM}m ${remainingS}s`
-      : `${remainingS}s`;
+  let remainingText = '';
+  if (remainingH > 0) {
+    remainingText = `${remainingH}h ${remainingM}m`;
+  } else if (remainingM > 0) {
+    remainingText = `${remainingM}m ${remainingS}s`;
+  } else {
+    remainingText = `${remainingS}s`;
+  }
 
   const viewPercent = Math.min(100, Math.round((row.views / row.max_views) * 100));
-  const features = Array.isArray(payload.features) ? (payload.features as string[]).join(', ') : '-';
+  const features = Array.isArray(payload.features)
+    ? (payload.features as string[]).join(', ')
+    : '-';
   const versionAllowed = Array.isArray(payload.version_allowed)
     ? (payload.version_allowed as string[]).join(', ')
     : '-';
@@ -419,51 +431,37 @@ async function handleRequest(req: Request): Promise<Response> {
   if (pathname === '/api/share' && req.method === 'POST') {
     try {
       // ── rate limit ──
-      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-        || req.headers.get('cf-connecting-ip')
-        || 'unknown';
+      const ip =
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        req.headers.get('cf-connecting-ip') ||
+        'unknown';
       if (!checkRateLimit(ip)) {
-        return new Response(JSON.stringify({ error: 'Too many requests' }), {
-          status: 429,
-          headers: { 'content-type': 'application/json' },
-        });
+        return Response.json({ error: 'Too many requests' }, { status: 429 });
       }
 
       const body = await req.json();
       if (!body.jwt || typeof body.jwt !== 'string') {
-        return new Response(JSON.stringify({ error: 'Invalid JWT' }), {
-          status: 400,
-          headers: { 'content-type': 'application/json' },
-        });
+        return Response.json({ error: 'Invalid JWT' }, { status: 400 });
       }
 
       // ── JWT size limit (10KB) ──
       if (body.jwt.length > 10_000) {
-        return new Response(JSON.stringify({ error: 'JWT too large' }), {
-          status: 400,
-          headers: { 'content-type': 'application/json' },
-        });
+        return Response.json({ error: 'JWT too large' }, { status: 400 });
       }
 
       // ── JWT format: 3 parts ──
       const parts = body.jwt.split('.');
       if (parts.length !== 3) {
-        return new Response(JSON.stringify({ error: 'Invalid JWT format' }), {
-          status: 400,
-          headers: { 'content-type': 'application/json' },
-        });
+        return Response.json({ error: 'Invalid JWT format' }, { status: 400 });
       }
 
       // ── JWT payload valid JSON ──
       try {
         const decoded = base64urlDecode(parts[1]);
         const payload = JSON.parse(decoded);
-        if (!payload || typeof payload !== 'object') throw new Error();
+        if (!payload || typeof payload !== 'object') throw new Error('Invalid JWT payload');
       } catch {
-        return new Response(JSON.stringify({ error: 'Invalid JWT payload' }), {
-          status: 400,
-          headers: { 'content-type': 'application/json' },
-        });
+        return Response.json({ error: 'Invalid JWT payload' }, { status: 400 });
       }
 
       // ── max active rows ──
@@ -483,20 +481,17 @@ async function handleRequest(req: Request): Promise<Response> {
         `INSERT INTO shared_tokens (id, jwt, views, max_views, created_at, expires_at) VALUES (?, ?, 0, 10, ?, ?)`,
         [id, body.jwt, now, now + 24 * 60 * 60 * 1000],
       );
-      return new Response(JSON.stringify({ url: `${PUBLIC_URL || BASE_URL}/share/${id}` }), {
-        headers: { 'content-type': 'application/json' },
-      });
+      return Response.json({ url: `${PUBLIC_URL || BASE_URL}/share/${id}` });
     } catch {
-      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
-        status: 400,
-        headers: { 'content-type': 'application/json' },
-      });
+      return Response.json({ error: 'Invalid request body' }, { status: 400 });
     }
   }
 
   const shareMatch = pathname.match(/^\/share\/([a-f0-9]{8})$/);
   if (shareMatch) {
-    const row = db.query('SELECT * FROM shared_tokens WHERE id = ?').get(shareMatch[1]) as ShareRow | null;
+    const row = db
+      .query('SELECT * FROM shared_tokens WHERE id = ?')
+      .get(shareMatch[1]) as ShareRow | null;
     if (!row) return notFound();
     const now = Date.now();
     if (row.expires_at < now) {
