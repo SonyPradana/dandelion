@@ -52,6 +52,13 @@
           </div>
 
           <div class="tab-group">
+            <button class="tab-btn" data-tab="keymaps">
+              <span class="tab-icon">⌨️</span>
+              <span class="tab-label">Keymaps</span>
+            </button>
+          </div>
+
+          <div class="tab-group">
             <button class="tab-btn" data-tab="lainnya">
               <span class="tab-icon">⚙️</span>
               <span class="tab-label">Lainnya</span>
@@ -286,6 +293,105 @@
               </button>
             </div>
             <div class="pane-body" id="produktifitas-page-content"></div>
+          </section>
+
+          <section class="tab-pane" id="tab-keymaps">
+            <div class="pane-header">⌨️ Keymaps</div>
+            <div class="pane-body">
+              <div class="keymaps-panel">
+                <div class="keymaps-panel-content">
+                  <div class="shortcut-config">
+                    <label class="shortcut-label">Aktivasi Mode Dandelion</label>
+                    <div class="shortcut-modifiers">
+                      <button type="button" class="shortcut-chip" data-mod="alt">Alt</button>
+                      <button type="button" class="shortcut-chip" data-mod="shift">Shift</button>
+                      <button type="button" class="shortcut-chip" data-mod="ctrl">Ctrl</button>
+                      <span class="shortcut-plus">+</span>
+                      <input
+                        type="text"
+                        class="shortcut-key"
+                        id="shortcut-key"
+                        maxlength="1"
+                        placeholder="?"
+                      />
+                    </div>
+                    <div class="shortcut-preview" id="shortcut-preview">Alt + Q</div>
+                  </div>
+                  <p>
+                    Tekan shortcut di atas untuk mengaktifkan <strong>Mode Dandelion</strong>, lalu
+                    tekan salah satu tombol di bawah untuk menjalankan aksi. Tekan
+                    <kbd>Esc</kbd> untuk membatalkan.
+                  </p>
+                </div>
+              </div>
+
+              <table class="keymaps-table">
+                <thead>
+                  <tr>
+                    <th class="col-key">Tombol</th>
+                    <th class="col-action">Aksi</th>
+                    <th class="col-desc">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <input
+                        type="text"
+                        class="keymap-input"
+                        data-ids="dandelion-auto-fill,dandelion-not-checked-automation"
+                        maxlength="1"
+                      />
+                    </td>
+                    <td>🙈 Isi Form / ❌ Tidak Periksa</td>
+                    <td>Isi form / proses item tidak diperiksa</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input
+                        type="text"
+                        class="keymap-input"
+                        data-id="dandelion-debug-toggle"
+                        maxlength="1"
+                      />
+                    </td>
+                    <td>🐞 Debug</td>
+                    <td>Tampilkan/sembunyikan info debug</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input
+                        type="text"
+                        class="keymap-input"
+                        data-id="dandelion-zen-mode-toggle"
+                        maxlength="1"
+                      />
+                    </td>
+                    <td>⚡ Zen Mode</td>
+                    <td>Aktifkan/nonaktifkan zen mode</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <input
+                        type="text"
+                        class="keymap-input"
+                        data-id="dandelion-zen-skip"
+                        maxlength="1"
+                      />
+                    </td>
+                    <td>⏩ Skip</td>
+                    <td>Lanjut ke item berikutnya</td>
+                  </tr>
+                  <tr class="keymaps-fixed">
+                    <td>
+                      <span class="keymaps-range"><kbd>1</kbd>–<kbd>N</kbd></span>
+                    </td>
+                    <td>👤 Profil</td>
+                    <td>Pilih profil sesuai urutan</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </section>
 
           <section class="tab-pane" id="tab-lainnya">

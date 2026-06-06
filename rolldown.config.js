@@ -12,6 +12,7 @@ export default [
       },
     },
   },
+
   {
     input: {
       'view/popup': 'src/view/popup.js',

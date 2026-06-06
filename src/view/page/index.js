@@ -592,4 +592,145 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
     reader.readAsText(file);
   });
+
+  // --- Keymaps Tab Logic ---
+  const keymapInputs = document.querySelectorAll('.keymap-input');
+  const keymapsTab = document.querySelector('.tab-btn[data-tab="keymaps"]');
+  const RESERVED_DIGITS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
+  const keymapsError = document.createElement('div');
+  keymapsError.className = 'keymaps-error hidden';
+  keymapsError.textContent = 'Angka 0-9 tidak bisa digunakan — reserved untuk pilihan profil.';
+
+  async function loadKeymaps() {
+    const config = await getFullConfig();
+    const km = config.keymaps || {};
+    keymapInputs.forEach((input) => {
+      const ids = (input.dataset.ids || input.dataset.id || '').split(',');
+      input.value = km[ids[0]] || '';
+    });
+
+    const range = document.querySelector('.keymaps-range');
+    if (range) {
+      const count = Object.keys(config.profiles || {}).length;
+      range.innerHTML = `<kbd>1</kbd>–<kbd>${count}</kbd>`;
+    }
+
+    const sc = config.shortcut || { key: 'q', alt: true, shift: false, ctrl: false };
+    document.querySelectorAll('.shortcut-chip').forEach((chip) => {
+      const mod = chip.dataset.mod;
+      chip.classList.toggle('active', Boolean(sc[mod]));
+    });
+    document.getElementById('shortcut-key').value = sc.key || '';
+    updateShortcutPreview();
+  }
+
+  function updateShortcutPreview() {
+    const mods = [];
+    document.querySelectorAll('.shortcut-chip.active').forEach((chip) => {
+      mods.push(chip.textContent);
+    });
+    const key = document.getElementById('shortcut-key').value.toUpperCase() || '?';
+    document.getElementById('shortcut-preview').textContent = mods.length
+      ? `${mods.join(' + ')} + ${key}`
+      : key;
+  }
+
+  document.querySelectorAll('.shortcut-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      chip.classList.toggle('active');
+      updateShortcutPreview();
+    });
+  });
+
+  document.getElementById('shortcut-key').addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' || e.key === 'Escape') return;
+    e.preventDefault();
+    const k = e.key.toLowerCase();
+    if (k.length === 1 && k >= 'a' && k <= 'z') {
+      e.target.value = k;
+      updateShortcutPreview();
+    }
+  });
+
+  keymapInputs.forEach((input) => {
+    input.addEventListener('input', () => {
+      input.value = input.value
+        .replace(/[^a-zA-Z]/g, '')
+        .toLowerCase()
+        .slice(0, 1);
+    });
+  });
+
+  if (keymapsTab) {
+    keymapsTab.addEventListener('click', () => {
+      setTimeout(loadKeymaps, 50);
+    });
+  }
+
+  if (document.getElementById('tab-keymaps')?.classList.contains('active')) {
+    loadKeymaps();
+  }
+
+  document.getElementById('save-config-btn').addEventListener('click', () => {
+    let hasError = false;
+    keymapInputs.forEach((input) => {
+      input.style.borderColor = '';
+      if (RESERVED_DIGITS.has(input.value)) {
+        input.style.borderColor = '#ef4444';
+        hasError = true;
+      }
+    });
+
+    if (hasError) {
+      if (!keymapsError.parentNode) {
+        const saveBtn = document.getElementById('save-config-btn');
+        saveBtn.parentNode.insertBefore(keymapsError, saveBtn);
+      }
+      keymapsError.classList.remove('hidden');
+      return;
+    }
+
+    keymapsError.classList.add('hidden');
+
+    const valueCount = {};
+    keymapInputs.forEach((input) => {
+      if (input.value) valueCount[input.value] = (valueCount[input.value] || 0) + 1;
+    });
+    const dupe = Object.entries(valueCount).find(([, count]) => count > 1);
+    if (dupe) {
+      if (!keymapsError.parentNode) {
+        const saveBtn = document.getElementById('save-config-btn');
+        saveBtn.parentNode.insertBefore(keymapsError, saveBtn);
+      }
+      keymapsError.textContent = `Tombol '${dupe[0]}' dipakai di lebih dari satu baris.`;
+      keymapsError.classList.remove('hidden');
+      return;
+    }
+
+    const modChips = document.querySelectorAll('.shortcut-chip.active');
+    const shortcutKey = document.getElementById('shortcut-key').value.trim().toLowerCase();
+    if (!modChips.length || !shortcutKey) {
+      return;
+    }
+
+    const shortcut = {
+      alt: false,
+      shift: false,
+      ctrl: false,
+    };
+    modChips.forEach((chip) => {
+      shortcut[chip.dataset.mod] = true;
+    });
+    shortcut.key = shortcutKey;
+    browser.storage.local.set({ shortcut });
+
+    const newKeymaps = {};
+    keymapInputs.forEach((input) => {
+      const ids = (input.dataset.ids || input.dataset.id || '').split(',');
+      ids.forEach((id) => {
+        newKeymaps[id] = input.value || id;
+      });
+    });
+    browser.storage.local.set({ keymaps: newKeymaps });
+  });
 });

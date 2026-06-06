@@ -6,6 +6,7 @@ import { getFlashDataIfEnabled } from './handlers/flashData.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
 import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quota-manager.js';
 import { controlPanel } from './components/controlPanel.js';
+import { init as initKeyboard } from './keyboard/index.js';
 
 async function main() {
   const agreed = await getAgreement();
@@ -24,6 +25,7 @@ async function main() {
 
   if ((await isDailyLimitReached()) || (await isLimitReached())) return;
 
+  initKeyboard();
   initialize();
 }
 
