@@ -1,4 +1,5 @@
 import { initializeSkriningForm } from './handlers/skriningform.js';
+import { initializeSkriningSend } from './handlers/skrining-send.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { getAgreement, getActiveConfig, getFullConfig } from './configuration.js';
@@ -47,6 +48,9 @@ async function initialize() {
     isFeatureEnabled('skriningform')
   ) {
     initializeSkriningForm(flashData || {});
+    if (isFeatureEnabled('skrining-send')) {
+      initializeSkriningSend();
+    }
   } else if (
     config.skrining?.url &&
     currentURL.includes(config.skrining.url) &&
