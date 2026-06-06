@@ -1,6 +1,7 @@
 import { readdirSync, existsSync, readFileSync, statSync, watch, mkdirSync } from 'fs';
 import { join, extname } from 'path';
 import { Database } from 'bun:sqlite';
+import { verifyLicense } from './src/quota/verify.js';
 
 // ── Routes ──
 //   /                     → Landing page (index.html)
@@ -449,19 +450,10 @@ async function handleRequest(req: Request): Promise<Response> {
         return Response.json({ error: 'JWT too large' }, { status: 400 });
       }
 
-      // ── JWT format: 3 parts ──
-      const parts = body.jwt.split('.');
-      if (parts.length !== 3) {
-        return Response.json({ error: 'Invalid JWT format' }, { status: 400 });
-      }
-
-      // ── JWT payload valid JSON ──
-      try {
-        const decoded = base64urlDecode(parts[1]);
-        const payload = JSON.parse(decoded);
-        if (!payload || typeof payload !== 'object') throw new Error('Invalid JWT payload');
-      } catch {
-        return Response.json({ error: 'Invalid JWT payload' }, { status: 400 });
+      // ── verify with jose ──
+      const payload = await verifyLicense(body.jwt);
+      if (!payload) {
+        return Response.json({ error: 'Invalid or expired JWT' }, { status: 400 });
       }
 
       // ── max active rows ──
@@ -487,7 +479,7 @@ async function handleRequest(req: Request): Promise<Response> {
     }
   }
 
-  const shareMatch = pathname.match(/^\/share\/([a-f0-9]{8})$/);
+  const shareMatch = pathname.match(/^\/(?:share|s)\/([a-f0-9]{8})$/);
   if (shareMatch) {
     const row = db
       .query('SELECT * FROM shared_tokens WHERE id = ?')
