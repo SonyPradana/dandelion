@@ -11,6 +11,7 @@ import { clearFlashData } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
 import { incrementBatch } from '../utils/productivityTracker';
+import bus from '../utils/hooks';
 import { notify } from '../components/notification';
 
 /**
@@ -131,6 +132,8 @@ export async function initializeSkriningForm(flashData = {}) {
       dropdown: result.dropdown,
       freetext: result.freetext,
     });
+
+    bus.emit('skriningForm:didFill', { result });
 
     notify.info('Selesai', `Berhasil, ${result.total} ditemukan.`, 2500);
 

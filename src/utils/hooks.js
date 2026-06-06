@@ -3,19 +3,23 @@ function createHookBus() {
 
   return {
     on(event, cb) {
-      (listeners[event] = listeners[event] || []).push(cb);
+      (listeners[event] ||= []).push(cb);
       return () => {
-        listeners[event] = (listeners[event] || []).filter(l => l !== cb);
+        listeners[event] = (listeners[event] || []).filter((l) => l !== cb);
       };
     },
     emit(event, data) {
-      (listeners[event] || []).forEach(cb => {
-        try { cb(data); } catch (e) { console.error('[Dandelion] hook error:', e); }
+      (listeners[event] || []).forEach((cb) => {
+        try {
+          cb(data);
+        } catch (error) {
+          console.error('[Dandelion] hook error:', error);
+        }
       });
     },
     off(event, cb) {
       if (cb) {
-        listeners[event] = (listeners[event] || []).filter(l => l !== cb);
+        listeners[event] = (listeners[event] || []).filter((l) => l !== cb);
       } else {
         delete listeners[event];
       }
