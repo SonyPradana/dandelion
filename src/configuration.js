@@ -53,6 +53,7 @@ const DEFAULT_CONFIG = {
 };
 
 const TERMS_KEY = 'dandelion_terms';
+let _configCache = null;
 
 /**
  * @returns {Promise<boolean>}
@@ -176,6 +177,8 @@ function applyConfigDefaults(raw) {
  * @returns {Promise<typeof DEFAULT_CONFIG>}
  */
 export function getFullConfig() {
+  if (_configCache) return Promise.resolve(_configCache);
+
   return browser.storage.local.get(null).then((result) => {
     const isOldFormat =
       result.formSelector !== undefined ||
@@ -192,6 +195,7 @@ export function getFullConfig() {
       ]);
     }
 
+    _configCache = migrated;
     return migrated;
   });
 }
@@ -219,6 +223,7 @@ export function getActiveConfig() {
  * @returns {void}
  */
 export function setConfig(config) {
+  _configCache = null;
   browser.storage.local.set(config);
 }
 
