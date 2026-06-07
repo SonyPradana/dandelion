@@ -6,6 +6,7 @@
     "perf": "deny"
   },
   "rules": {
+    "eslint/prefer-named-capture-group": "off",
     "func-style": "off",
     "sort-keys": "off",
     "max-statements": "off",
