@@ -41,7 +41,7 @@ export function initialize() {
  * Periodically monitors the page state to manage button visibility and resume pending tasks.
  */
 function startStateMonitor() {
-  setInterval(async () => {
+  async function poll() {
     const isProcessing = isPageInProcessingState();
 
     await ensureButtonsMounted(isProcessing);
@@ -54,7 +54,7 @@ function startStateMonitor() {
 
       if (ids.length === 0) {
         await finishAutomation();
-        return;
+        await ensureButtonsMounted(isPageInProcessingState());
       }
 
       if (isProcessing && !isStandardAutomationActive) {
@@ -62,7 +62,11 @@ function startStateMonitor() {
         await resumeAutomation();
       }
     }
-  }, 2000);
+
+    setTimeout(poll, 2000);
+  }
+
+  poll();
 }
 
 /**
@@ -75,21 +79,28 @@ async function ensureButtonsMounted(isProcessing) {
   let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
   let profileIndicator = document.getElementById('dandelion-profile-indicator');
 
-  const zenActive = await isZenModeActive();
-  const storage = await browser.storage.local.get([STORAGE_KEY]);
-  const hasPending = storage[STORAGE_KEY] !== undefined;
-
   if (!isProcessing) {
     if (mainBtn) controlPanel.remove(mainBtn);
     if (debugBtn) controlPanel.remove(debugBtn);
     if (zenBtn) controlPanel.remove(zenBtn);
     if (profileIndicator) controlPanel.remove(profileIndicator);
-    if (!isStandardAutomationActive && !hasPending && !zenActive) {
-      removeStatusPanel();
+
+    if (!isStandardAutomationActive) {
+      const [pendingResult, zenActive] = await Promise.all([
+        browser.storage.local.get([STORAGE_KEY]),
+        isZenModeActive(),
+      ]);
+      const hasPending = pendingResult[STORAGE_KEY] !== undefined;
+      if (!hasPending && !zenActive) removeStatusPanel();
     }
     return;
   }
 
+  const [pendingResult, zenActive] = await Promise.all([
+    browser.storage.local.get([STORAGE_KEY]),
+    isZenModeActive(),
+  ]);
+  const hasPending = pendingResult[STORAGE_KEY] !== undefined;
   const isRunningLocally = hasPending;
 
   if (!mainBtn) {
@@ -202,17 +213,7 @@ async function ensureButtonsMounted(isProcessing) {
  * @param {HTMLElement} zenBtn
  */
 function restoreUIState(mainBtn, debugBtn, zenBtn) {
-  if (mainBtn) {
-    mainBtn.setRunning(false);
-    mainBtn.setDimmed(false);
-  }
-  if (debugBtn) {
-    debugBtn.setDimmed(false);
-  }
-  if (zenBtn) {
-    zenBtn.setDimmed(false);
-    zenBtn.setActive(false);
-  }
+  [mainBtn, debugBtn, zenBtn].forEach((btn) => btn?.reset?.());
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.classList.remove('dandelion-dimmed');
   });
@@ -356,17 +357,8 @@ async function finishAutomation() {
   const debugBtn = document.getElementById('dandelion-debug-toggle');
   const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
 
-  if (mainBtn) {
-    if (typeof mainBtn.setRunning === 'function') mainBtn.setRunning(false);
-    if (typeof mainBtn.setDimmed === 'function') mainBtn.setDimmed(false);
-  }
-  if (debugBtn) {
-    if (typeof debugBtn.setDimmed === 'function') debugBtn.setDimmed(false);
-  }
-  if (zenBtn) {
-    if (typeof zenBtn.setDimmed === 'function') zenBtn.setDimmed(false);
-    if (typeof zenBtn.setActive === 'function') zenBtn.setActive(false);
-  }
+  [mainBtn, debugBtn, zenBtn].forEach((btn) => btn?.reset?.());
+
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '1';
     m.style.pointerEvents = 'auto';

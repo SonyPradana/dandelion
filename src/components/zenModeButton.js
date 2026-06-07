@@ -76,6 +76,10 @@ export function zenModeButton(isActive = false) {
     }
   };
 
+  btn.reset = () => {
+    btn.classList.remove('dandelion-dimmed', 'dandelion-zen-active');
+  };
+
   btn.addEventListener('mousedown', () => {
     if (btn.classList.contains('dandelion-dimmed')) return;
     btn.style.transform = 'scale(0.95)';
