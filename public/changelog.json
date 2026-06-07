@@ -1,5 +1,16 @@
 [
   {
+    "date": "7 Juni 2026",
+    "version": "1.5",
+    "details": [
+      "Tautan berbagi sementara untuk token yang dihasilkan — bagikan tanpa repot menyimpan",
+      "Notifikasi info bisa dibisukan — kendalikan pemberitahuan agar tidak mengganggu fokus",
+      "Flash data toggle — aktifkan atau nonaktifkan flash data langsung dari halaman pengaturan",
+      "Zen mode bisa mengesampingkan flash data pinneds — pengisian lebih leluasa saat mode fokus",
+      "Changelog statis di landing page — lihat riwayat pembaruan langsung dari dashboard"
+    ]
+  },
+  {
     "date": "30 Mei 2026",
     "version": "1.4",
     "details": [

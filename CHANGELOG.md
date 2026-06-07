@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-06-07
+
+### Added
+
+- Global event bus and skrining-send handler for decoupled inter-module communication (#70)
+- Temporary share link for generated tokens (#68)
+- Flash data pinneds override via zen mode (#61)
+- Option to silence info notifications (#71)
+- Flash data toggle checkbox on configuration page (#62)
+- Static changelog section on landing page (#73)
+- PM2 ecosystem configuration for production deployment
+- /health endpoint for server monitoring
+
+### Changed
+
+- Move post-fill logic to event-driven skrining-events handler (#72)
+- Simplify popup by removing advanced form skrining fields (#66)
+- Bump pnpm to v11 and update configuration (#69)
+- Upgrade web-ext from 9.4.0 to 10.3.0
+
+### Fixed
+
+- cmpVer not handling nightly-YYYYMMDD version format (#65)
+- Cache validation too short for some user cases (#64)
+- Replace regex wildcard matching with split-based approach for performance (#63)
+- Add /health endpoint to landing page endpoint list (#60)
+
 ## [1.4.0] - 2026-05-30
 
 ### Added
