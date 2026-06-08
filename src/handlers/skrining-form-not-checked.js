@@ -41,29 +41,37 @@ export function initialize() {
  * Periodically monitors the page state to manage button visibility and resume pending tasks.
  */
 function startStateMonitor() {
+  let isPolling = false;
+
   async function poll() {
-    const isProcessing = isPageInProcessingState();
+    if (isPolling) return;
+    isPolling = true;
 
-    await ensureButtonsMounted(isProcessing);
+    try {
+      const isProcessing = isPageInProcessingState();
 
-    const storage = await browser.storage.local.get([STORAGE_KEY]);
-    const pendingData = storage[STORAGE_KEY];
+      await ensureButtonsMounted(isProcessing);
 
-    if (pendingData) {
-      const ids = JSON.parse(pendingData);
+      const storage = await browser.storage.local.get([STORAGE_KEY]);
+      const pendingData = storage[STORAGE_KEY];
 
-      if (ids.length === 0) {
-        await finishAutomation();
-        await ensureButtonsMounted(isPageInProcessingState());
+      if (pendingData) {
+        const ids = JSON.parse(pendingData);
+
+        if (ids.length === 0) {
+          await finishAutomation();
+          await ensureButtonsMounted(isPageInProcessingState());
+        }
+
+        if (isProcessing && !isStandardAutomationActive) {
+          isStandardAutomationActive = true;
+          await resumeAutomation();
+        }
       }
-
-      if (isProcessing && !isStandardAutomationActive) {
-        isStandardAutomationActive = true;
-        await resumeAutomation();
-      }
+    } finally {
+      isPolling = true;
+      setTimeout(poll, 2000);
     }
-
-    setTimeout(poll, 2000);
   }
 
   poll();
