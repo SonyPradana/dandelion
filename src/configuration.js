@@ -25,7 +25,7 @@ const DEFAULT_CONFIG = {
       },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
-      flashData: { enabled: false },
+      flashData: { enabled: false, maxAge: 600_000 },
     },
     profile2: {
       name: 'Profile 2',
@@ -47,7 +47,7 @@ const DEFAULT_CONFIG = {
       },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
-      flashData: { enabled: false },
+      flashData: { enabled: false, maxAge: 600_000 },
     },
   },
 };
@@ -123,7 +123,7 @@ export function migrateConfig(raw) {
           enabled: false,
           timeout: 5000,
         },
-        flashData: { enabled: false },
+        flashData: { enabled: false, maxAge: 600_000 },
       };
     }
 
