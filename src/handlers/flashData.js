@@ -7,7 +7,7 @@ export async function getFlashDataIfEnabled() {
   if (!isFeatureEnabled('flashData')) return {};
   const config = await getActiveConfig();
   if (config.flashData?.enabled === false) return {};
-  return (await getFlashData()) || {};
+  return (await getFlashData(config.flashData?.maxAge)) || {};
 }
 
 export async function showFlashDataPanelIfEnabled() {
