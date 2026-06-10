@@ -69,7 +69,7 @@ function startStateMonitor() {
         }
       }
     } finally {
-      isPolling = true;
+      isPolling = false;
       setTimeout(poll, 2000);
     }
   }
