@@ -33,6 +33,10 @@ export function debugButton() {
     }
   };
 
+  debugToggle.reset = () => {
+    debugToggle.classList.remove('dandelion-dimmed');
+  };
+
   debugToggle.addEventListener('mousedown', () => {
     if (debugToggle.classList.contains('dandelion-dimmed')) return;
     debugToggle.style.transform = 'scale(0.95)';

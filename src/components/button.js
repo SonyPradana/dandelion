@@ -68,6 +68,10 @@ export function button(id) {
     }
   };
 
+  tombol.reset = () => {
+    tombol.classList.remove('dandelion-running', 'dandelion-dimmed');
+  };
+
   tombol.addEventListener('mousedown', () => {
     if (
       tombol.classList.contains('dandelion-running') ||

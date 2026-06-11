@@ -17,12 +17,23 @@ let isAutomationActive = false;
  * Initializes Zen Mode logic for the list page.
  */
 export function initializeZenMode() {
-  setInterval(async () => {
-    const state = await getZenModeState();
-    if (state.active && state.queue.length > 0 && !isAutomationActive) {
-      resumeZenAutomation();
+  let isPolling = false;
+
+  async function poll() {
+    if (isPolling) return;
+    isPolling = true;
+
+    try {
+      const state = await getZenModeState();
+      if (state.active && state.queue.length > 0 && !isAutomationActive) {
+        resumeZenAutomation();
+      }
+      setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
+    } finally {
+      isPolling = false;
     }
-  }, 500);
+  }
+  poll();
 }
 
 /**
