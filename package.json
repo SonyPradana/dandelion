@@ -34,9 +34,9 @@
     "archiver": "^8.0.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
-    "oxfmt": "^0.51.0",
-    "oxlint": "^1.66.0",
-    "rolldown": "^1.0.2",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0",
+    "rolldown": "^1.1.0",
     "web-ext": "^10.3.0"
   }
 }
