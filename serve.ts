@@ -91,6 +91,35 @@ setInterval(
   60 * 60 * 1000,
 );
 
+// ── download stats ──
+
+// Tracks unique visitors per artifact file for internal analysis.
+//
+// Example SQLite queries:
+//
+//   -- Total unique downloads per file
+//   SELECT file_name, COUNT(*) AS unique_downloads FROM download_stats GROUP BY file_name;
+//
+//   -- Unique visitors per version
+//   SELECT version, COUNT(*) AS unique_visitors FROM download_stats GROUP BY version ORDER BY version DESC;
+//
+//   -- Unique visitors per browser
+//   SELECT browser, COUNT(*) AS unique_visitors FROM download_stats GROUP BY browser;
+//
+//   -- Detail per version / browser / file
+//   SELECT version, browser, file_name, COUNT(*) AS unique_visitors
+//   FROM download_stats GROUP BY version, browser, file_name ORDER BY version DESC;
+//
+
+db.run(`CREATE TABLE IF NOT EXISTS download_stats (
+  file_name TEXT NOT NULL,
+  version TEXT NOT NULL,
+  browser TEXT NOT NULL,
+  visitor_hash TEXT NOT NULL,
+  downloaded_at INTEGER NOT NULL,
+  UNIQUE(file_name, visitor_hash)
+)`);
+
 // --- rate limiter ---
 
 const rateMap = new Map<string, { count: number; resetAt: number }>();
@@ -138,6 +167,12 @@ function fileHashHex(filePath: string): string {
   const hasher = new Bun.CryptoHasher('sha256');
   hasher.update(readFileSync(filePath));
   return hasher.digest('hex') as string;
+}
+
+function hashIP(ip: string): string {
+  const h = new Bun.CryptoHasher('sha256');
+  h.update(ip);
+  return h.digest('hex') as string;
 }
 
 // --- share helpers ---
@@ -379,6 +414,23 @@ async function handleRequest(req: Request): Promise<Response> {
 
     const filePath = join(ARTIFACTS_DIR, fileName);
     if (!existsSync(filePath)) return notFound();
+
+    // ── record unique visitor ──
+    const stableMatch = fileName.match(STABLE_RE);
+    const nightlyMatch = fileName.match(NIGHTLY_RE);
+    const dlMatch = stableMatch || nightlyMatch;
+    if (dlMatch) {
+      const ip =
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        req.headers.get('cf-connecting-ip') ||
+        'unknown';
+      const browser = dlMatch[1];
+      const version = stableMatch ? stableMatch[2] : `nightly-${nightlyMatch![2]}`;
+      db.run(
+        `INSERT OR IGNORE INTO download_stats (file_name, version, browser, visitor_hash, downloaded_at) VALUES (?, ?, ?, ?, ?)`,
+        [fileName, version, browser, hashIP(ip), Date.now()],
+      );
+    }
 
     // ── ETag ──
     const artifact = findArtifact(fileName);
