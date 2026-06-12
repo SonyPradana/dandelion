@@ -49,6 +49,30 @@ export function getQueueStats(masterList) {
 }
 
 /**
+ * Checks if there are still rows with "Dalam Pemeriksaan" status.
+ * @returns {boolean} True if any form is still being examined.
+ */
+export function hasRemainingForms() {
+  return document.body.textContent.includes('Dalam Pemeriksaan');
+}
+
+/**
+ * Finds and clicks the "Selesaikan Layanan" button if available.
+ * @returns {boolean} True if the button was found and clicked.
+ */
+export function clickFinishServiceButton() {
+  const buttons = document.querySelectorAll('button');
+  const finishBtn = Array.from(buttons).find(
+    (btn) => btn.textContent.includes('Selesaikan Layanan') && !btn.classList.contains('cursor-not-allowed'),
+  );
+  if (finishBtn) {
+    finishBtn.click();
+    return true;
+  }
+  return false;
+}
+
+/**
  * Waits for a specific row element to appear in the DOM.
  * @param {string} id - The ID of the element to wait for.
  * @param {number} [timeout=10000] - Maximum time to wait in milliseconds.
