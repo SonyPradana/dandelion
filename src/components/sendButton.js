@@ -6,9 +6,9 @@ export function sendButton() {
 
   const baseStyle = `
     padding: 0.3rem 0.75rem;
-    background: rgba(255, 255, 255, 0.8);
-    color: #3b82f6;
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: rgba(37, 99, 235, 0.2);
+    color: #1e40af;
+    border: 1px solid rgba(37, 99, 235, 0.4);
     border-radius: 8px;
     font-size: 0.875rem;
     cursor: pointer;
