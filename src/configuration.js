@@ -1,5 +1,3 @@
-import browser from 'webextension-polyfill';
-
 const DEFAULT_CONFIG = {
   activeProfile: 'profile1',
   panelPosition: 'top-right',
@@ -51,33 +49,6 @@ const DEFAULT_CONFIG = {
     },
   },
 };
-
-const TERMS_KEY = 'dandelion_terms';
-
-/**
- * @returns {Promise<boolean>}
- */
-export function getAgreement() {
-  return browser.storage.local.get(TERMS_KEY).then((result) => {
-    const data = result[TERMS_KEY];
-    if (!data || !data.agreed) return false;
-    return data.version === browser.runtime.getManifest().version;
-  });
-}
-
-/**
- * @param {boolean} value
- * @returns {void}
- */
-export function setAgreement(value) {
-  if (value) {
-    browser.storage.local.set({
-      [TERMS_KEY]: { agreed: true, version: browser.runtime.getManifest().version },
-    });
-  } else {
-    browser.storage.local.set({ [TERMS_KEY]: { agreed: false } });
-  }
-}
 
 /**
  * Migrates an old-format config to the new structure, or applies defaults for new format.
@@ -170,64 +141,13 @@ function applyConfigDefaults(raw) {
   };
 }
 
-/**
- * Gets the full configuration object, including all profiles.
- * Supports migration from old format to new format automatically.
- * @returns {Promise<typeof DEFAULT_CONFIG>}
- */
-export function getFullConfig() {
-  return browser.storage.local.get(null).then((result) => {
-    const isOldFormat =
-      result.formSelector !== undefined ||
-      result.profiles?.profile1?.radioButtonKeywords !== undefined;
-    const migrated = migrateConfig(result);
-
-    if (isOldFormat) {
-      setConfig(migrated);
-      browser.storage.local.remove([
-        'formSelector',
-        'surveySelector',
-        'scrollToBottom',
-        'notChecked',
-      ]);
-    }
-
-    return migrated;
-  });
-}
-
-/**
- * Gets the configuration for the currently active profile.
- */
-export function getActiveConfig() {
-  return getFullConfig().then((config) => {
-    const activeProfileSettings = config.profiles[config.activeProfile];
-    return {
-      formSkrining: activeProfileSettings.formSkrining,
-      notChecked: activeProfileSettings.notChecked,
-      skrining: activeProfileSettings.skrining,
-      zenMode: activeProfileSettings.zenMode,
-      flashData: activeProfileSettings.flashData,
-      activeProfile: config.activeProfile,
-    };
-  });
-}
-
-/**
- * Saves the full configuration object.
- * @param {typeof DEFAULT_CONFIG} config
- * @returns {void}
- */
-export function setConfig(config) {
-  browser.storage.local.set(config);
-}
-
-/**
- * Fast helper to switch active profile
- * @param {string} profileKey
- */
-export async function setActiveProfile(profileKey) {
-  const config = await getFullConfig();
-  config.activeProfile = profileKey;
-  await setConfig(config);
-}
+// -- Backward-compatible re-exports from store --
+// These will be removed in a future cleanup after all imports are migrated.
+export {
+  getAgreement,
+  setAgreement,
+  getFullConfig,
+  getActiveConfig,
+  setConfig,
+  setActiveProfile,
+} from './store';

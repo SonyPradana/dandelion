@@ -1,6 +1,11 @@
 import browser from 'webextension-polyfill';
-import { getAgreement, setAgreement, getFullConfig, setConfig } from '../../configuration';
+import { store } from '../../store';
+import bus from '../../utils/hooks';
+import { getAgreement, getFullConfig, setConfig } from '../../configuration';
 import { showAgreementPopup } from '../../components/agreementPopup';
+
+store.init(browser);
+bus.on('component:agreement:accept', () => store.setAgreement(true));
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';

@@ -1,24 +1,15 @@
-import { getFullConfig, setConfig } from '../configuration.js';
+import { store } from '../store.js';
 
-/**
- * Retrieves the "Not Checked" master list for the currently active profile.
- * @returns {Promise<string[]>} A promise that resolves to an array of row IDs.
- */
 export async function getNotCheckedList() {
-  const fullConfig = await getFullConfig();
+  const fullConfig = await store.getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
   const listString = fullConfig.profiles[activeProfileName]?.notChecked?.notCheckedList || '';
 
   return listString.split(';').filter(Boolean);
 }
 
-/**
- * Saves the "Not Checked" master list back to the active profile's configuration.
- * @param {string[]} listArray - The array of row IDs to save.
- * @returns {Promise<void>}
- */
 async function saveNotCheckedList(listArray) {
-  const fullConfig = await getFullConfig();
+  const fullConfig = await store.getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
 
   if (!fullConfig.profiles[activeProfileName]) {
@@ -29,7 +20,7 @@ async function saveNotCheckedList(listArray) {
   }
 
   fullConfig.profiles[activeProfileName].notChecked.notCheckedList = listArray.join(';');
-  await setConfig(fullConfig);
+  await store.setConfig(fullConfig);
 }
 
 /**

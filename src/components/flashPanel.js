@@ -1,6 +1,6 @@
+import bus from '../utils/hooks';
 import { createBasePanel, createPanelButton } from './notification/base';
 import { notify } from './notification';
-import { setFlashData, clearFlashData } from '../utils/flashSession';
 import { addKvRow, rebuildKvRows, S } from './flashKvRow';
 
 const PANEL_ID = 'dandelion-flash-data';
@@ -9,7 +9,7 @@ export function showFlashDataPanel() {
   const existing = document.getElementById(PANEL_ID);
   if (existing) existing.remove();
 
-  clearFlashData();
+  bus.emit('component:flash:panel-open');
 
   const { panel, contentArea, setHeader, remove } = createBasePanel(PANEL_ID);
 
@@ -177,8 +177,7 @@ export function showFlashDataPanel() {
       return;
     }
 
-    clearFlashData();
-    setFlashData({ pinneds: { ...sharedData } });
+    bus.emit('component:flash:save', { pinneds: { ...sharedData } });
     notify.info('Flash Data', 'Tersimpan', 1500);
   };
 

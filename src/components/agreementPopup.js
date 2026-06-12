@@ -1,5 +1,5 @@
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
-import { setAgreement } from '../configuration';
+import bus from '../utils/hooks';
 
 const POPUP_ID = 'dandelion-agreement-popup';
 
@@ -195,8 +195,8 @@ export function showAgreementPopup() {
     if (resolvePromise) resolvePromise();
   }
 
-  btn.addEventListener('click', async () => {
-    await setAgreement(true);
+  btn.addEventListener('click', () => {
+    bus.emit('component:agreement:accept');
     remove();
   });
 

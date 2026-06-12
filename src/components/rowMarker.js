@@ -42,9 +42,12 @@ function initializeStyles() {
 /**
  * Creates a stylized marker for a row header.
  * @param {string} rowId - The ID of the row.
+ * @param {Object} [options] - Options forwarded to createNotCheckedToggle
+ * @param {boolean} [options.initialChecked]
+ * @param {(id: string) => Promise<boolean>} [options.onToggle]
  * @returns {HTMLDivElement}
  */
-export function createRowMarker(rowId) {
+export function createRowMarker(rowId, options) {
   initializeStyles();
 
   const marker = document.createElement('div');
@@ -55,7 +58,7 @@ export function createRowMarker(rowId) {
   idText.textContent = rowId;
   idText.style.marginRight = '2px';
 
-  const toggle = createNotCheckedToggle(rowId);
+  const toggle = createNotCheckedToggle(rowId, options);
 
   marker.appendChild(idText);
   marker.appendChild(toggle);

@@ -1,7 +1,12 @@
+import { store } from '../store';
+import bus from '../utils/hooks';
 import { getActiveConfig } from '../configuration';
-import { getFlashData, clearFlashData } from '../utils/flashSession';
+import { getFlashData } from '../utils/flashSession';
 import { showFlashDataPanel } from '../components/flashPanel';
 import { isFeatureEnabled } from '../quota/quota-manager';
+
+bus.on('component:flash:panel-open', () => store.clearFlashData());
+bus.on('component:flash:save', (data) => store.setFlashData(data));
 
 export async function getFlashDataIfEnabled() {
   if (!isFeatureEnabled('flashData')) return {};

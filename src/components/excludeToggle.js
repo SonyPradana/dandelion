@@ -1,8 +1,5 @@
-import { isExcluded, toggleExclude } from '../utils/excludes.js';
-
 const EXCLUDE_TOGGLE_CLASS = 'dandelion-exclude-toggle';
 
-// Initialize styles once
 let stylesInitialized = false;
 
 function initializeStyles() {
@@ -42,11 +39,6 @@ function initializeStyles() {
   stylesInitialized = true;
 }
 
-/**
- * Updates the exclude toggle button state.
- * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {boolean} isExcluded - Whether the item is excluded.
- */
 function updateToggleState(toggleElement, isExcluded) {
   toggleElement.textContent = isExcluded ? '❌' : '➕';
   toggleElement.setAttribute(
@@ -56,61 +48,54 @@ function updateToggleState(toggleElement, isExcluded) {
 }
 
 /**
- * Handles the toggle exclude action.
- * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {string} identifier - The identifier for the item to toggle.
- */
-async function handleToggle(toggleElement, identifier) {
-  toggleElement.classList.add('loading');
-
-  try {
-    const nowExcluded = await toggleExclude(identifier);
-    updateToggleState(toggleElement, nowExcluded);
-  } catch (error) {
-    console.error('Failed to toggle exclude:', error);
-    toggleElement.textContent = '⚠️';
-    toggleElement.setAttribute('aria-label', 'Error toggling exclude state');
-  } finally {
-    toggleElement.classList.remove('loading');
-  }
-}
-
-/**
  * Creates an exclude toggle button element.
- * @param {string} identifier - The identifier for the item.
- * @returns {HTMLSpanElement} The created toggle button.
+ * @param {string} identifier
+ * @param {Object} [options]
+ * @param {boolean} [options.initialExcluded]
+ * @param {(id: string) => Promise<boolean>} [options.onToggle] - Async fn that toggles and returns new state
+ * @returns {HTMLSpanElement}
  */
-export function createExcludeToggle(identifier) {
+export function createExcludeToggle(identifier, { initialExcluded, onToggle } = {}) {
   initializeStyles();
 
-  const excludeToggle = document.createElement('span');
-  excludeToggle.className = EXCLUDE_TOGGLE_CLASS;
-  excludeToggle.setAttribute('role', 'button');
-  excludeToggle.setAttribute('tabindex', '0');
+  const toggleEl = document.createElement('span');
+  toggleEl.className = EXCLUDE_TOGGLE_CLASS;
+  toggleEl.setAttribute('role', 'button');
+  toggleEl.setAttribute('tabindex', '0');
 
-  // Initialize state
-  isExcluded(identifier)
-    .then((excluded) => updateToggleState(excludeToggle, excluded))
-    .catch((error) => {
-      console.error('Failed to check exclude state:', error);
-      excludeToggle.textContent = '⚠️';
-      excludeToggle.setAttribute('aria-label', 'Error loading exclude state');
-    });
+  if (initialExcluded !== undefined) {
+    updateToggleState(toggleEl, initialExcluded);
+  } else {
+    toggleEl.textContent = '⋯';
+  }
 
-  // Click handler
-  excludeToggle.addEventListener('click', (e) => {
+  async function handleToggle() {
+    if (!onToggle) return;
+    toggleEl.classList.add('loading');
+    try {
+      const nowExcluded = await onToggle(identifier);
+      updateToggleState(toggleEl, nowExcluded);
+    } catch (error) {
+      console.error('Failed to toggle exclude:', error);
+      toggleEl.textContent = '⚠️';
+      toggleEl.setAttribute('aria-label', 'Error toggling exclude state');
+    } finally {
+      toggleEl.classList.remove('loading');
+    }
+  }
+
+  toggleEl.addEventListener('click', (e) => {
     e.stopPropagation();
-    handleToggle(excludeToggle, identifier);
+    handleToggle();
   });
 
-  // Keyboard handler
-  excludeToggle.addEventListener('keydown', (e) => {
+  toggleEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
-      handleToggle(excludeToggle, identifier);
+      handleToggle();
     }
   });
 
-  return excludeToggle;
+  return toggleEl;
 }

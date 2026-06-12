@@ -1,10 +1,7 @@
-import browser from 'webextension-polyfill';
+import { store } from '../store';
 import { verifyLicense } from './verify.js';
 import { getCache, setCache, clearCache } from './cache.js';
 import { getTodaySummary } from '../utils/productivityTracker.js';
-
-const QUOTA_TOKEN_KEY = 'dandelion_quota_token';
-const DEVICE_ID_KEY = 'device_id';
 
 const FREE_PLAN = {
   features: [],
@@ -24,8 +21,7 @@ const _state = {
 
 async function getOrCreateDeviceId() {
   try {
-    const result = await browser.storage.local.get(DEVICE_ID_KEY);
-    const existing = result[DEVICE_ID_KEY];
+    const existing = await store.getDeviceId();
     if (existing) {
       _state.deviceId = existing;
       return;
@@ -35,7 +31,7 @@ async function getOrCreateDeviceId() {
     for (let i = 0; i < 8; i++) {
       id += CHARS[Math.floor(Math.random() * 62)];
     }
-    await browser.storage.local.set({ [DEVICE_ID_KEY]: id });
+    await store.setDeviceId(id);
     _state.deviceId = id;
   } catch {
     _state.deviceId = null;
@@ -63,8 +59,7 @@ export async function init() {
   }
 
   try {
-    const result = await browser.storage.local.get(QUOTA_TOKEN_KEY);
-    const jwt = result[QUOTA_TOKEN_KEY];
+    const jwt = await store.getQuotaToken();
 
     if (!jwt) {
       _state.status = 'none';
@@ -86,7 +81,7 @@ export async function init() {
       return;
     }
 
-    const currentVersion = browser.runtime.getManifest().version;
+    const currentVersion = store.getManifestVersion();
     if (
       Array.isArray(payload.version_allowed) &&
       payload.version_allowed.length > 0 &&
@@ -225,13 +220,13 @@ export async function saveToken(jwtString) {
   if (payload.license_id && payload.license_id !== _state.deviceId) {
     throw new Error('Token tidak terikat dengan device ini');
   }
-  await browser.storage.local.set({ [QUOTA_TOKEN_KEY]: jwtString.trim() });
+  await store.saveQuotaToken(jwtString.trim());
   await clearCache();
   await init();
 }
 
 export async function removeToken() {
-  await browser.storage.local.remove(QUOTA_TOKEN_KEY);
+  await store.removeQuotaToken();
   await clearCache();
   _state.status = 'none';
   _state.payload = { ...FREE_PLAN };
@@ -239,10 +234,5 @@ export async function removeToken() {
 }
 
 export async function getToken() {
-  try {
-    const result = await browser.storage.local.get(QUOTA_TOKEN_KEY);
-    return result[QUOTA_TOKEN_KEY] || null;
-  } catch {
-    return null;
-  }
+  return store.getQuotaToken();
 }

@@ -1,5 +1,8 @@
 import { button } from '../components/button';
-import { getActiveConfig } from '../configuration';
+import { store } from '../store';
+import { getFullConfig, getActiveConfig } from '../configuration';
+import { isExcluded, toggleExclude } from '../utils/excludes';
+import { isPinned, addPinnedItem, removePinnedItem } from '../utils/pinneds';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
@@ -27,7 +30,14 @@ export async function initializeSkriningForm(flashData = {}) {
   let dismissCountdown = null;
 
   const tombol = button('dandelion-auto-fill');
-  const profileIndicator = await createProfileComponent();
+  const fullConfig = await getFullConfig();
+  const profileIndicator = createProfileComponent({
+    profiles: fullConfig.profiles,
+    activeProfile: fullConfig.activeProfile,
+  });
+  bus.on('component:profile:switch', async ({ profileKey }) => {
+    await store.setActiveProfile(profileKey);
+  });
   const debugToggle = debugButton();
 
   if (tombol) {
@@ -284,7 +294,22 @@ export async function initializeSkriningForm(flashData = {}) {
         }
 
         const dataName = element.getAttribute('data-name');
-        const marker = debugMarker(dataName);
+        const marker = debugMarker(dataName, {
+          excludeToggle: {
+            onToggle: (id) => toggleExclude(id),
+          },
+          pinToggle: {
+            onToggle: async (id, value) => {
+              const pinned = await isPinned(id);
+              if (pinned) {
+                await removePinnedItem(id);
+              } else if (value !== null) {
+                await addPinnedItem(id, value);
+              }
+              return !pinned;
+            },
+          },
+        });
 
         // Ensure the parent is positioned to contain the absolute marker
         if (window.getComputedStyle(element).position === 'static') {

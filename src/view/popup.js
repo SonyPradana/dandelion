@@ -1,5 +1,8 @@
 import browser from 'webextension-polyfill';
+import { store } from '../store';
 import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
+
+store.init(browser);
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';

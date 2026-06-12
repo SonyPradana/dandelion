@@ -1,6 +1,4 @@
-import browser from 'webextension-polyfill';
-
-const STORAGE_KEY = 'productivity_stats';
+import { store } from '../store';
 
 const CATEGORIES = ['radio', 'freetext', 'dropdown', 'formNotChecked', 'formZen'];
 
@@ -39,15 +37,14 @@ function yesterdayKey(current) {
 
 async function loadAll() {
   try {
-    const result = await browser.storage.local.get(STORAGE_KEY);
-    return result[STORAGE_KEY] || {};
+    return await store.loadProductivityData();
   } catch {
     return {};
   }
 }
 
 async function saveAll(data) {
-  await browser.storage.local.set({ [STORAGE_KEY]: data });
+  await store.saveProductivityData(data);
 }
 
 function recalcDay(data, key) {

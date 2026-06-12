@@ -1,11 +1,12 @@
-import browser from 'webextension-polyfill';
 import { button } from '../components/button';
 import { debugButton } from '../components/debugButton';
 import { zenModeButton } from '../components/zenModeButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
-import { getNotCheckedList } from '../utils/notChecked';
-import { getActiveConfig } from '../configuration';
+import { getNotCheckedList, isInNotCheckedList, toggleNotCheckedItem } from '../utils/notChecked';
+import bus from '../utils/hooks';
+import { store } from '../store';
+import { getFullConfig, getActiveConfig } from '../configuration';
 import { isZenModeActive, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
 import { controlPanel } from '../components/controlPanel';
@@ -18,6 +19,10 @@ import {
   waitForElement,
 } from './inspection/not-checked-utils';
 import { increment } from '../utils/productivityTracker';
+
+bus.on('component:profile:switch', async ({ profileKey }) => {
+  await store.setActiveProfile(profileKey);
+});
 
 /**
  * Automates clicking the "Not Checked" confirmation buttons for a list of rows.
@@ -46,7 +51,7 @@ function startStateMonitor() {
 
     await ensureButtonsMounted(isProcessing);
 
-    const storage = await browser.storage.local.get([STORAGE_KEY]);
+    const storage = await store.storageGetMany([STORAGE_KEY]);
     const pendingData = storage[STORAGE_KEY];
 
     if (pendingData) {
@@ -76,7 +81,7 @@ async function ensureButtonsMounted(isProcessing) {
   let profileIndicator = document.getElementById('dandelion-profile-indicator');
 
   const zenActive = await isZenModeActive();
-  const storage = await browser.storage.local.get([STORAGE_KEY]);
+  const storage = await store.storageGetMany([STORAGE_KEY]);
   const hasPending = storage[STORAGE_KEY] !== undefined;
 
   if (!isProcessing) {
@@ -96,7 +101,11 @@ async function ensureButtonsMounted(isProcessing) {
     mainBtn = button('dandelion-not-checked-automation');
     if (mainBtn) {
       if (!profileIndicator) {
-        profileIndicator = await createProfileComponent();
+        const cfg = await getFullConfig();
+        profileIndicator = createProfileComponent({
+          profiles: cfg.profiles,
+          activeProfile: cfg.activeProfile,
+        });
       }
 
       let hideTimeout = null;
@@ -116,7 +125,7 @@ async function ensureButtonsMounted(isProcessing) {
       mainBtn.addEventListener('click', async () => {
         if (isStandardAutomationActive || (await isZenModeActive())) return;
 
-        const storageClick = await browser.storage.local.get([STORAGE_KEY]);
+        const storageClick = await store.storageGetMany([STORAGE_KEY]);
         const pending = storageClick[STORAGE_KEY];
 
         if (pending && JSON.parse(pending).length > 0) {
@@ -250,14 +259,14 @@ async function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocal
  * Updates the on-screen progress panel with current task statistics.
  */
 async function syncStatusPanel() {
-  const storage = await browser.storage.local.get([STORAGE_KEY, TOTAL_KEY]);
+  const storage = await store.storageGetMany([STORAGE_KEY, TOTAL_KEY]);
   const pending = JSON.parse(storage[STORAGE_KEY] || '[]');
   const totalFoundOnPage = parseInt(storage[TOTAL_KEY] || '0');
   const doneCount = Math.max(0, totalFoundOnPage - pending.length);
 
   updateStatusPanel(doneCount, totalFoundOnPage, pending.length > 0, {
     onDelete: async () => {
-      await browser.storage.local.remove([STORAGE_KEY, TOTAL_KEY]);
+      await store.storageRemoveMany([STORAGE_KEY, TOTAL_KEY]);
       isStandardAutomationActive = false;
       window.location.reload();
     },
@@ -282,7 +291,7 @@ async function toggleHelperMode() {
   updateStatusPanel(stats.doneIds.length, stats.foundIds.length, 'Mode Debug Aktif 🐞', {
     title: 'Info Debug',
     onDelete: async () => {
-      await browser.storage.local.remove([STORAGE_KEY, TOTAL_KEY]);
+      await store.storageRemoveMany([STORAGE_KEY, TOTAL_KEY]);
       isStandardAutomationActive = false;
       window.location.reload();
     },
@@ -300,7 +309,11 @@ async function toggleHelperMode() {
       titleColumn.style.position = 'relative';
     }
 
-    titleColumn.appendChild(createRowMarker(el.id));
+    titleColumn.appendChild(
+      createRowMarker(el.id, {
+        onToggle: (id) => toggleNotCheckedItem(id),
+      }),
+    );
   });
 }
 
@@ -312,7 +325,7 @@ async function toggleHelperMode() {
 async function startAutomation(pendingIds, totalFoundOnPage) {
   isStandardAutomationActive = true;
   const config = await getActiveConfig();
-  await browser.storage.local.set({
+  await store.storageSetMany({
     [STORAGE_KEY]: JSON.stringify(pendingIds),
     [TOTAL_KEY]: totalFoundOnPage.toString(),
   });
@@ -326,7 +339,7 @@ async function startAutomation(pendingIds, totalFoundOnPage) {
  * Resumes an existing automation session from storage.
  */
 async function resumeAutomation() {
-  const storage = await browser.storage.local.get([STORAGE_KEY]);
+  const storage = await store.storageGetMany([STORAGE_KEY]);
   const pending = storage[STORAGE_KEY];
 
   if (pending) {
@@ -346,7 +359,7 @@ async function resumeAutomation() {
  * Called by startStateMonitor after reload detects ids.length === 0.
  */
 async function finishAutomation() {
-  await browser.storage.local.remove([STORAGE_KEY, TOTAL_KEY]);
+  await store.storageRemoveMany([STORAGE_KEY, TOTAL_KEY]);
   isStandardAutomationActive = false;
 
   removeStatusPanel();
@@ -377,7 +390,7 @@ async function finishAutomation() {
  * Processes the next item in the pending queue by clicking its label and handling confirmation.
  */
 async function processNextItem() {
-  const storage = await browser.storage.local.get([STORAGE_KEY]);
+  const storage = await store.storageGetMany([STORAGE_KEY]);
   const pendingStr = storage[STORAGE_KEY];
 
   if (!pendingStr) {
@@ -437,7 +450,7 @@ async function processNextItem() {
     if (stats.pendingIds.length === 0) {
       await finishAutomation();
     } else {
-      await browser.storage.local.set({
+      await store.storageSetMany({
         [STORAGE_KEY]: JSON.stringify(stats.pendingIds),
         [TOTAL_KEY]: stats.foundIds.length.toString(),
       });
@@ -453,7 +466,7 @@ async function processNextItem() {
  */
 async function moveToNext(ids, delay) {
   ids.shift();
-  await browser.storage.local.set({ [STORAGE_KEY]: JSON.stringify(ids) });
+  await store.storageSet(STORAGE_KEY, JSON.stringify(ids));
 
   if (delay !== false) {
     await syncStatusPanel();

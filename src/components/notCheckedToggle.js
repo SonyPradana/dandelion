@@ -1,37 +1,18 @@
-import { isInNotCheckedList, toggleNotCheckedItem } from '../utils/notChecked.js';
-
 const TOGGLE_CLASS = 'dandelion-not-checked-toggle';
 
-/**
- * Updates the visual representation of the toggle.
- * @param {HTMLElement} toggleElement - The element to update.
- * @param {boolean} isActive - Whether the item is currently in the list.
- */
 function updateToggleState(toggleElement, isActive) {
   toggleElement.textContent = isActive ? '❌' : '➕';
 }
 
 /**
- * Handles the click event to add or remove an item from the master list.
- * @param {HTMLElement} toggleElement - The toggle element being clicked.
- * @param {string} identifier - The row ID associated with the toggle.
- */
-async function handleToggle(toggleElement, identifier) {
-  toggleElement.style.opacity = '0.5';
-  try {
-    const isNowActive = await toggleNotCheckedItem(identifier);
-    updateToggleState(toggleElement, isNowActive);
-  } finally {
-    toggleElement.style.opacity = '1';
-  }
-}
-
-/**
- * Creates a new toggle button instance for managing "Not Checked" list items.
  * @param {string} identifier - The row ID to be managed by this toggle.
- * @returns {HTMLSpanElement} The created toggle element.
+ * @param {Object} [options]
+ * @param {boolean} [options.initialChecked]
+ * @param {(id: string) => Promise<boolean>} [options.onToggle]
+ *   Async fn that toggles and returns the new state
+ * @returns {HTMLSpanElement}
  */
-export function createNotCheckedToggle(identifier) {
+export function createNotCheckedToggle(identifier, { initialChecked, onToggle } = {}) {
   const toggle = document.createElement('span');
   toggle.className = TOGGLE_CLASS;
   toggle.style.cssText = `
@@ -43,13 +24,24 @@ export function createNotCheckedToggle(identifier) {
     transition: opacity 0.2s ease;
   `;
 
-  isInNotCheckedList(identifier).then((isActive) => {
-    updateToggleState(toggle, isActive);
-  });
+  if (initialChecked !== undefined) {
+    updateToggleState(toggle, initialChecked);
+  }
+
+  async function handleToggle() {
+    if (!onToggle) return;
+    toggle.style.opacity = '0.5';
+    try {
+      const isNowActive = await onToggle(identifier);
+      updateToggleState(toggle, isNowActive);
+    } finally {
+      toggle.style.opacity = '1';
+    }
+  }
 
   toggle.addEventListener('click', (e) => {
     e.stopPropagation();
-    handleToggle(toggle, identifier);
+    handleToggle();
   });
 
   return toggle;
