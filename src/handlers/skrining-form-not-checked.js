@@ -363,10 +363,8 @@ async function finishAutomation() {
   removeStatusPanel();
   notify.info('Selesai', 'Seluruh tugas telah diproses ✓', 5000);
 
-  if (!hasRemainingForms()) {
-    if (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
-      clickFinishServiceButton();
-    }
+  if (!await hasRemainingForms() && await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+    clickFinishServiceButton();
   }
 
   const mainBtn = document.getElementById('dandelion-not-checked-automation');
