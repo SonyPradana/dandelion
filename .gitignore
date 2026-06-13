@@ -22,6 +22,11 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Local agent docs
+KNOWLEDGE.md
+TODO.md
+AGENTS.md
+
 # Database
 /data
 

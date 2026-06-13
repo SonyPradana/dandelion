@@ -3,12 +3,16 @@ import { initializeSkriningSend } from './handlers/skrining-send.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import './handlers/skrining-events.js';
+import browser from 'webextension-polyfill';
+import { store } from './store.js';
 import { getAgreement, getActiveConfig, getFullConfig } from './configuration.js';
 import { getFlashDataIfEnabled } from './handlers/flashData.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';
 import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quota-manager.js';
 import { controlPanel } from './components/controlPanel.js';
 import { notify } from './components/notification';
+
+store.init(browser);
 
 async function main() {
   const agreed = await getAgreement();
