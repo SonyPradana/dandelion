@@ -50,10 +50,24 @@ export function getQueueStats(masterList) {
 
 /**
  * Checks if there are still rows with "Dalam Pemeriksaan" status.
- * @returns {boolean} True if any form is still being examined.
+ * @param {number} [timeout=5000] - Maximum time to wait in milliseconds.
+ * @returns {Promise<boolean>} Resolves to true if any form is still being examined.
  */
-export function hasRemainingForms() {
-  return document.body.textContent.includes('Dalam Pemeriksaan');
+export function hasRemainingForms(timeout = 5000) {
+  return new Promise((resolve) => {
+    if (document.body.textContent.includes('Dalam Pemeriksaan')) {
+      return resolve(true);
+    }
+    const startTime = Date.now();
+    const check = () => {
+      if (Date.now() - startTime > timeout) {
+        resolve(false);
+      } else {
+        setTimeout(check, 300);
+      }
+    };
+    check();
+  });
 }
 
 /**
