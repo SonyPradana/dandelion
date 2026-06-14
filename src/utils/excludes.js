@@ -1,11 +1,11 @@
-import { getFullConfig, setConfig } from '../configuration.js';
+import { store } from '../store.js';
 
 /**
  * Retrieves the current active profile's excludes list as an array.
  * @returns {Promise<string[]>} A promise that resolves to an array of excluded data-names.
  */
 async function getExcludesForActiveProfile() {
-  const fullConfig = await getFullConfig();
+  const fullConfig = await store.getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
   const excludesString = fullConfig.profiles[activeProfileName]?.formSkrining?.excludes || '';
 
@@ -18,7 +18,7 @@ async function getExcludesForActiveProfile() {
  * @returns {Promise<void>}
  */
 async function saveExcludesForActiveProfile(excludesArray) {
-  const fullConfig = await getFullConfig();
+  const fullConfig = await store.getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
 
   if (!fullConfig.profiles[activeProfileName]) {
@@ -29,7 +29,7 @@ async function saveExcludesForActiveProfile(excludesArray) {
   }
 
   fullConfig.profiles[activeProfileName].formSkrining.excludes = excludesArray.join(';');
-  await setConfig(fullConfig);
+  await store.setConfig(fullConfig);
 }
 
 /**

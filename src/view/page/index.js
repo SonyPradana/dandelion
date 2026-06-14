@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill';
+import { store } from '../../store.js';
 import { getAgreement, setAgreement, getFullConfig, setConfig } from '../../configuration';
 import { showAgreementPopup } from '../../components/agreementPopup';
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
@@ -29,6 +30,7 @@ import {
 let activePopup = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
+  store.init(browser);
   await init();
 
   browser.storage.onChanged.addListener((changes, area) => {
