@@ -1,5 +1,3 @@
-import { addPinnedItem, removePinnedItem, isPinned } from '../utils/pinneds.js';
-
 const PIN_TOGGLE_CLASS = 'dandelion-pin-toggle';
 
 let stylesInitialized = false;
@@ -43,12 +41,6 @@ function initializeStyles() {
   stylesInitialized = true;
 }
 
-/**
- * Updates the pin toggle button state.
- *
- * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {boolean} pinned - Whether the item is pinned.
- */
 function updateToggleState(toggleElement, pinned) {
   toggleElement.textContent = '📌';
   toggleElement.classList.toggle('active', pinned);
@@ -56,76 +48,56 @@ function updateToggleState(toggleElement, pinned) {
 }
 
 /**
- * Handles the toggle pin action.
- *
- * @param {HTMLElement} toggleElement - The toggle button element.
- * @param {string} identifier - The data-name identifier.
- * @param {Function} getValue - Callback to get current field value.
+ * @param {string} identifier
+ * @param {() => string|null} getValue - Callback to get current field value
+ * @param {Object} [options]
+ * @param {boolean} [options.initialPinned]
+ * @param {(id: string, value: string|null) => Promise<boolean>} [options.onToggle]
+ *   Async fn that toggles pin state and returns the new pinned state
+ * @returns {HTMLSpanElement}
  */
-async function handleToggle(toggleElement, identifier, getValue) {
-  toggleElement.classList.add('loading');
-
-  try {
-    const currentPinned = await isPinned(identifier);
-    const nowPinned = !currentPinned;
-
-    if (nowPinned) {
-      const currentValue = getValue();
-      if (currentValue !== null) {
-        await addPinnedItem(identifier, currentValue);
-      }
-    } else {
-      await removePinnedItem(identifier);
-    }
-
-    updateToggleState(toggleElement, nowPinned);
-  } catch (error) {
-    console.error('Failed to toggle pin:', error);
-    toggleElement.textContent = '⚠️';
-    toggleElement.setAttribute('aria-label', 'Error toggling pin state');
-  } finally {
-    toggleElement.classList.remove('loading');
-  }
-}
-
-/**
- * Creates a toggle button to pin a field value.
- * Does not query the DOM directly - relies on getValue callback provided by the caller.
- *
- * @param {string} identifier - The data-name for the element.
- * @param {Function} getValue - Callback that returns the current field value.
- * @returns {Promise<HTMLSpanElement>} The created pin toggle element.
- */
-export async function createPinToggle(identifier, getValue) {
+export function createPinToggle(identifier, getValue, { initialPinned, onToggle } = {}) {
   initializeStyles();
 
-  const pinToggle = document.createElement('span');
-  pinToggle.className = PIN_TOGGLE_CLASS;
-  pinToggle.setAttribute('role', 'button');
-  pinToggle.setAttribute('tabindex', '0');
+  const toggleEl = document.createElement('span');
+  toggleEl.className = PIN_TOGGLE_CLASS;
+  toggleEl.setAttribute('role', 'button');
+  toggleEl.setAttribute('tabindex', '0');
 
-  isPinned(identifier)
-    .then((pinned) => {
-      updateToggleState(pinToggle, pinned);
-    })
-    .catch((error) => {
-      console.error('Failed to check pin state:', error);
-      pinToggle.textContent = '⚠️';
-      pinToggle.setAttribute('aria-label', 'Error loading pin state');
-    });
+  if (initialPinned !== undefined) {
+    updateToggleState(toggleEl, initialPinned);
+  } else {
+    toggleEl.style.opacity = '0.3';
+  }
 
-  pinToggle.addEventListener('click', (e) => {
+  async function handleToggle() {
+    if (!onToggle) return;
+    toggleEl.classList.add('loading');
+    try {
+      const currentValue = getValue();
+      const nowPinned = await onToggle(identifier, currentValue);
+      updateToggleState(toggleEl, nowPinned);
+    } catch (error) {
+      console.error('Failed to toggle pin:', error);
+      toggleEl.textContent = '⚠️';
+      toggleEl.setAttribute('aria-label', 'Error toggling pin state');
+    } finally {
+      toggleEl.classList.remove('loading');
+    }
+  }
+
+  toggleEl.addEventListener('click', (e) => {
     e.stopPropagation();
-    handleToggle(pinToggle, identifier, getValue);
+    handleToggle();
   });
 
-  pinToggle.addEventListener('keydown', (e) => {
+  toggleEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
-      handleToggle(pinToggle, identifier, getValue);
+      handleToggle();
     }
   });
 
-  return pinToggle;
+  return toggleEl;
 }

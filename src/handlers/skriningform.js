@@ -1,5 +1,8 @@
 import { button } from '../components/button';
-import { getActiveConfig } from '../configuration';
+import { store } from '../store';
+import { getFullConfig, getActiveConfig } from '../configuration';
+import { isExcluded, toggleExclude } from '../utils/excludes';
+import { isPinned, addPinnedItem, removePinnedItem } from '../utils/pinneds';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
@@ -27,7 +30,14 @@ export async function initializeSkriningForm(flashData = {}) {
   let dismissCountdown = null;
 
   const tombol = button('dandelion-auto-fill');
-  const profileIndicator = await createProfileComponent();
+  const fullConfig = await getFullConfig();
+  const profileIndicator = createProfileComponent({
+    profiles: fullConfig.profiles,
+    activeProfile: fullConfig.activeProfile,
+  });
+  bus.on('component:profile:switch', async ({ profileKey }) => {
+    await store.setActiveProfile(profileKey);
+  });
   const debugToggle = debugButton();
 
   if (tombol) {
@@ -271,28 +281,61 @@ export async function initializeSkriningForm(flashData = {}) {
   /**
    * @param {boolean} enable - Toggle show or hide debug markers.
    */
-  function showDebugInformation(enable) {
+  async function showDebugInformation(enable) {
     const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
 
     if (enable) {
       const elementsWithDataName = document.querySelectorAll('[data-name]');
 
-      elementsWithDataName.forEach((element) => {
-        // Prevent adding duplicate markers
+      const markersData = [];
+
+      for (const element of elementsWithDataName) {
         if (element.querySelector(`.${DEBUG_MARKER_CLASS}`)) {
-          return;
+          continue;
         }
 
         const dataName = element.getAttribute('data-name');
-        const marker = debugMarker(dataName);
 
-        // Ensure the parent is positioned to contain the absolute marker
+        let initialExcluded = false;
+        let initialPinned = false;
+        try {
+          [initialExcluded, initialPinned] = await Promise.all([
+            isExcluded(dataName),
+            isPinned(dataName),
+          ]);
+        } catch (err) {
+          console.error('Failed to fetch initial marker state:', err);
+        }
+
+        markersData.push({ element, dataName, initialExcluded, initialPinned });
+      }
+
+      for (const { element, dataName, initialExcluded, initialPinned } of markersData) {
+        const marker = debugMarker(dataName, {
+          excludeToggle: {
+            initialExcluded,
+            onToggle: (id) => toggleExclude(id),
+          },
+          pinToggle: {
+            initialPinned,
+            onToggle: async (id, value) => {
+              const pinned = await isPinned(id);
+              if (pinned) {
+                await removePinnedItem(id);
+              } else if (value !== null) {
+                await addPinnedItem(id, value);
+              }
+              return !pinned;
+            },
+          },
+        });
+
         if (window.getComputedStyle(element).position === 'static') {
           element.style.position = 'relative';
         }
 
         element.appendChild(marker);
-      });
+      }
     } else {
       const markers = document.querySelectorAll(`.${DEBUG_MARKER_CLASS}`);
       markers.forEach((marker) => marker.remove());

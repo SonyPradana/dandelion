@@ -1,15 +1,15 @@
-import { getFullConfig, setActiveProfile } from '../configuration';
+import bus from '../utils/hooks';
 import { controlPanel } from './controlPanel';
 import { notify } from './notification';
 
 /**
  * Creates a Profile Switcher (Vertical Dropdown style) with light glassmorphism.
- * @returns {Promise<HTMLDivElement>}
+ * @param {Object} options
+ * @param {Object} options.profiles - Map of profile keys to profile data
+ * @param {string} options.activeProfile - Currently active profile key
+ * @returns {HTMLDivElement}
  */
-export async function createProfileComponent() {
-  const config = await getFullConfig();
-  const activeProfile = config.activeProfile;
-
+export function createProfileComponent({ profiles, activeProfile } = {}) {
   const container = document.createElement('div');
   container.id = 'dandelion-profile-switcher';
 
@@ -32,11 +32,11 @@ export async function createProfileComponent() {
     z-index: 10001;
   `;
 
-  const profiles = Object.keys(config.profiles || {});
+  const profileKeys = Object.keys(profiles || {});
 
-  profiles.forEach((pKey) => {
+  profileKeys.forEach((pKey) => {
     const btn = document.createElement('div');
-    const profileData = config.profiles[pKey];
+    const profileData = profiles[pKey];
     const displayName = profileData.name || pKey.replace('profile', 'Profile ');
     const isActive = activeProfile === pKey;
 
@@ -74,12 +74,12 @@ export async function createProfileComponent() {
       }
     };
 
-    btn.onclick = async (e) => {
+    btn.onclick = (e) => {
       e.stopPropagation();
       if (isActive) return;
 
+      bus.emit('component:profile:switch', { profileKey: pKey, displayName });
       notify.info('Switching', `Mengaktifkan ${displayName}...`, 1000);
-      await setActiveProfile(pKey);
 
       container.style.transform = 'scale(0.98)';
       container.style.opacity = '0.5';
