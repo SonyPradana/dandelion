@@ -43,10 +43,17 @@ function initializeStyles() {
 
 /**
  * Creates a debug marker element with specific styling, including an exclude toggle.
- * @param {string} identifier - The text to display inside the marker and the data-name for the exclude toggle.
- * @returns {HTMLDivElement} The created marker element.
+ * @param {string} identifier - The text to display inside the marker.
+ * @param {Object} [options]
+ * @param {Object} [options.excludeToggle] - Options forwarded to createExcludeToggle
+ * @param {boolean} [options.excludeToggle.initialExcluded]
+ * @param {(id: string) => Promise<boolean>} [options.excludeToggle.onToggle]
+ * @param {Object} [options.pinToggle] - Options forwarded to createPinToggle
+ * @param {boolean} [options.pinToggle.initialPinned]
+ * @param {(id: string, value: string|null) => Promise<boolean>} [options.pinToggle.onToggle]
+ * @returns {HTMLDivElement}
  */
-export function debugMarker(identifier) {
+export function debugMarker(identifier, { excludeToggle: excludeOpts, pinToggle: pinOpts } = {}) {
   initializeStyles();
 
   const marker = document.createElement('div');
@@ -59,12 +66,11 @@ export function debugMarker(identifier) {
   const field = questionElement ? detectFieldType(questionElement) : null;
 
   if (field) {
-    createPinToggle(identifier, field.getValue).then((pinToggle) =>
-      marker.insertBefore(pinToggle, excludeToggle),
-    );
+    const pinToggle = createPinToggle(identifier, field.getValue, pinOpts);
+    marker.appendChild(pinToggle);
   }
 
-  const excludeToggle = createExcludeToggle(identifier);
+  const excludeToggle = createExcludeToggle(identifier, excludeOpts);
   marker.appendChild(excludeToggle);
 
   return marker;

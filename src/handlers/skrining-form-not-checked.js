@@ -5,7 +5,7 @@ import { zenModeButton } from '../components/zenModeButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
-import { getActiveConfig } from '../configuration';
+import { getFullConfig, getActiveConfig } from '../configuration';
 import { isZenModeActive, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
 import { controlPanel } from '../components/controlPanel';
@@ -117,7 +117,11 @@ async function ensureButtonsMounted(isProcessing) {
     mainBtn = button('dandelion-not-checked-automation');
     if (mainBtn) {
       if (!profileIndicator) {
-        profileIndicator = await createProfileComponent();
+        const cfg = await getFullConfig();
+        profileIndicator = createProfileComponent({
+          profiles: cfg.profiles,
+          activeProfile: cfg.activeProfile,
+        });
       }
 
       let hideTimeout = null;
