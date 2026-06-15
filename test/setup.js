@@ -1,3 +1,3 @@
-import { vi } from 'vitest'
+import { vi } from 'vitest';
 
-vi.mock('webextension-polyfill', () => ({}))
+vi.mock('webextension-polyfill', () => ({}));
