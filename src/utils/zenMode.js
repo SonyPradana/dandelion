@@ -1,6 +1,4 @@
-import browser from 'webextension-polyfill';
-
-const STORAGE_KEY = 'dandelion_zen_mode_state';
+import { store } from '../store.js';
 
 /**
  * @typedef {Object} ZenModeState
@@ -9,16 +7,12 @@ const STORAGE_KEY = 'dandelion_zen_mode_state';
  * @property {number} total - Total number of IDs initially in the queue.
  */
 
-const DEFAULT_STATE = { active: false, queue: [], total: 0 };
-
 /**
  * Gets the current Zen Mode state from extension storage.
  * @returns {Promise<ZenModeState>}
  */
 export async function getZenModeState() {
-  const result = await browser.storage.local.get(STORAGE_KEY);
-  const state = result[STORAGE_KEY] || DEFAULT_STATE;
-  return state;
+  return await store.getZenModeState();
 }
 
 /**
@@ -27,7 +21,7 @@ export async function getZenModeState() {
  * @returns {Promise<void>}
  */
 export async function setZenModeState(state) {
-  await browser.storage.local.set({ [STORAGE_KEY]: state });
+  await store.setZenModeState(state);
 }
 
 /**
@@ -90,5 +84,5 @@ export async function skipQueue() {
  * @returns {Promise<void>}
  */
 export async function clearZenMode() {
-  await browser.storage.local.remove(STORAGE_KEY);
+  await store.clearZenMode();
 }

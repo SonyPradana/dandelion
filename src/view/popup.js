@@ -1,4 +1,5 @@
 import browser from 'webextension-polyfill';
+import { store } from '../store.js';
 import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
 import { KeywordList } from './components/KeywordList.js';
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
   }
 
+  store.init(browser);
   await init();
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');

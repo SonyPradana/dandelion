@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import { store } from '../store.js';
 
 const STORAGE_KEY = 'flash_data';
 
@@ -13,7 +13,7 @@ const STORAGE_KEY = 'flash_data';
  */
 export async function setFlashData(data) {
   data._timestamp = Date.now();
-  await browser.storage.local.set({ [STORAGE_KEY]: data });
+  await store.storageSet(STORAGE_KEY, data);
 }
 
 /**
@@ -22,8 +22,7 @@ export async function setFlashData(data) {
  * @returns {Promise<FlashData|null>}
  */
 export async function getFlashData(maxAge = 600_000) {
-  const result = await browser.storage.local.get(STORAGE_KEY);
-  const data = result[STORAGE_KEY] || null;
+  const data = await store.storageGet(STORAGE_KEY);
   if (data && data._timestamp && Date.now() - data._timestamp > maxAge) {
     await clearFlashData();
     return null;
@@ -35,5 +34,5 @@ export async function getFlashData(maxAge = 600_000) {
  * Remove flash data from storage
  */
 export async function clearFlashData() {
-  await browser.storage.local.remove(STORAGE_KEY);
+  await store.storageRemove(STORAGE_KEY);
 }
