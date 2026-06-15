@@ -5,7 +5,11 @@ import {
   getNextFromQueue,
   clearZenMode,
 } from '../utils/zenMode';
-import { waitForRow, clickFinishServiceButton, hasRemainingForms } from './inspection/not-checked-utils';
+import {
+  waitForRow,
+  clickFinishServiceButton,
+  hasRemainingForms,
+} from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import bus from '../utils/hooks';
 import { showFlashDataPanelIfEnabled } from './flashData';
@@ -114,7 +118,10 @@ async function processNextZenItem() {
     isAutomationActive = false;
     await notify.alert('Zen Mode', 'Zen Mode Selesai!');
 
-    if (!await hasRemainingForms() && await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+    if (
+      !(await hasRemainingForms()) &&
+      (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?'))
+    ) {
       clickFinishServiceButton();
     }
     return;

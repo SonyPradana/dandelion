@@ -303,8 +303,8 @@ export async function initializeSkriningForm(flashData = {}) {
             isExcluded(dataName),
             isPinned(dataName),
           ]);
-        } catch (err) {
-          console.error('Failed to fetch initial marker state:', err);
+        } catch (error) {
+          console.error('Failed to fetch initial marker state:', error);
         }
 
         markersData.push({ element, dataName, initialExcluded, initialPinned });
