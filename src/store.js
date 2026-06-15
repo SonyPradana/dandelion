@@ -12,17 +12,17 @@ const STORAGE_KEYS = {
 };
 
 class DandelionStore {
-  _b = null;
+  _backend = null;
 
-  init(browserApi) {
-    this._b = browserApi;
+  init(backend) {
+    this._backend = backend;
   }
 
   get _browser() {
-    if (!this._b) {
-      throw new Error('DandelionStore not initialized. Call store.init(browser) first.');
+    if (!this._backend) {
+      throw new Error('DandelionStore not initialized. Call store.init(backend) first.');
     }
-    return this._b;
+    return this._backend;
   }
 
   // -- Raw storage access for custom keys (handlers etc) --
