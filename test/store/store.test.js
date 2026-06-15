@@ -1,9 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-
-vi.mock('webextension-polyfill', () => ({}))
-
-import { store } from '../src/store.js'
-import { MemoryBackend } from './memory-backend.js'
+import { describe, it, expect, beforeEach } from 'vitest'
+import { store } from '../../src/store.js'
+import { MemoryBackend } from '../__support__/memory-backend.js'
 
 let backend
 
