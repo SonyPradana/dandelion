@@ -1,6 +1,6 @@
 import bus from '../utils/hooks';
 import { notify } from '../components/notification';
-import { incrementBatch } from '../utils/productivityTracker';
+import { increment, incrementBatch } from '../utils/productivityTracker';
 
 bus.on('skriningForm:didFill', async (ctx) => {
   const { result } = ctx;
@@ -25,4 +25,16 @@ bus.on('skriningForm:didFill', async (ctx) => {
       });
     }, 100);
   }
+});
+
+bus.on('skrining:didFill', ({ radio }) => {
+  incrementBatch({ radio });
+});
+
+bus.on('notChecked:didProcessItem', () => {
+  increment('formNotChecked');
+});
+
+bus.on('zenMode:didProcessItem', () => {
+  increment('formZen');
 });
