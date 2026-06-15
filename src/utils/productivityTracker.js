@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import { store } from '../store.js';
 
 const STORAGE_KEY = 'productivity_stats';
 
@@ -38,16 +38,11 @@ function yesterdayKey(current) {
 }
 
 async function loadAll() {
-  try {
-    const result = await browser.storage.local.get(STORAGE_KEY);
-    return result[STORAGE_KEY] || {};
-  } catch {
-    return {};
-  }
+  return await store.loadProductivityData();
 }
 
 async function saveAll(data) {
-  await browser.storage.local.set({ [STORAGE_KEY]: data });
+  await store.saveProductivityData(data);
 }
 
 function recalcDay(data, key) {

@@ -1,11 +1,11 @@
-import { getActiveConfig, getFullConfig, setConfig } from '../configuration.js';
+import { store } from '../store.js';
 
 /**
  * Retrieves all pinned items from the active profile's configuration.
  * @returns {Promise<Object>} A promise that resolves with the pinned items object.
  */
 export async function getPinnedItems() {
-  const config = await getActiveConfig();
+  const config = await store.getActiveConfig();
   const pinneds = config.formSkrining?.pinneds;
   return typeof pinneds === 'object' && pinneds !== null ? pinneds : {};
 }
@@ -16,7 +16,7 @@ export async function getPinnedItems() {
  * @returns {Promise<void>} A promise that resolves when saving is complete.
  */
 export async function savePinnedItems(items) {
-  const config = await getFullConfig();
+  const config = await store.getFullConfig();
   const activeProfile = config.activeProfile;
 
   if (config.profiles && config.profiles[activeProfile]) {
@@ -26,7 +26,7 @@ export async function savePinnedItems(items) {
     config.profiles[activeProfile].formSkrining.pinneds = items;
   }
 
-  await setConfig(config);
+  await store.setConfig(config);
 }
 
 /**
