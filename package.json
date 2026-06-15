@@ -9,6 +9,8 @@
   "author": "SonyPradana",
   "type": "module",
   "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "oxlint . --deny-warnings",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt . --write",
@@ -37,6 +39,7 @@
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",
     "rolldown": "^1.1.0",
+    "vitest": "^4.1.8",
     "web-ext": "^10.3.0"
   }
 }

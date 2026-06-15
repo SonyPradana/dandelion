@@ -77,7 +77,9 @@ export function hasRemainingForms(timeout = 5000) {
 export function clickFinishServiceButton() {
   const buttons = document.querySelectorAll('button');
   const finishBtn = Array.from(buttons).find(
-    (btn) => btn.textContent.includes('Selesaikan Layanan') && !btn.classList.contains('cursor-not-allowed'),
+    (btn) =>
+      btn.textContent.includes('Selesaikan Layanan') &&
+      !btn.classList.contains('cursor-not-allowed'),
   );
   if (finishBtn) {
     finishBtn.click();

@@ -367,7 +367,7 @@ async function finishAutomation() {
   removeStatusPanel();
   notify.info('Selesai', 'Seluruh tugas telah diproses ✓', 5000);
 
-  if (!await hasRemainingForms() && await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+  if (!(await hasRemainingForms()) && (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?'))) {
     clickFinishServiceButton();
   }
 
