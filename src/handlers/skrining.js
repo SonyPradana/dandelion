@@ -1,4 +1,4 @@
-import { incrementBatch } from '../utils/productivityTracker';
+import bus from '../utils/hooks';
 
 export function initializeSkrining() {
   const radioClickedSet = new Set();
@@ -20,7 +20,7 @@ export function initializeSkrining() {
     });
 
     if (count > 0) {
-      incrementBatch({ radio: count });
+      bus.emit('skrining:didFill', { radio: count });
     }
 
     // Jika semua radio sudah pernah diklik, disconnect observer
