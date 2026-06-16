@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import bus from '../../src/utils/hooks'
+import { store } from '../../src/store'
+import { MemoryBackend } from '../__support__/memory-backend'
 import { controlPanel } from '../../src/components/controlPanel'
 import { createProfileComponent } from '../../src/components/profile'
 
@@ -8,6 +9,7 @@ describe('profile', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     document.head.innerHTML = ''
+    store.init(new MemoryBackend())
     controlPanel.init()
   })
 
@@ -37,20 +39,17 @@ describe('profile', () => {
     expect(el.children[0].style.fontWeight).toBe('700')
   })
 
-  it('should emit bus event when clicking inactive profile', () => {
-    const spy = vi.spyOn(bus, 'emit')
+  it('should call store.onProfileSwitch when clicking inactive profile', () => {
+    const spy = vi.spyOn(store, 'onProfileSwitch')
     const profiles = { p1: { name: 'One' }, p2: { name: 'Two' } }
     const el = createProfileComponent({ profiles, activeProfile: 'p1' })
     el.children[1].click()
-    expect(spy).toHaveBeenCalledWith('component:profile:switch', {
-      profileKey: 'p2',
-      displayName: 'Two',
-    })
+    expect(spy).toHaveBeenCalledWith('p2')
     spy.mockRestore()
   })
 
-  it('should not emit bus event when clicking active profile', () => {
-    const spy = vi.spyOn(bus, 'emit')
+  it('should not call store.onProfileSwitch when clicking active profile', () => {
+    const spy = vi.spyOn(store, 'onProfileSwitch')
     const profiles = { p1: { name: 'One' } }
     const el = createProfileComponent({ profiles, activeProfile: 'p1' })
     el.children[0].click()

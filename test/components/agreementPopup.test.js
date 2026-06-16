@@ -1,17 +1,15 @@
 // @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-
-vi.mock('../../src/configuration', () => ({
-  setAgreement: vi.fn().mockResolvedValue(),
-}))
+import { store } from '../../src/store'
+import { MemoryBackend } from '../__support__/memory-backend'
 
 import { showAgreementPopup } from '../../src/components/agreementPopup'
-import { setAgreement } from '../../src/configuration'
 
 describe('agreementPopup', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     document.head.innerHTML = ''
+    store.init(new MemoryBackend())
     vi.clearAllMocks()
   })
 
@@ -40,17 +38,20 @@ describe('agreementPopup', () => {
     expect(btn.classList.contains('enabled')).toBe(true)
   })
 
-  it('should call setAgreement on button click', () => {
+  it('should call store.setAgreement on button click', () => {
+    const spy = vi.spyOn(store, 'setAgreement').mockResolvedValue()
     showAgreementPopup()
     const checkbox = document.querySelector('#dandelion-agreement-popup-checkbox')
     const btn = document.querySelector('#dandelion-agreement-popup-btn')
     checkbox.checked = true
     checkbox.dispatchEvent(new Event('change'))
     btn.click()
-    expect(setAgreement).toHaveBeenCalledWith(true)
+    expect(spy).toHaveBeenCalledWith(true)
+    spy.mockRestore()
   })
 
   it('should remove overlay after button click', async () => {
+    vi.spyOn(store, 'setAgreement').mockResolvedValue()
     showAgreementPopup()
     const checkbox = document.querySelector('#dandelion-agreement-popup-checkbox')
     const btn = document.querySelector('#dandelion-agreement-popup-btn')

@@ -1,4 +1,4 @@
-import { store } from '../store.js';
+import { store as globalStore } from '../store.js';
 
 const STORAGE_KEY = 'productivity_stats';
 
@@ -37,11 +37,11 @@ function yesterdayKey(current) {
   return `${y}-${m}-${day}`;
 }
 
-async function loadAll() {
+async function loadAll(store = globalStore) {
   return await store.loadProductivityData();
 }
 
-async function saveAll(data) {
+async function saveAll(data, store = globalStore) {
   await store.saveProductivityData(data);
 }
 
@@ -59,12 +59,8 @@ function recalcDay(data, key) {
   entry.grandTotal = prevGrand + entry.dayTotal;
 }
 
-/**
- * Bulk increment — 1 read + 1 write.
- * @param {Partial<Record<'radio'|'freetext'|'dropdown'|'formNotChecked'|'formZen', number>>} counts
- */
-export async function incrementBatch(counts) {
-  const data = await loadAll();
+export async function incrementBatch(counts, store = globalStore) {
+  const data = await loadAll(store);
   const key = todayKey();
   if (!data[key]) data[key] = emptyDay();
 
@@ -77,28 +73,19 @@ export async function incrementBatch(counts) {
 
   data._meta = { weightVersion: WEIGHT_VERSION, weights: WEIGHTS };
   recalcDay(data, key);
-  await saveAll(data);
+  await saveAll(data, store);
 }
 
-/**
- * Single-category increment.
- * @param {'radio'|'freetext'|'dropdown'|'formNotChecked'|'formZen'} category
- */
-export async function increment(category) {
+export async function increment(category, store = globalStore) {
   if (!CATEGORIES.includes(category)) {
     console.warn(`[Productivity] Unknown category: ${category}`);
     return;
   }
-  await incrementBatch({ [category]: 1 });
+  await incrementBatch({ [category]: 1 }, store);
 }
 
-/**
- * Get summary for a specific date.
- * @param {string} dateKey - Format 'YYYY-MM-DD'
- * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
- */
-export async function getDaySummary(dateKey) {
-  const data = await loadAll();
+export async function getDaySummary(dateKey, store = globalStore) {
+  const data = await loadAll(store);
   const entry = data[dateKey];
   if (!entry) return null;
 
@@ -108,29 +95,15 @@ export async function getDaySummary(dateKey) {
   return { date: dateKey, counts, dayTotal: entry.dayTotal, grandTotal: entry.grandTotal };
 }
 
-/**
- * Get today's productivity summary.
- * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
- */
-export async function getTodaySummary() {
-  return getDaySummary(todayKey());
+export async function getTodaySummary(store = globalStore) {
+  return getDaySummary(todayKey(), store);
 }
 
-/**
- * Get yesterday's productivity summary for comparison.
- * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
- */
-export async function getYesterdaySummary() {
-  return getDaySummary(yesterdayKey(todayKey()));
+export async function getYesterdaySummary(store = globalStore) {
+  return getDaySummary(yesterdayKey(todayKey()), store);
 }
 
-/**
- * Get summaries for a date range (inclusive).
- * @param {string} fromDate - Format 'YYYY-MM-DD'
- * @param {string} toDate - Format 'YYYY-MM-DD'
- * @returns {Promise<Array<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>>}
- */
-export async function getRange(fromDate, toDate) {
+export async function getRange(fromDate, toDate, store = globalStore) {
   const result = [];
   const from = new Date(fromDate);
   const end = new Date(toDate);
@@ -143,32 +116,24 @@ export async function getRange(fromDate, toDate) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    result.push(await getDaySummary(`${y}-${m}-${day}`));
+    result.push(await getDaySummary(`${y}-${m}-${day}`, store));
   }
 
   return result;
 }
 
-/**
- * Get total dayTotal for the current month (from 1st to today).
- * @returns {Promise<number>}
- */
-export async function getMonthTotal() {
+export async function getMonthTotal(store = globalStore) {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const first = `${y}-${m}-01`;
   const today = todayKey();
 
-  const range = await getRange(first, today);
+  const range = await getRange(first, today, store);
   return range.reduce((sum, day) => sum + (day ? day.dayTotal : 0), 0);
 }
 
-/**
- * Get total dayTotal for the current week (Monday to today).
- * @returns {Promise<number>}
- */
-export async function getWeekTotal() {
+export async function getWeekTotal(store = globalStore) {
   const now = new Date();
   const day = now.getDay();
   const diff = now.getDate() - day + (day === 0 ? -6 : 1);
@@ -180,16 +145,12 @@ export async function getWeekTotal() {
   const first = `${y}-${m}-${d}`;
   const today = todayKey();
 
-  const range = await getRange(first, today);
+  const range = await getRange(first, today, store);
   return range.reduce((sum, day) => sum + (day ? day.dayTotal : 0), 0);
 }
 
-/**
- * Get overall breakdown across all history.
- * @returns {Promise<{ counts: Object, grandTotal: number, activeDays: number, average: number }>}
- */
-export async function getOverallBreakdown() {
-  const data = await loadAll();
+export async function getOverallBreakdown(store = globalStore) {
+  const data = await loadAll(store);
   const keys = Object.keys(data)
     .filter((k) => k !== '_meta')
     .toSorted();
@@ -213,30 +174,17 @@ export async function getOverallBreakdown() {
   return { counts, grandTotal, activeDays, average };
 }
 
-/**
- * Get full history for verification (chain integrity check).
- * @returns {Promise<Object>}
- */
-export async function getFullHistory() {
-  return await loadAll();
+export async function getFullHistory(store = globalStore) {
+  return await loadAll(store);
 }
 
-/**
- * Check if today's daily limit has been reached.
- * @returns {Promise<boolean>}
- */
-export async function isDailyLimitReached() {
-  const today = await getTodaySummary();
+export async function isDailyLimitReached(store = globalStore) {
+  const today = await getTodaySummary(store);
   return today ? today.dayTotal >= DAILY_LIMIT : false;
 }
 
-/**
- * Validate chain integrity — checks every stored entry.
- * Call from devtools console after importing.
- * @returns {Promise<{ valid: boolean, errors: string[], totalChecked: number, mismatches: number }>}
- */
-export async function validateChain() {
-  const data = await loadAll();
+export async function validateChain(store = globalStore) {
+  const data = await loadAll(store);
   const weights = getWeights(data);
   const errors = [];
   const keys = Object.keys(data)
@@ -275,14 +223,8 @@ export async function validateChain() {
   return { valid, errors, totalChecked, mismatches };
 }
 
-/**
- * Manual migration — recalculate all entries with current weights and rebuild chain.
- * Run from devtools console:
- *   const { migrateWeights } = await import('./utils/productivityTracker.js');
- *   await migrateWeights();
- */
-export async function migrateWeights() {
-  const data = await loadAll();
+export async function migrateWeights(store = globalStore) {
+  const data = await loadAll(store);
   const keys = Object.keys(data)
     .filter((k) => k !== '_meta')
     .toSorted();
@@ -293,6 +235,6 @@ export async function migrateWeights() {
     recalcDay(data, key);
   }
 
-  await saveAll(data);
+  await saveAll(data, store);
   console.log(`[Migrate] Recalculated ${keys.length} entries with weights v${WEIGHT_VERSION}`);
 }

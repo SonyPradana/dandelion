@@ -1,6 +1,5 @@
 import browser from 'webextension-polyfill';
 import { store } from '../store.js';
-import { getAgreement, setAgreement, getFullConfig, setConfig } from '../configuration';
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
@@ -65,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // --- Agreement Tab Logic ---
-  getAgreement().then((agreed) => {
+  store.getAgreement().then((agreed) => {
     if (agreeCheckbox) agreeCheckbox.checked = agreed;
     updateConfigState(agreed);
   });
@@ -73,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (agreeCheckbox) {
     agreeCheckbox.addEventListener('change', () => {
       const isAgreed = agreeCheckbox.checked;
-      setAgreement(isAgreed);
+      store.setAgreement(isAgreed);
       updateConfigState(isAgreed);
     });
   }
@@ -132,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     skriningUrlInput.value = sk.url || '';
   }
 
-  getFullConfig().then((config) => {
+  store.getFullConfig().then((config) => {
     loadedConfig = config;
 
     const activeProfileSettings = config.profiles[config.activeProfile];
@@ -156,10 +155,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       onSwitch: (newActiveProfile) => {
         loadedConfig.activeProfile = newActiveProfile;
         updateFormForProfile(newActiveProfile);
-        setConfig(loadedConfig);
+        store.setConfig(loadedConfig);
       },
       onChange: () => {
-        setConfig(loadedConfig);
+        store.setConfig(loadedConfig);
       },
     });
   });
@@ -189,7 +188,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
       profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
 
-      setConfig(loadedConfig);
+      store.setConfig(loadedConfig);
 
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
@@ -212,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();
-    getFullConfig().then((config) => {
+    store.getFullConfig().then((config) => {
       const configStr = JSON.stringify(config, null, 2);
       const blob = new Blob([configStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -240,8 +239,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const importedConfig = JSON.parse(e.target.result);
         if (!importedConfig.profiles || !importedConfig.activeProfile)
           throw new Error('Invalid config file format.');
-        setConfig(importedConfig);
-        loadedConfig = await getFullConfig();
+        store.setConfig(importedConfig);
+        loadedConfig = await store.getFullConfig();
         updateFormForProfile(loadedConfig.activeProfile);
       } catch (error) {
       } finally {

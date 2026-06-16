@@ -1,6 +1,5 @@
 import browser from 'webextension-polyfill';
 import { store } from '../../store.js';
-import { getAgreement, setAgreement, getFullConfig, setConfig } from '../../configuration';
 import { showAgreementPopup } from '../../components/agreementPopup';
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
 import { KeywordList } from '../components/KeywordList.js';
@@ -51,7 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  if (!(await getAgreement())) {
+  if (!(await store.getAgreement())) {
     activePopup = showAgreementPopup();
     await activePopup.promise;
     activePopup = null;
@@ -158,7 +157,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     flashDataEnabledCheckbox.checked = fd.enabled !== false;
   }
 
-  getFullConfig().then((config) => {
+  store.getFullConfig().then((config) => {
     loadedConfig = config;
 
     const activeProfileSettings = config.profiles[config.activeProfile];
@@ -182,10 +181,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       onSwitch: (newActiveProfile) => {
         loadedConfig.activeProfile = newActiveProfile;
         updateFormForProfile(newActiveProfile);
-        setConfig(loadedConfig);
+        store.setConfig(loadedConfig);
       },
       onChange: () => {
-        setConfig(loadedConfig);
+        store.setConfig(loadedConfig);
       },
     });
 
@@ -253,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadedConfig.panelPosition = activePosBtn.dataset.pos;
       }
 
-      setConfig(loadedConfig);
+      store.setConfig(loadedConfig);
 
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
@@ -555,7 +554,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   exportLink.addEventListener('click', (event) => {
     event.preventDefault();
-    getFullConfig().then((config) => {
+    store.getFullConfig().then((config) => {
       const configStr = JSON.stringify(config, null, 2);
       const blob = new Blob([configStr], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -589,8 +588,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           throw new Error('Invalid config file format.');
         }
 
-        setConfig(importedConfig);
-        loadedConfig = await getFullConfig();
+        store.setConfig(importedConfig);
+        loadedConfig = await store.getFullConfig();
         updateFormForProfile(loadedConfig.activeProfile);
       } catch (error) {
       } finally {

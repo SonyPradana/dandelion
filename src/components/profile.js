@@ -1,4 +1,4 @@
-import bus from '../utils/hooks';
+import { store } from '../store';
 import { controlPanel } from './controlPanel';
 import { notify } from './notification';
 
@@ -78,7 +78,7 @@ export function createProfileComponent({ profiles, activeProfile } = {}) {
       e.stopPropagation();
       if (isActive) return;
 
-      bus.emit('component:profile:switch', { profileKey: pKey, displayName });
+      store.onProfileSwitch(pKey);
       notify.info('Switching', `Mengaktifkan ${displayName}...`, 1000);
 
       container.style.transform = 'scale(0.98)';

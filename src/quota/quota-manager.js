@@ -1,7 +1,7 @@
 import { verifyLicense } from './verify.js';
 import { getCache, setCache } from './cache.js';
 import { getTodaySummary } from '../utils/productivityTracker.js';
-import { store } from '../store.js';
+import { store as globalStore } from '../store.js';
 
 const FREE_PLAN = {
   features: [],
@@ -19,7 +19,7 @@ const _state = {
   deviceId: null,
 };
 
-async function getOrCreateDeviceId() {
+async function getOrCreateDeviceId(store = globalStore) {
   try {
     const existing = await store.getDeviceId();
     if (existing) {
@@ -46,10 +46,10 @@ function versionMatch(pattern, version) {
   return pattern === version;
 }
 
-export async function init() {
-  await getOrCreateDeviceId();
+export async function init(store = globalStore) {
+  await getOrCreateDeviceId(store);
 
-  const cached = await getCache();
+  const cached = await getCache(store);
   if (cached) {
     _state.status = cached.status;
     _state.payload = cached.payload || { ...FREE_PLAN };
@@ -65,7 +65,7 @@ export async function init() {
       _state.status = 'none';
       _state.payload = { ...FREE_PLAN };
       _state.isFreePlan = true;
-      await setCache({ status: 'none', payload: null });
+      await setCache({ status: 'none', payload: null }, store);
       console.log('[Dandelion] Quota: none (free tier)');
       return;
     }
@@ -76,7 +76,7 @@ export async function init() {
       _state.status = 'none';
       _state.payload = { ...FREE_PLAN };
       _state.isFreePlan = true;
-      await setCache({ status: 'none', payload: null });
+      await setCache({ status: 'none', payload: null }, store);
       console.log('[Dandelion] Quota: invalid/expired (free tier)');
       return;
     }
@@ -90,7 +90,7 @@ export async function init() {
       _state.status = 'none';
       _state.payload = { ...FREE_PLAN };
       _state.isFreePlan = true;
-      await setCache({ status: 'none', payload: null });
+      await setCache({ status: 'none', payload: null }, store);
       console.log(
         `[Dandelion] Quota: version mismatch (${currentVersion} not in [${payload.version_allowed.join(',')}]) (free tier)`,
       );
@@ -101,14 +101,14 @@ export async function init() {
       _state.status = 'none';
       _state.payload = { ...FREE_PLAN };
       _state.isFreePlan = true;
-      await setCache({ status: 'none', payload: null });
+      await setCache({ status: 'none', payload: null }, store);
       return;
     }
 
     _state.status = 'valid';
     _state.payload = payload;
     _state.isFreePlan = false;
-    await setCache({ status: 'valid', payload });
+    await setCache({ status: 'valid', payload }, store);
     console.log(`[Dandelion] Quota: valid (total_limit=${payload.total_limit})`);
   } catch (error) {
     console.error('[Dandelion] Quota init error:', error);
@@ -142,11 +142,11 @@ export function getDailyCap() {
   return Infinity;
 }
 
-export async function getRemainingToday() {
+export async function getRemainingToday(store = globalStore) {
   if (_state.isFreePlan) {
     const cap = FREE_PLAN.daily_limit;
     try {
-      const today = await getTodaySummary();
+      const today = await getTodaySummary(store);
       const used = today ? today.dayTotal : 0;
       return Math.max(0, cap - used);
     } catch {
@@ -157,8 +157,8 @@ export async function getRemainingToday() {
   return Infinity;
 }
 
-export async function isLimitReached() {
-  const remaining = await getRemainingToday();
+export async function isLimitReached(store = globalStore) {
+  const remaining = await getRemainingToday(store);
   return remaining <= 0;
 }
 
@@ -173,12 +173,12 @@ function calcWeightedCount(counts) {
   return total;
 }
 
-export async function canUseTokens(counts) {
+export async function canUseTokens(counts, store = globalStore) {
   const weightedCount = calcWeightedCount(counts);
   if (weightedCount <= 0) return { canUse: true, reason: null };
 
   try {
-    const today = await getTodaySummary();
+    const today = await getTodaySummary(store);
     const usedToday = today ? today.dayTotal : 0;
     const grandTotal = today ? today.grandTotal : 0;
 
@@ -208,11 +208,11 @@ export async function canUseTokens(counts) {
   }
 }
 
-export async function saveToken(jwtString) {
+export async function saveToken(jwtString, store = globalStore) {
   if (typeof jwtString !== 'string' || jwtString.trim().length === 0) {
     throw new Error('Invalid token string');
   }
-  await getOrCreateDeviceId();
+  await getOrCreateDeviceId(store);
   const payload = await verifyLicense(jwtString.trim());
   if (!payload) {
     throw new Error('Token tidak valid atau sudah kadaluarsa');
@@ -222,10 +222,10 @@ export async function saveToken(jwtString) {
   }
   await store.saveQuotaToken(jwtString.trim());
   await store.clearCache();
-  await init();
+  await init(store);
 }
 
-export async function removeToken() {
+export async function removeToken(store = globalStore) {
   await store.removeQuotaToken();
   await store.clearCache();
   _state.status = 'none';
@@ -233,6 +233,6 @@ export async function removeToken() {
   _state.isFreePlan = true;
 }
 
-export async function getToken() {
+export async function getToken(store = globalStore) {
   return await store.getQuotaToken();
 }
