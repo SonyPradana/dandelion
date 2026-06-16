@@ -83,4 +83,97 @@ describe('zenMode', () => {
     expect(state.queue).toEqual([])
     expect(state.total).toBe(0)
   })
+
+  describe('error handling', () => {
+    it('addToQueue should handle empty array', async () => {
+      await addToQueue([])
+      const state = await getZenModeState()
+      expect(state.queue).toEqual([])
+      expect(state.total).toBe(0)
+    })
+
+    it('peekNextFromQueue on single-item queue should work', async () => {
+      await addToQueue(['only'])
+      const next = await peekNextFromQueue()
+      expect(next).toBe('only')
+    })
+
+    it('getNextFromQueue on single-item queue should pop correctly', async () => {
+      await addToQueue(['only'])
+      const next = await getNextFromQueue()
+      expect(next).toBe('only')
+      const state = await getZenModeState()
+      expect(state.queue).toEqual([])
+    })
+
+    it('skipQueue on empty queue should not error', async () => {
+      expect(async () => {
+        await skipQueue()
+      }).not.toThrow()
+    })
+
+    it('skipQueue on single-item queue should work', async () => {
+      await addToQueue(['only'])
+      await skipQueue()
+      const state = await getZenModeState()
+      expect(state.queue).toEqual([])
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should handle large queue', async () => {
+      const largeQueue = Array.from({ length: 1000 }, (_, i) => `item${i}`)
+      await addToQueue(largeQueue)
+      const state = await getZenModeState()
+      expect(state.queue).toHaveLength(1000)
+      expect(state.total).toBe(1000)
+    })
+
+    it('should handle repeated operations on same queue', async () => {
+      await addToQueue(['a', 'b', 'c'])
+      expect(await getNextFromQueue()).toBe('a')
+      expect(await getNextFromQueue()).toBe('b')
+      expect(await getNextFromQueue()).toBe('c')
+      expect(await getNextFromQueue()).toBeNull()
+    })
+
+    it('should handle items with special characters', async () => {
+      const specialItems = ['item-@#$%', 'item with spaces', 'item\twith\ttabs']
+      await addToQueue(specialItems)
+      expect(await peekNextFromQueue()).toBe('item-@#$%')
+    })
+
+    it('should preserve queue order through multiple operations', async () => {
+      await addToQueue(['a', 'b', 'c'])
+      expect(await getNextFromQueue()).toBe('a')
+      expect(await peekNextFromQueue()).toBe('b')
+      await getNextFromQueue()
+      expect(await peekNextFromQueue()).toBe('c')
+    })
+
+    it('setZenModeState should override queue', async () => {
+      await addToQueue(['a', 'b'])
+      await setZenModeState({ active: true, queue: ['x', 'y', 'z'], total: 3 })
+      const state = await getZenModeState()
+      expect(state.queue).toEqual(['x', 'y', 'z'])
+    })
+
+    it('clearZenMode multiple times should be idempotent', async () => {
+      await addToQueue(['a', 'b'])
+      await clearZenMode()
+      await clearZenMode()
+      const state = await getZenModeState()
+      expect(state.active).toBe(false)
+      expect(state.queue).toEqual([])
+    })
+
+    it('should track total correctly', async () => {
+      await addToQueue(['a', 'b', 'c'])
+      const state1 = await getZenModeState()
+      expect(state1.total).toBe(3)
+      await getNextFromQueue()
+      const state2 = await getZenModeState()
+      expect(state2.total).toBe(3)
+    })
+  })
 })

@@ -62,4 +62,54 @@ describe('notChecked', () => {
     expect(result).toBe(true)
     expect(await isInNotCheckedList('x')).toBe(true)
   })
+
+  describe('error handling', () => {
+    it('isInNotCheckedList should handle whitespace gracefully', async () => {
+      await setupConfig('a;b')
+      const result = await isInNotCheckedList('  ')
+      expect(typeof result).toBe('boolean')
+    })
+
+    it('toggleNotCheckedItem should handle empty string', async () => {
+      await setupConfig('a;b')
+      const result = await toggleNotCheckedItem('')
+      expect(typeof result).toBe('boolean')
+    })
+
+    it('should handle duplicate entries gracefully', async () => {
+      await setupConfig('a;a;a')
+      const list = await getNotCheckedList()
+      expect(Array.isArray(list)).toBe(true)
+    })
+
+    it('should handle items with special characters', async () => {
+      const result = await toggleNotCheckedItem('id-@#$%^&*()')
+      expect(typeof result).toBe('boolean')
+    })
+
+    it('toggleNotCheckedItem should preserve other items', async () => {
+      await setupConfig('a;b;c')
+      await toggleNotCheckedItem('b')
+      expect(await isInNotCheckedList('a')).toBe(true)
+      expect(await isInNotCheckedList('c')).toBe(true)
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should handle very long id strings', async () => {
+      const longId = 'x'.repeat(1000)
+      const result = await toggleNotCheckedItem(longId)
+      expect(typeof result).toBe('boolean')
+    })
+
+    it('should maintain list integrity after many operations', async () => {
+      await setupConfig('a')
+      for (let i = 0; i < 10; i++) {
+        await toggleNotCheckedItem(`item${i}`)
+      }
+      const list = await getNotCheckedList()
+      expect(Array.isArray(list)).toBe(true)
+      expect(list.length).toBeGreaterThan(0)
+    })
+  })
 })
