@@ -1,5 +1,5 @@
 import { button } from '../components/button';
-import { store } from '../store';
+import { store as globalStore } from '../store';
 import { isExcluded, toggleExclude } from '../utils/excludes';
 import { isPinned, addPinnedItem, removePinnedItem } from '../utils/pinneds';
 import { debugMarker } from '../components/marker';
@@ -23,7 +23,7 @@ import { notify } from '../components/notification';
  * The countdown can be dismissed or overridden by manually pressing the button,
  * so the user always retains control over the action.
  */
-export async function initializeSkriningForm(flashData = {}, store = store) {
+export async function initializeSkriningForm(flashData = {}, store = globalStore) {
   let isDebugEnabled = false; // Initial state is off
   let dismissCountdown = null;
 
