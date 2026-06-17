@@ -35,10 +35,16 @@ function yesterdayKey(current) {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 async function loadAll(store = globalStore) {
   return await store.loadProductivityData();
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 async function saveAll(data, store = globalStore) {
   await store.saveProductivityData(data);
 }
@@ -60,6 +66,7 @@ function recalcDay(data, key) {
 /**
  * Bulk increment — 1 read + 1 write.
  * @param {Partial<Record<'radio'|'freetext'|'dropdown'|'formNotChecked'|'formZen', number>>} counts
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function incrementBatch(counts, store = globalStore) {
   const data = await loadAll(store);
@@ -81,6 +88,7 @@ export async function incrementBatch(counts, store = globalStore) {
 /**
  * Single-category increment.
  * @param {'radio'|'freetext'|'dropdown'|'formNotChecked'|'formZen'} category
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function increment(category, store = globalStore) {
   if (!CATEGORIES.includes(category)) {
@@ -94,6 +102,7 @@ export async function increment(category, store = globalStore) {
  * Get summary for a specific date.
  * @param {string} dateKey - Format 'YYYY-MM-DD'
  * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getDaySummary(dateKey, store = globalStore) {
   const data = await loadAll(store);
@@ -109,6 +118,7 @@ export async function getDaySummary(dateKey, store = globalStore) {
 /**
  * Get today's productivity summary.
  * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getTodaySummary(store = globalStore) {
   return getDaySummary(todayKey(), store);
@@ -117,6 +127,7 @@ export async function getTodaySummary(store = globalStore) {
 /**
  * Get yesterday's productivity summary for comparison.
  * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getYesterdaySummary(store = globalStore) {
   return getDaySummary(yesterdayKey(todayKey()), store);
@@ -127,6 +138,7 @@ export async function getYesterdaySummary(store = globalStore) {
  * @param {string} fromDate - Format 'YYYY-MM-DD'
  * @param {string} toDate - Format 'YYYY-MM-DD'
  * @returns {Promise<Array<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getRange(fromDate, toDate, store = globalStore) {
   const result = [];
@@ -150,6 +162,7 @@ export async function getRange(fromDate, toDate, store = globalStore) {
 /**
  * Get total dayTotal for the current month (from 1st to today).
  * @returns {Promise<number>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getMonthTotal(store = globalStore) {
   const now = new Date();
@@ -165,6 +178,7 @@ export async function getMonthTotal(store = globalStore) {
 /**
  * Get total dayTotal for the current week (Monday to today).
  * @returns {Promise<number>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getWeekTotal(store = globalStore) {
   const now = new Date();
@@ -185,6 +199,7 @@ export async function getWeekTotal(store = globalStore) {
 /**
  * Get overall breakdown across all history.
  * @returns {Promise<{ counts: Object, grandTotal: number, activeDays: number, average: number }>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getOverallBreakdown(store = globalStore) {
   const data = await loadAll(store);
@@ -214,6 +229,7 @@ export async function getOverallBreakdown(store = globalStore) {
 /**
  * Get full history for verification (chain integrity check).
  * @returns {Promise<Object>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getFullHistory(store = globalStore) {
   return await loadAll(store);
@@ -222,6 +238,7 @@ export async function getFullHistory(store = globalStore) {
 /**
  * Check if today's daily limit has been reached.
  * @returns {Promise<boolean>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function isDailyLimitReached(store = globalStore) {
   const today = await getTodaySummary(store);
@@ -232,6 +249,7 @@ export async function isDailyLimitReached(store = globalStore) {
  * Validate chain integrity — checks every stored entry.
  * Call from devtools console after importing.
  * @returns {Promise<{ valid: boolean, errors: string[], totalChecked: number, mismatches: number }>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function validateChain(store = globalStore) {
   const data = await loadAll(store);
@@ -278,6 +296,7 @@ export async function validateChain(store = globalStore) {
  * Run from devtools console:
  *   const { migrateWeights } = await import('./utils/productivityTracker.js');
  *   await migrateWeights();
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function migrateWeights(store = globalStore) {
   const data = await loadAll(store);

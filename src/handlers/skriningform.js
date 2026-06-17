@@ -23,6 +23,7 @@ import { notify } from '../components/notification';
  * Zen Mode Asist auto-fill is optional and can be disabled in settings.
  * The countdown can be dismissed or overridden by manually pressing the button,
  * so the user always retains control over the action.
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function initializeSkriningForm(flashData = {}, store = globalStore) {
   let isDebugEnabled = false; // Initial state is off
