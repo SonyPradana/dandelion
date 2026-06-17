@@ -3,6 +3,7 @@ import { store as globalStore } from '../store.js';
 /**
  * Retrieves the current active profile's excludes list as an array.
  * @returns {Promise<string[]>} A promise that resolves to an array of excluded data-names.
+ * @param {import('../store.js').DandelionStore} [store]
  */
 async function getExcludesForActiveProfile(store = globalStore) {
   const fullConfig = await store.getFullConfig();
@@ -16,6 +17,7 @@ async function getExcludesForActiveProfile(store = globalStore) {
  * Saves the provided excludes array back to the active profile's configuration.
  * @param {string[]} excludesArray - The array of data-names to save as excludes.
  * @returns {Promise<void>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 async function saveExcludesForActiveProfile(excludesArray, store = globalStore) {
   const fullConfig = await store.getFullConfig();
@@ -36,6 +38,7 @@ async function saveExcludesForActiveProfile(excludesArray, store = globalStore) 
  * Checks if a specific data-name is currently excluded in the active profile.
  * @param {string} dataName - The data-name to check.
  * @returns {Promise<boolean>} True if excluded, false otherwise.
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function isExcluded(dataName, store = globalStore) {
   const excludesList = await getExcludesForActiveProfile(store);
@@ -47,6 +50,7 @@ export async function isExcluded(dataName, store = globalStore) {
  * Toggles the exclusion status of a data-name in the active profile.
  * @param {string} dataName - The data-name to toggle.
  * @returns {Promise<boolean>} True if the data-name is now excluded, false if it's now included.
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function toggleExclude(dataName, store = globalStore) {
   const excludesList = await getExcludesForActiveProfile(store);

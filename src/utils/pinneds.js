@@ -3,6 +3,7 @@ import { store as globalStore } from '../store.js';
 /**
  * Retrieves all pinned items from the active profile's configuration.
  * @returns {Promise<Object>} A promise that resolves with the pinned items object.
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function getPinnedItems(store = globalStore) {
   const config = await store.getActiveConfig();
@@ -14,6 +15,7 @@ export async function getPinnedItems(store = globalStore) {
  * Saves the pinned items object to the active profile's configuration.
  * @param {Object} items - The object containing all pinned items.
  * @returns {Promise<void>} A promise that resolves when saving is complete.
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function savePinnedItems(items, store = globalStore) {
   const config = await store.getFullConfig();
@@ -34,6 +36,7 @@ export async function savePinnedItems(items, store = globalStore) {
  * @param {string} key - The key (data-name) of the item.
  * @param {string} value - The value (text) of the item.
  * @returns {Promise<void>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function addPinnedItem(key, value, store = globalStore) {
   const items = await getPinnedItems(store);
@@ -45,6 +48,7 @@ export async function addPinnedItem(key, value, store = globalStore) {
  * Removes a single pinned item.
  * @param {string} key - The key (data-name) of the item to remove.
  * @returns {Promise<void>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function removePinnedItem(key, store = globalStore) {
   const items = await getPinnedItems(store);
@@ -56,6 +60,7 @@ export async function removePinnedItem(key, store = globalStore) {
  * Checks if an item is already pinned.
  * @param {string} key - The key (data-name) of the item to check.
  * @returns {Promise<boolean>}
+ * @param {import('../store.js').DandelionStore} [store]
  */
 export async function isPinned(key, store = globalStore) {
   const items = await getPinnedItems(store);

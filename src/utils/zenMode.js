@@ -9,6 +9,7 @@ import { store as globalStore } from '../store.js';
 
 /**
  * Gets the current Zen Mode state from extension storage.
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<ZenModeState>}
  */
 export async function getZenModeState(store = globalStore) {
@@ -18,6 +19,7 @@ export async function getZenModeState(store = globalStore) {
 /**
  * Saves the Zen Mode state to extension storage.
  * @param {ZenModeState} state
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<void>}
  */
 export async function setZenModeState(state, store = globalStore) {
@@ -26,6 +28,7 @@ export async function setZenModeState(state, store = globalStore) {
 
 /**
  * Checks if Zen Mode is currently active.
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<boolean>}
  */
 export async function isZenModeActive(store = globalStore) {
@@ -36,6 +39,7 @@ export async function isZenModeActive(store = globalStore) {
 /**
  * Adds IDs to the Zen Mode queue.
  * @param {string[]} ids
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<void>}
  */
 export async function addToQueue(ids, store = globalStore) {
@@ -47,6 +51,7 @@ export async function addToQueue(ids, store = globalStore) {
 
 /**
  * Gets the next ID from the queue without removing it.
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<string|null>}
  */
 export async function peekNextFromQueue(store = globalStore) {
@@ -57,6 +62,7 @@ export async function peekNextFromQueue(store = globalStore) {
 
 /**
  * Gets and removes the next ID from the queue.
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<string|null>}
  */
 export async function getNextFromQueue(store = globalStore) {
@@ -69,6 +75,7 @@ export async function getNextFromQueue(store = globalStore) {
 
 /**
  * Skips the current first item in the queue.
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<void>}
  */
 export async function skipQueue(store = globalStore) {
@@ -81,6 +88,7 @@ export async function skipQueue(store = globalStore) {
 
 /**
  * Clears the queue and deactivates Zen Mode.
+ * @param {import('../store.js').DandelionStore} [store]
  * @returns {Promise<void>}
  */
 export async function clearZenMode(store = globalStore) {

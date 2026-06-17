@@ -19,6 +19,9 @@ const _state = {
   deviceId: null,
 };
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 async function getOrCreateDeviceId(store = globalStore) {
   try {
     const existing = await store.getDeviceId();
@@ -46,6 +49,9 @@ function versionMatch(pattern, version) {
   return pattern === version;
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 export async function init(store = globalStore) {
   await getOrCreateDeviceId(store);
 
@@ -142,6 +148,9 @@ export function getDailyCap() {
   return Infinity;
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 export async function getRemainingToday(store = globalStore) {
   if (_state.isFreePlan) {
     const cap = FREE_PLAN.daily_limit;
@@ -157,6 +166,9 @@ export async function getRemainingToday(store = globalStore) {
   return Infinity;
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 export async function isLimitReached(store = globalStore) {
   const remaining = await getRemainingToday(store);
   return remaining <= 0;
@@ -173,6 +185,9 @@ function calcWeightedCount(counts) {
   return total;
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 export async function canUseTokens(counts, store = globalStore) {
   const weightedCount = calcWeightedCount(counts);
   if (weightedCount <= 0) return { canUse: true, reason: null };
@@ -208,6 +223,9 @@ export async function canUseTokens(counts, store = globalStore) {
   }
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 export async function saveToken(jwtString, store = globalStore) {
   if (typeof jwtString !== 'string' || jwtString.trim().length === 0) {
     throw new Error('Invalid token string');
@@ -225,6 +243,9 @@ export async function saveToken(jwtString, store = globalStore) {
   await init(store);
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 export async function removeToken(store = globalStore) {
   await store.removeQuotaToken();
   await store.clearCache();
@@ -233,6 +254,9 @@ export async function removeToken(store = globalStore) {
   _state.isFreePlan = true;
 }
 
+/**
+ * @param {import('../store.js').DandelionStore} [store]
+ */
 export async function getToken(store = globalStore) {
   return await store.getQuotaToken();
 }
