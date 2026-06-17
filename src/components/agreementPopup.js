@@ -1,5 +1,5 @@
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
-import { setAgreement } from '../configuration';
+import { store } from '../store';
 
 const POPUP_ID = 'dandelion-agreement-popup';
 
@@ -196,7 +196,7 @@ export function showAgreementPopup() {
   }
 
   btn.addEventListener('click', async () => {
-    await setAgreement(true);
+    await store.setAgreement(true);
     remove();
   });
 

@@ -114,6 +114,10 @@ class DandelionStore {
     await this.setConfig(config);
   }
 
+  async onProfileSwitch(profileKey) {
+    await this.setActiveProfile(profileKey);
+  }
+
   // -- Flash Session --
 
   async getFlashData() {
@@ -227,6 +231,7 @@ export const getFullConfig = (...a) => store.getFullConfig(...a);
 export const getActiveConfig = (...a) => store.getActiveConfig(...a);
 export const setConfig = (...a) => store.setConfig(...a);
 export const setActiveProfile = (...a) => store.setActiveProfile(...a);
+export const onProfileSwitch = (...a) => store.onProfileSwitch(...a);
 export const getFlashData = (...a) => store.getFlashData(...a);
 export const setFlashData = (...a) => store.setFlashData(...a);
 export const clearFlashData = (...a) => store.clearFlashData(...a);

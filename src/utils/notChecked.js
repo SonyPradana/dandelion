@@ -1,10 +1,10 @@
-import { store } from '../store.js';
+import { store as globalStore } from '../store.js';
 
 /**
  * Retrieves the "Not Checked" master list for the currently active profile.
  * @returns {Promise<string[]>} A promise that resolves to an array of row IDs.
  */
-export async function getNotCheckedList() {
+export async function getNotCheckedList(store = globalStore) {
   const fullConfig = await store.getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
   const listString = fullConfig.profiles[activeProfileName]?.notChecked?.notCheckedList || '';
@@ -17,7 +17,7 @@ export async function getNotCheckedList() {
  * @param {string[]} listArray - The array of row IDs to save.
  * @returns {Promise<void>}
  */
-async function saveNotCheckedList(listArray) {
+async function saveNotCheckedList(listArray, store = globalStore) {
   const fullConfig = await store.getFullConfig();
   const activeProfileName = fullConfig.activeProfile;
 
@@ -37,8 +37,8 @@ async function saveNotCheckedList(listArray) {
  * @param {string} id - The row ID to check.
  * @returns {Promise<boolean>} Resolves to true if the ID is in the list.
  */
-export async function isInNotCheckedList(id) {
-  const list = await getNotCheckedList();
+export async function isInNotCheckedList(id, store = globalStore) {
+  const list = await getNotCheckedList(store);
   return list.includes(id);
 }
 
@@ -47,17 +47,17 @@ export async function isInNotCheckedList(id) {
  * @param {string} id - The row ID to toggle.
  * @returns {Promise<boolean>} Resolves to the new presence state (true if added).
  */
-export async function toggleNotCheckedItem(id) {
-  const list = await getNotCheckedList();
+export async function toggleNotCheckedItem(id, store = globalStore) {
+  const list = await getNotCheckedList(store);
   const index = list.indexOf(id);
 
   if (index > -1) {
     list.splice(index, 1);
-    await saveNotCheckedList(list);
+    await saveNotCheckedList(list, store);
     return false;
   } else {
     list.push(id);
-    await saveNotCheckedList(list);
+    await saveNotCheckedList(list, store);
     return true;
   }
 }
