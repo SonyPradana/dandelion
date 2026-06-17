@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { store } from '../../src/store.js';
 import { MemoryBackend } from '../__support__/memory-backend.js';
 import {

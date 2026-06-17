@@ -32,7 +32,7 @@
     "unicorn/consistent-existence-index-check": "off",
     "unicorn/prefer-ternary": "off",
     "no-unused-expressions": "off",
-    "no-unused-vars": "off",
+    "no-unused-vars": "deny",
     "no-continue": "off",
     "no-shadow": "off",
     "capitalized-comments": "off",

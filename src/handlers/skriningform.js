@@ -1,6 +1,5 @@
 import { button } from '../components/button';
-import { store } from '../store';
-import { getFullConfig, getActiveConfig } from '../configuration';
+import { store as globalStore } from '../store';
 import { isExcluded, toggleExclude } from '../utils/excludes';
 import { isPinned, addPinnedItem, removePinnedItem } from '../utils/pinneds';
 import { debugMarker } from '../components/marker';
@@ -25,18 +24,15 @@ import { notify } from '../components/notification';
  * The countdown can be dismissed or overridden by manually pressing the button,
  * so the user always retains control over the action.
  */
-export async function initializeSkriningForm(flashData = {}) {
+export async function initializeSkriningForm(flashData = {}, store = globalStore) {
   let isDebugEnabled = false; // Initial state is off
   let dismissCountdown = null;
 
   const tombol = button('dandelion-auto-fill');
-  const fullConfig = await getFullConfig();
+  const fullConfig = await store.getFullConfig();
   const profileIndicator = createProfileComponent({
     profiles: fullConfig.profiles,
     activeProfile: fullConfig.activeProfile,
-  });
-  bus.on('component:profile:switch', async ({ profileKey }) => {
-    await store.setActiveProfile(profileKey);
   });
   const debugToggle = debugButton();
 
@@ -93,7 +89,7 @@ export async function initializeSkriningForm(flashData = {}) {
     controlPanel.mount(zenToggle, 2);
     controlPanel.mount(skipBtn, 2);
 
-    const activeConfig = await getActiveConfig();
+    const activeConfig = await store.getActiveConfig();
     const zenConfig = activeConfig.zenMode || {};
     if (zenConfig.enabled !== false) {
       const timeout = Math.min(30_000, Math.max(500, zenConfig.timeout || 5000));
@@ -118,7 +114,7 @@ export async function initializeSkriningForm(flashData = {}) {
       dismissCountdown = null;
     }
 
-    const config = await getActiveConfig();
+    const config = await store.getActiveConfig();
     const fs = config.formSkrining || {};
     const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
