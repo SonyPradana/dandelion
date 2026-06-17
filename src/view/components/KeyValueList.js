@@ -219,7 +219,7 @@ export class KeyValueList {
     keyDiv.dataset.fullKey = key; // Store full key
 
     // Toggle expand/collapse on click
-    keyDiv.addEventListener('click', (_e) => {
+    keyDiv.addEventListener('click', () => {
       if (window.getSelection().toString()) {
         return;
       }
