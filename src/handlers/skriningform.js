@@ -12,6 +12,7 @@ import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
 import { clearFlashData } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
+import bus from '../utils/hooks';
 import { notify } from '../components/notification';
 
 /**
