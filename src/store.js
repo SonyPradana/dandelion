@@ -223,6 +223,7 @@ class DandelionStore {
 
 export const store = new DandelionStore();
 export default store;
+export { DandelionStore };
 
 // Named exports for backward compatibility
 export const getAgreement = (...a) => store.getAgreement(...a);
