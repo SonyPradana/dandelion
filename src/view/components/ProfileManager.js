@@ -221,7 +221,7 @@ export class ProfileManager {
     }
   }
 
-  startInlineRename(card, nameSpan, key) {
+  startInlineRename(_card, nameSpan, key) {
     const currentName = this.getProfileDisplayName(key);
 
     const input = document.createElement('input');
