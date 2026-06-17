@@ -32,7 +32,10 @@
     "unicorn/consistent-existence-index-check": "off",
     "unicorn/prefer-ternary": "off",
     "no-unused-expressions": "off",
-    "no-unused-vars": ["deny", { "args": "all", "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-unused-vars": [
+      "deny",
+      { "args": "all", "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
     "no-continue": "off",
     "no-shadow": "off",
     "capitalized-comments": "off",
