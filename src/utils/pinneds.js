@@ -36,9 +36,9 @@ export async function savePinnedItems(items, store = globalStore) {
  * @returns {Promise<void>}
  */
 export async function addPinnedItem(key, value, store = globalStore) {
-  const items = await getPinnedItems();
+  const items = await getPinnedItems(store);
   items[key] = value;
-  await savePinnedItems(items);
+  await savePinnedItems(items, store);
 }
 
 /**
@@ -47,9 +47,9 @@ export async function addPinnedItem(key, value, store = globalStore) {
  * @returns {Promise<void>}
  */
 export async function removePinnedItem(key, store = globalStore) {
-  const items = await getPinnedItems();
+  const items = await getPinnedItems(store);
   delete items[key];
-  await savePinnedItems(items);
+  await savePinnedItems(items, store);
 }
 
 /**
@@ -58,6 +58,6 @@ export async function removePinnedItem(key, store = globalStore) {
  * @returns {Promise<boolean>}
  */
 export async function isPinned(key, store = globalStore) {
-  const items = await getPinnedItems();
+  const items = await getPinnedItems(store);
   return Object.prototype.hasOwnProperty.call(items, key);
 }

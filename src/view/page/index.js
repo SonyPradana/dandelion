@@ -591,7 +591,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         store.setConfig(importedConfig);
         loadedConfig = await store.getFullConfig();
         updateFormForProfile(loadedConfig.activeProfile);
-      } catch (error) {
+      } catch {
       } finally {
         importFileInput.value = '';
       }

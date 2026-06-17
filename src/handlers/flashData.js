@@ -1,5 +1,5 @@
 import { store as globalStore } from '../store';
-import { getFlashData, clearFlashData } from '../utils/flashSession';
+import { getFlashData } from '../utils/flashSession';
 import { showFlashDataPanel } from '../components/flashPanel';
 import { isFeatureEnabled } from '../quota/quota-manager';
 

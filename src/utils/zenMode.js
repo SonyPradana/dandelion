@@ -29,7 +29,7 @@ export async function setZenModeState(state, store = globalStore) {
  * @returns {Promise<boolean>}
  */
 export async function isZenModeActive(store = globalStore) {
-  const state = await getZenModeState();
+  const state = await getZenModeState(store);
   return state.active;
 }
 
@@ -39,10 +39,10 @@ export async function isZenModeActive(store = globalStore) {
  * @returns {Promise<void>}
  */
 export async function addToQueue(ids, store = globalStore) {
-  const state = await getZenModeState();
+  const state = await getZenModeState(store);
   state.queue = ids;
   state.total = ids.length;
-  await setZenModeState(state);
+  await setZenModeState(state, store);
 }
 
 /**
@@ -50,7 +50,7 @@ export async function addToQueue(ids, store = globalStore) {
  * @returns {Promise<string|null>}
  */
 export async function peekNextFromQueue(store = globalStore) {
-  const state = await getZenModeState();
+  const state = await getZenModeState(store);
   if (state.queue.length === 0) return null;
   return state.queue[0];
 }
@@ -60,10 +60,10 @@ export async function peekNextFromQueue(store = globalStore) {
  * @returns {Promise<string|null>}
  */
 export async function getNextFromQueue(store = globalStore) {
-  const state = await getZenModeState();
+  const state = await getZenModeState(store);
   if (state.queue.length === 0) return null;
   const nextId = state.queue.shift();
-  await setZenModeState(state);
+  await setZenModeState(state, store);
   return nextId;
 }
 
@@ -72,10 +72,10 @@ export async function getNextFromQueue(store = globalStore) {
  * @returns {Promise<void>}
  */
 export async function skipQueue(store = globalStore) {
-  const state = await getZenModeState();
+  const state = await getZenModeState(store);
   if (state.queue.length > 0) {
     state.queue.shift();
-    await setZenModeState(state);
+    await setZenModeState(state, store);
   }
 }
 

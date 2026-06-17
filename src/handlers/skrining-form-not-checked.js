@@ -432,7 +432,7 @@ async function processNextItem() {
       setTimeout(() => {
         window.location.reload();
       }, ncConfig.reloadDelay || 1000);
-    } catch (error) {
+    } catch {
       setTimeout(processNextItem, ncConfig.itemDelay || 1000);
     }
   } else {

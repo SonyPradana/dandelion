@@ -14,7 +14,7 @@ import {
   MONTHLY_TARGET,
   TARGET_MODE,
 } from '../utils/productivityTracker';
-import { init, getStatus, getToken } from '../quota/quota-manager.js';
+import { init, getStatus } from '../quota/quota-manager.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         store.setConfig(importedConfig);
         loadedConfig = await store.getFullConfig();
         updateFormForProfile(loadedConfig.activeProfile);
-      } catch (error) {
+      } catch {
       } finally {
         importFileInput.value = '';
       }

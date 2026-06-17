@@ -38,7 +38,7 @@ async function saveExcludesForActiveProfile(excludesArray, store = globalStore) 
  * @returns {Promise<boolean>} True if excluded, false otherwise.
  */
 export async function isExcluded(dataName, store = globalStore) {
-  const excludesList = await getExcludesForActiveProfile();
+  const excludesList = await getExcludesForActiveProfile(store);
 
   return excludesList.includes(dataName);
 }
@@ -49,18 +49,18 @@ export async function isExcluded(dataName, store = globalStore) {
  * @returns {Promise<boolean>} True if the data-name is now excluded, false if it's now included.
  */
 export async function toggleExclude(dataName, store = globalStore) {
-  const excludesList = await getExcludesForActiveProfile();
+  const excludesList = await getExcludesForActiveProfile(store);
   const index = excludesList.indexOf(dataName);
 
   // It exists, so remove it
   if (index > -1) {
     excludesList.splice(index, 1);
-    await saveExcludesForActiveProfile(excludesList);
+    await saveExcludesForActiveProfile(excludesList, store);
 
     return false;
   } else {
     excludesList.push(dataName);
-    await saveExcludesForActiveProfile(excludesList);
+    await saveExcludesForActiveProfile(excludesList, store);
 
     return true;
   }

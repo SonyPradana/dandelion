@@ -38,7 +38,7 @@ async function saveNotCheckedList(listArray, store = globalStore) {
  * @returns {Promise<boolean>} Resolves to true if the ID is in the list.
  */
 export async function isInNotCheckedList(id, store = globalStore) {
-  const list = await getNotCheckedList();
+  const list = await getNotCheckedList(store);
   return list.includes(id);
 }
 
@@ -48,16 +48,16 @@ export async function isInNotCheckedList(id, store = globalStore) {
  * @returns {Promise<boolean>} Resolves to the new presence state (true if added).
  */
 export async function toggleNotCheckedItem(id, store = globalStore) {
-  const list = await getNotCheckedList();
+  const list = await getNotCheckedList(store);
   const index = list.indexOf(id);
 
   if (index > -1) {
     list.splice(index, 1);
-    await saveNotCheckedList(list);
+    await saveNotCheckedList(list, store);
     return false;
   } else {
     list.push(id);
-    await saveNotCheckedList(list);
+    await saveNotCheckedList(list, store);
     return true;
   }
 }

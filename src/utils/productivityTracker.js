@@ -1,7 +1,5 @@
 import { store as globalStore } from '../store.js';
 
-const STORAGE_KEY = 'productivity_stats';
-
 const CATEGORIES = ['radio', 'freetext', 'dropdown', 'formNotChecked', 'formZen'];
 
 export const WEIGHT_VERSION = 1;
@@ -64,7 +62,7 @@ function recalcDay(data, key) {
  * @param {Partial<Record<'radio'|'freetext'|'dropdown'|'formNotChecked'|'formZen', number>>} counts
  */
 export async function incrementBatch(counts, store = globalStore) {
-  const data = await loadAll();
+  const data = await loadAll(store);
   const key = todayKey();
   if (!data[key]) data[key] = emptyDay();
 
@@ -77,7 +75,7 @@ export async function incrementBatch(counts, store = globalStore) {
 
   data._meta = { weightVersion: WEIGHT_VERSION, weights: WEIGHTS };
   recalcDay(data, key);
-  await saveAll(data);
+  await saveAll(data, store);
 }
 
 /**
@@ -89,7 +87,7 @@ export async function increment(category, store = globalStore) {
     console.warn(`[Productivity] Unknown category: ${category}`);
     return;
   }
-  await incrementBatch({ [category]: 1 });
+  await incrementBatch({ [category]: 1 }, store);
 }
 
 /**
@@ -98,7 +96,7 @@ export async function increment(category, store = globalStore) {
  * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
  */
 export async function getDaySummary(dateKey, store = globalStore) {
-  const data = await loadAll();
+  const data = await loadAll(store);
   const entry = data[dateKey];
   if (!entry) return null;
 
@@ -113,7 +111,7 @@ export async function getDaySummary(dateKey, store = globalStore) {
  * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
  */
 export async function getTodaySummary(store = globalStore) {
-  return getDaySummary(todayKey());
+  return getDaySummary(todayKey(), store);
 }
 
 /**
@@ -121,7 +119,7 @@ export async function getTodaySummary(store = globalStore) {
  * @returns {Promise<{ date: string, counts: Object, dayTotal: number, grandTotal: number }|null>}
  */
 export async function getYesterdaySummary(store = globalStore) {
-  return getDaySummary(yesterdayKey(todayKey()));
+  return getDaySummary(yesterdayKey(todayKey()), store);
 }
 
 /**
@@ -143,7 +141,7 @@ export async function getRange(fromDate, toDate, store = globalStore) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    result.push(await getDaySummary(`${y}-${m}-${day}`));
+    result.push(await getDaySummary(`${y}-${m}-${day}`, store));
   }
 
   return result;
@@ -160,7 +158,7 @@ export async function getMonthTotal(store = globalStore) {
   const first = `${y}-${m}-01`;
   const today = todayKey();
 
-  const range = await getRange(first, today);
+  const range = await getRange(first, today, store);
   return range.reduce((sum, day) => sum + (day ? day.dayTotal : 0), 0);
 }
 
@@ -180,7 +178,7 @@ export async function getWeekTotal(store = globalStore) {
   const first = `${y}-${m}-${d}`;
   const today = todayKey();
 
-  const range = await getRange(first, today);
+  const range = await getRange(first, today, store);
   return range.reduce((sum, day) => sum + (day ? day.dayTotal : 0), 0);
 }
 
@@ -189,7 +187,7 @@ export async function getWeekTotal(store = globalStore) {
  * @returns {Promise<{ counts: Object, grandTotal: number, activeDays: number, average: number }>}
  */
 export async function getOverallBreakdown(store = globalStore) {
-  const data = await loadAll();
+  const data = await loadAll(store);
   const keys = Object.keys(data)
     .filter((k) => k !== '_meta')
     .toSorted();
@@ -218,7 +216,7 @@ export async function getOverallBreakdown(store = globalStore) {
  * @returns {Promise<Object>}
  */
 export async function getFullHistory(store = globalStore) {
-  return await loadAll();
+  return await loadAll(store);
 }
 
 /**
@@ -226,7 +224,7 @@ export async function getFullHistory(store = globalStore) {
  * @returns {Promise<boolean>}
  */
 export async function isDailyLimitReached(store = globalStore) {
-  const today = await getTodaySummary();
+  const today = await getTodaySummary(store);
   return today ? today.dayTotal >= DAILY_LIMIT : false;
 }
 
@@ -236,7 +234,7 @@ export async function isDailyLimitReached(store = globalStore) {
  * @returns {Promise<{ valid: boolean, errors: string[], totalChecked: number, mismatches: number }>}
  */
 export async function validateChain(store = globalStore) {
-  const data = await loadAll();
+  const data = await loadAll(store);
   const weights = getWeights(data);
   const errors = [];
   const keys = Object.keys(data)
@@ -282,7 +280,7 @@ export async function validateChain(store = globalStore) {
  *   await migrateWeights();
  */
 export async function migrateWeights(store = globalStore) {
-  const data = await loadAll();
+  const data = await loadAll(store);
   const keys = Object.keys(data)
     .filter((k) => k !== '_meta')
     .toSorted();
@@ -293,6 +291,6 @@ export async function migrateWeights(store = globalStore) {
     recalcDay(data, key);
   }
 
-  await saveAll(data);
+  await saveAll(data, store);
   console.log(`[Migrate] Recalculated ${keys.length} entries with weights v${WEIGHT_VERSION}`);
 }

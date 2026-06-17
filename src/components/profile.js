@@ -1,5 +1,4 @@
 import { store } from '../store';
-import { controlPanel } from './controlPanel';
 import { notify } from './notification';
 
 /**
