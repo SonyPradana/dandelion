@@ -161,7 +161,7 @@ export class ProfileManager {
 
       editBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        this.startInlineRename(card, nameSpan, key);
+        this.startInlineRename(nameSpan, key);
       });
 
       duplicateBtn.addEventListener('click', (e) => {
@@ -221,7 +221,7 @@ export class ProfileManager {
     }
   }
 
-  startInlineRename(card, nameSpan, key) {
+  startInlineRename(nameSpan, key) {
     const currentName = this.getProfileDisplayName(key);
 
     const input = document.createElement('input');
