@@ -34,17 +34,38 @@
     <div class="sd-dropdown_chevron-button" aria-hidden="true"></div>
     <div class="sv-popup sv-popup--dropdown">
       <ul class="sv-list" role="listbox">
-        <li class="sv-list__item sv-list__item--selected" role="option" id="opt_a">
+        <li class="sv-list__item sv-list__item--selected" role="option">
           <div title="Opsi A">
             <span class="sv-string-viewer">Opsi A</span>
           </div>
         </li>
-        <li class="sv-list__item" role="option" id="opt_b">
+        <li class="sv-list__item" role="option">
           <div title="Opsi B">
             <span class="sv-string-viewer">Opsi B</span>
           </div>
         </li>
       </ul>
+    </div>
+    <div class="sv-popup sv-popup--dropdown-overlay">
+      <div class="sv-list__filter">
+        <input class="sv-list__input" placeholder="Cari...">
+      </div>
+      <div class="sv-list__empty-container" style="display:none"></div>
+      <ul class="sv-list" role="listbox">
+        <li class="sv-list__item sv-list__item--selected" role="option">
+          <div class="sv-list__item-body" title="Opsi A">
+            <span class="sv-string-viewer">Opsi A</span>
+          </div>
+        </li>
+        <li class="sv-list__item" role="option">
+          <div class="sv-list__item-body" title="Opsi B">
+            <span class="sv-string-viewer">Opsi B</span>
+          </div>
+        </li>
+      </ul>
+      <div class="sv-popup__body-footer">
+        <button class="sv-popup__button sv-popup__button--cancel">Cancel</button>
+      </div>
     </div>
   </div>
 </div>
