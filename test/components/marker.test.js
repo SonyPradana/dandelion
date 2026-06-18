@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as fillPinnedFields from '../../src/handlers/skriningform/fill-pinned-fields';
 import { debugMarker } from '../../src/components/marker';

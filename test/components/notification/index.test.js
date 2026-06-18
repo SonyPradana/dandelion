@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { controlPanel } from '../../../src/components/controlPanel';
 
