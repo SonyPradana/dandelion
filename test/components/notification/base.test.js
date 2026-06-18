@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createBasePanel, createPanelButton } from '../../../src/components/notification/base';
 
@@ -86,12 +85,12 @@ describe('createPanelButton', () => {
   it('should use danger type styles', () => {
     const btn = createPanelButton('Delete', 'danger');
     expect(btn.style.background).toContain('rgba(255, 77, 77, 0.15)');
-    expect(btn.style.color).toBe('rgb(255, 77, 77)');
+    expect(btn.style.color).toBe('#ff4d4d');
   });
 
   it('should use success type styles', () => {
     const btn = createPanelButton('OK', 'success');
     expect(btn.style.background).toContain('rgba(34, 197, 94, 0.15)');
-    expect(btn.style.color).toBe('rgb(74, 222, 128)');
+    expect(btn.style.color).toBe('#4ade80');
   });
 });

@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest';
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
