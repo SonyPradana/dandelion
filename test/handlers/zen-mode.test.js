@@ -44,7 +44,7 @@ describe('zen-mode', () => {
       const state = await store.getZenModeState();
       expect(state).toEqual({
         active: true,
-        queue: ['rowfrm000184'],
+        queue: ['rowfrmabc000002'],
         total: 1,
       });
     });

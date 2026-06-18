@@ -46,8 +46,8 @@ describe('skriningform', () => {
         profile1: {
           name: 'Default Profile',
           formSkrining: {
-            radioButtonKeywords: 'Tidak ada serumen impaksi',
-            dropdownKeywords: 'Tidak ada infeksi telinga',
+            radioButtonKeywords: 'Opsi A',
+            dropdownKeywords: 'Opsi A',
             pinneds: {},
           },
         },
@@ -94,7 +94,7 @@ describe('skriningform', () => {
 
       const selectedRadio = document.querySelector('input[type="radio"]:checked');
       expect(selectedRadio).toBeTruthy();
-      expect(selectedRadio.value).toBe('PPV00001020');
+      expect(selectedRadio.value).toBe('opt_a');
     });
 
     it('should not select radio when no keywords match', async () => {
@@ -129,7 +129,7 @@ describe('skriningform', () => {
 
       const selectedItem = document.querySelector('.sv-list__item--selected');
       expect(selectedItem).toBeTruthy();
-      expect(selectedItem.textContent.trim()).toBe('Tidak ada infeksi telinga');
+      expect(selectedItem.textContent.trim()).toBe('Opsi A');
     });
   });
 
@@ -138,7 +138,7 @@ describe('skriningform', () => {
       vi.useFakeTimers();
       await initializeSkriningForm({
         pinneds: {
-          'LPM000073|FRM000093|PPM00000248|number': '65',
+          'abcxyz000123|defuvw000456|jkl000791|number': '65',
         },
       });
 
