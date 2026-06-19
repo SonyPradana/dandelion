@@ -119,6 +119,7 @@ async function ensureButtonsMounted(isProcessing) {
         profileIndicator = createProfileComponent({
           profiles: cfg.profiles,
           activeProfile: cfg.activeProfile,
+          onSwitch: (pKey) => store.onProfileSwitch(pKey),
         });
       }
 

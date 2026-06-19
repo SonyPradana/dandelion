@@ -1,4 +1,3 @@
-import { store } from '../store';
 import { notify } from './notification';
 
 /**
@@ -6,9 +5,10 @@ import { notify } from './notification';
  * @param {Object} options
  * @param {Object} options.profiles - Map of profile keys to profile data
  * @param {string} options.activeProfile - Currently active profile key
+ * @param {(profileKey: string) => Promise<void>} [options.onSwitch] - Async callback when a profile is clicked
  * @returns {HTMLDivElement}
  */
-export function createProfileComponent({ profiles, activeProfile } = {}) {
+export function createProfileComponent({ profiles, activeProfile, onSwitch } = {}) {
   const container = document.createElement('div');
   container.id = 'dandelion-profile-switcher';
 
@@ -73,12 +73,19 @@ export function createProfileComponent({ profiles, activeProfile } = {}) {
       }
     };
 
-    btn.onclick = (e) => {
+    btn.onclick = async (e) => {
       e.stopPropagation();
       if (isActive) return;
 
-      store.onProfileSwitch(pKey);
       notify.info('Switching', `Mengaktifkan ${displayName}...`, 1000);
+
+      try {
+        if (onSwitch) await onSwitch(pKey);
+      } catch (error) {
+        console.error('Failed to switch profile:', error);
+        notify.alert('Error', 'Gagal mengganti profil. Coba lagi.');
+        return;
+      }
 
       container.style.transform = 'scale(0.98)';
       container.style.opacity = '0.5';
