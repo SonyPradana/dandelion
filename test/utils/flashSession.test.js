@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { store } from '../../src/store.js';
+import { store, DandelionStore } from '../../src/store.js';
 import { MemoryBackend } from '../__support__/memory-backend.js';
 import { setFlashData, getFlashData, clearFlashData } from '../../src/utils/flashSession.js';
 
@@ -35,6 +35,19 @@ describe('flashSession', () => {
     await setFlashData({ pinneds: {} });
     const result = await getFlashData(1000);
     expect(result).not.toBeNull();
+  });
+
+  it('expired data should be cleared from the injected store, not the default one', async () => {
+    const otherBackend = new MemoryBackend();
+    const otherStore = new DandelionStore();
+    otherStore.init(otherBackend);
+
+    await otherStore.storageSet('flash_data', { pinneds: {}, _timestamp: Date.now() - 1_000_000 });
+
+    await getFlashData(0, otherStore);
+
+    expect(await otherStore.storageGet('flash_data')).toBeNull();
+    expect(await store.storageGet('flash_data')).toBeNull();
   });
 
   describe('error handling', () => {
