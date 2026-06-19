@@ -34,6 +34,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
   const profileIndicator = createProfileComponent({
     profiles: fullConfig.profiles,
     activeProfile: fullConfig.activeProfile,
+    onSwitch: (pKey) => store.onProfileSwitch(pKey),
   });
   const debugToggle = debugButton();
 
