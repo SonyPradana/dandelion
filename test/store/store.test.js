@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { store } from '../../src/store.js';
 import { MemoryBackend } from '../__support__/memory-backend.js';
 
@@ -36,6 +36,34 @@ describe('raw storage', () => {
 });
 
 describe('config', () => {
+  it('getFullConfig should hit storage only once across repeated calls', async () => {
+    const getSpy = vi.spyOn(backend.storage.local, 'get');
+    await store.getFullConfig();
+    await store.getFullConfig();
+    await store.getFullConfig();
+    expect(getSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('getFullConfig should reflect writes made via setConfig (cache must not go stale)', async () => {
+    const config = await store.getFullConfig();
+    config.activeProfile = 'profile2';
+    await store.setConfig(config);
+    const reloaded = await store.getFullConfig();
+    expect(reloaded.activeProfile).toBe('profile2');
+  });
+
+  it('init() should reset cache so a new backend starts clean', async () => {
+    const backendA = new MemoryBackend();
+    store.init(backendA);
+    await store.setConfig({ activeProfile: 'profile1' });
+    await store.getFullConfig();
+    const backendB = new MemoryBackend();
+    await backendB.storage.local.set({ activeProfile: 'profile9' });
+    store.init(backendB);
+    const config = await store.getFullConfig();
+    expect(config.activeProfile).toBe('profile9');
+  });
+
   it('getFullConfig should return config with activeProfile', async () => {
     const config = await store.getFullConfig();
     expect(config).toHaveProperty('activeProfile');

@@ -13,9 +13,11 @@ const STORAGE_KEYS = {
 
 class DandelionStore {
   _backend = null;
+  _configCache = null;
 
   init(backend) {
     this._backend = backend;
+    this._configCache = null;
   }
 
   get _browser() {
@@ -72,6 +74,8 @@ class DandelionStore {
   }
 
   async getFullConfig() {
+    if (this._configCache) return this._configCache;
+
     const result = await this._browser.storage.local.get(null);
     const isOldFormat =
       result.formSelector !== undefined ||
@@ -88,6 +92,7 @@ class DandelionStore {
       ]);
     }
 
+    this._configCache = migrated;
     return migrated;
   }
 
@@ -106,6 +111,7 @@ class DandelionStore {
 
   async setConfig(config) {
     await this._browser.storage.local.set(config);
+    this._configCache = config;
   }
 
   async setActiveProfile(profileKey) {
