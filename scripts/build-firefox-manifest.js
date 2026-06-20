@@ -1,9 +1,7 @@
-import 'dotenv/config';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dir;
 const root = path.resolve(__dirname, '..');
 const outDir = path.join(root, 'dist', 'firefox');
 const start = performance.now();

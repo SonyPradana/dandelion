@@ -294,7 +294,7 @@ Extension ships with an embedded EC public key (`src/quota/public-key.js`) for v
 
 ```bash
 # Generate a quota token
-node scripts/gen-quota-token.mjs \
+bun scripts/gen-quota-token.js \
   -k keys/license-priv.pem \
   -e 7d \
   -p 30000 \
@@ -384,7 +384,7 @@ scripts/
   build-firefox-manifest.js — Firefox manifest injector
   build-chrome-manifest.js  — Chrome manifest injector
   copy-static.js        — copies HTML/CSS/icons
-  gen-quota-token.mjs   — quota token generator
+  gen-quota-token.js   — quota token generator
   generate-license-keys.js — EC key pair generator
   package.js            — Chrome zip + Firefox XPI copy
   remove-static.js      — rm -rf equivalent (fs.rmSync)

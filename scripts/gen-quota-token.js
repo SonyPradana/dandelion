@@ -19,7 +19,7 @@ for (let i = 0; i < raw.length; i++) {
 
 if (!args.privateKey || !args.expiry) {
   console.error(
-    'Usage: node scripts/gen-quota-token.mjs -k <private-key.pem> -e <expiry> -p <total_limit>',
+    'Usage: bun scripts/gen-quota-token.js -k <private-key.pem> -e <expiry> -p <total_limit>',
   );
   console.error('  -k, --private-key      Path to ES256 private key PEM (required)');
   console.error('  -e, --expiry           Duration: 7d, 12m, 1y, or date (required)');
@@ -31,10 +31,10 @@ if (!args.privateKey || !args.expiry) {
   console.error('');
   console.error('Examples:');
   console.error(
-    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 7d -p 30000 --version-allowed "1.*" --token-id aB3xK9mQ',
+    '  bun scripts/gen-quota-token.js -k keys/license-priv.pem -e 7d -p 30000 --version-allowed "1.*" --token-id aB3xK9mQ',
   );
   console.error(
-    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 12m -p 0 -d 200 --features skriningform --token-id X7pL2nR8',
+    '  bun scripts/gen-quota-token.js -k keys/license-priv.pem -e 12m -p 0 -d 200 --features skriningform --token-id X7pL2nR8',
   );
   process.exit(1);
 }

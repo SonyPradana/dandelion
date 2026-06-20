@@ -1,11 +1,9 @@
-import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
 const start = performance.now();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dir;
 const projectRoot = path.resolve(__dirname, '..');
 
 const srcManifestPath = path.join(projectRoot, 'src', 'manifest.json');

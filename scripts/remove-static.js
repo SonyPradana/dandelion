@@ -4,7 +4,7 @@ const start = performance.now();
 const target = process.argv[2];
 
 if (!target) {
-  console.error('Usage: node scripts/remove-static.js <path>');
+  console.error('Usage: bun scripts/remove-static.js <path>');
   process.exit(1);
 }
 
