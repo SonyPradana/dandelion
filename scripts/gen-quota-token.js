@@ -1,5 +1,4 @@
 import { SignJWT, importPKCS8 } from 'jose';
-import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
@@ -54,7 +53,7 @@ function parseExpiry(value) {
   return now;
 }
 
-const privateKeyPEM = fs.readFileSync(path.resolve(args.privateKey), 'utf8');
+const privateKeyPEM = await Bun.file(path.resolve(args.privateKey)).text();
 
 const licenseId = args.licenseId || `lic_${crypto.randomUUID().slice(0, 8)}`;
 const features = args.features

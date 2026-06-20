@@ -1,4 +1,3 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 
 const __dirname = import.meta.dir;
@@ -6,10 +5,10 @@ const root = path.resolve(__dirname, '..');
 const outDir = path.join(root, 'dist', 'firefox');
 const start = performance.now();
 
-const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
+const pkg = await Bun.file(path.join(root, 'package.json')).json();
 
 console.log('Building Firefox manifest...');
-const manifest = JSON.parse(readFileSync(path.join(root, 'src', 'manifest.firefox.json'), 'utf8'));
+const manifest = await Bun.file(path.join(root, 'src', 'manifest.firefox.json')).json();
 manifest.version = pkg.version.replace(/-.*$/, '');
 
 const targetHost = process.env.TARGET_HOST;
@@ -41,8 +40,7 @@ if (process.env.PUBLIC_URL) {
   manifest.browser_specific_settings.gecko.update_url = `https://${process.env.HOST}/update.json`;
 }
 
-mkdirSync(outDir, { recursive: true });
-writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+await Bun.write(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 const duration = (performance.now() - start).toFixed(2);
 console.log(`Firefox manifest build in ${duration}ms`);

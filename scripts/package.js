@@ -4,7 +4,7 @@ import path from 'path';
 
 const __dirname = import.meta.dir;
 const root = path.resolve(__dirname, '..');
-const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+const pkg = await Bun.file(path.join(root, 'package.json')).json();
 const version = pkg.version;
 const name = pkg.name;
 const artifactsDir = path.join(root, 'artifacts');

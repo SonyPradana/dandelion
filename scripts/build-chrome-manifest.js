@@ -1,4 +1,3 @@
-import fs from 'fs';
 import path from 'path';
 
 const start = performance.now();
@@ -9,11 +8,10 @@ const projectRoot = path.resolve(__dirname, '..');
 const srcManifestPath = path.join(projectRoot, 'src', 'manifest.json');
 const distManifestPath = path.join(projectRoot, 'dist', 'chrome', 'manifest.json');
 
-const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'));
+const pkg = await Bun.file(path.join(projectRoot, 'package.json')).json();
 
 try {
-  const manifestString = fs.readFileSync(srcManifestPath, 'utf8');
-  const manifest = JSON.parse(manifestString);
+  const manifest = await Bun.file(srcManifestPath).json();
 
   if (process.env.NIGHTLY === 'true') {
     const now = new Date();
@@ -24,8 +22,6 @@ try {
   } else {
     manifest.version = pkg.version.replace(/-.*$/, '');
   }
-
-  fs.mkdirSync(path.dirname(distManifestPath), { recursive: true });
 
   const targetHost = process.env.TARGET_HOST;
   if (targetHost) {
@@ -47,7 +43,7 @@ try {
     manifest.key = process.env.CHROME_EXTENSION_KEY;
   }
 
-  fs.writeFileSync(distManifestPath, JSON.stringify(manifest, null, 2));
+  await Bun.write(distManifestPath, JSON.stringify(manifest, null, 2));
 
   const duration = (performance.now() - start).toFixed(2);
   console.log(`Chrome manifest build in ${duration}ms`);
