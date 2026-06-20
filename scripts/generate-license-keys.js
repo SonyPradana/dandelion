@@ -1,9 +1,8 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dir;
 const projectRoot = path.resolve(__dirname, '..');
 
 const outputDir = process.argv[2] ? path.resolve(process.argv[2]) : path.join(projectRoot, 'keys');

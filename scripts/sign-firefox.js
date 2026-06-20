@@ -1,9 +1,7 @@
-import 'dotenv/config';
 import { cmd } from 'web-ext';
 import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dir;
 const root = path.resolve(__dirname, '..');
 
 if (!process.env.AMO_JWT_ISSUER || !process.env.AMO_JWT_SECRET) {
