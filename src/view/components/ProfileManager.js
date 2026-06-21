@@ -41,6 +41,7 @@ export class ProfileManager {
         dropdownKeywords: '',
         excludes: '',
         pinneds: {},
+        respectInput: false,
       },
       notChecked: {
         url: '',

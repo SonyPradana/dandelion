@@ -5,6 +5,7 @@ import { isPinned, addPinnedItem, removePinnedItem } from '../utils/pinneds';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
+import { isFieldFilled } from './skriningform/respect-input';
 import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
@@ -121,6 +122,8 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
 
+    const respectInput = fs.respectInput === true;
+
     const configPinneds = Object.fromEntries(
       Object.entries(fs.pinneds || {}).filter(([k]) => !k.includes('|number')),
     );
@@ -132,6 +135,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
       dropdownKeywords,
       pinneds,
       excludes,
+      respectInput,
     );
 
     bus.emit('skriningForm:didFill', { result });
@@ -147,7 +151,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
    * @param {string[]} config - List of radioInput konfuguration
    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
    */
-  function fillRadioButtons(config, skipList = []) {
+  function fillRadioButtons(config, skipList = [], respectInput = false) {
     const allMatchingLabels = Array.from(
       document.querySelectorAll('span.sd-item__control-label'),
     ).filter((span) => {
@@ -171,6 +175,9 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
           if (skipList.includes(dataName)) {
             return;
           }
+          if (respectInput && questionElement.querySelector('input[type="radio"]:checked')) {
+            return;
+          }
         }
 
         const radioInput = parentLabel.querySelector('input[type="radio"]');
@@ -189,7 +196,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
    * @param {string[]} config - List of radioInput konfuguration
    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
    */
-  async function fillDropdowns(config, skipList = []) {
+  async function fillDropdowns(config, skipList = [], respectInput = false) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
     let count = 0;
 
@@ -202,6 +209,10 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
       if (questionElement) {
         dataName = questionElement.getAttribute('data-name');
         if (skipList.includes(dataName)) {
+          continue;
+        }
+        if (respectInput && isFieldFilled(questionElement)) {
+          if (dataName) skipList.push(dataName);
           continue;
         }
       }
@@ -238,7 +249,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     return count;
   }
 
-  async function processWithRecursion(radioKw, dropdownKw, pinneds, excludes) {
+  async function processWithRecursion(radioKw, dropdownKw, pinneds, excludes, respectInput = false) {
     let radioTotal = 0;
     let dropdownTotal = 0;
     let freetextTotal = 0;
@@ -248,9 +259,9 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     for (let round = 0; round < MAX_ROUNDS; round++) {
       const prevCount = document.querySelectorAll('[data-name]').length;
 
-      const radioCount = fillRadioButtons(radioKw, excludes);
-      const dropdownCount = await fillDropdowns(dropdownKw, excludes);
-      const pinnedCount = await fillPinnedFields(pinneds);
+      const radioCount = fillRadioButtons(radioKw, excludes, respectInput);
+      const dropdownCount = await fillDropdowns(dropdownKw, excludes, respectInput);
+      const pinnedCount = await fillPinnedFields(pinneds, respectInput);
 
       radioTotal += radioCount;
       dropdownTotal += dropdownCount;

@@ -14,6 +14,7 @@ const DEFAULT_CONFIG = {
         dropdownKeywords: '',
         excludes: '',
         pinneds: {},
+        respectInput: false,
       },
       notChecked: {
         url: '',
@@ -36,6 +37,7 @@ const DEFAULT_CONFIG = {
         dropdownKeywords: '',
         excludes: '',
         pinneds: {},
+        respectInput: false,
       },
       notChecked: {
         url: '',

@@ -148,6 +148,99 @@ describe('skriningform', () => {
     });
   });
 
+  describe('respect input feature', () => {
+    describe('radio button', () => {
+      it('should overwrite existing radio when respectInput is OFF (default)', async () => {
+        vi.useFakeTimers();
+        const q1 = document.getElementById('q1');
+        const radioOptB = q1.querySelector('input[value="opt_b"]');
+        radioOptB.checked = true;
+
+        await initializeSkriningForm();
+        await clickAutoFill();
+
+        const checkedRadio = document.querySelector('input[type="radio"]:checked');
+        expect(checkedRadio.value).toBe('opt_a');
+      });
+
+      it('should NOT overwrite existing radio when respectInput is ON', async () => {
+        vi.useFakeTimers();
+        await store.setConfig({
+          activeProfile: 'profile1',
+          profiles: {
+            profile1: {
+              name: 'Default Profile',
+              formSkrining: {
+                radioButtonKeywords: 'Opsi A',
+                dropdownKeywords: 'Opsi A',
+                pinneds: {},
+                respectInput: true,
+              },
+            },
+          },
+        });
+
+        const q1 = document.getElementById('q1');
+        const radioOptB = q1.querySelector('input[value="opt_b"]');
+        radioOptB.checked = true;
+
+        await initializeSkriningForm();
+        await clickAutoFill();
+
+        const checkedRadio = document.querySelector('input[type="radio"]:checked');
+        expect(checkedRadio).toBeTruthy();
+        expect(checkedRadio.value).toBe('opt_b');
+      });
+    });
+
+    describe('pinned number input', () => {
+      it('should overwrite existing number when respectInput is OFF (default)', async () => {
+        vi.useFakeTimers();
+        const numberInput = document.querySelector('input[type="number"]');
+        numberInput.value = '10';
+
+        await initializeSkriningForm({
+          pinneds: {
+            'abcxyz000123|defuvw000456|jkl000791|number': '65',
+          },
+        });
+        await clickAutoFill();
+
+        expect(numberInput.value).toBe('65');
+      });
+
+      it('should NOT overwrite existing number when respectInput is ON', async () => {
+        vi.useFakeTimers();
+        await store.setConfig({
+          activeProfile: 'profile1',
+          profiles: {
+            profile1: {
+              name: 'Default Profile',
+              formSkrining: {
+                radioButtonKeywords: '',
+                dropdownKeywords: '',
+                pinneds: {},
+                respectInput: true,
+              },
+            },
+          },
+        });
+
+        const numberInput = document.querySelector('input[type="number"]');
+        numberInput.value = '10';
+
+        await initializeSkriningForm({
+          pinneds: {
+            'abcxyz000123|defuvw000456|jkl000791|number': '65',
+          },
+        });
+        await clickAutoFill();
+
+        expect(numberInput.value).toBe('10');
+      });
+    });
+  });
+
   describe('bus event', () => {
     it('should emit skriningForm:didFill with correct result', async () => {
       vi.useFakeTimers();
