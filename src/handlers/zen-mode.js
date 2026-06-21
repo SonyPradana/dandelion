@@ -116,13 +116,12 @@ async function processNextZenItem() {
     await clearZenMode();
     await clearFlashData();
     isAutomationActive = false;
-    await notify.alert('Zen Mode', 'Zen Mode Selesai!');
 
-    if (
-      !(await hasRemainingForms()) &&
-      (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?'))
-    ) {
-      clickFinishServiceButton();
+    if (!(await hasRemainingForms())) {
+      await notify.alert('Zen Mode', 'Zen Mode Selesai!');
+      if (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+        clickFinishServiceButton();
+      }
     }
     return;
   }

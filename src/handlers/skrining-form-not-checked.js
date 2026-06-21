@@ -15,8 +15,6 @@ import {
   getQueueStats,
   waitForRow,
   waitForElement,
-  clickFinishServiceButton,
-  hasRemainingForms,
 } from './inspection/not-checked-utils';
 import bus from '../utils/hooks';
 
@@ -363,10 +361,6 @@ async function finishAutomation() {
 
   removeStatusPanel();
   notify.info('Selesai', 'Seluruh tugas telah diproses ✓', 5000);
-
-  if (!(await hasRemainingForms()) && (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?'))) {
-    clickFinishServiceButton();
-  }
 
   const mainBtn = document.getElementById('dandelion-not-checked-automation');
   const debugBtn = document.getElementById('dandelion-debug-toggle');
