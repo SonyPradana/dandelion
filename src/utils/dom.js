@@ -31,3 +31,10 @@ function appendChildren(el, children) {
     }
   }
 }
+
+export function fragment(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const frag = document.createDocumentFragment();
+  frag.append(...doc.body.childNodes);
+  return frag;
+}
