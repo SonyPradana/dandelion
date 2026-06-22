@@ -277,7 +277,9 @@ describe('skriningform', () => {
       await initializeSkriningForm();
 
       let busResult = null;
-      bus.on('skriningForm:didFill', (payload) => { busResult = payload; });
+      bus.on('skriningForm:didFill', (payload) => {
+        busResult = payload;
+      });
       await clickAutoFill();
 
       expect(busResult).toBeDefined();

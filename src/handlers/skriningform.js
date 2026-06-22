@@ -266,7 +266,13 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     return count;
   }
 
-  async function processWithRecursion(radioKw, dropdownKw, pinneds, excludes, respectInput = false) {
+  async function processWithRecursion(
+    radioKw,
+    dropdownKw,
+    pinneds,
+    excludes,
+    respectInput = false,
+  ) {
     let radioTotal = 0;
     let dropdownTotal = 0;
     let freetextTotal = 0;
