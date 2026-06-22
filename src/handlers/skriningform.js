@@ -123,6 +123,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     const dropdownKeywords = (fs.dropdownKeywords && fs.dropdownKeywords.split(';')) || [];
 
     const respectInput = fs.respectInput === true;
+    const ensureFill = fs.ensureFill === true;
 
     const configPinneds = Object.fromEntries(
       Object.entries(fs.pinneds || {}).filter(([k]) => !k.includes('|number')),
@@ -130,13 +131,29 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     const pinneds = { ...configPinneds, ...flashData.pinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
 
-    const result = await processWithRecursion(
+    let result = await processWithRecursion(
       radioButtonKeywords,
       dropdownKeywords,
       pinneds,
       excludes,
       respectInput,
     );
+
+    if (ensureFill) {
+      const retryResult = await processWithRecursion(
+        radioButtonKeywords,
+        dropdownKeywords,
+        pinneds,
+        excludes,
+        true,
+      );
+      result = {
+        radio: result.radio + retryResult.radio,
+        dropdown: result.dropdown + retryResult.dropdown,
+        freetext: result.freetext + retryResult.freetext,
+        total: result.total + retryResult.total,
+      };
+    }
 
     bus.emit('skriningForm:didFill', { result });
   }

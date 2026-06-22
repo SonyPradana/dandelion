@@ -15,6 +15,7 @@ const DEFAULT_CONFIG = {
         excludes: '',
         pinneds: {},
         respectInput: false,
+        ensureFill: false,
       },
       notChecked: {
         url: '',
@@ -38,6 +39,7 @@ const DEFAULT_CONFIG = {
         excludes: '',
         pinneds: {},
         respectInput: false,
+        ensureFill: false,
       },
       notChecked: {
         url: '',
@@ -109,6 +111,7 @@ export function migrateConfig(raw) {
           dropdownKeywords: oldProfile.dropdownKeywords ?? '',
           excludes: oldProfile.excludes ?? '',
           pinneds: oldProfile.pinneds ?? {},
+          ensureFill: false,
         },
         notChecked: {
           url: raw.notChecked?.url ?? '',
