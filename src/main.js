@@ -3,7 +3,7 @@ import { initializeSkriningSend } from './handlers/skrining-send.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import './handlers/skrining-events.js';
-import browser from 'webextension-polyfill';
+import browser from '@bridge/browser';
 import { store } from './store.js';
 import { getFlashDataIfEnabled } from './handlers/flashData.js';
 import { validateChain, isDailyLimitReached } from './utils/productivityTracker.js';

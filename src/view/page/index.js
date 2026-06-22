@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import browser from '@bridge/browser';
 import { store } from '../../store.js';
 import { showAgreementPopup } from '../../components/agreementPopup';
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
