@@ -1,8 +1,11 @@
+import { isFieldFilled } from './respect-input';
+
 /**
  * Fill pinned fields based on data-name and value mapping.
  * Supports: textarea, text input, and radio buttons.
  *
  * @param {Object} pinneds - Object containing data-name as key and value to fill
+ * @param {boolean} [respectInput=false] - Skip if field already has value
  * @returns {Promise<{radio: number, freetext: number, dropdown: number}>}
  * @example
  * pinneds = {
@@ -10,7 +13,7 @@
  *   "LPM002-quest|freetext": "Tidak ada"
  * }
  */
-export async function fillPinnedFields(pinneds) {
+export async function fillPinnedFields(pinneds, respectInput = false) {
   let radio = 0;
   let freetext = 0;
   let dropdown = 0;
@@ -29,7 +32,9 @@ export async function fillPinnedFields(pinneds) {
     }
   }
 
-  async function fillField(questionElement, value) {
+  async function fillField(questionElement, value, respectInput = false) {
+    if (respectInput && isFieldFilled(questionElement)) return;
+
     const field = detectFieldType(questionElement);
     if (!field) return;
 
@@ -53,7 +58,7 @@ export async function fillPinnedFields(pinneds) {
     const questionElement = document.querySelector(`[data-name="${CSS.escape(key)}"]`);
     if (!questionElement) continue;
     filled.add(key);
-    await fillField(questionElement, value);
+    await fillField(questionElement, value, respectInput);
   }
 
   if (wildcardEntries.length > 0) {
@@ -68,7 +73,7 @@ export async function fillPinnedFields(pinneds) {
           parts.every((p, i) => p === '*' || p === nameParts[i])
         ) {
           filled.add(dn);
-          await fillField(el, value);
+          await fillField(el, value, respectInput);
           break;
         }
       }

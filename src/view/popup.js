@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const saveConfigBtn = document.getElementById('save-config-btn');
   const formSkriningUrlInput = document.getElementById('form-skrining-url');
   const scrollToButtonCheckbox = document.getElementById('form-skrining-scroll-to-button');
+  const respectInputCheckbox = document.getElementById('form-skrining-respect-input');
   const notCheckedUrlInput = document.getElementById('not-checked-url');
   const notCheckedListInput = document.getElementById('not-checked-list-input');
   const notCheckedAutomationDelayInput = document.getElementById('not-checked-automation-delay');
@@ -115,6 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
     scrollToButtonCheckbox.checked = fs.scrollToButton ?? true;
+    respectInputCheckbox.checked = fs.respectInput === true;
 
     if (pinnedValuesList) pinnedValuesList.setData(fs.pinneds || {});
 
@@ -174,6 +176,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
       profileSettings.formSkrining.url = formSkriningUrlInput.value;
       profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
+      profileSettings.formSkrining.respectInput = respectInputCheckbox.checked;
 
       if (pinnedValuesList) profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
 
