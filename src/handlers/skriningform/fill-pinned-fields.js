@@ -214,32 +214,29 @@ async function fillDropdowns(questionElement, targetValue) {
   const chevronButton = questionElement.querySelector('.sd-dropdown_chevron-button');
   if (!chevronButton) return;
 
-  // Open dropdown
-  chevronButton.click();
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  const popups = document.querySelectorAll('.sv-popup--dropdown, .sv-popup--dropdown-overlay');
+  const displayMap = [];
+  popups.forEach((p) => {
+    displayMap.push({ el: p, display: p.style.display });
+    p.style.display = '';
+  });
 
-  // Find visible options
-  const visibleOptions = Array.from(
+  const allOptions = Array.from(
     document.querySelectorAll(
       '.sv-popup--dropdown .sv-string-viewer, .sv-popup--dropdown-overlay .sv-string-viewer',
     ),
-  ).filter((option) => {
-    const popup = option.closest('.sv-popup');
-    return popup && popup.style.display !== 'none';
-  });
+  );
 
-  // Find matching option
-  const targetOption = visibleOptions.find((span) => {
+  const targetOption = allOptions.find((span) => {
     const text = span.textContent.trim();
     return text === targetValue;
   });
 
   if (targetOption) {
     targetOption.closest('.sv-list__item').click();
-    await new Promise((resolve) => setTimeout(resolve, 200));
   } else {
-    // Close dropdown if no match found
-    chevronButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    displayMap.forEach(({ el, display }) => {
+      el.style.display = display;
+    });
   }
 }

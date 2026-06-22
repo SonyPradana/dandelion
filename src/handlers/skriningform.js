@@ -234,20 +234,20 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
         }
       }
 
-      chevronButton.click();
+      const popups = document.querySelectorAll('.sv-popup--dropdown, .sv-popup--dropdown-overlay');
+      const displayMap = [];
+      popups.forEach((p) => {
+        displayMap.push({ el: p, display: p.style.display });
+        p.style.display = '';
+      });
 
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
-      const visibleOptions = Array.from(
+      const allOptions = Array.from(
         document.querySelectorAll(
           '.sv-popup--dropdown .sv-string-viewer, .sv-popup--dropdown-overlay .sv-string-viewer',
         ),
-      ).filter((option) => {
-        const popup = option.closest('.sv-popup');
-        return popup && popup.style.display !== 'none';
-      });
+      );
 
-      const targetOptionElement = visibleOptions.find((span) => {
+      const targetOptionElement = allOptions.find((span) => {
         const text = span.textContent.trim();
         return config.includes(text);
       });
@@ -256,10 +256,10 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
         targetOptionElement.closest('.sv-list__item').click();
         if (dataName) skipList.push(dataName);
         count++;
-        await new Promise((resolve) => setTimeout(resolve, 200));
       } else {
-        chevronButton.click(); // Close drop down
-        await new Promise((resolve) => setTimeout(resolve, 150));
+        displayMap.forEach(({ el, display }) => {
+          el.style.display = display;
+        });
       }
     }
 
