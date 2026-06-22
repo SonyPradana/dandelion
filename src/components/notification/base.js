@@ -56,7 +56,7 @@ export function createBasePanel(id) {
     `;
 
     const closeBtn = document.createElement('div');
-    closeBtn.innerHTML = '×';
+    closeBtn.textContent = '×';
     closeBtn.style.cssText = `
       position: absolute;
       top: 5px;

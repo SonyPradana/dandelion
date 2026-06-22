@@ -64,10 +64,10 @@ export function removeStatusPanel(delay = 0) {
   if (!panel) return;
 
   if (delay > 0) {
-    panel.innerHTML = `
-      <div style="font-weight: bold; color: #00ff00; padding: 5px 0;">Selesai</div>
-      <div style="font-size: 0.6rem;">Seluruh tugas telah diproses ✓</div>
-    `;
+    panel.replaceChildren(
+      Object.assign(document.createElement('div'), { style: 'font-weight: bold; color: #00ff00; padding: 5px 0;', textContent: 'Selesai' }),
+      Object.assign(document.createElement('div'), { style: 'font-size: 0.6rem;', textContent: 'Seluruh tugas telah diproses \u2713' }),
+    );
     setTimeout(() => {
       const p = document.getElementById(STATUS_PANEL_ID);
       if (p) p.remove();

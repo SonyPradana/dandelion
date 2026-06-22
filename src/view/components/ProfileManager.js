@@ -116,7 +116,7 @@ export class ProfileManager {
   }
 
   render() {
-    this.container.innerHTML = '';
+    this.container.replaceChildren();
 
     const keys = Object.keys(this.profiles);
 
