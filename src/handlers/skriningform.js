@@ -6,6 +6,7 @@ import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
 import { isFieldFilled, isRadioFilled } from './skriningform/respect-input';
+import { getSurvey, clearSurveyCache } from './skriningform/find-survey';
 import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
@@ -117,6 +118,8 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
       dismissCountdown = null;
     }
 
+    clearSurveyCache();
+
     const config = await store.getActiveConfig();
     const fs = config.formSkrining || {};
     const radioButtonKeywords = (fs.radioButtonKeywords && fs.radioButtonKeywords.split(';')) || [];
@@ -214,6 +217,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
    */
   async function fillDropdowns(config, skipList = [], respectInput = false) {
+    const survey = getSurvey();
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
     let count = 0;
 
@@ -231,6 +235,23 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
         if (respectInput && isFieldFilled(questionElement)) {
           if (dataName) skipList.push(dataName);
           continue;
+        }
+      }
+
+      if (survey && dataName) {
+        const question = survey.getQuestionByName(dataName);
+        if (question) {
+          const choices = question.visibleChoices || question.choices || [];
+          const match = choices.find((c) => {
+            const text = (c.text || c.value || c || '').toString().trim();
+            return config.includes(text);
+          });
+          if (match) {
+            survey.setValue(dataName, match.value ?? match);
+            if (dataName) skipList.push(dataName);
+            count++;
+            continue;
+          }
         }
       }
 

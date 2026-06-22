@@ -1,4 +1,5 @@
 import { isFieldFilled } from './respect-input';
+import { getSurvey } from './find-survey';
 
 /**
  * Fill pinned fields based on data-name and value mapping.
@@ -213,6 +214,25 @@ function fillRadioButton(questionElement, targetLabel) {
 async function fillDropdowns(questionElement, targetValue) {
   const chevronButton = questionElement.querySelector('.sd-dropdown_chevron-button');
   if (!chevronButton) return;
+
+  const dataName = questionElement.getAttribute('data-name');
+  if (dataName) {
+    const survey = getSurvey();
+    if (survey) {
+      const question = survey.getQuestionByName(dataName);
+      if (question) {
+        const choices = question.visibleChoices || question.choices || [];
+        const match = choices.find((c) => {
+          const text = (c.text || c.value || c || '').toString().trim();
+          return text === targetValue;
+        });
+        if (match) {
+          survey.setValue(dataName, match.value ?? match);
+          return;
+        }
+      }
+    }
+  }
 
   // Open dropdown
   chevronButton.click();
