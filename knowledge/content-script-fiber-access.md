@@ -42,8 +42,61 @@ The survey model is stored as `el.__dandelionSurvey` which the content script ca
 
 **Status**: Code exists in `src/handlers/skriningform/find-survey.js` under `findFiberViaInjectedScript()` but was never verified to work end-to-end in a real browser. The `walkReactFiber` function remains functional.
 
+## Environment Details
+
+The target page is a **Next.js App Router** application with React Server Components (RSC). SurveyJS forms are rendered as client components embedded in the RSC tree. The entire `<body>` is a single React tree.
+
+**Form structure (confirmed from raw HTML):**
+- 6 dropdown questions on the page
+- Each has `data-name` like `LPM000002|FRM000169|PPM00000706|text`
+- SurveyJS popup exists in DOM with `style="display: none"` (not rendered until opened)
+- Chevron buttons use `.sd-dropdown_chevron-button` class
+- Choices data not visible in HTML — only loaded by SurveyJS when popup opens
+
 ## Recommendation for Future
 
-- Use `window.__REACT_DEVTOOLS_GLOBAL_HOOK__` if available — it's accessible from content scripts
-- Or use `chrome.scripting.executeScript()` with `world: 'MAIN'` (MV3)
-- The injected script approach (`<script>` element) should also work in MV3
+### Priority 1: Verify `findFiberViaInjectedScript()` in browser
+The code already exists at `src/handlers/skriningform/find-survey.js`. Test it live:
+1. Load page
+2. Run in console: inject a script that sets `el.__dandelionSurvey`, then in content script check `el.__dandelionSurvey.setValue`
+
+### Priority 2: React DevTools Hook
+`window.__REACT_DEVTOOLS_GLOBAL_HOOK__` may be accessible from content scripts. Check if SurveyJS registers with it. If so, React fiber traversal via DevTools hook is possible without script injection.
+
+### Priority 3: Injected script that performs fill directly (most robust)
+Skip the model-passing problem entirely: inject a `<script>` that finds the model and calls `setValue` for all dropdowns in one shot. No communication back to content script needed — the content script only needs to pass the config keywords and data-names as JSON embedded in the script text.
+
+```js
+function fillAllViaInjectedScript(config, dataNames) {
+  const script = document.createElement('script');
+  script.textContent = `(function(){
+    var el = document.querySelector('.sd-root-modern');
+    var k = Object.keys(el).find(function(k){return k.startsWith('__reactFiber$')});
+    if(!k)return;
+    var f = el[k];
+    var model = null;
+    while(f){ 
+      if(f.pendingProps && f.pendingProps.model && f.pendingProps.model.setValue){ model = f.pendingProps.model; break; }
+      if(f.pendingProps && f.pendingProps.survey && f.pendingProps.survey.setValue){ model = f.pendingProps.survey; break; }
+      f = f.return;
+    }
+    if(!model)return;
+    var config = ${JSON.stringify(config)};
+    var names = ${JSON.stringify(dataNames)};
+    for(var i=0;i<names.length;i++){
+      var q = model.getQuestionByName(names[i]);
+      if(!q)continue;
+      var choices = q.visibleChoices || q.choices || [];
+      var match = choices.find(function(c){ return config.indexOf((c.text||c.value||c||'').toString().trim()) !== -1 });
+      if(match) model.setValue(names[i], match.value || match);
+    }
+  })()`;
+  document.body.appendChild(script);
+  script.remove();
+}
+```
+
+This bypasses the isolated world entirely — the fill logic runs in the main world where React fiber is fully accessible.
+
+### Alternative: `chrome.scripting.executeScript()`
+With `"world": "MAIN"` in MV3, you can execute scripts in the main world. Same principle as injected script but using the extension API instead of DOM injection.
