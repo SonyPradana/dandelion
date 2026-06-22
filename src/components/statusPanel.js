@@ -29,7 +29,8 @@ export function updateStatusPanel(done, total, status, options = {}) {
   const titleColor = onDelete ? '#ff4d4d' : '#ffd700';
 
   const progressDiv = document.createElement('div');
-  progressDiv.style.cssText = 'display: flex; justify-content: space-between; gap: 15px; align-items: center;';
+  progressDiv.style.cssText =
+    'display: flex; justify-content: space-between; gap: 15px; align-items: center;';
   const span1 = document.createElement('span');
   span1.style.cssText = 'opacity: 0.8;';
   span1.textContent = 'Progres';
@@ -72,8 +73,14 @@ export function removeStatusPanel(delay = 0) {
 
   if (delay > 0) {
     panel.replaceChildren(
-      Object.assign(document.createElement('div'), { style: 'font-weight: bold; color: #00ff00; padding: 5px 0;', textContent: 'Selesai' }),
-      Object.assign(document.createElement('div'), { style: 'font-size: 0.6rem;', textContent: 'Seluruh tugas telah diproses \u2713' }),
+      Object.assign(document.createElement('div'), {
+        style: 'font-weight: bold; color: #00ff00; padding: 5px 0;',
+        textContent: 'Selesai',
+      }),
+      Object.assign(document.createElement('div'), {
+        style: 'font-size: 0.6rem;',
+        textContent: 'Seluruh tugas telah diproses \u2713',
+      }),
     );
     setTimeout(() => {
       const p = document.getElementById(STATUS_PANEL_ID);

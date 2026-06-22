@@ -8,8 +8,10 @@ export function showAgreementPopup() {
   const existing = document.getElementById(POPUP_ID);
   if (existing) existing.remove();
 
-  const overlay = h('div', { id: POPUP_ID,
-    style: 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);',
+  const overlay = h('div', {
+    id: POPUP_ID,
+    style:
+      'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);',
   });
 
   const style = document.createElement('style');
@@ -156,17 +158,29 @@ export function showAgreementPopup() {
   `;
   overlay.appendChild(style);
 
-  const card = h('div', { className: 'dap-card' },
-    h('div', { className: 'dap-header' },
-      h('h1', null, 'SYARAT DAN KETENTUAN PENGGUNAAN'),
-    ),
+  const card = h(
+    'div',
+    { className: 'dap-card' },
+    h('div', { className: 'dap-header' }, h('h1', null, 'SYARAT DAN KETENTUAN PENGGUNAAN')),
     h('div', { className: 'dap-body' }, fragment(AGREEMENT_SECTIONS_HTML)),
-    h('div', { className: 'dap-footer' },
-      h('div', { className: 'dap-checkbox' },
+    h(
+      'div',
+      { className: 'dap-footer' },
+      h(
+        'div',
+        { className: 'dap-checkbox' },
         h('input', { type: 'checkbox', id: `${POPUP_ID}-checkbox` }),
-        h('label', { for: `${POPUP_ID}-checkbox` }, 'Saya telah membaca dan menyetujui syarat dan ketentuan.'),
+        h(
+          'label',
+          { for: `${POPUP_ID}-checkbox` },
+          'Saya telah membaca dan menyetujui syarat dan ketentuan.',
+        ),
       ),
-      h('button', { className: 'dap-btn', id: `${POPUP_ID}-btn`, disabled: '' }, 'Setuju & Lanjutkan'),
+      h(
+        'button',
+        { className: 'dap-btn', id: `${POPUP_ID}-btn`, disabled: '' },
+        'Setuju & Lanjutkan',
+      ),
     ),
   );
   overlay.appendChild(card);

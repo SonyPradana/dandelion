@@ -21,16 +21,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
   if (agreement) {
     agreement.append(
-      h('div', { className: 'header' },
-        h('h1', null, 'SYARAT DAN KETENTUAN PENGGUNAAN'),
-      ),
-      h('div', { className: 'content' },
+      h('div', { className: 'header' }, h('h1', null, 'SYARAT DAN KETENTUAN PENGGUNAAN')),
+      h(
+        'div',
+        { className: 'content' },
         fragment(AGREEMENT_SECTIONS_HTML),
-        h('div', { className: 'checkbox-group' },
+        h(
+          'div',
+          { className: 'checkbox-group' },
           h('h3', { style: 'margin-bottom: 16px; font-size: 15px; color: #333' }, 'KONFIRMASI'),
-          h('div', { className: 'checkbox-item' },
+          h(
+            'div',
+            { className: 'checkbox-item' },
             h('input', { type: 'checkbox', id: 'agree-checkbox' }),
-            h('label', { for: 'agree-checkbox' }, 'Saya telah membaca dan menyetujui syarat dan ketentuan.'),
+            h(
+              'label',
+              { for: 'agree-checkbox' },
+              'Saya telah membaca dan menyetujui syarat dan ketentuan.',
+            ),
           ),
         ),
       ),
@@ -292,7 +300,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function prodRow(label, value) {
-    return h('div', { className: 'prod-row' },
+    return h(
+      'div',
+      { className: 'prod-row' },
       h('span', { className: 'label' }, label),
       h('span', { className: 'value' }, value),
     );
@@ -328,7 +338,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const daysLeft = Math.ceil((p.exp * 1000 - Date.now()) / 86_400_000);
       const expiryText = daysLeft <= 0 ? 'Kedaluwarsa' : `Berakhir dalam ${daysLeft} hari`;
       container.appendChild(
-        h('div', { className: 'prod-license pro' },
+        h(
+          'div',
+          { className: 'prod-license pro' },
           h('span', { className: 'license-badge-sm pro' }, 'PRO'),
           h('span', { className: 'license-text' }, `${totalPct}% digunakan`),
           h('span', { className: 'license-sep' }, '\u00B7'),
@@ -346,7 +358,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         prodRow('📋 Dropdown', rd(today.counts.dropdown, prev?.dropdown ?? null)),
         prodRow('❌ Tidak Periksa', rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)),
         prodRow('🧘 Zen', rd(today.counts.formZen, prev?.formZen ?? null)),
-        h('div', { className: 'prod-total' },
+        h(
+          'div',
+          { className: 'prod-total' },
           h('span', null, 'Total Hari Ini'),
           h('span', null, rd(today.dayTotal, yesterday?.dayTotal ?? null)),
         ),
@@ -361,16 +375,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const barPct = Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100));
     container.append(
-      h('div', { className: 'prod-grand' },
+      h(
+        'div',
+        { className: 'prod-grand' },
         h('span', null, 'Grand Total'),
         h('span', null, overall.grandTotal.toLocaleString()),
       ),
-      h('div', { className: 'prod-progress' },
-        h('div', { className: 'prod-header' }, `Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)`),
-        h('div', { className: 'label-row' },
-          h('span', null, `${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin`),
+      h(
+        'div',
+        { className: 'prod-progress' },
+        h(
+          'div',
+          { className: 'prod-header' },
+          `Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)`,
         ),
-        h('div', { className: 'prod-bar-track' },
+        h(
+          'div',
+          { className: 'label-row' },
+          h(
+            'span',
+            null,
+            `${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin`,
+          ),
+        ),
+        h(
+          'div',
+          { className: 'prod-bar-track' },
           h('div', { className: 'prod-bar-fill', style: `width:${barPct}%` }),
         ),
       ),

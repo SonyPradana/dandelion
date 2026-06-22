@@ -21,7 +21,10 @@ export const notify = {
 
     contentArea.append(
       setHeader(title, '#4ade80'),
-      Object.assign(document.createElement('div'), { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9;', textContent: message }),
+      Object.assign(document.createElement('div'), {
+        style: 'font-size: 11px; line-height: 1.4; opacity: 0.9;',
+        textContent: message,
+      }),
     );
 
     if (duration > 0) {
@@ -41,7 +44,10 @@ export const notify = {
 
       panel.append(
         setHeader(title, '#ffd700'),
-        Object.assign(document.createElement('div'), { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;', textContent: message }),
+        Object.assign(document.createElement('div'), {
+          style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;',
+          textContent: message,
+        }),
       );
 
       const okBtn = createPanelButton('OK', 'success');
@@ -66,7 +72,10 @@ export const notify = {
 
       panel.append(
         setHeader(title, '#60a5fa'),
-        Object.assign(document.createElement('div'), { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;', textContent: message }),
+        Object.assign(document.createElement('div'), {
+          style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;',
+          textContent: message,
+        }),
       );
 
       const btnContainer = document.createElement('div');
@@ -100,7 +109,10 @@ export const notify = {
 
     panel.append(
       setHeader(title, '#ff4d4d'),
-      Object.assign(document.createElement('div'), { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;', textContent: message }),
+      Object.assign(document.createElement('div'), {
+        style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;',
+        textContent: message,
+      }),
     );
 
     actions.forEach((action) => {

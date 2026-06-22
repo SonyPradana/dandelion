@@ -311,10 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (overallLabel !== undefined) {
       valueSpan.append(h('span', { className: 'po' }, `/ ${overallLabel}`));
     }
-    return h('div', { className: 'prod-row' },
-      h('span', { className: 'label' }, label),
-      valueSpan,
-    );
+    return h('div', { className: 'prod-row' }, h('span', { className: 'label' }, label), valueSpan);
   }
 
   async function renderProduktifitas() {
@@ -359,14 +356,39 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (today) {
       leftCol.append(
-        prodRow('📻 Radio', rd(today.counts.radio, prev?.radio ?? null), overall.counts.radio.toLocaleString()),
-        prodRow('📝 Teks', rd(today.counts.freetext, prev?.freetext ?? null), overall.counts.freetext.toLocaleString()),
-        prodRow('📋 Dropdown', rd(today.counts.dropdown, prev?.dropdown ?? null), overall.counts.dropdown.toLocaleString()),
-        prodRow('❌ Tidak Periksa', rd(today.counts.formNotChecked, prev?.formNotChecked ?? null), overall.counts.formNotChecked.toLocaleString()),
-        prodRow('🧘 Zen', rd(today.counts.formZen, prev?.formZen ?? null), overall.counts.formZen.toLocaleString()),
-        h('div', { className: 'prod-total' },
+        prodRow(
+          '📻 Radio',
+          rd(today.counts.radio, prev?.radio ?? null),
+          overall.counts.radio.toLocaleString(),
+        ),
+        prodRow(
+          '📝 Teks',
+          rd(today.counts.freetext, prev?.freetext ?? null),
+          overall.counts.freetext.toLocaleString(),
+        ),
+        prodRow(
+          '📋 Dropdown',
+          rd(today.counts.dropdown, prev?.dropdown ?? null),
+          overall.counts.dropdown.toLocaleString(),
+        ),
+        prodRow(
+          '❌ Tidak Periksa',
+          rd(today.counts.formNotChecked, prev?.formNotChecked ?? null),
+          overall.counts.formNotChecked.toLocaleString(),
+        ),
+        prodRow(
+          '🧘 Zen',
+          rd(today.counts.formZen, prev?.formZen ?? null),
+          overall.counts.formZen.toLocaleString(),
+        ),
+        h(
+          'div',
+          { className: 'prod-total' },
           h('span', null, 'Total'),
-          h('span', null, rd(today.dayTotal, yesterday?.dayTotal ?? null),
+          h(
+            'span',
+            null,
+            rd(today.dayTotal, yesterday?.dayTotal ?? null),
             h('span', { className: 'po' }, `/ ${overall.grandTotal.toLocaleString()}`),
           ),
         ),
@@ -384,12 +406,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       prodRow('🏆 Grand Total', overall.grandTotal.toLocaleString()),
       prodRow('📆 Hari Aktif', String(overall.activeDays)),
       prodRow('⚡ Rata-rata/hari', overall.average),
-      h('div', { style: 'margin-top:12px' },
-        h('div', { className: 'prod-header' }, `Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)`),
-        h('div', { className: 'prod-bar-track' },
-          h('div', { className: 'prod-bar-fill', style: `width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%` }),
+      h(
+        'div',
+        { style: 'margin-top:12px' },
+        h(
+          'div',
+          { className: 'prod-header' },
+          `Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)`,
         ),
-        h('div', { style: 'font-size:12px;color:#888;margin-top:4px' }, `${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin`),
+        h(
+          'div',
+          { className: 'prod-bar-track' },
+          h('div', {
+            className: 'prod-bar-fill',
+            style: `width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%`,
+          }),
+        ),
+        h(
+          'div',
+          { style: 'font-size:12px;color:#888;margin-top:4px' },
+          `${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin`,
+        ),
       ),
     );
 
@@ -404,24 +441,55 @@ document.addEventListener('DOMContentLoaded', async () => {
       const rangeData = await getRange(fromStr, toStr);
       const usedInLicense = rangeData.reduce((sum, d) => sum + (d ? d.dayTotal : 0), 0);
       const totalPct = Math.min(100, Math.round((usedInLicense / totalLimit) * 100));
-      const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'Mei',
+        'Jun',
+        'Jul',
+        'Agu',
+        'Sep',
+        'Okt',
+        'Nov',
+        'Des',
+      ];
       const fmtDate = (ts) => {
         const d = new Date(ts * 1000);
         return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
       };
       rightCol.append(
-        h('div', { style: 'margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb' },
-          h('div', { className: 'prod-header', style: 'color:#065f46' }, '🏅 Total Limit (Pro Tier)'),
-          h('div', { className: 'prod-bar-track' },
+        h(
+          'div',
+          { style: 'margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb' },
+          h(
+            'div',
+            { className: 'prod-header', style: 'color:#065f46' },
+            '🏅 Total Limit (Pro Tier)',
+          ),
+          h(
+            'div',
+            { className: 'prod-bar-track' },
             h('div', { className: 'prod-bar-fill', style: `width:${totalPct}%` }),
           ),
-          h('div', { style: 'font-size:12px;color:#888;margin-top:4px' }, `${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)`),
-          h('div', { style: 'font-size:12px;color:#888;margin-top:8px' }, `Periode Token: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}`),
+          h(
+            'div',
+            { style: 'font-size:12px;color:#888;margin-top:4px' },
+            `${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)`,
+          ),
+          h(
+            'div',
+            { style: 'font-size:12px;color:#888;margin-top:8px' },
+            `Periode Token: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}`,
+          ),
         ),
       );
     } else {
       rightCol.append(
-        h('div', { style: 'margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb' },
+        h(
+          'div',
+          { style: 'margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb' },
           h('div', { className: 'prod-header', style: 'color:#92400e' }, '🆓 Free Tier'),
           h('div', { style: 'font-size:12px;color:#888' }, '50 poin/hari \u00B7 tanpa total limit'),
         ),
@@ -431,13 +499,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     const grid = h('div', { className: 'prod-grid' }, leftCol, rightCol);
     container.appendChild(grid);
 
-    const chartSection = h('div', { className: 'prod-chart-section' },
+    const chartSection = h(
+      'div',
+      { className: 'prod-chart-section' },
       h('h3', null, `Grafik Produktivitas ${chartDays}H Terakhir`),
-      h('div', { className: 'prod-chart' },
+      h(
+        'div',
+        { className: 'prod-chart' },
         ...rangeData.map((day) => {
           const pct = day ? Math.round((day.dayTotal / maxVal) * 100) : 0;
           const label = day ? day.date.slice(5) : '';
-          return h('div', { className: 'prod-chart-bar-wrapper' },
+          return h(
+            'div',
+            { className: 'prod-chart-bar-wrapper' },
             h('div', { className: 'prod-chart-bar', style: `height:${Math.max(pct, 2)}%` }),
             h('div', { className: 'prod-chart-label' }, label),
           );
@@ -479,12 +553,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const deviceId = getDeviceId();
 
-    const statusDiv = h('div', { className: `license-status ${statusClass}` }, badge, ` ${statusText}`);
+    const statusDiv = h(
+      'div',
+      { className: `license-status ${statusClass}` },
+      badge,
+      ` ${statusText}`,
+    );
     container.appendChild(statusDiv);
 
-    const deviceSection = h('div', { className: 'device-id-section' },
+    const deviceSection = h(
+      'div',
+      { className: 'device-id-section' },
       h('div', { className: 'device-id-label' }, 'Device ID'),
-      h('div', { className: 'device-id-row' },
+      h(
+        'div',
+        { className: 'device-id-row' },
         h('span', { className: 'device-id-value' }, deviceId || '-'),
         h('button', { className: 'device-id-copy', id: 'device-id-copy-btn' }, 'Salin'),
       ),
@@ -495,31 +578,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!isFree && status.payload) {
       const p = status.payload;
       const expDate = p.exp ? new Date(p.exp * 1000).toLocaleDateString('id-ID') : '-';
-      const featList = Array.isArray(p.features) && p.features.length > 0 ? p.features.join(', ') : '-';
-      const verList = Array.isArray(p.version_allowed) && p.version_allowed.length > 0 ? p.version_allowed.join(', ') : '-';
+      const featList =
+        Array.isArray(p.features) && p.features.length > 0 ? p.features.join(', ') : '-';
+      const verList =
+        Array.isArray(p.version_allowed) && p.version_allowed.length > 0
+          ? p.version_allowed.join(', ')
+          : '-';
       container.appendChild(
-        h('div', { className: 'license-info-grid' },
-          h('div', { className: 'license-info-item' },
+        h(
+          'div',
+          { className: 'license-info-grid' },
+          h(
+            'div',
+            { className: 'license-info-item' },
             h('div', { className: 'label' }, 'Total Limit'),
             h('div', { className: 'value' }, (p.total_limit ?? 0).toLocaleString()),
           ),
-          h('div', { className: 'license-info-item' },
+          h(
+            'div',
+            { className: 'license-info-item' },
             h('div', { className: 'label' }, 'Grace Daily'),
             h('div', { className: 'value' }, (p.daily_limit ?? 100).toLocaleString()),
           ),
-          h('div', { className: 'license-info-item' },
+          h(
+            'div',
+            { className: 'license-info-item' },
             h('div', { className: 'label' }, 'Berlaku Sampai'),
             h('div', { className: 'value' }, expDate),
           ),
-          h('div', { className: 'license-info-item' },
+          h(
+            'div',
+            { className: 'license-info-item' },
             h('div', { className: 'label' }, 'Sisa Hari Ini'),
             h('div', { className: 'value' }, remaining.toLocaleString()),
           ),
-          h('div', { className: 'license-info-item', style: 'grid-column:1/-1' },
+          h(
+            'div',
+            { className: 'license-info-item', style: 'grid-column:1/-1' },
             h('div', { className: 'label' }, 'Fitur'),
             h('div', { className: 'value' }, featList),
           ),
-          h('div', { className: 'license-info-item', style: 'grid-column:1/-1' },
+          h(
+            'div',
+            { className: 'license-info-item', style: 'grid-column:1/-1' },
             h('div', { className: 'label' }, 'Versi Diizinkan'),
             h('div', { className: 'value' }, verList),
           ),
@@ -529,10 +630,30 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     container.append(
       h('div', { className: 'pane-title' }, 'Aktifkan Token'),
-      Object.assign(h('textarea', { className: 'license-jwt-input', id: 'quota-jwt-input', placeholder: 'Tempel token (JWT) di sini...' }), { value: jwt || '' }),
-      h('div', { className: 'license-actions' },
+      Object.assign(
+        h('textarea', {
+          className: 'license-jwt-input',
+          id: 'quota-jwt-input',
+          placeholder: 'Tempel token (JWT) di sini...',
+        }),
+        { value: jwt || '' },
+      ),
+      h(
+        'div',
+        { className: 'license-actions' },
         h('button', { className: 'license-btn activate', id: 'quota-activate-btn' }, 'Aktifkan'),
-        Object.assign(h('button', { className: 'license-btn remove', id: 'quota-remove-btn', style: isFree ? 'opacity:0.4;cursor:not-allowed' : '' }, 'Hapus Token'), { disabled: isFree }),
+        Object.assign(
+          h(
+            'button',
+            {
+              className: 'license-btn remove',
+              id: 'quota-remove-btn',
+              style: isFree ? 'opacity:0.4;cursor:not-allowed' : '',
+            },
+            'Hapus Token',
+          ),
+          { disabled: isFree },
+        ),
       ),
       h('div', { className: 'license-message', id: 'quota-message' }),
     );
