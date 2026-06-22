@@ -49,11 +49,7 @@ describe('skrining-events', () => {
 
       await vi.runAllTimersAsync();
 
-      expect(mockNotifyInfo).toHaveBeenCalledWith(
-        'Selesai',
-        'Berhasil, 1 ditemukan.',
-        2500,
-      );
+      expect(mockNotifyInfo).toHaveBeenCalledWith('Selesai', 'Berhasil, 1 ditemukan.', 2500);
     });
 
     it('should blur active element if not body', async () => {

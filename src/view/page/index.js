@@ -105,6 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formSkriningUrlInput = document.getElementById('form-skrining-url');
   const scrollToButtonCheckbox = document.getElementById('form-skrining-scroll-to-button');
   const respectInputCheckbox = document.getElementById('form-skrining-respect-input');
+  const ensureFillCheckbox = document.getElementById('form-skrining-ensure-fill');
   const radioButtonKeywordsInput = document.getElementById('form-skrining-radio-keywords-input');
   const dropdownKeywordsInput = document.getElementById('form-skrining-dropdown-keywords-input');
   const excludesInput = document.getElementById('form-skrining-excludes');
@@ -128,6 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     formSkriningUrlInput.value = fs.url || '';
     scrollToButtonCheckbox.checked = fs.scrollToButton ?? true;
     respectInputCheckbox.checked = fs.respectInput === true;
+    ensureFillCheckbox.checked = fs.ensureFill === true;
     radioButtonKeywordsInput.value = fs.radioButtonKeywords || '';
     dropdownKeywordsInput.value = fs.dropdownKeywords || '';
     excludesInput.value = fs.excludes || '';
@@ -219,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.formSkrining.url = formSkriningUrlInput.value;
       profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
       profileSettings.formSkrining.respectInput = respectInputCheckbox.checked;
+      profileSettings.formSkrining.ensureFill = ensureFillCheckbox.checked;
       profileSettings.formSkrining.radioButtonKeywords = radioButtonKeywordsInput.value;
       profileSettings.formSkrining.dropdownKeywords = dropdownKeywordsInput.value;
       profileSettings.formSkrining.excludes = excludesInput.value;

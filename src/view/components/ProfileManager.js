@@ -42,6 +42,7 @@ export class ProfileManager {
         excludes: '',
         pinneds: {},
         respectInput: false,
+        ensureFill: false,
       },
       notChecked: {
         url: '',

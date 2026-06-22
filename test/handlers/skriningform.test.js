@@ -241,13 +241,45 @@ describe('skriningform', () => {
     });
   });
 
+  describe('ensure fill', () => {
+    it('should fill dropdown with ensureFill enabled', async () => {
+      vi.useFakeTimers();
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            formSkrining: {
+              radioButtonKeywords: 'Opsi A',
+              dropdownKeywords: 'Opsi A',
+              pinneds: {},
+              ensureFill: true,
+            },
+          },
+        },
+      });
+
+      await initializeSkriningForm();
+
+      const btn = document.getElementById('dandelion-auto-fill');
+      btn.click();
+      await vi.advanceTimersByTimeAsync(4000);
+
+      const selectedItem = document.querySelector('.sv-list__item--selected');
+      expect(selectedItem).toBeTruthy();
+      expect(selectedItem.textContent.trim()).toBe('Opsi A');
+    });
+  });
+
   describe('bus event', () => {
     it('should emit skriningForm:didFill with correct result', async () => {
       vi.useFakeTimers();
       await initializeSkriningForm();
 
       let busResult = null;
-      bus.on('skriningForm:didFill', (payload) => { busResult = payload; });
+      bus.on('skriningForm:didFill', (payload) => {
+        busResult = payload;
+      });
       await clickAutoFill();
 
       expect(busResult).toBeDefined();
