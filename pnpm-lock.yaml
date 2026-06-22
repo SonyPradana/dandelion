@@ -11,9 +11,6 @@ importers:
       jose:
         specifier: ^6.2.3
         version: 6.2.3
-      webextension-polyfill:
-        specifier: ^0.12.0
-        version: 0.12.0
     devDependencies:
       archiver:
         specifier: ^8.0.0
@@ -2274,9 +2271,6 @@ packages:
     engines: {node: '>=20.0.0', npm: '>=8.0.0'}
     hasBin: true
 
-  webextension-polyfill@0.12.0:
-    resolution: {integrity: sha512-97TBmpoWJEE+3nFBQ4VocyCdLKfw54rFaJ6EVQYLBCXqCIpLSZkwGgASpv4oPt9gdKCJ80RJlcmNzNn008Ag6Q==}
-
   webidl-conversions@8.0.1:
     resolution: {integrity: sha512-BMhLD/Sw+GbJC21C/UgyaZX41nPt8bUTg+jWyDeg7e7YN4xOM05YPSIXceACnXVtqyEw/LMClUQMtMZ+PGGpqQ==}
     engines: {node: '>=20'}
@@ -4447,8 +4441,6 @@ snapshots:
       - jiti
       - safe-compare
       - supports-color
-
-  webextension-polyfill@0.12.0: {}
 
   webidl-conversions@8.0.1:
     optional: true

@@ -18,19 +18,18 @@
     "clean": "node scripts/remove-static.js dist",
     "clean:chrome": "node scripts/remove-static.js dist/chrome",
     "clean:firefox": "node scripts/remove-static.js dist/firefox",
-    "build:chrome": "pnpm clean:chrome && cross-env OUTPUT_DIR=dist/chrome rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-chrome-manifest.js",
-    "build:firefox": "pnpm clean:firefox && cross-env OUTPUT_DIR=dist/firefox rolldown -c && node scripts/copy-static.js dist/firefox && node scripts/build-firefox-manifest.js",
+    "build:chrome": "pnpm clean:chrome && cross-env TARGET=chrome OUTPUT_DIR=dist/chrome rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-chrome-manifest.js",
+    "build:firefox": "pnpm clean:firefox && cross-env TARGET=firefox OUTPUT_DIR=dist/firefox rolldown -c && node scripts/copy-static.js dist/firefox && node scripts/build-firefox-manifest.js",
     "build": "pnpm build:chrome && pnpm build:firefox",
     "sign:firefox": "node scripts/sign-firefox.js",
     "release:chrome": "pnpm build:chrome && node scripts/package.js chrome",
-    "release:chrome:nightly": "pnpm clean:chrome && cross-env OUTPUT_DIR=dist/chrome NIGHTLY=true rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-chrome-manifest.js && node scripts/package.js chrome-nightly",
+    "release:chrome:nightly": "pnpm clean:chrome && cross-env TARGET=chrome OUTPUT_DIR=dist/chrome NIGHTLY=true rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-chrome-manifest.js && node scripts/package.js chrome-nightly",
     "release:firefox": "pnpm build:firefox && pnpm sign:firefox && node scripts/package.js firefox",
     "release": "pnpm build && pnpm sign:firefox && node scripts/package.js all",
     "verify:firefox": "web-ext lint --source-dir dist/firefox"
   },
   "dependencies": {
-    "jose": "^6.2.3",
-    "webextension-polyfill": "^0.12.0"
+    "jose": "^6.2.3"
   },
   "devDependencies": {
     "archiver": "^8.0.0",
