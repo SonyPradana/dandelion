@@ -28,14 +28,21 @@ export function updateStatusPanel(done, total, status, options = {}) {
   const titleText = title || 'Status Tugas';
   const titleColor = onDelete ? '#ff4d4d' : '#ffd700';
 
-  contentArea.innerHTML = `
-    ${setHeader(titleText, titleColor)}
-    <div style="display: flex; justify-content: space-between; gap: 15px; align-items: center;">
-      <span style="opacity: 0.8;">Progres</span>
-      <span style="font-weight: bold; font-size: 12px;">${done}/${total}</span>
-    </div>
-    <div style="font-size: 0.6rem; opacity: 0.7; font-style: italic;">${statusText}</div>
-  `;
+  const progressDiv = document.createElement('div');
+  progressDiv.style.cssText = 'display: flex; justify-content: space-between; gap: 15px; align-items: center;';
+  const span1 = document.createElement('span');
+  span1.style.cssText = 'opacity: 0.8;';
+  span1.textContent = 'Progres';
+  const span2 = document.createElement('span');
+  span2.style.cssText = 'font-weight: bold; font-size: 12px;';
+  span2.textContent = `${done}/${total}`;
+  progressDiv.append(span1, span2);
+
+  const statusDiv = document.createElement('div');
+  statusDiv.style.cssText = 'font-size: 0.6rem; opacity: 0.7; font-style: italic;';
+  statusDiv.textContent = statusText;
+
+  contentArea.append(setHeader(titleText, titleColor), progressDiv, statusDiv);
 
   if (onDelete) {
     // Check if button already exists in contentArea

@@ -16,7 +16,7 @@ export function showFlashDataPanel() {
   // mobile-friendly: full width with a max cap
   panel.style.cssText += 'width:min(380px,100vw - 16px);';
 
-  contentArea.innerHTML = setHeader('Flash Data', '#a78bfa');
+  contentArea.append(setHeader('Flash Data', '#a78bfa'));
 
   // ─── shared state ─────────────────────────────────────────────
   let sharedData = {};
