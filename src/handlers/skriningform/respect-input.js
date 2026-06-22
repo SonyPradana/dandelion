@@ -6,3 +6,7 @@ export function isFieldFilled(questionElement) {
   const value = field.getValue();
   return value !== null && value !== '';
 }
+
+export function isRadioFilled(questionElement) {
+  return questionElement.querySelector('input[type="radio"]:checked') !== null;
+}

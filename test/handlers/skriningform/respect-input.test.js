@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { isFieldFilled } from '../../../src/handlers/skriningform/respect-input';
+import { isFieldFilled, isRadioFilled } from '../../../src/handlers/skriningform/respect-input';
 
 const fixtureHtml = readFileSync(resolve('test/__fixtures__/respect-input.html'), 'utf8');
 
@@ -77,5 +77,27 @@ describe('isFieldFilled', () => {
     const el = document.createElement('div');
     el.textContent = 'plain div';
     expect(isFieldFilled(el)).toBe(false);
+  });
+});
+
+describe('isRadioFilled', () => {
+  beforeEach(() => {
+    document.head.innerHTML = '';
+    document.body.innerHTML = fixtureHtml;
+  });
+
+  it('returns false when no radio selected', () => {
+    const el = document.getElementById('q_radio_empty');
+    expect(isRadioFilled(el)).toBe(false);
+  });
+
+  it('returns true when a radio is selected', () => {
+    const el = document.getElementById('q_radio_filled');
+    expect(isRadioFilled(el)).toBe(true);
+  });
+
+  it('returns false for non-radio element', () => {
+    const el = document.getElementById('q_text_empty');
+    expect(isRadioFilled(el)).toBe(false);
   });
 });

@@ -5,7 +5,7 @@ import { isPinned, addPinnedItem, removePinnedItem } from '../utils/pinneds';
 import { debugMarker } from '../components/marker';
 import { debugButton } from '../components/debugButton';
 import { fillPinnedFields } from './skriningform/fill-pinned-fields';
-import { isFieldFilled } from './skriningform/respect-input';
+import { isFieldFilled, isRadioFilled } from './skriningform/respect-input';
 import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
@@ -175,7 +175,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
           if (skipList.includes(dataName)) {
             return;
           }
-          if (respectInput && questionElement.querySelector('input[type="radio"]:checked')) {
+          if (respectInput && isRadioFilled(questionElement)) {
             return;
           }
         }
