@@ -630,29 +630,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     container.append(
       h('div', { className: 'pane-title' }, 'Aktifkan Token'),
-      Object.assign(
-        h('textarea', {
-          className: 'license-jwt-input',
-          id: 'quota-jwt-input',
-          placeholder: 'Tempel token (JWT) di sini...',
-        }),
-        { value: jwt || '' },
-      ),
+      h('textarea', {
+        className: 'license-jwt-input',
+        id: 'quota-jwt-input',
+        placeholder: 'Tempel token (JWT) di sini...',
+        value: jwt || '',
+      }),
       h(
         'div',
         { className: 'license-actions' },
         h('button', { className: 'license-btn activate', id: 'quota-activate-btn' }, 'Aktifkan'),
-        Object.assign(
-          h(
-            'button',
-            {
-              className: 'license-btn remove',
-              id: 'quota-remove-btn',
-              style: isFree ? 'opacity:0.4;cursor:not-allowed' : '',
-            },
-            'Hapus Token',
-          ),
-          { disabled: isFree },
+        h(
+          'button',
+          {
+            className: 'license-btn remove',
+            id: 'quota-remove-btn',
+            disabled: isFree,
+            style: isFree ? 'opacity:0.4;cursor:not-allowed' : '',
+          },
+          'Hapus Token',
         ),
       ),
       h('div', { className: 'license-message', id: 'quota-message' }),

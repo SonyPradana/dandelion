@@ -19,6 +19,8 @@
  *   }
  * );
  */
+import { h } from '../../utils/dom';
+
 export class KeyValueList {
   /**
    * Creates a new KeyValueList instance
@@ -166,15 +168,9 @@ export class KeyValueList {
     const header = document.createElement('div');
     header.className = 'kv-list-header';
     header.append(
-      Object.assign(document.createElement('div'), {
-        className: 'kv-header-key',
-        textContent: 'Kunci',
-      }),
-      Object.assign(document.createElement('div'), {
-        className: 'kv-header-value',
-        textContent: 'Nilai',
-      }),
-      Object.assign(document.createElement('div'), { className: 'kv-header-action' }),
+      h('div', { className: 'kv-header-key', textContent: 'Kunci' }),
+      h('div', { className: 'kv-header-value', textContent: 'Nilai' }),
+      h('div', { className: 'kv-header-action' }),
     );
     wrapper.appendChild(header);
 

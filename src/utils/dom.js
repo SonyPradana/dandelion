@@ -6,6 +6,12 @@ export function h(tag, attrs, ...children) {
         el.className = val;
       } else if (key === 'style' && typeof val === 'object') {
         Object.assign(el.style, val);
+      } else if (key === 'value') {
+        el.value = val;
+      } else if (key === 'textContent') {
+        el.textContent = val;
+      } else if (key === 'disabled') {
+        el.disabled = val !== false && val !== null && val !== undefined;
       } else if (key.startsWith('on') && typeof val === 'function') {
         el.addEventListener(key.slice(2).toLowerCase(), val);
       } else if (key === 'dataset' && typeof val === 'object') {
