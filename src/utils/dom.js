@@ -1,3 +1,30 @@
+/**
+ * Creates a DOM element programmatically.
+ *
+ * Use when:
+ * - You need event listeners (onClick, onChange, etc.)
+ * - Content comes from dynamic data (user input, variables)
+ * - You need specific DOM properties (value, disabled, className)
+ *
+ * @param {string} tag - HTML tag name (div, span, button, etc.)
+ * @param {Object|null} attrs - Element attributes/properties
+ *   className: string    → sets class attribute
+ *   style: object|string → style object ({display:'flex'}) or cssText
+ *   value: string        → el.value (for input/textarea)
+ *   textContent: string  → el.textContent
+ *   disabled: boolean    → el.disabled
+ *   onClick, onMouseenter, etc. → event listener
+ *   dataset: object      → el.dataset
+ *   other values         → setAttribute
+ * @param {...(string|number|Node|Array)} children - Child elements or text
+ * @returns {HTMLElement}
+ *
+ * @example
+ * h('button', { className: 'btn', onClick: () => alert('hi') }, 'Click me')
+ * h('div', { style: { display: 'flex', gap: '4px' } },
+ *   h('span', null, 'label'),
+ * )
+ */
 export function h(tag, attrs, ...children) {
   const el = document.createElement(tag);
   if (attrs) {
@@ -38,8 +65,61 @@ function appendChildren(el, children) {
   }
 }
 
+/**
+ * Converts a static HTML string into a DocumentFragment.
+ *
+ * Use when: the HTML content comes from a constant export
+ * (e.g. AGREEMENT_SECTIONS_HTML) — more concise than html``
+ *
+ * Internally uses DOMParser, NOT innerHTML. Safe from web-ext lint.
+ *
+ * @param {string} html - Static HTML string
+ * @returns {DocumentFragment}
+ *
+ * @example
+ * container.appendChild(fragment(AGREEMENT_SECTIONS_HTML))
+ */
 export function fragment(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
+  const frag = document.createDocumentFragment();
+  frag.append(...doc.body.childNodes);
+  return frag;
+}
+
+/**
+ * Tagged template literal — parses an HTML string into a DocumentFragment.
+ *
+ * Use when:
+ * - The markup is mostly static (headers, labels, fixed structure)
+ * - You want high readability with familiar HTML syntax
+ * - You only need simple text interpolation (${name})
+ *
+ * Do NOT use for:
+ * - Event listeners (onClick in string HTML won't work)
+ * - Unsanitized user input
+ *
+ * Internally uses DOMParser, NOT innerHTML. Safe from web-ext lint.
+ *
+ * @param {string[]} strings - Template literal strings
+ * @param {...*} values - Interpolated values
+ * @returns {DocumentFragment}
+ *
+ * @example
+ * header.append(html`<div class="title">Settings</div>`)
+ * container.append(html`<span>${userName}</span>`)
+ *
+ * // Combined with h():
+ * container.append(
+ *   h('button', { onClick: handleClick }, 'Save'),
+ *   html`<span class="hint">Press Enter to save</span>`,
+ * )
+ */
+export function html(strings, ...values) {
+  let result = '';
+  for (let i = 0; i < strings.length; i++) {
+    result += strings[i] + (values[i] !== undefined ? String(values[i]) : '');
+  }
+  const doc = new DOMParser().parseFromString(result, 'text/html');
   const frag = document.createDocumentFragment();
   frag.append(...doc.body.childNodes);
   return frag;

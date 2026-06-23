@@ -1,7 +1,7 @@
 import browser from '@bridge/browser';
 import { store } from '../store.js';
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
-import { h, fragment } from '../utils/dom';
+import { h, html, fragment } from '../utils/dom';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
 import { ProfileManager } from './components/ProfileManager.js';
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
   if (agreement) {
     agreement.append(
-      h('div', { className: 'header' }, h('h1', null, 'SYARAT DAN KETENTUAN PENGGUNAAN')),
+      html`<div class="header"><h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1></div>`,
       h(
         'div',
         { className: 'content' },
@@ -29,11 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         h(
           'div',
           { className: 'checkbox-group' },
-          h('h3', { style: 'margin-bottom: 16px; font-size: 15px; color: #333' }, 'KONFIRMASI'),
+          html`<h3 style="margin-bottom:16px;font-size:15px;color:#333">KONFIRMASI</h3>`,
           h(
             'div',
             { className: 'checkbox-item' },
-            h('input', { type: 'checkbox', id: 'agree-checkbox' }),
+            html`<input type="checkbox" id="agree-checkbox" />`,
             h(
               'label',
               { for: 'agree-checkbox' },
@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       );
     }
 
-    container.appendChild(h('div', { className: 'prod-header' }, 'Hari Ini'));
+    container.appendChild(html`<div class="prod-header">Hari Ini</div>`);
 
     if (today) {
       container.append(

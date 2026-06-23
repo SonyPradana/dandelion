@@ -1,6 +1,6 @@
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
 import { store } from '../store';
-import { h, fragment } from '../utils/dom';
+import { h, html, fragment } from '../utils/dom';
 
 const POPUP_ID = 'dandelion-agreement-popup';
 
@@ -161,7 +161,7 @@ export function showAgreementPopup() {
   const card = h(
     'div',
     { className: 'dap-card' },
-    h('div', { className: 'dap-header' }, h('h1', null, 'SYARAT DAN KETENTUAN PENGGUNAAN')),
+    html`<div class="dap-header"><h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1></div>`,
     h('div', { className: 'dap-body' }, fragment(AGREEMENT_SECTIONS_HTML)),
     h(
       'div',

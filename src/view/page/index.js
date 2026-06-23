@@ -2,7 +2,7 @@ import browser from '@bridge/browser';
 import { store } from '../../store.js';
 import { showAgreementPopup } from '../../components/agreementPopup';
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
-import { h, fragment } from '../../utils/dom';
+import { h, html, fragment } from '../../utils/dom';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
@@ -349,10 +349,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const maxVal = Math.max(1, ...rangeData.map((d) => (d ? d.dayTotal : 0)));
 
-    const leftCol = h('div', { className: 'prod-col' });
-    const rightCol = h('div', { className: 'prod-col' });
+    const leftCol = html`<div class="prod-col"></div>`;
+    const rightCol = html`<div class="prod-col"></div>`;
 
-    leftCol.appendChild(h('div', { className: 'prod-col-header' }, 'Hari Ini'));
+    leftCol.appendChild(html`<div class="prod-col-header">Hari Ini</div>`);
 
     if (today) {
       leftCol.append(
@@ -384,7 +384,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         h(
           'div',
           { className: 'prod-total' },
-          h('span', null, 'Total'),
+          html`<span>Total</span>`,
           h(
             'span',
             null,
@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       leftCol.appendChild(emptyRow);
     }
 
-    rightCol.append(h('div', { className: 'prod-col-header' }, 'Ringkasan'));
+    rightCol.append(html`<div class="prod-col-header">Ringkasan</div>`);
     rightCol.append(
       prodRow('🏆 Grand Total', overall.grandTotal.toLocaleString()),
       prodRow('📆 Hari Aktif', String(overall.activeDays)),
@@ -490,8 +490,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         h(
           'div',
           { style: 'margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb' },
-          h('div', { className: 'prod-header', style: 'color:#92400e' }, '🆓 Free Tier'),
-          h('div', { style: 'font-size:12px;color:#888' }, '50 poin/hari \u00B7 tanpa total limit'),
+          html`<div class="prod-header" style="color:#92400e">🆓 Free Tier</div>`,
+          html`<div style="font-size:12px;color:#888">50 poin/hari · tanpa total limit</div>`,
         ),
       );
     }
@@ -564,14 +564,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const deviceSection = h(
       'div',
       { className: 'device-id-section' },
-      h('div', { className: 'device-id-label' }, 'Device ID'),
+      html`<div class="device-id-label">Device ID</div>`,
       h(
         'div',
         { className: 'device-id-row' },
         h('span', { className: 'device-id-value' }, deviceId || '-'),
-        h('button', { className: 'device-id-copy', id: 'device-id-copy-btn' }, 'Salin'),
+        html`<button class="device-id-copy" id="device-id-copy-btn">Salin</button>`,
       ),
-      h('div', { className: 'device-id-hint' }, 'Gunakan ID ini untuk mendapatkan token'),
+      html`<div class="device-id-hint">Gunakan ID ini untuk mendapatkan token</div>`,
     );
     container.appendChild(deviceSection);
 
@@ -629,7 +629,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     container.append(
-      h('div', { className: 'pane-title' }, 'Aktifkan Token'),
+      html`<div class="pane-title">Aktifkan Token</div>`,
       h('textarea', {
         className: 'license-jwt-input',
         id: 'quota-jwt-input',
@@ -651,7 +651,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           'Hapus Token',
         ),
       ),
-      h('div', { className: 'license-message', id: 'quota-message' }),
+      html`<div class="license-message" id="quota-message"></div>`,
     );
 
     document.getElementById('device-id-copy-btn')?.addEventListener('click', async () => {

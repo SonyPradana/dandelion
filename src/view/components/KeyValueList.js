@@ -19,7 +19,7 @@
  *   }
  * );
  */
-import { h } from '../../utils/dom';
+import { html } from '../../utils/dom';
 
 export class KeyValueList {
   /**
@@ -168,9 +168,9 @@ export class KeyValueList {
     const header = document.createElement('div');
     header.className = 'kv-list-header';
     header.append(
-      h('div', { className: 'kv-header-key', textContent: 'Kunci' }),
-      h('div', { className: 'kv-header-value', textContent: 'Nilai' }),
-      h('div', { className: 'kv-header-action' }),
+      html`<div class="kv-header-key">Kunci</div>`,
+      html`<div class="kv-header-value">Nilai</div>`,
+      html`<div class="kv-header-action"></div>`,
     );
     wrapper.appendChild(header);
 
