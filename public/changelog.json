@@ -1,5 +1,16 @@
 [
   {
+    "date": "23 Juni 2026",
+    "version": "1.6",
+    "details": [
+      "Input lebih terkendali — aktifkan fitur 'respect input' agar kolom yang sudah terisi tidak ditimpa saat pengisian otomatis",
+      "Pengisian formulir lebih andal — ekstensi akan memeriksa ulang jika ada kolom yang terlewat diisi",
+      "Perbaikan: notifikasi penyelesaian layanan kini muncul saat tombol OK di Zen Mode ditekan",
+      "Perbaikan: pengalihan profil berjalan lebih stabil tanpa error",
+      "Kinerja lebih ringan dan cepat berkat pengurangan ukuran ekstensi"
+    ]
+  },
+  {
     "date": "7 Juni 2026",
     "version": "1.5",
     "details": [

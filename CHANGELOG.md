@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-06-23
+
+### Added
+
+- Store foundation with DandelionStore class for centralized storage abstraction (#82)
+- Component decoupling with callback-based toggles and skriningform store integration (#84)
+- Store migration from configuration.js and browser.storage to DandelionStore (#85)
+- Store singleton refactor with dependency injection across all handlers (#91)
+- JSDoc type hints for Store across all modules (#92)
+- Respect input feature with config toggle and UI checkbox (#107)
+- Ensure fill option for reliable second-pass form filling (#109)
+
+### Changed
+
+- Replace direct increment calls with skrining-events bus events (#86)
+- Remove webextension-polyfill, use native browser API via build-time bridge (#108)
+
+### Fixed
+
+- Forward injected store to clearFlashData() in getFlashData() (#100)
+- Handle profile switch errors with async handler and onSwitch callback (#101)
+- Restore in-memory \_configCache in Store.getFullConfig() (#103)
+- Move service completion trigger to Zen Mode alert OK button (#106)
+
 ## 1.5.2 - 2026-06-19
 
 ### Changed
