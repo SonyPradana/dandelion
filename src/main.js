@@ -2,6 +2,7 @@ import { initializeSkriningForm } from './handlers/skriningform.js';
 import { initializeSkriningSend } from './handlers/skrining-send.js';
 import { initializeSkrining } from './handlers/skrining.js';
 import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
+import { initializeRegisterForm } from './handlers/register-form.js';
 import './handlers/skrining-events.js';
 import browser from '@bridge/browser';
 import { store } from './store.js';
@@ -63,5 +64,11 @@ async function initialize() {
     isFeatureEnabled('skrining')
   ) {
     initializeSkrining();
+  } else if (
+    config.registerForm?.url &&
+    currentURL.includes(config.registerForm.url) &&
+    isFeatureEnabled('registerForm')
+  ) {
+    initializeRegisterForm();
   }
 }

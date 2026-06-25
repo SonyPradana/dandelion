@@ -5,11 +5,13 @@ import { addKvRow, rebuildKvRows, S } from './flashKvRow';
 
 const PANEL_ID = 'dandelion-flash-data';
 
-export function showFlashDataPanel() {
+export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey } = {}) {
+  const _setData = setData || setFlashData;
+  const _clearData = clearData || clearFlashData;
   const existing = document.getElementById(PANEL_ID);
   if (existing) existing.remove();
 
-  clearFlashData();
+  _clearData();
 
   const { panel, contentArea, setHeader, remove } = createBasePanel(PANEL_ID);
 
@@ -177,9 +179,19 @@ export function showFlashDataPanel() {
       return;
     }
 
-    clearFlashData();
-    setFlashData({ pinneds: { ...sharedData } });
+    let data = sharedData;
+    if (normalizeKey) {
+      const normalized = {};
+      for (const [k, v] of Object.entries(data)) {
+        normalized[normalizeKey(k)] = v;
+      }
+      data = normalized;
+    }
+
+    _clearData();
+    _setData({ pinneds: { ...data } });
     notify.info('Flash Data', 'Tersimpan', 1500);
+    if (onSave) onSave(data);
   };
 
   btnContainer.appendChild(useBtn);

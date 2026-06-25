@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
+  const registerFormUrlInput = document.getElementById('register-form-url');
   const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
   const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
   const flashDataEnabledCheckbox = document.getElementById('flash-data-enabled');
@@ -152,6 +153,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
+
+    const rf = profileSettings.registerForm || {};
+    registerFormUrlInput.value = rf.url || '';
 
     const zm = profileSettings.zenMode || {};
     zenModeEnabledCheckbox.checked = zm.enabled !== false;
@@ -232,6 +236,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
+
+      if (!profileSettings.registerForm) profileSettings.registerForm = {};
+      profileSettings.registerForm.url = registerFormUrlInput.value;
 
       if (!profileSettings.zenMode) profileSettings.zenMode = {};
       profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;
@@ -328,6 +335,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po">/ ${overall.counts.dropdown.toLocaleString()}</span></span></div>
         <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span class="po">/ ${overall.counts.formNotChecked.toLocaleString()}</span></span></div>
         <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}<span class="po">/ ${overall.counts.formZen.toLocaleString()}</span></span></div>
+        <div class="prod-row"><span class="label">📝 Register</span><span class="value">${rd(today.counts.registerForm, prev?.registerForm ?? null)}<span class="po">/ ${overall.counts.registerForm.toLocaleString()}</span></span></div>
         <div class="prod-total"><span>Total</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po">/ ${overall.grandTotal.toLocaleString()}</span></span></div>
       `;
     } else {

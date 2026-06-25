@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
+  const registerFormUrlInput = document.getElementById('register-form-url');
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
@@ -133,6 +134,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
+
+    const rf = profileSettings.registerForm || {};
+    registerFormUrlInput.value = rf.url || '';
   }
 
   store.getFullConfig().then((config) => {
@@ -185,6 +189,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
+
+      if (!profileSettings.registerForm) profileSettings.registerForm = {};
+      profileSettings.registerForm.url = registerFormUrlInput.value;
 
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;
@@ -316,6 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}</span></div>
         <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}</span></div>
         <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}</span></div>
+        <div class="prod-row"><span class="label">📝 Register</span><span class="value">${rd(today.counts.registerForm, prev?.registerForm ?? null)}</span></div>
         <div class="prod-total"><span>Total Hari Ini</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}</span></div>
       `;
     } else {
