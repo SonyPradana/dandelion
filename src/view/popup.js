@@ -1,6 +1,7 @@
 import browser from '@bridge/browser';
 import { store } from '../store.js';
 import { AGREEMENT_SECTIONS_HTML } from '../agreement-text';
+import { h, html, fragment } from '../utils/dom';
 import { KeywordList } from './components/KeywordList.js';
 import { KeyValueList } from './components/KeyValueList.js';
 import { ProfileManager } from './components/ProfileManager.js';
@@ -19,21 +20,29 @@ import { init, getStatus } from '../quota/quota-manager.js';
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
   if (agreement) {
-    agreement.innerHTML = `
-      <div class="header">
-        <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
-      </div>
-      <div class="content">
-        ${AGREEMENT_SECTIONS_HTML}
-        <div class="checkbox-group">
-          <h3 style="margin-bottom: 16px; font-size: 15px; color: #333">KONFIRMASI</h3>
-          <div class="checkbox-item">
-            <input type="checkbox" id="agree-checkbox" />
-            <label for="agree-checkbox">Saya telah membaca dan menyetujui syarat dan ketentuan.</label>
-          </div>
-        </div>
-      </div>
-    `;
+    agreement.append(
+      html`<div class="header"><h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1></div>`,
+      h(
+        'div',
+        { className: 'content' },
+        fragment(AGREEMENT_SECTIONS_HTML),
+        h(
+          'div',
+          { className: 'checkbox-group' },
+          html`<h3 style="margin-bottom:16px;font-size:15px;color:#333">KONFIRMASI</h3>`,
+          h(
+            'div',
+            { className: 'checkbox-item' },
+            html`<input type="checkbox" id="agree-checkbox" />`,
+            h(
+              'label',
+              { for: 'agree-checkbox' },
+              'Saya telah membaca dan menyetujui syarat dan ketentuan.',
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   store.init(browser);
@@ -258,20 +267,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Produktifitas Tab Logic ---
   function rd(current, prev) {
-    if (prev === null || prev === undefined) return `<span class="pv">${current}</span>`;
-    if (prev === 0 && current === 0) return '<span class="pv zero">0</span>';
-    if (prev === 0)
-      return `<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
+    const pv = document.createElement('span');
+    pv.className = 'pv';
+    if (prev === null || prev === undefined) {
+      pv.textContent = String(current);
+      return pv;
+    }
+    if (prev === 0 && current === 0) {
+      pv.className = 'pv zero';
+      pv.textContent = '0';
+      return pv;
+    }
     const d = current - prev;
-    if (d === 0) return `<span class="pv">${current}</span>`;
-    if (d > 0) return `<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
-    return `<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
+    if (d === 0) {
+      pv.textContent = String(current);
+      return pv;
+    }
+    pv.textContent = String(current);
+    const pd = document.createElement('span');
+    if (d > 0) {
+      pd.className = 'pd pos';
+      pd.textContent = `(+${d})`;
+    } else {
+      pd.className = 'pd neg';
+      pd.textContent = `(${d})`;
+    }
+    const frag = document.createDocumentFragment();
+    frag.appendChild(pv);
+    frag.appendChild(document.createTextNode(' '));
+    frag.appendChild(pd);
+    return frag;
+  }
+
+  function prodRow(label, value) {
+    return h(
+      'div',
+      { className: 'prod-row' },
+      h('span', { className: 'label' }, label),
+      h('span', { className: 'value' }, value),
+    );
   }
 
   async function renderProduktifitas() {
     const container = document.getElementById('produktifitas-content');
     if (!container) return;
 
+    container.replaceChildren();
+
+    const status = getStatus();
     const periodTotal = TARGET_MODE === 'weekly' ? await getWeekTotal() : await getMonthTotal();
     const periodLabel = TARGET_MODE === 'weekly' ? 'Minggu' : 'Bulan';
 
@@ -283,9 +326,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const prev = yesterday ? yesterday.counts : null;
 
-    // --- License Status Card (PRO only) ---
-    const status = getStatus();
-    let licenseHtml = '';
     if (!status.isFreePlan && status.payload) {
       const p = status.payload;
       const from = new Date(p.iat * 1000);
@@ -297,42 +337,74 @@ document.addEventListener('DOMContentLoaded', async () => {
       const totalPct = Math.min(100, Math.round((usedInLicense / (p.total_limit || 1)) * 100));
       const daysLeft = Math.ceil((p.exp * 1000 - Date.now()) / 86_400_000);
       const expiryText = daysLeft <= 0 ? 'Kedaluwarsa' : `Berakhir dalam ${daysLeft} hari`;
-      licenseHtml = `
-        <div class="prod-license pro">
-          <span class="license-badge-sm pro">PRO</span>
-          <span class="license-text">${totalPct}% digunakan</span>
-          <span class="license-sep">·</span>
-          <span class="license-text">${expiryText}</span>
-        </div>
-      `;
+      container.appendChild(
+        h(
+          'div',
+          { className: 'prod-license pro' },
+          h('span', { className: 'license-badge-sm pro' }, 'PRO'),
+          h('span', { className: 'license-text' }, `${totalPct}% digunakan`),
+          h('span', { className: 'license-sep' }, '\u00B7'),
+          h('span', { className: 'license-text' }, expiryText),
+        ),
+      );
     }
 
-    let html = licenseHtml + '<div class="prod-header">Hari Ini</div>';
+    container.appendChild(html`<div class="prod-header">Hari Ini</div>`);
 
     if (today) {
-      html += `
-        <div class="prod-row"><span class="label">📻 Radio</span><span class="value">${rd(today.counts.radio, prev?.radio ?? null)}</span></div>
-        <div class="prod-row"><span class="label">📝 Teks</span><span class="value">${rd(today.counts.freetext, prev?.freetext ?? null)}</span></div>
-        <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}</span></div>
-        <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}</span></div>
-        <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}</span></div>
-        <div class="prod-total"><span>Total Hari Ini</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}</span></div>
-      `;
+      container.append(
+        prodRow('📻 Radio', rd(today.counts.radio, prev?.radio ?? null)),
+        prodRow('📝 Teks', rd(today.counts.freetext, prev?.freetext ?? null)),
+        prodRow('📋 Dropdown', rd(today.counts.dropdown, prev?.dropdown ?? null)),
+        prodRow('❌ Tidak Periksa', rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)),
+        prodRow('🧘 Zen', rd(today.counts.formZen, prev?.formZen ?? null)),
+        h(
+          'div',
+          { className: 'prod-total' },
+          h('span', null, 'Total Hari Ini'),
+          h('span', null, rd(today.dayTotal, yesterday?.dayTotal ?? null)),
+        ),
+      );
     } else {
-      html += '<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>';
+      const emptyRow = document.createElement('div');
+      emptyRow.className = 'prod-row';
+      emptyRow.style.color = '#999';
+      emptyRow.textContent = 'Belum ada data hari ini.';
+      container.appendChild(emptyRow);
     }
 
     const barPct = Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100));
-    html += `
-      <div class="prod-grand"><span>Grand Total</span><span>${overall.grandTotal.toLocaleString()}</span></div>
-      <div class="prod-progress">
-        <div class="prod-header">Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)</div>
-        <div class="label-row"><span>${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin</span></div>
-        <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${barPct}%"></div></div>
-      </div>
-    `;
-
-    container.innerHTML = html;
+    container.append(
+      h(
+        'div',
+        { className: 'prod-grand' },
+        h('span', null, 'Grand Total'),
+        h('span', null, overall.grandTotal.toLocaleString()),
+      ),
+      h(
+        'div',
+        { className: 'prod-progress' },
+        h(
+          'div',
+          { className: 'prod-header' },
+          `Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)`,
+        ),
+        h(
+          'div',
+          { className: 'label-row' },
+          h(
+            'span',
+            null,
+            `${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin`,
+          ),
+        ),
+        h(
+          'div',
+          { className: 'prod-bar-track' },
+          h('div', { className: 'prod-bar-fill', style: `width:${barPct}%` }),
+        ),
+      ),
+    );
   }
 
   const produktifitasTab = document.querySelector('.tab-button[data-tab="produktifitas"]');

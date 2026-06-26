@@ -44,11 +44,13 @@ describe('createBasePanel', () => {
     expect(closeBtn.innerHTML).toBe('×');
   });
 
-  it('setHeader should return HTML string', () => {
+  it('setHeader should return a DOM element', () => {
     const { setHeader } = createBasePanel('header-test');
-    const html = setHeader('Test Title', '#ff0000');
-    expect(html).toContain('TEST TITLE');
-    expect(html).toContain('#ff0000');
+    const el = setHeader('Test Title', '#ff0000');
+    expect(el.tagName).toBe('DIV');
+    expect(el.className).toBe('dandelion-panel-header');
+    expect(el.textContent).toBe('TEST TITLE');
+    expect(el.style.color).toBe('#ff0000');
   });
 
   it('remove should add hide class and animate', () => {

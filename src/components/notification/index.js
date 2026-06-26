@@ -1,3 +1,4 @@
+import { h } from '../../utils/dom';
 import { createBasePanel, createPanelButton } from './base';
 
 /**
@@ -19,10 +20,10 @@ export const notify = {
     const id = `dandelion-info-${Date.now()}`;
     const { contentArea, setHeader, remove } = createBasePanel(id);
 
-    contentArea.innerHTML = `
-      ${setHeader(title, '#4ade80')}
-      <div style="font-size: 11px; line-height: 1.4; opacity: 0.9;">${message}</div>
-    `;
+    contentArea.append(
+      setHeader(title, '#4ade80'),
+      h('div', { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9;' }, message),
+    );
 
     if (duration > 0) {
       setTimeout(remove, duration);
@@ -39,10 +40,14 @@ export const notify = {
       const id = `dandelion-alert-${Date.now()}`;
       const { panel, setHeader, remove } = createBasePanel(id);
 
-      panel.innerHTML = `
-        ${setHeader(title, '#ffd700')}
-        <div style="font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;">${message}</div>
-      `;
+      panel.append(
+        setHeader(title, '#ffd700'),
+        h(
+          'div',
+          { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;' },
+          message,
+        ),
+      );
 
       const okBtn = createPanelButton('OK', 'success');
       okBtn.onclick = () => {
@@ -64,10 +69,14 @@ export const notify = {
       const id = `dandelion-confirm-${Date.now()}`;
       const { panel, setHeader, remove } = createBasePanel(id);
 
-      panel.innerHTML = `
-        ${setHeader(title, '#60a5fa')}
-        <div style="font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;">${message}</div>
-      `;
+      panel.append(
+        setHeader(title, '#60a5fa'),
+        h(
+          'div',
+          { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;' },
+          message,
+        ),
+      );
 
       const btnContainer = document.createElement('div');
       btnContainer.style.display = 'flex';
@@ -98,10 +107,14 @@ export const notify = {
     const id = `dandelion-action-${Date.now()}`;
     const { panel, setHeader, remove } = createBasePanel(id);
 
-    panel.innerHTML = `
-      ${setHeader(title, '#ff4d4d')}
-      <div style="font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;">${message}</div>
-    `;
+    panel.append(
+      setHeader(title, '#ff4d4d'),
+      h(
+        'div',
+        { style: 'font-size: 11px; line-height: 1.4; opacity: 0.9; margin-bottom: 5px;' },
+        message,
+      ),
+    );
 
     actions.forEach((action) => {
       const btn = createPanelButton(action.label, action.type || 'default');
@@ -132,7 +145,7 @@ export const notify = {
       const { panel, setHeader, remove } = createBasePanel(id);
       let remaining = Math.ceil(duration / 1000);
 
-      panel.innerHTML = `${setHeader(title, '#60a5fa')}`;
+      panel.append(setHeader(title, '#60a5fa'));
 
       if (message) {
         const msgEl = document.createElement('div');

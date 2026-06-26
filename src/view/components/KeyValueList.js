@@ -19,6 +19,8 @@
  *   }
  * );
  */
+import { html } from '../../utils/dom';
+
 export class KeyValueList {
   /**
    * Creates a new KeyValueList instance
@@ -156,7 +158,7 @@ export class KeyValueList {
    * @returns {void}
    */
   render() {
-    this.container.innerHTML = '';
+    this.container.replaceChildren();
 
     // Create wrapper
     const wrapper = document.createElement('div');
@@ -165,11 +167,11 @@ export class KeyValueList {
     // Create header
     const header = document.createElement('div');
     header.className = 'kv-list-header';
-    header.innerHTML = `
-      <div class="kv-header-key">Kunci</div>
-      <div class="kv-header-value">Nilai</div>
-      <div class="kv-header-action"></div>
-    `;
+    header.append(
+      html`<div class="kv-header-key">Kunci</div>`,
+      html`<div class="kv-header-value">Nilai</div>`,
+      html`<div class="kv-header-action"></div>`,
+    );
     wrapper.appendChild(header);
 
     // Create items container

@@ -5,7 +5,7 @@
 export function skipButton() {
   const btn = document.createElement('button');
   btn.id = 'dandelion-zen-skip';
-  btn.innerHTML = '⏩ lewati';
+  btn.textContent = '⏩ lewati';
   btn.title = 'Skip to next form';
 
   const baseStyle = `

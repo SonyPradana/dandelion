@@ -157,7 +157,7 @@ export class KeywordList {
    * @returns {void}
    */
   render() {
-    this.listElement.innerHTML = '';
+    this.listElement.replaceChildren();
 
     this.items.forEach((item, index) => {
       const itemDiv = document.createElement('div');
@@ -168,7 +168,7 @@ export class KeywordList {
       // Drag handle
       const dragHandle = document.createElement('div');
       dragHandle.className = 'drag-handle';
-      dragHandle.innerHTML = '<span></span><span></span><span></span>';
+      for (let i = 0; i < 3; i++) dragHandle.appendChild(document.createElement('span'));
 
       // Keyword text
       const textSpan = document.createElement('span');

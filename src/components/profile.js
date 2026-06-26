@@ -39,10 +39,13 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
     const displayName = profileData.name || pKey.replace('profile', 'Profile ');
     const isActive = activeProfile === pKey;
 
-    btn.innerHTML = `
-      <span style="font-size: 8px; opacity: ${isActive ? '1' : '0.2'}">${isActive ? '●' : '○'}</span>
-      <span style="flex: 1;">${displayName}</span>
-    `;
+    const indicatorSpan = document.createElement('span');
+    indicatorSpan.style.cssText = `font-size: 8px; opacity: ${isActive ? '1' : '0.2'}`;
+    indicatorSpan.textContent = isActive ? '\u25CF' : '\u25CB';
+    const nameSpan = document.createElement('span');
+    nameSpan.style.cssText = 'flex: 1;';
+    nameSpan.textContent = displayName;
+    btn.append(indicatorSpan, nameSpan);
 
     btn.style.cssText = `
       padding: 8px 12px;

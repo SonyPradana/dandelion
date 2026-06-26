@@ -1,7 +1,7 @@
 export function sendButton() {
   const btn = document.createElement('button');
   btn.id = 'dandelion-send-btn';
-  btn.innerHTML = '✉️ kirim';
+  btn.textContent = '✉️ kirim';
   btn.title = 'Kirim form';
 
   const baseStyle = `

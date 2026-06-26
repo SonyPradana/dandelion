@@ -80,7 +80,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
       await skipQueue();
       skipBtn.style.opacity = '0.5';
       skipBtn.style.pointerEvents = 'none';
-      skipBtn.innerHTML = '✅ Skipped';
+      skipBtn.textContent = '✅ Skipped';
       setTimeout(() => controlPanel.remove(skipBtn), 1000);
 
       try {

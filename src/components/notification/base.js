@@ -56,7 +56,7 @@ export function createBasePanel(id) {
     `;
 
     const closeBtn = document.createElement('div');
-    closeBtn.innerHTML = '×';
+    closeBtn.textContent = '×';
     closeBtn.style.cssText = `
       position: absolute;
       top: 5px;
@@ -96,8 +96,11 @@ export function createBasePanel(id) {
      * @param {string} color
      */
     setHeader(text, color = '#ffd700') {
-      const headerHtml = `<div class="dandelion-panel-header" style="font-weight: bold; color: ${color}; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px; margin-bottom: 4px; font-size: 10px; letter-spacing: 0.5px;">${text.toUpperCase()}</div>`;
-      return headerHtml;
+      const el = document.createElement('div');
+      el.className = 'dandelion-panel-header';
+      el.style.cssText = `font-weight: bold; color: ${color}; border-bottom: 1px solid rgba(255,255,255,0.15); padding-bottom: 4px; margin-bottom: 4px; font-size: 10px; letter-spacing: 0.5px;`;
+      el.textContent = text.toUpperCase();
+      return el;
     },
     remove() {
       if (panel.classList.contains('dandelion-panel-hide')) return;

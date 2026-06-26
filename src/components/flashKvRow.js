@@ -44,7 +44,7 @@ export function addKvRow(container, key, value, onRowChange) {
 }
 
 export function rebuildKvRows(container, data, onRowChange) {
-  container.innerHTML = '';
+  container.replaceChildren();
   for (const [key, value] of Object.entries(data)) {
     addKvRow(container, key, String(value), onRowChange);
   }
