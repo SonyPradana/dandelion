@@ -31,7 +31,9 @@ export async function fillTanggalLahir(value) {
   const wrapper = document.getElementById('Tanggal Lahir');
   if (!wrapper) return false;
 
-  wrapper.querySelector('.mx-input-wrapper').click();
+  const inputWrapper = wrapper.querySelector('.mx-input-wrapper');
+  if (!inputWrapper) return false;
+  inputWrapper.click();
   await wait(400);
 
   const popup = () => document.querySelector('.mx-datepicker-popup');
