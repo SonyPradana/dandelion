@@ -68,11 +68,11 @@ describe('validateTanggalLahir', () => {
   });
 
   it('should return error for age > 120', () => {
-    expect(validateTanggalLahir('Tanggal Lahir', '12-07-1800')).toContain('tidak masuk akal');
+    expect(validateTanggalLahir('Tanggal Lahir', '12-07-1800')).toContain('tidak sesuai');
   });
 
   it('should return error for future date', () => {
-    expect(validateTanggalLahir('Tanggal Lahir', '12-07-2099')).toContain('tidak masuk akal');
+    expect(validateTanggalLahir('Tanggal Lahir', '12-07-2099')).toContain('tidak sesuai');
   });
 });
 
@@ -191,12 +191,12 @@ describe('validateRegisterFormFields', () => {
 
     it('should error for date with unreasonable age (> 120)', () => {
       const errors = validateRegisterFormFields({ 'Tanggal Lahir': '12-07-1800' });
-      expect(errors.some((e) => e.message.includes('tidak masuk akal'))).toBe(true);
+      expect(errors.some((e) => e.message.includes('tidak sesuai'))).toBe(true);
     });
 
     it('should error for future birth date', () => {
       const errors = validateRegisterFormFields({ 'Tanggal Lahir': '12-07-2099' });
-      expect(errors.some((e) => e.message.includes('tidak masuk akal'))).toBe(true);
+      expect(errors.some((e) => e.message.includes('tidak sesuai'))).toBe(true);
     });
 
     it('should skip when empty', () => {

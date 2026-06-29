@@ -62,7 +62,7 @@ export function validateTanggalLahir(_key, value) {
   const date = parseDate(value);
   if (!date) return 'Format tanggal lahir harus DD-MM-YYYY';
   const age = diffYears(date, new Date());
-  if (age < 0 || age > 120) return 'Tanggal lahir tidak masuk akal';
+  if (age < 0 || age > 120) return 'Tanggal lahir tidak sesuai';
   return null;
 }
 

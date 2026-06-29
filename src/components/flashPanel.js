@@ -1,3 +1,4 @@
+import { h } from '../utils/dom';
 import { createBasePanel, createPanelButton } from './notification/base';
 import { notify } from './notification';
 import { setFlashData, clearFlashData } from '../utils/flashSession';
@@ -191,13 +192,19 @@ export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey, v
     if (validate) {
       const errors = validate(data);
       if (errors.length > 0) {
-        notify.info(
-          'Register Form',
-          '<ul style="margin:0;padding-left:16px;list-style:disc;line-height:1.6">' +
-            errors.map((e) => '<li><b>' + e.key + '</b>: ' + e.message + '</li>').join('') +
-            '</ul>',
-          3000,
+        const { contentArea, setHeader, remove } = createBasePanel(
+          `dandelion-validation-${Date.now()}-${Math.random()}`,
         );
+        contentArea.append(
+          setHeader('Register Form', '#4ade80'),
+          h(
+            'ul',
+            { style: 'margin:0;padding-left:16px;list-style:disc;line-height:1.6' },
+            ...errors.map((e) => h('li', null, h('b', null, e.key), ': ' + e.message)),
+          ),
+        );
+        setTimeout(remove, 3000);
+        return;
       }
     }
 
