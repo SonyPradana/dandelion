@@ -185,7 +185,7 @@ export async function initializeRegisterForm() {
       'button.absolute.right-4.top-3.cursor-pointer.p-1.btn-transparent',
     );
     if (closeBtn) closeBtn.click();
-    if (message) alert(message);
+    if (message) notify.alert('Register Form', message);
   }
 
   controlPanel.mount(monkeyBtn, 1);
