@@ -30,7 +30,7 @@ export function button(id) {
 
   const tombol = document.createElement('button');
   tombol.id = id;
-  tombol.innerHTML = '🙈';
+  tombol.textContent = '🙈';
   tombol.style.cssText = `
       padding: 0.75rem 1.25rem;
       background: rgb(253, 255, 153);

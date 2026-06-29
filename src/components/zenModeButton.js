@@ -6,7 +6,7 @@
 export function zenModeButton(isActive = false) {
   const btn = document.createElement('button');
   btn.id = 'dandelion-zen-mode-toggle';
-  btn.innerHTML = '⚡';
+  btn.textContent = '⚡';
   btn.title = 'Zen Mode';
 
   const styleId = 'dandelion-zen-mode-style';

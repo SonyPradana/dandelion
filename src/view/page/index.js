@@ -2,6 +2,7 @@ import browser from '@bridge/browser';
 import { store } from '../../store.js';
 import { showAgreementPopup } from '../../components/agreementPopup';
 import { AGREEMENT_SECTIONS_HTML } from '../../agreement-text';
+import { h, html, fragment } from '../../utils/dom';
 import { KeywordList } from '../components/KeywordList.js';
 import { KeyValueList } from '../components/KeyValueList.js';
 import { ProfileManager } from '../components/ProfileManager.js';
@@ -280,19 +281,51 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Produktifitas Tab Logic ---
   function rd(current, prev) {
-    if (prev === null || prev === undefined) return `<span class="pv">${current}</span>`;
-    if (prev === 0 && current === 0) return '<span class="pv zero">0</span>';
-    if (prev === 0)
-      return `<span class="pv">${current}</span> <span class="pd pos">(+${current})</span>`;
+    const pv = document.createElement('span');
+    pv.className = 'pv';
+    if (prev === null || prev === undefined) {
+      pv.textContent = String(current);
+      return pv;
+    }
+    if (prev === 0 && current === 0) {
+      pv.className = 'pv zero';
+      pv.textContent = '0';
+      return pv;
+    }
     const d = current - prev;
-    if (d === 0) return `<span class="pv">${current}</span>`;
-    if (d > 0) return `<span class="pv">${current}</span> <span class="pd pos">(+${d})</span>`;
-    return `<span class="pv">${current}</span> <span class="pd neg">(${d})</span>`;
+    if (d === 0) {
+      pv.textContent = String(current);
+      return pv;
+    }
+    pv.textContent = String(current);
+    const pd = document.createElement('span');
+    if (d > 0) {
+      pd.className = 'pd pos';
+      pd.textContent = `(+${d})`;
+    } else {
+      pd.className = 'pd neg';
+      pd.textContent = `(${d})`;
+    }
+    const frag = document.createDocumentFragment();
+    frag.appendChild(pv);
+    frag.appendChild(document.createTextNode(' '));
+    frag.appendChild(pd);
+    return frag;
+  }
+
+  function prodRow(label, value, overallLabel) {
+    const valueSpan = h('span', { className: 'value' }, value);
+    if (overallLabel !== undefined) {
+      valueSpan.append(h('span', { className: 'po' }, `/ ${overallLabel}`));
+    }
+    return h('div', { className: 'prod-row' }, h('span', { className: 'label' }, label), valueSpan);
   }
 
   async function renderProduktifitas() {
     const container = document.getElementById('produktifitas-page-content');
     if (!container) return;
+
+    container.replaceChildren();
 
     const [today, yesterday, overall, history] = await Promise.all([
       getTodaySummary(),
@@ -323,39 +356,91 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const maxVal = Math.max(1, ...rangeData.map((d) => (d ? d.dayTotal : 0)));
 
-    // --- Layout: Grid 2 kolom ---
-    let html = '<div class="prod-grid"><div class="prod-col">';
+    const leftCol = html`<div class="prod-col"></div>`;
+    const rightCol = html`<div class="prod-col"></div>`;
 
-    // Kolom kiri: Hari Ini
-    html += '<div class="prod-col-header">Hari Ini</div>';
+    leftCol.appendChild(html`<div class="prod-col-header">Hari Ini</div>`);
+
     if (today) {
-      html += `
-        <div class="prod-row"><span class="label">📻 Radio</span><span class="value">${rd(today.counts.radio, prev?.radio ?? null)}<span class="po">/ ${overall.counts.radio.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">📝 Teks</span><span class="value">${rd(today.counts.freetext, prev?.freetext ?? null)}<span class="po">/ ${overall.counts.freetext.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">📋 Dropdown</span><span class="value">${rd(today.counts.dropdown, prev?.dropdown ?? null)}<span class="po">/ ${overall.counts.dropdown.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">❌ Tidak Periksa</span><span class="value">${rd(today.counts.formNotChecked, prev?.formNotChecked ?? null)}<span class="po">/ ${overall.counts.formNotChecked.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">🧘 Zen</span><span class="value">${rd(today.counts.formZen, prev?.formZen ?? null)}<span class="po">/ ${overall.counts.formZen.toLocaleString()}</span></span></div>
-        <div class="prod-row"><span class="label">📝 Register</span><span class="value">${rd(today.counts.registerForm, prev?.registerForm ?? null)}<span class="po">/ ${overall.counts.registerForm.toLocaleString()}</span></span></div>
-        <div class="prod-total"><span>Total</span><span>${rd(today.dayTotal, yesterday?.dayTotal ?? null)}<span class="po">/ ${overall.grandTotal.toLocaleString()}</span></span></div>
-      `;
+      leftCol.append(
+        prodRow(
+          '📻 Radio',
+          rd(today.counts.radio, prev?.radio ?? null),
+          overall.counts.radio.toLocaleString(),
+        ),
+        prodRow(
+          '📝 Teks',
+          rd(today.counts.freetext, prev?.freetext ?? null),
+          overall.counts.freetext.toLocaleString(),
+        ),
+        prodRow(
+          '📋 Dropdown',
+          rd(today.counts.dropdown, prev?.dropdown ?? null),
+          overall.counts.dropdown.toLocaleString(),
+        ),
+        prodRow(
+          '❌ Tidak Periksa',
+          rd(today.counts.formNotChecked, prev?.formNotChecked ?? null),
+          overall.counts.formNotChecked.toLocaleString(),
+        ),
+        prodRow(
+          '🧘 Zen',
+          rd(today.counts.formZen, prev?.formZen ?? null),
+          overall.counts.formZen.toLocaleString(),
+        ),
+        prodRow(
+          '📝 Register',
+          rd(today.counts.registerForm, prev?.registerForm ?? null),
+          overall.counts.registerForm.toLocaleString(),
+        ),
+        h(
+          'div',
+          { className: 'prod-total' },
+          html`<span>Total</span>`,
+          h(
+            'span',
+            null,
+            rd(today.dayTotal, yesterday?.dayTotal ?? null),
+            h('span', { className: 'po' }, `/ ${overall.grandTotal.toLocaleString()}`),
+          ),
+        ),
+      );
     } else {
-      html += '<div class="prod-row" style="color:#999">Belum ada data hari ini.</div>';
+      const emptyRow = document.createElement('div');
+      emptyRow.className = 'prod-row';
+      emptyRow.style.color = '#999';
+      emptyRow.textContent = 'Belum ada data hari ini.';
+      leftCol.appendChild(emptyRow);
     }
 
-    html += '</div><div class="prod-col">';
-
-    // Kolom kanan: Progress + Ringkasan
-    html += '<div class="prod-col-header">Ringkasan</div>';
-    html += `
-      <div class="prod-row"><span class="label">🏆 Grand Total</span><span class="value">${overall.grandTotal.toLocaleString()}</span></div>
-      <div class="prod-row"><span class="label">📆 Hari Aktif</span><span class="value">${overall.activeDays}</span></div>
-      <div class="prod-row"><span class="label">⚡ Rata-rata/hari</span><span class="value">${overall.average}</span></div>
-      <div style="margin-top:12px">
-        <div class="prod-header">Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)</div>
-        <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%"></div></div>
-        <div style="font-size:12px;color:#888;margin-top:4px">${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin</div>
-      </div>
-    `;
+    rightCol.append(html`<div class="prod-col-header">Ringkasan</div>`);
+    rightCol.append(
+      prodRow('🏆 Grand Total', overall.grandTotal.toLocaleString()),
+      prodRow('📆 Hari Aktif', String(overall.activeDays)),
+      prodRow('⚡ Rata-rata/hari', overall.average),
+      h(
+        'div',
+        { style: 'margin-top:12px' },
+        h(
+          'div',
+          { className: 'prod-header' },
+          `Progress ${periodLabel} Ini (target ${MONTHLY_TARGET.toLocaleString()} poin)`,
+        ),
+        h(
+          'div',
+          { className: 'prod-bar-track' },
+          h('div', {
+            className: 'prod-bar-fill',
+            style: `width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%`,
+          }),
+        ),
+        h(
+          'div',
+          { style: 'font-size:12px;color:#888;margin-top:4px' },
+          `${periodTotal.toLocaleString()} / ${MONTHLY_TARGET.toLocaleString()} poin`,
+        ),
+      ),
+    );
 
     const licStatus = getStatus();
     if (!licStatus.isFreePlan && licStatus.payload) {
@@ -386,45 +471,66 @@ document.addEventListener('DOMContentLoaded', async () => {
         const d = new Date(ts * 1000);
         return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
       };
-      html += `
-        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
-          <div class="prod-header" style="color:#065f46">🏅 Total Limit (Pro Tier)</div>
-          <div class="prod-bar-track"><div class="prod-bar-fill" style="width:${totalPct}%"></div></div>
-          <div style="font-size:12px;color:#888;margin-top:4px">${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)</div>
-          <div style="font-size:12px;color:#888;margin-top:8px">Periode Token: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}</div>
-        </div>
-      `;
+      rightCol.append(
+        h(
+          'div',
+          { style: 'margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb' },
+          h(
+            'div',
+            { className: 'prod-header', style: 'color:#065f46' },
+            '🏅 Total Limit (Pro Tier)',
+          ),
+          h(
+            'div',
+            { className: 'prod-bar-track' },
+            h('div', { className: 'prod-bar-fill', style: `width:${totalPct}%` }),
+          ),
+          h(
+            'div',
+            { style: 'font-size:12px;color:#888;margin-top:4px' },
+            `${usedInLicense.toLocaleString()} / ${totalLimit.toLocaleString()} poin (sejak lisensi)`,
+          ),
+          h(
+            'div',
+            { style: 'font-size:12px;color:#888;margin-top:8px' },
+            `Periode Token: ${fmtDate(p.iat)} - ${fmtDate(p.exp)}`,
+          ),
+        ),
+      );
     } else {
-      html += `
-        <div style="margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb">
-          <div class="prod-header" style="color:#92400e">🆓 Free Tier</div>
-          <div style="font-size:12px;color:#888">50 poin/hari · tanpa total limit</div>
-        </div>
-      `;
+      rightCol.append(
+        h(
+          'div',
+          { style: 'margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb' },
+          html`<div class="prod-header" style="color:#92400e">🆓 Free Tier</div>`,
+          html`<div style="font-size:12px;color:#888">50 poin/hari · tanpa total limit</div>`,
+        ),
+      );
     }
 
-    html += '</div></div>';
+    const grid = h('div', { className: 'prod-grid' }, leftCol, rightCol);
+    container.appendChild(grid);
 
-    html += `
-      <div class="prod-chart-section">
-        <h3>Grafik Produktivitas ${chartDays}H Terakhir</h3>
-        <div class="prod-chart">
-    `;
-
-    for (const day of rangeData) {
-      const pct = day ? Math.round((day.dayTotal / maxVal) * 100) : 0;
-      const label = day ? day.date.slice(5) : '';
-      html += `
-        <div class="prod-chart-bar-wrapper">
-          <div class="prod-chart-bar" style="height:${Math.max(pct, 2)}%"></div>
-          <div class="prod-chart-label">${label}</div>
-        </div>
-      `;
-    }
-
-    html += '</div></div>';
-
-    container.innerHTML = html;
+    const chartSection = h(
+      'div',
+      { className: 'prod-chart-section' },
+      h('h3', null, `Grafik Produktivitas ${chartDays}H Terakhir`),
+      h(
+        'div',
+        { className: 'prod-chart' },
+        ...rangeData.map((day) => {
+          const pct = day ? Math.round((day.dayTotal / maxVal) * 100) : 0;
+          const label = day ? day.date.slice(5) : '';
+          return h(
+            'div',
+            { className: 'prod-chart-bar-wrapper' },
+            h('div', { className: 'prod-chart-bar', style: `height:${Math.max(pct, 2)}%` }),
+            h('div', { className: 'prod-chart-label' }, label),
+          );
+        }),
+      ),
+    );
+    container.appendChild(chartSection);
   }
 
   const produktifitasTab = document.querySelector('.tab-btn[data-tab="produktifitas"]');
@@ -445,18 +551,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById('license-page-content');
     if (!container) return;
 
+    container.replaceChildren();
+
     const status = getStatus();
     const remaining = await getRemainingToday();
     const jwt = await getToken();
 
     const isFree = status.isFreePlan;
-    const badge = isFree
-      ? '<span class="license-badge free">FREE</span>'
-      : '<span class="license-badge pro">PRO</span>';
     const statusText = isFree ? 'Free Tier (50 poin/hari)' : 'Pro Tier';
     const statusClass = isFree ? 'free' : 'pro';
 
-    let infoHtml = '';
+    const badge = h('span', { className: `license-badge ${statusClass}` }, isFree ? 'FREE' : 'PRO');
+
+    const deviceId = getDeviceId();
+
+    const statusDiv = h(
+      'div',
+      { className: `license-status ${statusClass}` },
+      badge,
+      ` ${statusText}`,
+    );
+    container.appendChild(statusDiv);
+
+    const deviceSection = h(
+      'div',
+      { className: 'device-id-section' },
+      html`<div class="device-id-label">Device ID</div>`,
+      h(
+        'div',
+        { className: 'device-id-row' },
+        h('span', { className: 'device-id-value' }, deviceId || '-'),
+        html`<button class="device-id-copy" id="device-id-copy-btn">Salin</button>`,
+      ),
+      html`<div class="device-id-hint">Gunakan ID ini untuk mendapatkan token</div>`,
+    );
+    container.appendChild(deviceSection);
+
     if (!isFree && status.payload) {
       const p = status.payload;
       const expDate = p.exp ? new Date(p.exp * 1000).toLocaleDateString('id-ID') : '-';
@@ -466,39 +596,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         Array.isArray(p.version_allowed) && p.version_allowed.length > 0
           ? p.version_allowed.join(', ')
           : '-';
-      infoHtml = `
-        <div class="license-info-grid">
-          <div class="license-info-item"><div class="label">Total Limit</div><div class="value">${(p.total_limit ?? 0).toLocaleString()}</div></div>
-          <div class="license-info-item"><div class="label">Grace Daily</div><div class="value">${(p.daily_limit ?? 100).toLocaleString()}</div></div>
-          <div class="license-info-item"><div class="label">Berlaku Sampai</div><div class="value">${expDate}</div></div>
-          <div class="license-info-item"><div class="label">Sisa Hari Ini</div><div class="value">${remaining.toLocaleString()}</div></div>
-          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Fitur</div><div class="value">${featList}</div></div>
-          <div class="license-info-item" style="grid-column:1/-1"><div class="label">Versi Diizinkan</div><div class="value">${verList}</div></div>
-        </div>
-      `;
+      container.appendChild(
+        h(
+          'div',
+          { className: 'license-info-grid' },
+          h(
+            'div',
+            { className: 'license-info-item' },
+            h('div', { className: 'label' }, 'Total Limit'),
+            h('div', { className: 'value' }, (p.total_limit ?? 0).toLocaleString()),
+          ),
+          h(
+            'div',
+            { className: 'license-info-item' },
+            h('div', { className: 'label' }, 'Grace Daily'),
+            h('div', { className: 'value' }, (p.daily_limit ?? 100).toLocaleString()),
+          ),
+          h(
+            'div',
+            { className: 'license-info-item' },
+            h('div', { className: 'label' }, 'Berlaku Sampai'),
+            h('div', { className: 'value' }, expDate),
+          ),
+          h(
+            'div',
+            { className: 'license-info-item' },
+            h('div', { className: 'label' }, 'Sisa Hari Ini'),
+            h('div', { className: 'value' }, remaining.toLocaleString()),
+          ),
+          h(
+            'div',
+            { className: 'license-info-item', style: 'grid-column:1/-1' },
+            h('div', { className: 'label' }, 'Fitur'),
+            h('div', { className: 'value' }, featList),
+          ),
+          h(
+            'div',
+            { className: 'license-info-item', style: 'grid-column:1/-1' },
+            h('div', { className: 'label' }, 'Versi Diizinkan'),
+            h('div', { className: 'value' }, verList),
+          ),
+        ),
+      );
     }
 
-    const deviceId = getDeviceId();
-
-    container.innerHTML = `
-      <div class="license-status ${statusClass}">${badge} ${statusText}</div>
-      <div class="device-id-section">
-        <div class="device-id-label">Device ID</div>
-        <div class="device-id-row">
-          <span class="device-id-value">${deviceId || '-'}</span>
-          <button class="device-id-copy" id="device-id-copy-btn">Salin</button>
-        </div>
-        <div class="device-id-hint">Gunakan ID ini untuk mendapatkan token</div>
-      </div>
-      ${infoHtml}
-      <div class="pane-title">Aktifkan Token</div>
-      <textarea class="license-jwt-input" id="quota-jwt-input" placeholder="Tempel token (JWT) di sini...">${jwt || ''}</textarea>
-      <div class="license-actions">
-        <button class="license-btn activate" id="quota-activate-btn">Aktifkan</button>
-        <button class="license-btn remove" id="quota-remove-btn" ${isFree ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>Hapus Token</button>
-      </div>
-      <div class="license-message" id="quota-message"></div>
-    `;
+    container.append(
+      html`<div class="pane-title">Aktifkan Token</div>`,
+      h('textarea', {
+        className: 'license-jwt-input',
+        id: 'quota-jwt-input',
+        placeholder: 'Tempel token (JWT) di sini...',
+        value: jwt || '',
+      }),
+      h(
+        'div',
+        { className: 'license-actions' },
+        h('button', { className: 'license-btn activate', id: 'quota-activate-btn' }, 'Aktifkan'),
+        h(
+          'button',
+          {
+            className: 'license-btn remove',
+            id: 'quota-remove-btn',
+            disabled: isFree,
+            style: isFree ? 'opacity:0.4;cursor:not-allowed' : '',
+          },
+          'Hapus Token',
+        ),
+      ),
+      html`<div class="license-message" id="quota-message"></div>`,
+    );
 
     document.getElementById('device-id-copy-btn')?.addEventListener('click', async () => {
       const btn = document.getElementById('device-id-copy-btn');
@@ -559,11 +725,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const persetujuanContent = document.getElementById('persetujuan-content');
   if (persetujuanContent) {
-    persetujuanContent.innerHTML = `
-      <div class="overview">
-        ${AGREEMENT_SECTIONS_HTML}
-      </div>
-    `;
+    persetujuanContent.appendChild(
+      h('div', { className: 'overview' }, fragment(AGREEMENT_SECTIONS_HTML)),
+    );
   }
 
   exportLink.addEventListener('click', (event) => {
