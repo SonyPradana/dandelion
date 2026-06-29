@@ -199,6 +199,7 @@ export async function initializeRegisterForm() {
     await clearRegisterFormFlashData();
     const flashPanel = document.getElementById('dandelion-flash-data');
     if (flashPanel) flashPanel.remove();
+    document.querySelector('[id^="dandelion-action-"]')?.remove();
     const closeBtn = document.querySelector(
       'button.absolute.right-4.top-3.cursor-pointer.p-1.btn-transparent',
     );
