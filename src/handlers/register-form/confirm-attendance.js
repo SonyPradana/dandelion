@@ -110,7 +110,7 @@ export async function confirmAttendance(nik) {
   const ticketDiv = Array.from(successModal.querySelectorAll('div')).find((d) =>
     d.textContent.includes('No. Tiket:'),
   );
-  const ticket = ticketDiv ? ticketDiv.textContent.trim() : null;
+  const ticket = ticketDiv ? ticketDiv.textContent.trim().slice(11) : null;
 
   const tutup = findTutup(successModal);
   if (tutup) tutup.click();

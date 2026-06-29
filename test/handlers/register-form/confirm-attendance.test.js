@@ -87,7 +87,7 @@ describe('confirmAttendance', () => {
       const nik = '3322185207660004';
       const promise = confirmAttendance(nik);
       await vi.advanceTimersByTimeAsync(3000);
-      expect(await promise).toBe('No. Tiket: ABC-123');
+      expect(await promise).toBe('ABC-123');
     });
   });
 
@@ -242,7 +242,7 @@ describe('confirmAttendance', () => {
 
       const promise = confirmAttendance('3322185207660004');
       await vi.advanceTimersByTimeAsync(10_000);
-      expect(await promise).toBe('No. Tiket: ABC-123');
+      expect(await promise).toBe('ABC-123');
     });
   });
 });

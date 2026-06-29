@@ -5,7 +5,7 @@ import { addKvRow, rebuildKvRows, S } from './flashKvRow';
 
 const PANEL_ID = 'dandelion-flash-data';
 
-export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey } = {}) {
+export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey, validate } = {}) {
   const _setData = setData || setFlashData;
   const _clearData = clearData || clearFlashData;
   const existing = document.getElementById(PANEL_ID);
@@ -186,6 +186,19 @@ export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey } 
         normalized[normalizeKey(k)] = v;
       }
       data = normalized;
+    }
+
+    if (validate) {
+      const errors = validate(data);
+      if (errors.length > 0) {
+        notify.info(
+          'Register Form',
+          '<ul style="margin:0;padding-left:16px;list-style:disc;line-height:1.6">' +
+            errors.map((e) => '<li><b>' + e.key + '</b>: ' + e.message + '</li>').join('') +
+            '</ul>',
+          3000,
+        );
+      }
     }
 
     _clearData();

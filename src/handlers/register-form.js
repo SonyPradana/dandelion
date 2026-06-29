@@ -8,6 +8,7 @@ import {
   getRegisterFormFlashData,
   clearRegisterFormFlashData,
 } from '../utils/registerFormFlashSession.js';
+import { validateRegisterFormFields } from '../utils/registerFormValidator.js';
 import { fillByCheckId } from './register-form/fill-by-check-id.js';
 import { clickCekNik, waitForCekNikResponse } from './register-form/click-check-nik.js';
 import { fillTanggalPemeriksaan } from './register-form/fill-examination-date.js';
@@ -41,6 +42,7 @@ export async function initializeRegisterForm() {
       setData: setRegisterFormFlashData,
       clearData: clearRegisterFormFlashData,
       onSave: () => notify.info('Register Form', 'Flash data tersimpan', 1500),
+      validate: validateRegisterFormFields,
     });
 
     waitForModal().then(() => {
