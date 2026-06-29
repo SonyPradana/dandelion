@@ -67,6 +67,15 @@ function waitForSubmitResult(timeout = 7000) {
             }
           }
         }
+
+        if (content.textContent.includes('Data peserta tidak valid')) {
+          const btns = content.querySelectorAll('button');
+          for (const btn of btns) {
+            if (btn.textContent.trim() === 'Periksa Kembali') {
+              return resolve({ type: 'blocked', btn });
+            }
+          }
+        }
       }
       if (Date.now() - start > timeout) return resolve({ type: 'timeout' });
       setTimeout(poll, 200);

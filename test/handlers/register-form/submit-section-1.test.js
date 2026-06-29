@@ -106,6 +106,22 @@ describe('submitSection1', () => {
         expect(await promise).toBe('blocked');
       },
     );
+
+    it(
+      'should return "blocked" when "Data peserta tidak valid" modal appears',
+      { timeout: 15_000 },
+      async () => {
+        document.body.appendChild(makeSubmitButton());
+
+        setTimeout(() => {
+          document.body.appendChild(makeResultModal('Data peserta tidak valid', 'Periksa Kembali'));
+        }, 500);
+
+        const promise = submitSection1();
+        await vi.advanceTimersByTimeAsync(7000);
+        expect(await promise).toBe('blocked');
+      },
+    );
   });
 
   describe('kuota habis modal', () => {
