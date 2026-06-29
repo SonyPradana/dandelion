@@ -12,7 +12,9 @@ describe('fillByCheckId', () => {
     document.body.appendChild(input);
 
     let dispatched = false;
-    input.addEventListener('input', () => { dispatched = true; });
+    input.addEventListener('input', () => {
+      dispatched = true;
+    });
 
     const result = fillByCheckId('nik', '1234567890');
 
@@ -32,7 +34,9 @@ describe('fillByCheckId', () => {
     document.body.appendChild(textarea);
 
     let dispatched = false;
-    textarea.addEventListener('input', () => { dispatched = true; });
+    textarea.addEventListener('input', () => {
+      dispatched = true;
+    });
 
     const result = fillByCheckId('alamat', 'Jalan Merdeka No.1');
 
@@ -49,7 +53,9 @@ describe('fillByCheckId', () => {
     document.body.appendChild(parent);
 
     let capturedOnParent = false;
-    parent.addEventListener('input', () => { capturedOnParent = true; });
+    parent.addEventListener('input', () => {
+      capturedOnParent = true;
+    });
 
     fillByCheckId('test', 'value');
     expect(capturedOnParent).toBe(true);

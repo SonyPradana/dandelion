@@ -1,4 +1,4 @@
-<!-- Fixture: Modal pendaftaran individu (Vue rendered) -->
+<!-- Fixture: Modal pendaftaran individu (test fixture) -->
 
 <!-- Toast "Data Tidak Ditemukan" -->
 <div id="toast--response-fetch" class="show">
@@ -16,10 +16,7 @@
     </svg>
     <div class="text-left font-bold">Data Tidak Ditemukan</div>
     <div></div>
-    <div class="text-left">
-      Peserta belum pernah terdaftar di Pemeriksaan Kesehatan Gratis. Silakan isi data peserta
-      secara manual untuk melanjutkan pendaftaran
-    </div>
+    <div class="text-left">Contoh not found message for testing purpose only.</div>
   </div>
 </div>
 
@@ -43,8 +40,8 @@
     </button>
 
     <div class="p-2">
-      <div class="text-[24px] font-bold">Formulir Pendaftaran</div>
-      <div class="text-base">Pastikan isi data sesuai dengan KTP/KK.</div>
+      <div class="text-[24px] font-bold">Contoh Form Title</div>
+      <div class="text-base">Contoh subtitle for registration form fixture.</div>
 
       <!-- Stepper (Section 1 state: bar 1 green, bar 2 light) -->
       <div class="stepper section-1-state w-full grid grid-cols-2 gap-2 my-5">
@@ -58,18 +55,18 @@
           <div class="step-1 w-full h-[8px] border border-1 border-rd-xl bg-[#16B3AC]"></div>
           <div class="step-1 w-full h-[8px] border border-1 border-rd-xl bg-[#16B3AC]"></div>
         </div>
-        <div class="text-[18px] font-bold text-[#141313]">Isi data pendukung</div>
+        <div class="text-[18px] font-bold text-[#141313]">Contoh Section Title</div>
         <div class="text-[14px] text-[#313336]">
-          Silakan lengkapi informasi pendukung untuk keperluan layanan CKG.
+          Contoh section description for testing purposes.
         </div>
       </div>
 
       <!-- Section 1 Content -->
       <div id="section-1-content">
         <div>
-          <div class="text-[18px] font-bold text-[#141313]">Isi identitas</div>
+          <div class="text-[18px] font-bold text-[#141313]">Contoh Identity Section</div>
           <div class="text-[14px] text-[#313336]">
-            Silakan lengkapi data peserta dan wali (jika diperlukan).
+            Contoh instruction text for identity section.
           </div>
         </div>
 
@@ -79,7 +76,7 @@
         >
           <div class="flex gap-2 items-center">
             <img src="/images/icons/warning.png" class="w-5 h-5" />
-            <div>Nama yang diisi harus sama persis dengan Kartu Tanda Penduduk (KTP)</div>
+            <div>Contoh warning: fill data correctly according to ID card.</div>
           </div>
         </div>
 
@@ -90,7 +87,7 @@
               <div class="flex gap-5 w-full lt-sm:flex-col">
                 <!-- Kiri: Data Peserta -->
                 <div class="flex flex-col gap-3 w-full">
-                  <div class="text-[20px] font-bold">Data Peserta</div>
+                  <div class="text-[20px] font-bold">Contoh Participant Data</div>
 
                   <!-- NIK -->
                   <div class="w-full flex flex-col gap-1">
@@ -105,7 +102,7 @@
                             type="text"
                             class="form-input border-gray-3 focus-within:border-black"
                             name="NIK"
-                            placeholder="Masukkan NIK"
+                            placeholder="Enter contoh NIK"
                             autocomplete="off"
                             maxlength="16"
                           />
@@ -132,7 +129,7 @@
                           class="border-gray"
                           value="false"
                         />
-                        <div class="mb-0 text-sm font-semibold">Tidak punya NIK</div>
+                        <div class="mb-0 text-sm font-semibold">Contoh no NIK option</div>
                       </div>
                     </div>
                   </div>
@@ -148,7 +145,7 @@
                         type="text"
                         class="form-input border-gray-3 focus-within:border-black"
                         name="Nama"
-                        placeholder="Masukkan nama lengkap"
+                        placeholder="Enter contoh name"
                         autocomplete="off"
                         maxlength="300"
                       />
@@ -165,7 +162,7 @@
                     >
                       <div class="mx-datepicker">
                         <div class="mx-input-wrapper">
-                          <div class="ml-4 truncate text-gray-4">Pilih tanggal lahir</div>
+                          <div class="ml-4 truncate text-gray-4">Contoh date placeholder</div>
                           <i class="mx-icon-calendar">
                             <svg width="20px" height="20px" viewBox="0 0 24 24">
                               <path
@@ -190,7 +187,7 @@
                       <div
                         class="h-[2.9rem] w-full flex gap-2 cursor-pointer items-center justify-start overflow-hidden border-none bg-transparent pl-4 text-sm focus:outline-none text-gray-4"
                       >
-                        <span class="line-clamp-2 text-gray-4">Pilih jenis kelamin</span>
+                        <span class="line-clamp-2 text-gray-4">Contoh gender placeholder</span>
                       </div>
                       <div class="m-auto h-full flex-none p-2">
                         <svg width="20px" height="20px" viewBox="0 0 24 24">
@@ -220,7 +217,7 @@
                           type="text"
                           class="w-full form-input rounded-l-none"
                           name="Nomor Whatsapp"
-                          placeholder="Masukkan nomor whatsapp"
+                          placeholder="Enter contoh WA"
                           autocomplete="off"
                           maxlength="300"
                         />
@@ -234,7 +231,7 @@
                         class="w-[16.67px] h-[16.67px]"
                       />
                       <div class="text-[12px] font-400 text-[#313336]">
-                        Informasi terkait Cek Kesehatan Gratis akan dikirim ke nomor ini.
+                        Contoh info text about whatsapp notifications.
                       </div>
                     </div>
                   </div>
@@ -242,7 +239,7 @@
 
                 <!-- Kanan: Tanggal Pemeriksaan -->
                 <div class="flex flex-col gap-3 w-full">
-                  <div class="text-[20px] font-bold">Tanggal Pemeriksaan</div>
+                  <div class="text-[20px] font-bold">Contoh Exam Date</div>
                   <div class="relative p-3 pt-2 border rounded-md bg-white shadow-gmail">
                     <div class="flex justify-between items-center mb-4">
                       <div class="flex items-center">
@@ -285,8 +282,8 @@
                     <div
                       class="grid grid-cols-7 gap-1 text-center text-[10px] text-[#7F8284] font-400"
                     >
-                      <span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span
-                      ><span>Kam</span><span>Jum</span><span>Sab</span>
+                      <span>D1</span><span>D2</span><span>D3</span><span>D4</span><span>D5</span
+                      ><span>D6</span><span>D7</span>
                     </div>
                     <div class="grid grid-cols-7 gap-1 mt-2">
                       <span class="text-gray-300 flex justify-center items-center text-[15px]"
@@ -326,16 +323,16 @@
         >
           <div class="flex gap-2 items-center">
             <img src="/images/icons/warning.png" class="w-5 h-5" />
-            <div>Nama yang diisi harus sama persis dengan Kartu Tanda Penduduk (KTP)</div>
+            <div>Contoh warning: fill data correctly.</div>
           </div>
           <div class="text-[12px] font-600 text-[#2196F3] ml-7 mt-1 cursor-pointer">
-            Lihat Petunjuk Pengisian Nama
+            Contoh link for filling instructions
           </div>
         </div>
         <form>
           <div class="flex gap-5 w-full lt-sm:flex-col">
             <div class="flex flex-col gap-3 w-full">
-              <div class="text-[20px] font-bold">Data Peserta</div>
+              <div class="text-[20px] font-bold">Contoh Participant Data</div>
 
               <!-- Status Pernikahan -->
               <div data-v-fa819537="" show-icon-reset="false" class="w-full">
@@ -352,7 +349,7 @@
                     class="h-[2.9rem] w-full flex gap-2 cursor-pointer items-center justify-start overflow-hidden border-none bg-transparent pl-4 text-sm focus:outline-none text-gray-4"
                   >
                     <span data-v-fa819537="" class="line-clamp-2 text-gray-4"
-                      >Pilih status pernikahan</span
+                      >Contoh status placeholder</span
                     >
                   </div>
                   <div data-v-fa819537="" class="m-auto h-full flex-none p-2">
@@ -388,7 +385,7 @@
                     class="h-[2.9rem] w-full flex gap-2 cursor-pointer items-center justify-start overflow-hidden border-none bg-transparent pl-4 text-sm focus:outline-none text-black"
                   >
                     <span data-v-fa819537="" class="line-clamp-2 text-black"
-                      >Tidak memiliki disabilitas</span
+                      >Contoh disability placeholder</span
                     >
                   </div>
                   <div data-v-fa819537="" class="m-auto h-full flex-none p-2">
@@ -425,7 +422,7 @@
                         data-v-0dd0c770=""
                         class="min-h-[2.9rem] w-full flex cursor-pointer items-center justify-start overflow-hidden border-none bg-transparent pl-4 text-sm focus:outline-none text-[#969BA2]"
                       >
-                        Pilih pekerjaan
+                        Contoh job placeholder
                       </div>
                       <div data-v-0dd0c770="" class="m-auto h-full flex-none p-2">
                         <svg
@@ -462,7 +459,7 @@
                       data-v-60d840db=""
                       class="min-h-[2.9rem] w-full flex cursor-pointer items-center justify-start overflow-hidden border-none bg-transparent pl-4 text-sm focus:outline-none text-[#969BA2]"
                     >
-                      Pilih alamat domisili
+                      Contoh address placeholder
                     </div>
                   </div>
                 </div>
@@ -481,7 +478,7 @@
                       rows="3"
                       class="h-auto p-4 form-input border-gray-3 focus-within:border-black"
                       name="detail-domisili"
-                      placeholder="Cth: Jl. Kenanga 14 no 92"
+                      placeholder="Contoh address detail"
                       autocomplete="on"
                       maxlength="60"
                     ></textarea>
@@ -533,12 +530,12 @@
               NIK
               <div class="text-[#141313] font-semibold">:</div>
             </div>
-            <div class="text-[#141313] font-semibold break-words">1234567890123456</div>
+            <div class="text-[#141313] font-semibold break-words">9999999999999999</div>
             <div class="lt-md:pl-5 flex justify-between">
               Nama lengkap
               <div class="text-[#141313] font-semibold">:</div>
             </div>
-            <div class="text-[#141313] font-semibold">JOHN DOE</div>
+            <div class="text-[#141313] font-semibold">NAMA CONTOH</div>
             <div class="lt-md:pl-5 flex justify-between">
               Tanggal lahir
               <div class="text-[#141313] font-semibold">:</div>
@@ -551,9 +548,7 @@
             <div class="text-[#141313] font-semibold">Laki-Laki</div>
           </div>
         </div>
-        <div class="py-3 w-full text-center">
-          Apakah Anda ingin menggunakan data ini untuk melanjutkan pendaftaran?
-        </div>
+        <div class="py-3 w-full text-center">Contoh: use this data to continue registration?</div>
         <div class="flex justify-center gap-2 font-600 text-base w-full mt-6">
           <button type="button" class="w-fill btn-outline-primary h-11">Isi Manual</button>
           <button type="button" class="w-fill btn-fill-primary h-11">Gunakan Data</button>

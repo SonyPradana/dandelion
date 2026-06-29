@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { clickCekNik, waitForCekNikResponse } from '../../../src/handlers/register-form/click-check-nik.js';
+import {
+  clickCekNik,
+  waitForCekNikResponse,
+} from '../../../src/handlers/register-form/click-check-nik.js';
 
 describe('clickCekNik', () => {
   beforeEach(() => {
@@ -83,7 +86,9 @@ describe('clickCekNik', () => {
 
   it('should not resolve before timeout when button never appears', async () => {
     let resolved = false;
-    clickCekNik().then(() => { resolved = true; });
+    clickCekNik().then(() => {
+      resolved = true;
+    });
 
     await vi.advanceTimersByTimeAsync(4000);
     expect(resolved).toBe(false);

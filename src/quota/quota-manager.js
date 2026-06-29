@@ -9,7 +9,14 @@ const FREE_PLAN = {
   daily_limit: 50,
 };
 
-const WEIGHTS = { radio: 1, freetext: 1, dropdown: 1, formNotChecked: 5, formZen: 5, registerForm: 100 };
+const WEIGHTS = {
+  radio: 1,
+  freetext: 1,
+  dropdown: 1,
+  formNotChecked: 5,
+  formZen: 5,
+  registerForm: 100,
+};
 const CATEGORIES = ['radio', 'freetext', 'dropdown', 'formNotChecked', 'formZen', 'registerForm'];
 
 const _state = {
