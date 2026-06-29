@@ -1,7 +1,6 @@
 import { controlPanel } from '../components/controlPanel.js';
 import { notify } from '../components/notification';
 import { button } from '../components/button.js';
-import { startButton } from '../components/startButton.js';
 import { showFlashDataPanel } from '../components/flashPanel.js';
 import {
   setRegisterFormFlashData,
@@ -28,8 +27,6 @@ export async function initializeRegisterForm() {
   const monkeyBtn = button('dandelion-register-form-btn');
   if (!monkeyBtn) return;
 
-  const mulaiBtn = startButton();
-
   monkeyBtn.addEventListener('click', async () => {
     closeSuccessModalIfOpen();
 
@@ -46,141 +43,160 @@ export async function initializeRegisterForm() {
     });
 
     waitForModal().then(() => {
-      mulaiBtn.setEnabled(true);
-      notify.info('Register Form', 'Modal siap, klik Mulai untuk isi form', 2000);
+      let isRunning = false;
+      const actionPanel = notify.action(
+        'Register Form',
+        'Isi data dengan lengkap dan sesuai',
+        [
+          {
+            label: 'Mulai',
+            type: 'success',
+            autoClose: false,
+            onClick: async () => {
+              if (isRunning) return;
+              isRunning = true;
+
+              const flashData = await getRegisterFormFlashData();
+              if (!flashData?.pinneds || Object.keys(flashData.pinneds).length === 0) {
+                notify.info('Register Form', 'Isi flash data panel dulu', 2000);
+                isRunning = false;
+                return;
+              }
+
+              const entries = Object.entries(flashData.pinneds);
+              const step = detectCurrentStep();
+
+              if (step === 'section-2') {
+                const section2Ok = await fillSection2(entries);
+                if (section2Ok) {
+                  const submitted2 = await submitSection2();
+                  if (submitted2) {
+                    const submitted3 = await submitSection3();
+                    if (submitted3) {
+                      const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
+                      if (nik) {
+                        const ticket = await confirmAttendance(nik);
+                        if (ticket) {
+                          await incrementBatch({ registerForm: 1 });
+                          await resetRegisterForm(null);
+                          notify.info('Register Form', `${ticket} — Berhasil Hadir`, 5000);
+                          actionPanel.remove();
+                        } else {
+                          notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
+                        }
+                      } else {
+                        notify.info('Register Form', 'Pendaftaran selesai', 3000);
+                      }
+                    } else {
+                      notify.alert('Register Form', 'Gagal di section 3', 3000);
+                    }
+                  } else {
+                    notify.alert('Register Form', 'Gagal submit section 2', 3000);
+                  }
+                }
+                isRunning = false;
+                return;
+              }
+
+              const nikEntry = entries.find(([id]) => id.toLowerCase() === 'nik');
+              const otherEntries = entries.filter(([id]) => id.toLowerCase() !== 'nik');
+              let dataDitemukan = false;
+              let count = 0;
+
+              if (nikEntry && fillByCheckId(nikEntry[0], nikEntry[1])) {
+                count++;
+                const clicked = await clickCekNik();
+                if (clicked) {
+                  const result = await waitForCekNikResponse();
+                  if (result === 'not-found') {
+                    notify.info('Cek NIK', 'Data baru, isi manual', 3000);
+                    for (const [id, value] of otherEntries) {
+                      if (fillByCheckId(id, value)) count++;
+                    }
+                  } else if (result === 'found') {
+                    dataDitemukan = await handleDataDitemukanModal();
+                    await new Promise((r) => setTimeout(r, 300));
+                  }
+                }
+              } else {
+                for (const [id, value] of entries) {
+                  if (fillByCheckId(id, value)) count++;
+                }
+              }
+
+              const jkEntry = entries.find(
+                ([id]) =>
+                  id.toLowerCase().includes('jenis') && id.toLowerCase().includes('kelamin'),
+              );
+              if (!dataDitemukan && jkEntry && (await fillJenisKelamin(jkEntry[1]))) count++;
+
+              const tlEntry = entries.find(
+                ([id]) =>
+                  id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('lahir'),
+              );
+              if (!dataDitemukan && tlEntry && (await fillTanggalLahir(tlEntry[1]))) count++;
+
+              const tpEntry = entries.find(
+                ([id]) =>
+                  id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('pemeriksaan'),
+              );
+              fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
+
+              notify.info('Register Form', `Terisi: ${count}/${entries.length} field`, 2000);
+
+              const noWaliDiv = document.querySelector('#noWali.check');
+              if (noWaliDiv) {
+                noWaliDiv.click();
+                await new Promise((r) => setTimeout(r, 300));
+              }
+
+              const submitted = await submitSection1();
+              if (submitted === 'blocked') {
+                await resetRegisterForm();
+              } else if (submitted) {
+                notify.info('Register Form', 'Lanjut ke step 2', 2000);
+                const section2Ok = await fillSection2(entries);
+                if (section2Ok) {
+                  const submitted2 = await submitSection2();
+                  if (submitted2) {
+                    const submitted3 = await submitSection3();
+                    if (submitted3) {
+                      const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
+                      if (nik) {
+                        const ticket = await confirmAttendance(nik);
+                        if (ticket) {
+                          await incrementBatch({ registerForm: 1 });
+                          await resetRegisterForm(null);
+                          notify.info('Register Form', `${ticket} — Berhasil Hadir`, 5000);
+                          actionPanel.remove();
+                        } else {
+                          notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
+                        }
+                      } else {
+                        notify.info('Register Form', 'Pendaftaran selesai', 3000);
+                      }
+                    } else {
+                      notify.alert('Register Form', 'Gagal di section 3', 3000);
+                    }
+                  } else {
+                    notify.alert('Register Form', 'Gagal submit section 2', 3000);
+                  }
+                }
+              } else {
+                notify.alert('Register Form', 'Gagal submit section 1', 3000);
+              }
+
+              isRunning = false;
+            },
+          },
+        ],
+        { pinned: true },
+      );
     });
-  });
-
-  mulaiBtn.addEventListener('click', async () => {
-    if (mulaiBtn.disabled) return;
-
-    const flashData = await getRegisterFormFlashData();
-    if (!flashData?.pinneds || Object.keys(flashData.pinneds).length === 0) {
-      notify.info('Register Form', 'Isi flash data panel dulu', 2000);
-      return;
-    }
-
-    const entries = Object.entries(flashData.pinneds);
-    const step = detectCurrentStep();
-
-    if (step === 'section-2') {
-      const section2Ok = await fillSection2(entries);
-      if (section2Ok) {
-        const submitted2 = await submitSection2();
-        if (submitted2) {
-          const submitted3 = await submitSection3();
-          if (submitted3) {
-            const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
-            if (nik) {
-              const ticket = await confirmAttendance(nik);
-              if (ticket) {
-                await incrementBatch({ registerForm: 1 });
-                await resetRegisterForm(null);
-                notify.info('Register Form', `${ticket} — Berhasil Hadir`, 5000);
-              } else {
-                notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
-              }
-            } else {
-              notify.info('Register Form', 'Pendaftaran selesai', 3000);
-            }
-          } else {
-            notify.alert('Register Form', 'Gagal di section 3', 3000);
-          }
-        } else {
-          notify.alert('Register Form', 'Gagal submit section 2', 3000);
-        }
-      }
-      return;
-    }
-
-    const nikEntry = entries.find(([id]) => id.toLowerCase() === 'nik');
-    const otherEntries = entries.filter(([id]) => id.toLowerCase() !== 'nik');
-    let dataDitemukan = false;
-    let count = 0;
-
-    if (nikEntry && fillByCheckId(nikEntry[0], nikEntry[1])) {
-      count++;
-      const clicked = await clickCekNik();
-      if (clicked) {
-        const result = await waitForCekNikResponse();
-        if (result === 'not-found') {
-          notify.info('Cek NIK', 'Data baru, isi manual', 3000);
-          for (const [id, value] of otherEntries) {
-            if (fillByCheckId(id, value)) count++;
-          }
-        } else if (result === 'found') {
-          dataDitemukan = await handleDataDitemukanModal();
-          await new Promise((r) => setTimeout(r, 300));
-        }
-      }
-    } else {
-      for (const [id, value] of entries) {
-        if (fillByCheckId(id, value)) count++;
-      }
-    }
-
-    const jkEntry = entries.find(
-      ([id]) => id.toLowerCase().includes('jenis') && id.toLowerCase().includes('kelamin'),
-    );
-    if (!dataDitemukan && jkEntry && (await fillJenisKelamin(jkEntry[1]))) count++;
-
-    const tlEntry = entries.find(
-      ([id]) => id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('lahir'),
-    );
-    if (!dataDitemukan && tlEntry && (await fillTanggalLahir(tlEntry[1]))) count++;
-
-    const tpEntry = entries.find(
-      ([id]) => id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('pemeriksaan'),
-    );
-    fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
-
-    notify.info('Register Form', `Terisi: ${count}/${entries.length} field`, 2000);
-
-    const noWaliDiv = document.querySelector('#noWali.check');
-    if (noWaliDiv) {
-      noWaliDiv.click();
-      await new Promise((r) => setTimeout(r, 300));
-    }
-
-    const submitted = await submitSection1();
-    if (submitted === 'blocked') {
-      await resetRegisterForm();
-    } else if (submitted) {
-      notify.info('Register Form', 'Lanjut ke step 2', 2000);
-      const section2Ok = await fillSection2(entries);
-      if (section2Ok) {
-        const submitted2 = await submitSection2();
-        if (submitted2) {
-          const submitted3 = await submitSection3();
-          if (submitted3) {
-            const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
-            if (nik) {
-              const ticket = await confirmAttendance(nik);
-              if (ticket) {
-                await incrementBatch({ registerForm: 1 });
-                await resetRegisterForm(null);
-                notify.info('Register Form', `${ticket} — Berhasil Hadir`, 5000);
-              } else {
-                notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
-              }
-            } else {
-              notify.info('Register Form', 'Pendaftaran selesai', 3000);
-            }
-          } else {
-            notify.alert('Register Form', 'Gagal di section 3', 3000);
-          }
-        } else {
-          notify.alert('Register Form', 'Gagal submit section 2', 3000);
-        }
-      }
-    } else {
-      notify.alert('Register Form', 'Gagal submit section 1', 3000);
-    }
   });
 
   async function resetRegisterForm(message = 'NIK sudah pernah diperiksa, task dibatalkan') {
     await clearRegisterFormFlashData();
-    mulaiBtn.setEnabled(false);
     const flashPanel = document.getElementById('dandelion-flash-data');
     if (flashPanel) flashPanel.remove();
     const closeBtn = document.querySelector(
@@ -191,7 +207,6 @@ export async function initializeRegisterForm() {
   }
 
   controlPanel.mount(monkeyBtn, 1);
-  controlPanel.mount(mulaiBtn, 1);
 }
 
 function handleDataDitemukanModal(timeout = 8000) {

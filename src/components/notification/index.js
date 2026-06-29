@@ -103,9 +103,10 @@ export const notify = {
   /**
    * Custom Action panel
    */
-  action(title, message, actions = []) {
+  action(title, message, actions = [], { pinned } = {}) {
+    document.querySelectorAll('[id^="dandelion-action-"]').forEach((el) => el.remove());
     const id = `dandelion-action-${Date.now()}`;
-    const { panel, setHeader, remove } = createBasePanel(id);
+    const { panel, setHeader, remove } = createBasePanel(id, pinned);
 
     panel.append(
       setHeader(title, '#ff4d4d'),
