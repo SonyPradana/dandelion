@@ -1,6 +1,7 @@
 import { controlPanel } from '../components/controlPanel.js';
 import { notify } from '../components/notification';
 import { button } from '../components/button.js';
+import { h } from '../utils/dom.js';
 import { showFlashDataPanel } from '../components/flashPanel.js';
 import {
   setRegisterFormFlashData,
@@ -79,7 +80,19 @@ export async function initializeRegisterForm() {
                         if (ticket) {
                           await incrementBatch({ registerForm: 1 });
                           await resetRegisterForm(null);
-                          notify.info('Register Form', `${ticket} — Berhasil Hadir`, 5000);
+                          await notify.alert(
+                            'Register Form',
+                            h(
+                              'span',
+                              {},
+                              'Berhasil menghadirkan ',
+                              h(
+                                'span',
+                                { style: 'user-select: all; -webkit-user-select: all;' },
+                                ticket,
+                              ),
+                            ),
+                          );
                           actionPanel.remove();
                         } else {
                           notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
@@ -167,7 +180,19 @@ export async function initializeRegisterForm() {
                         if (ticket) {
                           await incrementBatch({ registerForm: 1 });
                           await resetRegisterForm(null);
-                          notify.info('Register Form', `${ticket} — Berhasil Hadir`, 5000);
+                          await notify.alert(
+                            'Register Form',
+                            h(
+                              'span',
+                              {},
+                              'Berhasil menghadirkan ',
+                              h(
+                                'span',
+                                { style: 'user-select: all; -webkit-user-select: all;' },
+                                ticket,
+                              ),
+                            ),
+                          );
                           actionPanel.remove();
                         } else {
                           notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);

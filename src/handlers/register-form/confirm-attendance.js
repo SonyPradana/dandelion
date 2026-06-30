@@ -94,6 +94,15 @@ export async function confirmAttendance(nik) {
   const modal = await waitForTandaiHadirModal();
   if (!modal) return false;
 
+  let ticket = null;
+  const labels = modal.querySelectorAll('.font-semibold');
+  for (const label of labels) {
+    if (label.textContent.trim() === 'Nomor Tiket:') {
+      ticket = label.nextElementSibling?.textContent?.trim() || null;
+      break;
+    }
+  }
+
   const checkDiv = document.querySelector('#verify.check');
   if (checkDiv) {
     checkDiv.click();
@@ -107,14 +116,9 @@ export async function confirmAttendance(nik) {
   const successModal = await waitForBerhasilHadirModal();
   if (!successModal) return null;
 
-  const ticketDiv = Array.from(successModal.querySelectorAll('div')).find((d) =>
-    d.textContent.includes('No. Tiket:'),
-  );
-  const ticket = ticketDiv ? ticketDiv.textContent.trim().slice(11) : null;
-
   const tutup = findTutup(successModal);
   if (tutup) tutup.click();
 
   await wait(500);
-  return ticket;
+  return ticket || null;
 }

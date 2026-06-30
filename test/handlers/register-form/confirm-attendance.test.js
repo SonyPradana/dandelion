@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { confirmAttendance } from '../../../src/handlers/register-form/confirm-attendance.js';
 
-function makeAttandanceModal(contentText, buttons) {
+function makeAttandanceModal(contentText, buttons, ticketText) {
   const outer = document.createElement('div');
   outer.className = 'fixed flex justify-center items-center';
 
@@ -11,6 +11,19 @@ function makeAttandanceModal(contentText, buttons) {
   const msg = document.createElement('div');
   msg.textContent = contentText;
   inner.appendChild(msg);
+
+  if (ticketText) {
+    const row = document.createElement('div');
+    row.className = 'px-4 pb-1 flex gap-1';
+    const label = document.createElement('div');
+    label.className = 'font-semibold';
+    label.textContent = 'Nomor Tiket:';
+    const value = document.createElement('div');
+    value.textContent = ticketText;
+    row.appendChild(label);
+    row.appendChild(value);
+    inner.appendChild(row);
+  }
 
   for (const label of buttons) {
     const btn = document.createElement('button');
@@ -53,7 +66,9 @@ describe('confirmAttendance', () => {
       document.body.appendChild(input);
 
       setTimeout(() => {
-        document.body.appendChild(makeAttandanceModal('Tandai Hadir?', ['Batal', 'Hadir']));
+        document.body.appendChild(
+          makeAttandanceModal('Tandai Hadir?', ['Batal', 'Hadir'], 'ABC-123'),
+        );
         // Add verify checkbox
         const checkDiv = document.createElement('div');
         checkDiv.id = 'verify';
@@ -75,9 +90,6 @@ describe('confirmAttendance', () => {
           const msg = document.createElement('div');
           msg.textContent = 'Berhasil Hadir';
           modal.appendChild(msg);
-          const ticket = document.createElement('div');
-          ticket.textContent = 'No. Tiket: ABC-123';
-          modal.appendChild(ticket);
           const tutupBtn = document.createElement('button');
           tutupBtn.textContent = 'Tutup';
           modal.appendChild(tutupBtn);
@@ -158,7 +170,7 @@ describe('confirmAttendance', () => {
       }, 400);
 
       setTimeout(() => {
-        document.body.appendChild(makeAttandanceModal('Tandai Hadir?', ['Batal']));
+        document.body.appendChild(makeAttandanceModal('Tandai Hadir?', ['Batal'], 'ABC-123'));
         const checkDiv = document.createElement('div');
         checkDiv.id = 'verify';
         checkDiv.className = 'check';
@@ -193,7 +205,9 @@ describe('confirmAttendance', () => {
       }, 400);
 
       setTimeout(() => {
-        document.body.appendChild(makeAttandanceModal('Tandai Hadir?', ['Batal', 'Hadir']));
+        document.body.appendChild(
+          makeAttandanceModal('Tandai Hadir?', ['Batal', 'Hadir'], 'ABC-123'),
+        );
         const checkDiv = document.createElement('div');
         checkDiv.id = 'verify';
         checkDiv.className = 'check';
@@ -221,7 +235,9 @@ describe('confirmAttendance', () => {
       }, 400);
 
       setTimeout(() => {
-        document.body.appendChild(makeAttandanceModal('Tandai Hadir?', ['Batal', 'Hadir']));
+        document.body.appendChild(
+          makeAttandanceModal('Tandai Hadir?', ['Batal', 'Hadir'], 'ABC-123'),
+        );
         const checkDiv = document.createElement('div');
         checkDiv.id = 'verify';
         checkDiv.className = 'check';
