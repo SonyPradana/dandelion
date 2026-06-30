@@ -39,7 +39,6 @@ export async function initializeRegisterForm() {
     showFlashDataPanel({
       setData: setRegisterFormFlashData,
       clearData: clearRegisterFormFlashData,
-      onSave: () => notify.info('Register Form', 'Flash data tersimpan', 1500),
       validate: validateRegisterFormFields,
     });
 
