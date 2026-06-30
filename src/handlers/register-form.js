@@ -67,16 +67,20 @@ export async function initializeRegisterForm() {
               const step = detectCurrentStep();
 
               if (step === 'section-2') {
+                stateEl.textContent = 'Mulai 2/4';
                 const section2Ok = await fillSection2(entries);
                 if (section2Ok) {
                   const submitted2 = await submitSection2();
                   if (submitted2) {
+                    stateEl.textContent = 'Mulai 3/4';
                     const submitted3 = await submitSection3();
                     if (submitted3) {
+                      stateEl.textContent = 'Mulai 4/4';
                       const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
                       if (nik) {
                         const ticket = await confirmAttendance(nik);
                         if (ticket) {
+                          stateEl.textContent = 'Selesai — ' + ticket;
                           await incrementBatch({ registerForm: 1 });
                           await resetRegisterForm(null);
                           await notify.alert(
@@ -166,17 +170,21 @@ export async function initializeRegisterForm() {
               if (submitted === 'blocked') {
                 await resetRegisterForm();
               } else if (submitted) {
+                stateEl.textContent = 'Mulai 2/4';
                 notify.info('Register Form', 'Lanjut ke step 2', 2000);
                 const section2Ok = await fillSection2(entries);
                 if (section2Ok) {
                   const submitted2 = await submitSection2();
                   if (submitted2) {
+                    stateEl.textContent = 'Mulai 3/4';
                     const submitted3 = await submitSection3();
                     if (submitted3) {
+                      stateEl.textContent = 'Mulai 4/4';
                       const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
                       if (nik) {
                         const ticket = await confirmAttendance(nik);
                         if (ticket) {
+                          stateEl.textContent = 'Selesai — ' + ticket;
                           await incrementBatch({ registerForm: 1 });
                           await resetRegisterForm(null);
                           await notify.alert(
@@ -216,6 +224,11 @@ export async function initializeRegisterForm() {
         ],
         { pinned: true },
       );
+
+      const stateEl = document.createElement('div');
+      stateEl.style.cssText = 'font-size:9px;opacity:0.5;margin-top:2px;';
+      stateEl.textContent = 'Mulai 1/4';
+      actionPanel.panel.appendChild(stateEl);
     });
   });
 
