@@ -1,4 +1,4 @@
-const GENDER_VALUES = new Set(['laki-laki', 'perempuan', 'l', 'p', 'pria', 'wanita']);
+const GENDER_VALUES = new Set(['laki-laki', 'perempuan', 'l', 'p', 'pria', 'wanita', 'lk', 'pr']);
 
 function isDigitsOnly(s) {
   for (let i = 0; i < s.length; i++) {
@@ -9,7 +9,7 @@ function isDigitsOnly(s) {
 }
 
 function parseDate(ddmmyyyy) {
-  const parts = ddmmyyyy.split('-');
+  const parts = ddmmyyyy.split('/').join('-').split('-');
   if (parts.length !== 3) return null;
   const d = parseInt(parts[0], 10);
   const m = parseInt(parts[1], 10);

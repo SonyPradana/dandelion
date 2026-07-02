@@ -40,7 +40,7 @@ describe('validateNik', () => {
 
 describe('validateJenisKelamin', () => {
   it('should return null for valid values', () => {
-    for (const v of ['laki-laki', 'perempuan', 'L', 'P', 'pria', 'wanita']) {
+    for (const v of ['laki-laki', 'perempuan', 'L', 'P', 'pria', 'wanita', 'lk', 'pr']) {
       expect(validateJenisKelamin('Jenis Kelamin', v)).toBeNull();
     }
   });
@@ -57,6 +57,10 @@ describe('validateJenisKelamin', () => {
 describe('validateTanggalLahir', () => {
   it('should return null for valid date with reasonable age', () => {
     expect(validateTanggalLahir('Tanggal Lahir', '12-07-1966')).toBeNull();
+  });
+
+  it('should return null for date with / separator', () => {
+    expect(validateTanggalLahir('Tanggal Lahir', '12/07/1966')).toBeNull();
   });
 
   it('should return null when empty', () => {
@@ -94,6 +98,12 @@ describe('validateTanggalPemeriksaan', () => {
   it('should return error for date > 7 days away', () => {
     expect(validateTanggalPemeriksaan('Tanggal Pemeriksaan', daysFromNow(8))).toContain('7 hari');
     expect(validateTanggalPemeriksaan('Tanggal Pemeriksaan', daysFromNow(-8))).toContain('7 hari');
+  });
+
+  it('should return null for date with / separator', () => {
+    expect(
+      validateTanggalPemeriksaan('Tanggal Pemeriksaan', daysFromNow(0).replace(/-/g, '/')),
+    ).toBeNull();
   });
 
   it('should return error for invalid format', () => {
@@ -163,7 +173,7 @@ describe('validateRegisterFormFields', () => {
   });
 
   describe('Jenis Kelamin', () => {
-    const valid = ['laki-laki', 'perempuan', 'L', 'P', 'pria', 'wanita'];
+    const valid = ['laki-laki', 'perempuan', 'L', 'P', 'pria', 'wanita', 'lk', 'pr'];
     for (const v of valid) {
       it(`should accept "${v}"`, () => {
         const errors = validateRegisterFormFields({ 'Jenis Kelamin': v });
@@ -185,6 +195,11 @@ describe('validateRegisterFormFields', () => {
   describe('Tanggal Lahir', () => {
     it('should pass for valid date with reasonable age', () => {
       const errors = validateRegisterFormFields({ 'Tanggal Lahir': '12-07-1966' });
+      expect(errors.filter((e) => e.key === 'Tanggal Lahir')).toHaveLength(0);
+    });
+
+    it('should pass for date with / separator', () => {
+      const errors = validateRegisterFormFields({ 'Tanggal Lahir': '12/07/1966' });
       expect(errors.filter((e) => e.key === 'Tanggal Lahir')).toHaveLength(0);
     });
 
@@ -219,8 +234,17 @@ describe('validateRegisterFormFields', () => {
       expect(errors.filter((e) => e.key === 'Tanggal Pemeriksaan')).toHaveLength(0);
     });
 
+    it('should pass for date with / separator', () => {
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      const errors = validateRegisterFormFields({ 'Tanggal Pemeriksaan': `${dd}/${mm}/${yyyy}` });
+      expect(errors.filter((e) => e.key === 'Tanggal Pemeriksaan')).toHaveLength(0);
+    });
+
     it('should pass for date within 7 days', () => {
-      const errors = validateRegisterFormFields({ 'Tanggal Pemeriksaan': '24-06-2026' });
+      const errors = validateRegisterFormFields({ 'Tanggal Pemeriksaan': daysFromNow(3) });
       expect(errors.filter((e) => e.key === 'Tanggal Pemeriksaan')).toHaveLength(0);
     });
 
