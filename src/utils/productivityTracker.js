@@ -9,7 +9,7 @@ export const WEIGHTS = {
   dropdown: 1,
   formNotChecked: 5,
   formZen: 5,
-  registerForm: 100,
+  registerForm: 25,
 };
 export const MONTHLY_TARGET = 30_000;
 export const TARGET_MODE = 'weekly';

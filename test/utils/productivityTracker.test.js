@@ -34,7 +34,7 @@ describe('productivityTracker', () => {
         dropdown: 1,
         formNotChecked: 5,
         formZen: 5,
-        registerForm: 100,
+        registerForm: 25,
       });
     });
 

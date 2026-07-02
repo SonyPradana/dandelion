@@ -22,7 +22,7 @@ import { fillAlamatDomisili } from './register-form/fill-residence-address.js';
 import { submitSection2 } from './register-form/submit-section-2.js';
 import { submitSection3 } from './register-form/submit-section-3.js';
 import { confirmAttendance } from './register-form/confirm-attendance.js';
-import { incrementBatch } from '../utils/productivityTracker.js';
+import bus from '../utils/hooks';
 
 export async function initializeRegisterForm() {
   const monkeyBtn = button('dandelion-register-form-btn');
@@ -152,6 +152,7 @@ export async function initializeRegisterForm() {
                   return;
                 }
                 completed[1] = true;
+                bus.emit('registerForm:sectionComplete', { section: 1 });
                 stateEl.textContent = 'Mulai 2/4';
               }
 
@@ -170,6 +171,7 @@ export async function initializeRegisterForm() {
                   return;
                 }
                 completed[2] = true;
+                bus.emit('registerForm:sectionComplete', { section: 2 });
                 stateEl.textContent = 'Mulai 3/4';
               }
 
@@ -182,6 +184,7 @@ export async function initializeRegisterForm() {
                   return;
                 }
                 completed[3] = true;
+                bus.emit('registerForm:sectionComplete', { section: 3 });
                 stateEl.textContent = 'Mulai 4/4';
               }
 
@@ -191,7 +194,7 @@ export async function initializeRegisterForm() {
                 const ticket = await confirmAttendance(nik);
                 if (ticket) {
                   stateEl.textContent = 'Selesai — ' + ticket;
-                  await incrementBatch({ registerForm: 1 });
+                  bus.emit('registerForm:sectionComplete', { section: 4 });
                   await resetRegisterForm(null);
                   await notify.alert(
                     'Register Form',
