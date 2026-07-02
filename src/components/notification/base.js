@@ -3,7 +3,7 @@ import { controlPanel } from '../controlPanel';
 /**
  * Shared base for all Slot 3 panels (Status, Alert, Confirm, etc.)
  */
-export function createBasePanel(id) {
+export function createBasePanel(id, pinned) {
   const styleId = 'dandelion-panel-animations';
   if (!document.getElementById(styleId)) {
     const style = document.createElement('style');
@@ -34,6 +34,7 @@ export function createBasePanel(id) {
     panel = document.createElement('div');
     panel.id = id;
     panel.classList.add('dandelion-panel-show');
+    if (pinned) panel.dataset.pinned = 'true';
     panel.style.cssText = `
       padding: 0.6rem 0.9rem;
       background: rgba(0, 0, 0, 0.6);
@@ -58,13 +59,13 @@ export function createBasePanel(id) {
     const closeBtn = document.createElement('div');
     closeBtn.textContent = '×';
     closeBtn.style.cssText = `
-      position: absolute;
-      top: 5px;
-      right: 8px;
       cursor: pointer;
       opacity: 0.5;
       font-size: 14px;
       line-height: 1;
+      position: absolute;
+      top: 5px;
+      right: 8px;
       transition: opacity 0.2s;
     `;
     closeBtn.onmouseover = () => {

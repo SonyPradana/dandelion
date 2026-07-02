@@ -25,6 +25,7 @@ const DEFAULT_CONFIG = {
         reloadDelay: 1000,
         domTimeout: 5000,
       },
+      registerForm: { url: '', retryMax: 3, retryDelay: 2000 },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
       flashData: { enabled: false, maxAge: 600_000 },
@@ -49,6 +50,7 @@ const DEFAULT_CONFIG = {
         reloadDelay: 1000,
         domTimeout: 5000,
       },
+      registerForm: { url: '', retryMax: 3, retryDelay: 2000 },
       skrining: { url: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
       flashData: { enabled: false, maxAge: 600_000 },
@@ -124,6 +126,7 @@ export function migrateConfig(raw) {
         skrining: {
           url: raw.formSelector ?? '',
         },
+        registerForm: { url: '' },
         zenMode: {
           domTimeout: 5000,
           enabled: false,
@@ -162,6 +165,7 @@ function applyConfigDefaults(raw) {
       name: savedProfile.name || defaultProfile.name || '',
       formSkrining: { ...defaultProfile.formSkrining, ...(savedProfile.formSkrining || {}) },
       notChecked: { ...defaultProfile.notChecked, ...(savedProfile.notChecked || {}) },
+      registerForm: { ...defaultProfile.registerForm, ...(savedProfile.registerForm || {}) },
       skrining: { ...defaultProfile.skrining, ...(savedProfile.skrining || {}) },
       zenMode: { ...defaultProfile.zenMode, ...(savedProfile.zenMode || {}) },
       flashData: { ...defaultProfile.flashData, ...(savedProfile.flashData || {}) },
@@ -214,6 +218,7 @@ export function getActiveConfig() {
     return {
       formSkrining: activeProfileSettings.formSkrining,
       notChecked: activeProfileSettings.notChecked,
+      registerForm: activeProfileSettings.registerForm,
       skrining: activeProfileSettings.skrining,
       zenMode: activeProfileSettings.zenMode,
       flashData: activeProfileSettings.flashData,

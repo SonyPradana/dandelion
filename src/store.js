@@ -102,6 +102,7 @@ class DandelionStore {
     return {
       formSkrining: activeProfileSettings.formSkrining,
       notChecked: activeProfileSettings.notChecked,
+      registerForm: activeProfileSettings.registerForm,
       skrining: activeProfileSettings.skrining,
       zenMode: activeProfileSettings.zenMode,
       flashData: activeProfileSettings.flashData,

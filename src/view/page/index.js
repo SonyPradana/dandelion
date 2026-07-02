@@ -116,6 +116,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
+  const registerFormUrlInput = document.getElementById('register-form-url');
+  const registerFormRetryMaxInput = document.getElementById('register-form-retry-max');
+  const registerFormRetryDelayInput = document.getElementById('register-form-retry-delay');
   const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
   const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
   const flashDataEnabledCheckbox = document.getElementById('flash-data-enabled');
@@ -153,6 +156,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
+
+    const rf = profileSettings.registerForm || {};
+    registerFormUrlInput.value = rf.url || '';
+    registerFormRetryMaxInput.value = rf.retryMax ?? 3;
+    registerFormRetryDelayInput.value = rf.retryDelay ?? 2000;
 
     const zm = profileSettings.zenMode || {};
     zenModeEnabledCheckbox.checked = zm.enabled !== false;
@@ -233,6 +241,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
+
+      if (!profileSettings.registerForm) profileSettings.registerForm = {};
+      profileSettings.registerForm.url = registerFormUrlInput.value;
+      profileSettings.registerForm.retryMax = parseInt(registerFormRetryMaxInput.value) || 3;
+      profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
 
       if (!profileSettings.zenMode) profileSettings.zenMode = {};
       profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;
@@ -349,8 +362,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const maxVal = Math.max(1, ...rangeData.map((d) => (d ? d.dayTotal : 0)));
 
-    const leftCol = html`<div class="prod-col"></div>`;
-    const rightCol = html`<div class="prod-col"></div>`;
+    const leftCol = h('div', { className: 'prod-col' });
+    const rightCol = h('div', { className: 'prod-col' });
 
     leftCol.appendChild(html`<div class="prod-col-header">Hari Ini</div>`);
 
@@ -380,6 +393,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           '🧘 Zen',
           rd(today.counts.formZen, prev?.formZen ?? null),
           overall.counts.formZen.toLocaleString(),
+        ),
+        prodRow(
+          '📝 Register',
+          rd(today.counts.registerForm, prev?.registerForm ?? null),
+          overall.counts.registerForm.toLocaleString(),
         ),
         h(
           'div',
