@@ -122,12 +122,16 @@ describe('validateNoWhatsapp', () => {
     expect(validateNoWhatsapp('No Whatsapp', '088888888')).toContain('0');
   });
 
-  it('should return error for < 8 digits', () => {
-    expect(validateNoWhatsapp('No Whatsapp', '1234567')).toContain('8-13');
+  it('should return null for 7 digit number', () => {
+    expect(validateNoWhatsapp('No Whatsapp', '1234567')).toBeNull();
+  });
+
+  it('should return error for < 7 digits', () => {
+    expect(validateNoWhatsapp('No Whatsapp', '123456')).toContain('7-13');
   });
 
   it('should return error for > 13 digits', () => {
-    expect(validateNoWhatsapp('No Whatsapp', '12345678901234')).toContain('8-13');
+    expect(validateNoWhatsapp('No Whatsapp', '12345678901234')).toContain('7-13');
   });
 
   it('should return null when empty', () => {
@@ -257,14 +261,19 @@ describe('validateRegisterFormFields', () => {
       expect(errors.some((e) => e.message.includes('0'))).toBe(true);
     });
 
-    it('should error when less than 8 digits', () => {
+    it('should pass for 7 digit number', () => {
       const errors = validateRegisterFormFields({ 'No Whatsapp': '1234567' });
-      expect(errors.some((e) => e.message.includes('8-13'))).toBe(true);
+      expect(errors.filter((e) => e.key === 'No Whatsapp')).toHaveLength(0);
+    });
+
+    it('should error when less than 7 digits', () => {
+      const errors = validateRegisterFormFields({ 'No Whatsapp': '123456' });
+      expect(errors.some((e) => e.message.includes('7-13'))).toBe(true);
     });
 
     it('should error when more than 13 digits', () => {
       const errors = validateRegisterFormFields({ 'No Whatsapp': '12345678901234' });
-      expect(errors.some((e) => e.message.includes('8-13'))).toBe(true);
+      expect(errors.some((e) => e.message.includes('7-13'))).toBe(true);
     });
 
     it('should skip when empty', () => {
@@ -274,7 +283,7 @@ describe('validateRegisterFormFields', () => {
 
     it('should match alternate keys like "no hp" or "nowa"', () => {
       const errors = validateRegisterFormFields({ 'no hp': '123' });
-      expect(errors.some((e) => e.message.includes('8-13'))).toBe(true);
+      expect(errors.some((e) => e.message.includes('7-13'))).toBe(true);
     });
   });
 

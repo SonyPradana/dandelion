@@ -81,7 +81,7 @@ export function validateNoWhatsapp(_key, value) {
   if (value.startsWith('+62') || value.startsWith('0'))
     return 'No Whatsapp tidak boleh diawali +62 atau 0';
   const digits = digitCount(value);
-  if (digits < 8 || digits > 13) return 'No Whatsapp harus 8-13 digit';
+  if (digits < 7 || digits > 13) return 'No Whatsapp harus 7-13 digit';
   return null;
 }
 
