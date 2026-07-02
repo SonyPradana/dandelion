@@ -117,6 +117,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
   const registerFormUrlInput = document.getElementById('register-form-url');
+  const registerFormRetryMaxInput = document.getElementById('register-form-retry-max');
+  const registerFormRetryDelayInput = document.getElementById('register-form-retry-delay');
   const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
   const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
   const flashDataEnabledCheckbox = document.getElementById('flash-data-enabled');
@@ -157,6 +159,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const rf = profileSettings.registerForm || {};
     registerFormUrlInput.value = rf.url || '';
+    registerFormRetryMaxInput.value = rf.retryMax ?? 3;
+    registerFormRetryDelayInput.value = rf.retryDelay ?? 2000;
 
     const zm = profileSettings.zenMode || {};
     zenModeEnabledCheckbox.checked = zm.enabled !== false;
@@ -240,6 +244,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.registerForm) profileSettings.registerForm = {};
       profileSettings.registerForm.url = registerFormUrlInput.value;
+      profileSettings.registerForm.retryMax = parseInt(registerFormRetryMaxInput.value) || 3;
+      profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
 
       if (!profileSettings.zenMode) profileSettings.zenMode = {};
       profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;

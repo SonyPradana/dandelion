@@ -44,6 +44,20 @@ export async function initializeRegisterForm() {
 
     waitForModal().then(() => {
       let isRunning = false;
+      const completed = {};
+      const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      async function retry(label, fn) {
+        for (let i = 1; i <= 3; i++) {
+          const result = await fn();
+          if (result && result !== 'blocked') return result;
+          if (result === 'blocked') return 'blocked';
+          if (i < 3) {
+            stateEl.textContent = `${label} [ulang ${i}/2]`;
+            await wait(2000);
+          }
+        }
+        return null;
+      }
       const actionPanel = notify.action(
         'Register Form',
         'Isi data dengan lengkap dan sesuai',
@@ -65,157 +79,135 @@ export async function initializeRegisterForm() {
 
               const entries = Object.entries(flashData.pinneds);
               const step = detectCurrentStep();
+              let startSection = 1;
+              if (step === 'section-2' || completed[1]) startSection = 2;
+              if (completed[2]) startSection = 3;
+              if (completed[3]) startSection = 4;
+              stateEl.textContent = `Mulai ${startSection}/4`;
 
-              if (step === 'section-2') {
-                stateEl.textContent = 'Mulai 2/4';
-                const section2Ok = await fillSection2(entries);
-                if (section2Ok) {
-                  const submitted2 = await submitSection2();
-                  if (submitted2) {
-                    stateEl.textContent = 'Mulai 3/4';
-                    const submitted3 = await submitSection3();
-                    if (submitted3) {
-                      stateEl.textContent = 'Mulai 4/4';
-                      const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
-                      if (nik) {
-                        const ticket = await confirmAttendance(nik);
-                        if (ticket) {
-                          stateEl.textContent = 'Selesai — ' + ticket;
-                          await incrementBatch({ registerForm: 1 });
-                          await resetRegisterForm(null);
-                          await notify.alert(
-                            'Register Form',
-                            h(
-                              'span',
-                              {},
-                              'Berhasil menghadirkan ',
-                              h(
-                                'span',
-                                { style: 'user-select: all; -webkit-user-select: all;' },
-                                ticket,
-                              ),
-                            ),
-                          );
-                          actionPanel.remove();
-                        } else {
-                          notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
-                        }
-                      } else {
-                        notify.info('Register Form', 'Pendaftaran selesai', 3000);
+              // ── Section 1 ──
+              if (startSection <= 1 && !completed[1]) {
+                const nikEntry = entries.find(([id]) => id.toLowerCase() === 'nik');
+                const otherEntries = entries.filter(([id]) => id.toLowerCase() !== 'nik');
+                let dataDitemukan = false;
+                let count = 0;
+
+                if (nikEntry && fillByCheckId(nikEntry[0], nikEntry[1])) {
+                  count++;
+                  const clicked = await clickCekNik();
+                  if (clicked) {
+                    const result = await waitForCekNikResponse();
+                    if (result === 'not-found') {
+                      notify.info('Cek NIK', 'Data baru, isi manual', 3000);
+                      for (const [id, value] of otherEntries) {
+                        if (fillByCheckId(id, value)) count++;
                       }
-                    } else {
-                      notify.alert('Register Form', 'Gagal di section 3', 3000);
+                    } else if (result === 'found') {
+                      dataDitemukan = await handleDataDitemukanModal();
+                      await new Promise((r) => setTimeout(r, 300));
                     }
-                  } else {
-                    notify.alert('Register Form', 'Gagal submit section 2', 3000);
+                  }
+                } else {
+                  for (const [id, value] of entries) {
+                    if (fillByCheckId(id, value)) count++;
                   }
                 }
-                isRunning = false;
-                return;
+
+                const jkEntry = entries.find(
+                  ([id]) =>
+                    id.toLowerCase().includes('jenis') && id.toLowerCase().includes('kelamin'),
+                );
+                if (!dataDitemukan && jkEntry && (await fillJenisKelamin(jkEntry[1]))) count++;
+
+                const tlEntry = entries.find(
+                  ([id]) =>
+                    id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('lahir'),
+                );
+                if (!dataDitemukan && tlEntry && (await fillTanggalLahir(tlEntry[1]))) count++;
+
+                const tpEntry = entries.find(
+                  ([id]) =>
+                    id.toLowerCase().includes('tanggal') &&
+                    id.toLowerCase().includes('pemeriksaan'),
+                );
+                fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
+
+                notify.info('Register Form', `Terisi: ${count}/${entries.length} field`, 2000);
+
+                const noWaliDiv = document.querySelector('#noWali.check');
+                if (noWaliDiv) {
+                  noWaliDiv.click();
+                  await new Promise((r) => setTimeout(r, 300));
+                }
+
+                const submitted = await submitSection1();
+                if (submitted === 'blocked') {
+                  await resetRegisterForm();
+                  isRunning = false;
+                  return;
+                }
+                if (!submitted) {
+                  notify.alert('Register Form', 'Gagal submit section 1', 3000);
+                  isRunning = false;
+                  return;
+                }
+                completed[1] = true;
+                stateEl.textContent = 'Mulai 2/4';
               }
 
-              const nikEntry = entries.find(([id]) => id.toLowerCase() === 'nik');
-              const otherEntries = entries.filter(([id]) => id.toLowerCase() !== 'nik');
-              let dataDitemukan = false;
-              let count = 0;
+              // ── Section 2 ──
+              if (startSection <= 2 && !completed[2]) {
+                const section2Ok = await retry('Section 2', () => fillSection2(entries));
+                if (!section2Ok) {
+                  notify.alert('Register Form', 'Gagal mengisi section 2', 3000);
+                  isRunning = false;
+                  return;
+                }
+                const submitted2 = await submitSection2();
+                if (!submitted2) {
+                  notify.alert('Register Form', 'Gagal submit section 2', 3000);
+                  isRunning = false;
+                  return;
+                }
+                completed[2] = true;
+                stateEl.textContent = 'Mulai 3/4';
+              }
 
-              if (nikEntry && fillByCheckId(nikEntry[0], nikEntry[1])) {
-                count++;
-                const clicked = await clickCekNik();
-                if (clicked) {
-                  const result = await waitForCekNikResponse();
-                  if (result === 'not-found') {
-                    notify.info('Cek NIK', 'Data baru, isi manual', 3000);
-                    for (const [id, value] of otherEntries) {
-                      if (fillByCheckId(id, value)) count++;
-                    }
-                  } else if (result === 'found') {
-                    dataDitemukan = await handleDataDitemukanModal();
-                    await new Promise((r) => setTimeout(r, 300));
-                  }
+              // ── Section 3 ──
+              if (startSection <= 3 && !completed[3]) {
+                const submitted3 = await submitSection3();
+                if (!submitted3) {
+                  notify.alert('Register Form', 'Gagal di section 3', 3000);
+                  isRunning = false;
+                  return;
+                }
+                completed[3] = true;
+                stateEl.textContent = 'Mulai 4/4';
+              }
+
+              // ── Section 4 ──
+              const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
+              if (nik) {
+                const ticket = await confirmAttendance(nik);
+                if (ticket) {
+                  stateEl.textContent = 'Selesai — ' + ticket;
+                  await incrementBatch({ registerForm: 1 });
+                  await resetRegisterForm(null);
+                  await notify.alert(
+                    'Register Form',
+                    h(
+                      'span',
+                      {},
+                      'Berhasil menghadirkan ',
+                      h('span', { style: 'user-select: all; -webkit-user-select: all;' }, ticket),
+                    ),
+                  );
+                  actionPanel.remove();
+                } else {
+                  notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
                 }
               } else {
-                for (const [id, value] of entries) {
-                  if (fillByCheckId(id, value)) count++;
-                }
-              }
-
-              const jkEntry = entries.find(
-                ([id]) =>
-                  id.toLowerCase().includes('jenis') && id.toLowerCase().includes('kelamin'),
-              );
-              if (!dataDitemukan && jkEntry && (await fillJenisKelamin(jkEntry[1]))) count++;
-
-              const tlEntry = entries.find(
-                ([id]) =>
-                  id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('lahir'),
-              );
-              if (!dataDitemukan && tlEntry && (await fillTanggalLahir(tlEntry[1]))) count++;
-
-              const tpEntry = entries.find(
-                ([id]) =>
-                  id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('pemeriksaan'),
-              );
-              fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
-
-              notify.info('Register Form', `Terisi: ${count}/${entries.length} field`, 2000);
-
-              const noWaliDiv = document.querySelector('#noWali.check');
-              if (noWaliDiv) {
-                noWaliDiv.click();
-                await new Promise((r) => setTimeout(r, 300));
-              }
-
-              const submitted = await submitSection1();
-              if (submitted === 'blocked') {
-                await resetRegisterForm();
-              } else if (submitted) {
-                stateEl.textContent = 'Mulai 2/4';
-                notify.info('Register Form', 'Lanjut ke step 2', 2000);
-                const section2Ok = await fillSection2(entries);
-                if (section2Ok) {
-                  const submitted2 = await submitSection2();
-                  if (submitted2) {
-                    stateEl.textContent = 'Mulai 3/4';
-                    const submitted3 = await submitSection3();
-                    if (submitted3) {
-                      stateEl.textContent = 'Mulai 4/4';
-                      const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
-                      if (nik) {
-                        const ticket = await confirmAttendance(nik);
-                        if (ticket) {
-                          stateEl.textContent = 'Selesai — ' + ticket;
-                          await incrementBatch({ registerForm: 1 });
-                          await resetRegisterForm(null);
-                          await notify.alert(
-                            'Register Form',
-                            h(
-                              'span',
-                              {},
-                              'Berhasil menghadirkan ',
-                              h(
-                                'span',
-                                { style: 'user-select: all; -webkit-user-select: all;' },
-                                ticket,
-                              ),
-                            ),
-                          );
-                          actionPanel.remove();
-                        } else {
-                          notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
-                        }
-                      } else {
-                        notify.info('Register Form', 'Pendaftaran selesai', 3000);
-                      }
-                    } else {
-                      notify.alert('Register Form', 'Gagal di section 3', 3000);
-                    }
-                  } else {
-                    notify.alert('Register Form', 'Gagal submit section 2', 3000);
-                  }
-                }
-              } else {
-                notify.alert('Register Form', 'Gagal submit section 1', 3000);
+                notify.info('Register Form', 'Pendaftaran selesai', 3000);
               }
 
               isRunning = false;

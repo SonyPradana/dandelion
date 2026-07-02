@@ -203,6 +203,29 @@
                   placeholder="Masukkan pola URL register form"
                 />
               </div>
+
+              <div class="delay-settings-grid">
+                <div class="form-group-sm">
+                  <label for="register-form-retry-max">Max Retry</label>
+                  <input
+                    type="number"
+                    id="register-form-retry-max"
+                    placeholder="3"
+                    min="1"
+                    max="10"
+                  />
+                </div>
+                <div class="form-group-sm">
+                  <label for="register-form-retry-delay">Jeda Retry (ms)</label>
+                  <input
+                    type="number"
+                    id="register-form-retry-delay"
+                    placeholder="2000"
+                    min="500"
+                    max="10000"
+                  />
+                </div>
+              </div>
             </div>
           </section>
 
