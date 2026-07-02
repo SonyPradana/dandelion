@@ -362,8 +362,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const maxVal = Math.max(1, ...rangeData.map((d) => (d ? d.dayTotal : 0)));
 
-    const leftCol = html`<div class="prod-col"></div>`;
-    const rightCol = html`<div class="prod-col"></div>`;
+    const leftCol = h('div', { className: 'prod-col' });
+    const rightCol = h('div', { className: 'prod-col' });
 
     leftCol.appendChild(html`<div class="prod-col-header">Hari Ini</div>`);
 
