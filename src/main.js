@@ -69,6 +69,6 @@ async function initialize() {
     currentURL.includes(config.registerForm.url) &&
     isFeatureEnabled('registerForm')
   ) {
-    initializeRegisterForm();
+    initializeRegisterForm(config.registerForm);
   }
 }
