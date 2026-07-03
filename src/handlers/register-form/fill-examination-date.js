@@ -1,6 +1,6 @@
 function parseDate(value) {
   if (!value) return new Date();
-  const parts = value.split('-');
+  const parts = value.split('/').join('-').split('-');
   if (parts.length === 3 && parts[0].length <= 2) {
     return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
   }

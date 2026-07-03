@@ -25,7 +25,7 @@ function monthTextToIndex(text) {
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function fillTanggalLahir(value) {
-  const [dd, mm, yyyy] = value.split('-').map(Number);
+  const [dd, mm, yyyy] = value.split('/').join('-').split('-').map(Number);
   const targetMonth = mm - 1;
 
   const wrapper = document.getElementById('Tanggal Lahir');
