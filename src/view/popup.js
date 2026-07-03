@@ -121,6 +121,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   const registerFormUrlInput = document.getElementById('register-form-url');
   const registerFormRetryMaxInput = document.getElementById('register-form-retry-max');
   const registerFormRetryDelayInput = document.getElementById('register-form-retry-delay');
+  const registerFormCountdownDurationInput = document.getElementById(
+    'register-form-countdown-duration',
+  );
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
@@ -150,6 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerFormUrlInput.value = rf.url || '';
     registerFormRetryMaxInput.value = rf.retryMax ?? 3;
     registerFormRetryDelayInput.value = rf.retryDelay ?? 2000;
+    registerFormCountdownDurationInput.value = rf.countdownDuration ?? 5000;
   }
 
   store.getFullConfig().then((config) => {
@@ -207,6 +211,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.registerForm.url = registerFormUrlInput.value;
       profileSettings.registerForm.retryMax = parseInt(registerFormRetryMaxInput.value) || 3;
       profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
+      profileSettings.registerForm.countdownDuration =
+        parseInt(registerFormCountdownDurationInput.value) || 5000;
 
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;

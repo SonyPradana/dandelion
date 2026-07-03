@@ -97,7 +97,7 @@ describe('confirmAttendance', () => {
       }, 1200);
 
       const nik = '3322185207660004';
-      const promise = confirmAttendance(nik);
+      const promise = confirmAttendance(nik, 500);
       await vi.advanceTimersByTimeAsync(3000);
       expect(await promise).toBe('ABC-123');
     });
@@ -114,7 +114,7 @@ describe('confirmAttendance', () => {
       const keydownSpy = vi.fn();
       input.addEventListener('keydown', keydownSpy);
 
-      const promise = confirmAttendance('3322185207660004');
+      const promise = confirmAttendance('3322185207660004', 1000);
       await vi.advanceTimersByTimeAsync(500);
       expect(input.value).toBe('3322185207660004');
       expect(inputSpy).toHaveBeenCalledOnce();
@@ -128,7 +128,7 @@ describe('confirmAttendance', () => {
 
   describe('failure cases', () => {
     it('should return false when searchNik input is missing', async () => {
-      const result = await confirmAttendance('3322185207660004');
+      const result = await confirmAttendance('3322185207660004', 1000);
       expect(result).toBe(false);
     });
 
@@ -137,7 +137,7 @@ describe('confirmAttendance', () => {
       input.id = 'searchNik';
       document.body.appendChild(input);
 
-      const promise = confirmAttendance('3322185207660004');
+      const promise = confirmAttendance('3322185207660004', 1000);
       await vi.advanceTimersByTimeAsync(9000);
       expect(await promise).toBe(false);
     });
@@ -153,7 +153,7 @@ describe('confirmAttendance', () => {
         document.body.appendChild(btn);
       }, 400);
 
-      const promise = confirmAttendance('3322185207660004');
+      const promise = confirmAttendance('3322185207660004', 1000);
       await vi.advanceTimersByTimeAsync(10_000);
       expect(await promise).toBe(false);
     });
@@ -188,7 +188,7 @@ describe('confirmAttendance', () => {
         document.body.appendChild(wrapper);
       }, 1000);
 
-      const promise = confirmAttendance('3322185207660004');
+      const promise = confirmAttendance('3322185207660004', 1000);
       await vi.advanceTimersByTimeAsync(12_000);
       expect(await promise).toBe(false);
     });
@@ -218,7 +218,7 @@ describe('confirmAttendance', () => {
         document.body.appendChild(makeHadirButton(true));
       }, 1000);
 
-      const promise = confirmAttendance('3322185207660004');
+      const promise = confirmAttendance('3322185207660004', 1000);
       await vi.advanceTimersByTimeAsync(20_000);
       expect(await promise).toBe(null);
     });
@@ -256,7 +256,7 @@ describe('confirmAttendance', () => {
         document.body.appendChild(modal);
       }, 1600);
 
-      const promise = confirmAttendance('3322185207660004');
+      const promise = confirmAttendance('3322185207660004', 1000);
       await vi.advanceTimersByTimeAsync(10_000);
       expect(await promise).toBe('ABC-123');
     });

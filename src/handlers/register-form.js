@@ -24,7 +24,7 @@ import { submitSection3 } from './register-form/submit-section-3.js';
 import { confirmAttendance } from './register-form/confirm-attendance.js';
 import bus from '../utils/hooks';
 
-export async function initializeRegisterForm() {
+export async function initializeRegisterForm(registerFormConfig = {}) {
   const monkeyBtn = button('dandelion-register-form-btn');
   if (!monkeyBtn) return;
 
@@ -46,14 +46,15 @@ export async function initializeRegisterForm() {
       let isRunning = false;
       const completed = {};
       const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+      const { retryMax = 3, retryDelay = 2000, countdownDuration = 5000 } = registerFormConfig;
       async function retry(label, fn) {
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= retryMax; i++) {
           const result = await fn();
           if (result && result !== 'blocked') return result;
           if (result === 'blocked') return 'blocked';
-          if (i < 3) {
-            stateEl.textContent = `${label} [ulang ${i}/2]`;
-            await wait(2000);
+          if (i < retryMax) {
+            stateEl.textContent = `${label} [ulang ${i}/${retryMax - 1}]`;
+            await wait(retryDelay);
           }
         }
         return null;
@@ -191,7 +192,7 @@ export async function initializeRegisterForm() {
               // ── Section 4 ──
               const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
               if (nik) {
-                const ticket = await confirmAttendance(nik);
+                const ticket = await confirmAttendance(nik, countdownDuration);
                 if (ticket) {
                   stateEl.textContent = 'Selesai — ' + ticket;
                   bus.emit('registerForm:sectionComplete', { section: 4 });

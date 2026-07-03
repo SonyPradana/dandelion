@@ -1,3 +1,5 @@
+import { notify } from '../../components/notification';
+
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function waitForKonfirmasiHadir(timeout = 8000) {
@@ -70,7 +72,7 @@ function findTutup(modal) {
   return null;
 }
 
-export async function confirmAttendance(nik) {
+export async function confirmAttendance(nik, countdownDuration = 5000) {
   const input = document.getElementById('searchNik');
   if (!input) return false;
 
@@ -109,11 +111,28 @@ export async function confirmAttendance(nik) {
     await wait(200);
   }
 
-  const hadirBtn = await waitForHadirEnabled();
-  if (!hadirBtn) return false;
-  hadirBtn.click();
+  const { promise } = notify.countdown(
+    'Tandai Hadir',
+    'Klik tombol "Hadir" secara manual',
+    countdownDuration,
+  );
 
-  const successModal = await waitForBerhasilHadirModal();
+  const countdownResult = await promise;
+
+  if (!countdownResult) {
+    await wait(200);
+    const m = await waitForBerhasilHadirModal(1000);
+    if (!m) return false;
+  }
+
+  const existing = await waitForBerhasilHadirModal(1000);
+  if (!existing) {
+    const hadirBtn = await waitForHadirEnabled(countdownDuration);
+    if (!hadirBtn) return false;
+    hadirBtn.click();
+  }
+
+  const successModal = await waitForBerhasilHadirModal(countdownDuration);
   if (!successModal) return null;
 
   const tutup = findTutup(successModal);
