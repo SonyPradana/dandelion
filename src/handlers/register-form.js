@@ -136,7 +136,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
                 notify.info('Register Form', `Terisi: ${count}/${entries.length} field`, 2000);
 
                 const noWaliDiv = document.querySelector('#noWali.check');
-                if (noWaliDiv) {
+                if (noWaliDiv && tlEntry && (countAge(tlEntry[1]) ?? 0) >= 60) {
                   noWaliDiv.click();
                   await new Promise((r) => setTimeout(r, 300));
                 }
@@ -354,4 +354,23 @@ async function waitForModal() {
     if (found) return;
     await new Promise((r) => setTimeout(r, 500));
   }
+}
+
+function countAge(birthdate) {
+  if (!birthdate) return null;
+
+  const [day, month, year] = birthdate.split('/').join('-').split('-');
+  if (!day || !month || !year) return null;
+
+  const lahir = new Date(year, month - 1, day);
+  if (isNaN(lahir.getTime())) return null;
+
+  const now = new Date();
+  let usia = now.getFullYear() - lahir.getFullYear();
+  const belumUlangTahun =
+    now.getMonth() < lahir.getMonth() ||
+    (now.getMonth() === lahir.getMonth() && now.getDate() < lahir.getDate());
+  if (belumUlangTahun) usia--;
+
+  return usia;
 }
