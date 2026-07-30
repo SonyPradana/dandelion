@@ -1,7 +1,7 @@
 export async function fillPenyandangDisabilitas(value) {
   const target = value.trim().toLowerCase();
 
-  const labels = document.querySelectorAll('div.mb-1.font-semibold');
+  const labels = document.querySelectorAll('div.font-semibold');
   let wrapper = null;
   for (const label of labels) {
     if (label.textContent.includes('Penyandang disabilitas')) {

@@ -20,7 +20,7 @@ export async function fillJenisKelamin(value) {
   const targetValue = normalizeValue(value);
   if (!targetValue) return false;
 
-  const labels = document.querySelectorAll('div.mb-1.font-semibold.text-xs');
+  const labels = document.querySelectorAll('div.font-semibold.text-xs');
   let wrapper = null;
   for (const label of labels) {
     if (label.textContent.includes('Jenis Kelamin')) {
