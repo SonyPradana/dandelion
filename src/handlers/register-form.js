@@ -22,6 +22,8 @@ import { fillAlamatDomisili } from './register-form/fill-residence-address.js';
 import { submitSection2 } from './register-form/submit-section-2.js';
 import { submitSection3 } from './register-form/submit-section-3.js';
 import { confirmAttendance } from './register-form/confirm-attendance.js';
+import { fillDataWali } from './register-form/fill-data-wali.js';
+import { fillNikWali } from './register-form/fill-nik-wali.js';
 import bus from '../utils/hooks';
 
 export async function initializeRegisterForm(registerFormConfig = {}) {
@@ -88,8 +90,9 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
 
               // ── Section 1 ──
               if (startSection <= 1 && !completed[1]) {
-                const nikEntry = entries.find(([id]) => id.toLowerCase() === 'nik');
-                const otherEntries = entries.filter(([id]) => id.toLowerCase() !== 'nik');
+                const pesertaEntries = entries.filter(([id]) => !id.toLowerCase().endsWith(' wali'));
+                const nikEntry = pesertaEntries.find(([id]) => id.toLowerCase() === 'nik');
+                const otherEntries = pesertaEntries.filter(([id]) => id.toLowerCase() !== 'nik');
                 let dataDitemukan = false;
                 let count = 0;
 
@@ -109,36 +112,50 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
                     }
                   }
                 } else {
-                  for (const [id, value] of entries) {
+                  for (const [id, value] of pesertaEntries) {
                     if (fillByCheckId(id, value)) count++;
                   }
                 }
 
-                const jkEntry = entries.find(
+                const jkEntry = pesertaEntries.find(
                   ([id]) =>
                     id.toLowerCase().includes('jenis') && id.toLowerCase().includes('kelamin'),
                 );
                 if (!dataDitemukan && jkEntry && (await fillJenisKelamin(jkEntry[1]))) count++;
 
-                const tlEntry = entries.find(
+                const tlEntry = pesertaEntries.find(
                   ([id]) =>
                     id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('lahir'),
                 );
                 if (!dataDitemukan && tlEntry && (await fillTanggalLahir(tlEntry[1]))) count++;
 
-                const tpEntry = entries.find(
+                const tpEntry = pesertaEntries.find(
                   ([id]) =>
                     id.toLowerCase().includes('tanggal') &&
                     id.toLowerCase().includes('pemeriksaan'),
                 );
                 fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
 
-                notify.info('Register Form', `Terisi: ${count}/${entries.length} field`, 2000);
+                notify.info('Register Form', `Terisi: ${count}/${pesertaEntries.length} field`, 2000);
+
+                const usia = tlEntry ? countAge(tlEntry[1]) : null;
 
                 const noWaliDiv = document.querySelector('#noWali.check');
-                if (noWaliDiv && tlEntry && (countAge(tlEntry[1]) ?? 0) >= 60) {
+                if (noWaliDiv && usia !== null && usia >= 60) {
                   noWaliDiv.click();
                   await new Promise((r) => setTimeout(r, 300));
+                }
+
+                if (usia !== null && usia >= 1 && usia <= 5) {
+                  await new Promise((r) => setTimeout(r, 500));
+                  await fillDataWali(entries);
+                  await new Promise((r) => setTimeout(r, 300));
+                  fillNikWali(entries);
+                  await new Promise((r) => setTimeout(r, 200));
+                  const nikWaliInput = document.getElementById('nik wali');
+                  if (nikWaliInput && !nikWaliInput.value) {
+                    fillNikWali(entries);
+                  }
                 }
 
                 const submitted = await submitSection1();
@@ -291,7 +308,7 @@ function waitForPanel2(timeout = 7000) {
   return new Promise((resolve) => {
     const start = Date.now();
     const poll = () => {
-      const labels = document.querySelectorAll('div.mb-1.font-semibold');
+      const labels = document.querySelectorAll('div.font-semibold');
       const found = Array.from(labels).some((l) => l.textContent.includes('Status Pernikahan'));
       if (found) return resolve(true);
       if (Date.now() - start > timeout) return resolve(false);
