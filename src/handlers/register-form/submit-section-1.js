@@ -103,7 +103,9 @@ export async function submitSection1() {
   if (result.type === 'timeout') return false;
 
   result.btn.click();
-  await wait(800);
-
-  return isOnStep2();
+  for (let i = 0; i < 10; i++) {
+    await wait(100);
+    if (isOnStep2()) return true;
+  }
+  return false;
 }
