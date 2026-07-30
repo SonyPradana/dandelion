@@ -34,22 +34,27 @@ export async function fillDataWali(entries) {
   for (const [key, value] of waliEntries) {
     const type = detectWaliField(key);
     switch (type) {
-      case 'nik':
+      case 'nik': {
         // handled by fillNikWali after fillDataWali
         break;
-      case 'nama':
+      }
+      case 'nama': {
         fillScoped('Nama Lengkap', value);
         break;
-      case 'tl':
+      }
+      case 'tl': {
         await fillTanggalLahirWali(value, container);
         break;
-      case 'jk':
+      }
+      case 'jk': {
         await fillJenisKelaminWali(value, container);
         break;
-      case 'wa':
+      }
+      case 'wa': {
         fillScoped('No whatsapp', value);
         hasWa = true;
         break;
+      }
     }
   }
 
