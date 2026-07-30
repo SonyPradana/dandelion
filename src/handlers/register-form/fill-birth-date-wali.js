@@ -34,6 +34,8 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
  * @returns {Promise<boolean>}
  */
 export async function fillTanggalLahirWali(value, container) {
+  if (!container) return false;
+
   const [dd, mm, yyyy] = value.split('/').join('-').split('-').map(Number);
   const targetMonth = mm - 1;
 

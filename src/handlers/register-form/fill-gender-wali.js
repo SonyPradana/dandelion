@@ -26,6 +26,8 @@ function normalizeValue(input) {
  * @returns {Promise<boolean>}
  */
 export async function fillJenisKelaminWali(value, container) {
+  if (!container) return false;
+
   const targetValue = normalizeValue(value);
   if (!targetValue) return false;
 
