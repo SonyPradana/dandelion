@@ -1,10 +1,16 @@
+/** @param {number} ms */
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** @returns {boolean} */
 function isOnStep2() {
   const bars = document.querySelectorAll(String.raw`.stepper .bg-\[\#16B3AC\]`);
   return bars.length === 2;
 }
 
+/**
+ * @param {number} [timeout=10000]
+ * @returns {Promise<HTMLButtonElement|null>}
+ */
 function waitForSubmitButton(timeout = 10_000) {
   return new Promise((resolve) => {
     const start = Date.now();
@@ -18,6 +24,12 @@ function waitForSubmitButton(timeout = 10_000) {
   });
 }
 
+/**
+ * @param {string} modalText
+ * @param {string} buttonText
+ * @param {number} [timeout=7000]
+ * @returns {Promise<HTMLButtonElement|null>}
+ */
 function waitForModalButton(modalText, buttonText, timeout = 7000) {
   return new Promise((resolve) => {
     const start = Date.now();
@@ -41,6 +53,10 @@ function waitForModalButton(modalText, buttonText, timeout = 7000) {
   });
 }
 
+/**
+ * @param {number} [timeout=7000]
+ * @returns {Promise<{type: string, btn?: HTMLButtonElement}>}
+ */
 function waitForSubmitResult(timeout = 7000) {
   return new Promise((resolve) => {
     const start = Date.now();
@@ -84,6 +100,7 @@ function waitForSubmitResult(timeout = 7000) {
   });
 }
 
+/** @returns {Promise<boolean|'blocked'>} */
 export async function submitSection1() {
   const selanjutnya = await waitForSubmitButton();
   if (!selanjutnya) return false;

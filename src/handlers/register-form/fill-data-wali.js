@@ -1,6 +1,10 @@
 import { fillTanggalLahirWali } from './fill-birth-date-wali.js';
 import { fillJenisKelaminWali } from './fill-gender-wali.js';
 
+/**
+ * @param {string} key
+ * @returns {string|null}
+ */
 function detectWaliField(key) {
   const k = key.toLowerCase();
   if (!k.endsWith(' wali')) return null;
@@ -12,8 +16,12 @@ function detectWaliField(key) {
   return null;
 }
 
+/**
+ * @param {Array<[string, string]>} entries
+ * @returns {Promise<boolean>}
+ */
 export async function fillDataWali(entries) {
-  const waliEntries = entries.filter(([key]) => detectWaliField(key));
+  const waliEntries = entries.filter(([id]) => detectWaliField(id));
   if (waliEntries.length === 0) return false;
 
   const nikWali = document.getElementById('nik wali');
@@ -23,6 +31,11 @@ export async function fillDataWali(entries) {
 
   let hasWa = false;
 
+  /**
+   * @param {string} id
+   * @param {string} val
+   * @returns {boolean}
+   */
   function fillScoped(id, val) {
     const el = container.querySelector(`[id="${id}"]`);
     if (!el) return false;
@@ -31,8 +44,8 @@ export async function fillDataWali(entries) {
     return true;
   }
 
-  for (const [key, value] of waliEntries) {
-    const type = detectWaliField(key);
+  for (const [id, value] of waliEntries) {
+    const type = detectWaliField(id);
     switch (type) {
       case 'nik': {
         // handled by fillNikWali after fillDataWali

@@ -1,3 +1,7 @@
+/**
+ * @param {Array<[string, string]>} entries
+ * @returns {boolean}
+ */
 export function fillNikWali(entries) {
   const entry = entries.find(([key]) => {
     const k = key.toLowerCase();
@@ -8,6 +12,7 @@ export function fillNikWali(entries) {
   const input = document.getElementById('nik wali');
   if (!input) return false;
 
+  // Vue v-model intercepts .value=; native setter bypasses property descriptor
   const nativeSetter = Object.getOwnPropertyDescriptor(
     window.HTMLInputElement.prototype,
     'value',

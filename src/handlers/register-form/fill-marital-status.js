@@ -1,3 +1,7 @@
+/**
+ * @param {string} value
+ * @returns {Promise<boolean>}
+ */
 export async function fillStatusPernikahan(value) {
   const target = value.trim().toLowerCase();
 

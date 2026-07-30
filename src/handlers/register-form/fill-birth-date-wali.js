@@ -17,6 +17,10 @@ function pad(n) {
   return String(n).padStart(2, '0');
 }
 
+/**
+ * @param {string} text
+ * @returns {number|undefined}
+ */
 function monthTextToIndex(text) {
   const key = text.trim().toLowerCase().slice(0, 3);
   return MONTH_MAP[key];
@@ -24,6 +28,11 @@ function monthTextToIndex(text) {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * @param {string} value - dd/mm/yyyy or dd-mm-yyyy
+ * @param {HTMLElement} container
+ * @returns {Promise<boolean>}
+ */
 export async function fillTanggalLahirWali(value, container) {
   const [dd, mm, yyyy] = value.split('/').join('-').split('-').map(Number);
   const targetMonth = mm - 1;

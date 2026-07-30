@@ -3,6 +3,10 @@ const ALIAS_MAP = [
   { aliases: ['perempuan', 'wanita', 'p', 'perempuan'], value: 'Perempuan' },
 ];
 
+/**
+ * @param {string} input
+ * @returns {string|null}
+ */
 function normalizeValue(input) {
   const normalized = input.trim().toLowerCase();
   for (const { aliases, value } of ALIAS_MAP) {
@@ -16,6 +20,10 @@ function normalizeValue(input) {
   return null;
 }
 
+/**
+ * @param {string} value
+ * @returns {Promise<boolean>}
+ */
 export async function fillJenisKelamin(value) {
   const targetValue = normalizeValue(value);
   if (!targetValue) return false;

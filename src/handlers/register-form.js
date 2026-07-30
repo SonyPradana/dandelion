@@ -9,6 +9,7 @@ import {
   clearRegisterFormFlashData,
 } from '../utils/registerFormFlashSession.js';
 import { validateRegisterFormFields } from '../utils/registerFormValidator.js';
+import bus from '../utils/hooks';
 import { fillByCheckId } from './register-form/fill-by-check-id.js';
 import { clickCekNik, waitForCekNikResponse } from './register-form/click-check-nik.js';
 import { fillTanggalPemeriksaan } from './register-form/fill-examination-date.js';
@@ -24,8 +25,11 @@ import { submitSection3 } from './register-form/submit-section-3.js';
 import { confirmAttendance } from './register-form/confirm-attendance.js';
 import { fillDataWali } from './register-form/fill-data-wali.js';
 import { fillNikWali } from './register-form/fill-nik-wali.js';
-import bus from '../utils/hooks';
 
+/**
+ * @param {{ retryMax?: number, retryDelay?: number, countdownDuration?: number }} [registerFormConfig={}]
+ * @returns {Promise<void>}
+ */
 export async function initializeRegisterForm(registerFormConfig = {}) {
   const monkeyBtn = button('dandelion-register-form-btn');
   if (!monkeyBtn) return;
@@ -47,8 +51,14 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
     waitForModal().then(() => {
       let isRunning = false;
       const completed = {};
+      /** @param {number} ms */
       const wait = (ms) => new Promise((r) => setTimeout(r, ms));
       const { retryMax = 3, retryDelay = 2000, countdownDuration = 5000 } = registerFormConfig;
+      /**
+       * @param {string} label
+       * @param {() => Promise<any>} fn
+       * @returns {Promise<any>}
+       */
       async function retry(label, fn) {
         for (let i = 1; i <= retryMax; i++) {
           const result = await fn();
@@ -217,7 +227,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
               if (nik) {
                 const ticket = await confirmAttendance(nik, countdownDuration);
                 if (ticket) {
-                  stateEl.textContent = 'Selesai — ' + ticket;
+                  stateEl.textContent = `Selesai — ${ticket}`;
                   bus.emit('registerForm:sectionComplete', { section: 4 });
                   await resetRegisterForm(null);
                   await notify.alert(
@@ -251,6 +261,10 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
     });
   });
 
+  /**
+   * @param {string} [message]
+   * @returns {Promise<void>}
+   */
   async function resetRegisterForm(message = 'NIK sudah pernah diperiksa, task dibatalkan') {
     await clearRegisterFormFlashData();
     const flashPanel = document.getElementById('dandelion-flash-data');
@@ -266,6 +280,10 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
   controlPanel.mount(monkeyBtn, 1);
 }
 
+/**
+ * @param {number} [timeout=8000]
+ * @returns {Promise<boolean>}
+ */
 function handleDataDitemukanModal(timeout = 8000) {
   return new Promise((resolve) => {
     const start = Date.now();
@@ -289,6 +307,7 @@ function handleDataDitemukanModal(timeout = 8000) {
   });
 }
 
+/** @returns {boolean} */
 function closeSuccessModalIfOpen() {
   const modals = document.querySelectorAll('.rounded-lg.bg-white.p-4');
   for (const m of modals) {
@@ -303,6 +322,7 @@ function closeSuccessModalIfOpen() {
   return false;
 }
 
+/** @returns {string} */
 function detectCurrentStep() {
   const greenBars = document.querySelectorAll(String.raw`.stepper .bg-\[\#16B3AC\]`);
   if (greenBars.length === 2) return 'section-2';
@@ -310,6 +330,10 @@ function detectCurrentStep() {
   return 'unknown';
 }
 
+/**
+ * @param {number} [timeout=7000]
+ * @returns {Promise<boolean>}
+ */
 function waitForPanel2(timeout = 7000) {
   return new Promise((resolve) => {
     const start = Date.now();
@@ -324,6 +348,10 @@ function waitForPanel2(timeout = 7000) {
   });
 }
 
+/**
+ * @param {Array<[string, string]>} entries
+ * @returns {Promise<boolean>}
+ */
 async function fillSection2(entries) {
   const ready = await waitForPanel2();
   if (!ready) return false;
@@ -369,6 +397,7 @@ async function fillSection2(entries) {
   return true;
 }
 
+/** @returns {Promise<void>} */
 async function waitForModal() {
   while (true) {
     const found = Array.from(document.querySelectorAll('div')).some(
@@ -379,6 +408,10 @@ async function waitForModal() {
   }
 }
 
+/**
+ * @param {string} birthdate - dd/mm/yyyy or dd-mm-yyyy
+ * @returns {number|null}
+ */
 function countAge(birthdate) {
   if (!birthdate) return null;
 
