@@ -90,7 +90,9 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
 
               // ── Section 1 ──
               if (startSection <= 1 && !completed[1]) {
-                const pesertaEntries = entries.filter(([id]) => !id.toLowerCase().endsWith(' wali'));
+                const pesertaEntries = entries.filter(
+                  ([id]) => !id.toLowerCase().endsWith(' wali'),
+                );
                 const nikEntry = pesertaEntries.find(([id]) => id.toLowerCase() === 'nik');
                 const otherEntries = pesertaEntries.filter(([id]) => id.toLowerCase() !== 'nik');
                 let dataDitemukan = false;
@@ -136,7 +138,11 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
                 );
                 fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
 
-                notify.info('Register Form', `Terisi: ${count}/${pesertaEntries.length} field`, 2000);
+                notify.info(
+                  'Register Form',
+                  `Terisi: ${count}/${pesertaEntries.length} field`,
+                  2000,
+                );
 
                 const usia = tlEntry ? countAge(tlEntry[1]) : null;
 
