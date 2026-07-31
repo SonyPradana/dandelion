@@ -1,4 +1,14 @@
-const GENDER_VALUES = new Set(['laki-laki', 'perempuan', 'l', 'p', 'pria', 'wanita', 'lk', 'pr']);
+const GENDER_VALUES = new Set([
+  'laki-laki',
+  'perempuan',
+  'l',
+  'p',
+  'wanita',
+  'pria',
+  'laki',
+  'lk',
+  'pr',
+]);
 
 function isDigitsOnly(s) {
   for (let i = 0; i < s.length; i++) {

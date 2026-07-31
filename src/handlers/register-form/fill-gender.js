@@ -1,6 +1,6 @@
 const ALIAS_MAP = [
-  { aliases: ['laki-laki', 'laki', 'pria', 'l'], value: 'Laki-laki' },
-  { aliases: ['perempuan', 'wanita', 'p', 'perempuan'], value: 'Perempuan' },
+  { aliases: ['laki-laki', 'laki', 'pria', 'lk', 'l'], value: 'Laki-laki' },
+  { aliases: ['perempuan', 'wanita', 'perempuan', 'pr', 'p'], value: 'Perempuan' },
 ];
 
 /**
