@@ -106,7 +106,7 @@ export async function submitSection1() {
   if (!selanjutnya) return false;
   selanjutnya.click();
 
-  const lanjutBtn = await waitForModalButton('Kuota Pemeriksaan Habis', 'Lanjut', 5000);
+  const lanjutBtn = await waitForModalButton('Kuota Pemeriksaan Habis', 'Lanjut', 1000);
   if (lanjutBtn) {
     lanjutBtn.click();
     await wait(500);

@@ -1,37 +1,67 @@
-export async function fillPekerjaan(value) {
-  const target = value.trim().toLowerCase();
+function normalize(value) {
+  return value.trim().split(' ').filter(Boolean).join(' ').toLowerCase();
+}
+
+function isOccupationModal(modal) {
+  return normalize(modal.textContent).includes('pilih pekerjaan');
+}
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+export async function fillPekerjaan(value, timeout = 10_000) {
+  const target = normalize(value);
 
   const labels = document.querySelectorAll('div.mb-1.font-semibold');
   let wrapper = null;
   for (const label of labels) {
     if (label.textContent.includes('Pekerjaan')) {
-      wrapper = label.closest('.w-full');
+      wrapper = label.parentElement;
       break;
     }
   }
   if (!wrapper) return false;
 
-  const trigger = wrapper.querySelector('[class*="cursor-pointer"]');
+  let trigger = wrapper.querySelector('[class*="cursor-pointer"]');
   if (!trigger) return false;
-  trigger.click();
 
-  const found = await new Promise((resolve) => {
-    const start = Date.now();
-    const poll = () => {
-      const modal = document.querySelector('.modal-content');
-      if (modal) {
-        const buttons = modal.querySelectorAll('button');
-        for (const btn of buttons) {
-          const text = btn.textContent.trim().toLowerCase();
-          if (!text) continue;
-          if (text === target || text.includes(target)) return resolve(btn);
+  const pick = () =>
+    new Promise((resolve) => {
+      const start = Date.now();
+      const poll = () => {
+        const modals = document.querySelectorAll('.modal-content');
+        for (const modal of modals) {
+          if (!isOccupationModal(modal)) continue;
+          const buttons = modal.querySelectorAll('button');
+          for (const btn of buttons) {
+            const text = normalize(btn.textContent);
+            if (!text) continue;
+            if (text === target || text.includes(target)) return resolve(btn);
+          }
         }
+        if (Date.now() - start > timeout) return resolve(null);
+        setTimeout(poll, 100);
+      };
+      poll();
+    });
+
+  trigger.click();
+  let found = await pick();
+
+  if (!found) {
+    const open = Array.from(document.querySelectorAll('.modal-content')).find(isOccupationModal);
+    if (open) {
+      const closeBtn = open.querySelector('button.p-0.border-none');
+      if (closeBtn) {
+        closeBtn.click();
+      } else {
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       }
-      if (Date.now() - start > 5000) return resolve(null);
-      setTimeout(poll, 100);
-    };
-    poll();
-  });
+    }
+    await wait(500);
+    trigger = wrapper.querySelector('[class*="cursor-pointer"]');
+    if (trigger) trigger.click();
+    found = await pick();
+  }
 
   if (!found) return false;
   found.click();
