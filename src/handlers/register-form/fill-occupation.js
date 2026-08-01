@@ -8,7 +8,7 @@ function isOccupationModal(modal) {
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function fillPekerjaan(value, timeout = 10_000) {
+export async function fillPekerjaan(value, firstPickTimeout = 3000, retryTimeout = 10_000) {
   const target = normalize(value);
 
   const labels = document.querySelectorAll('div.mb-1.font-semibold');
@@ -24,7 +24,7 @@ export async function fillPekerjaan(value, timeout = 10_000) {
   let trigger = wrapper.querySelector('[class*="cursor-pointer"]');
   if (!trigger) return false;
 
-  const pick = () =>
+  const pick = (timeout) =>
     new Promise((resolve) => {
       const start = Date.now();
       const poll = () => {
@@ -45,7 +45,7 @@ export async function fillPekerjaan(value, timeout = 10_000) {
     });
 
   trigger.click();
-  let found = await pick();
+  let found = await pick(firstPickTimeout);
 
   if (!found) {
     const open = Array.from(document.querySelectorAll('.modal-content')).find(isOccupationModal);
@@ -60,7 +60,7 @@ export async function fillPekerjaan(value, timeout = 10_000) {
     await wait(500);
     trigger = wrapper.querySelector('[class*="cursor-pointer"]');
     if (trigger) trigger.click();
-    found = await pick();
+    found = await pick(retryTimeout);
   }
 
   if (!found) return false;

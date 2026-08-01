@@ -132,10 +132,10 @@ describe('fillPekerjaan', () => {
         btn.textContent = 'Ibu Rumah Tangga';
         reopened.appendChild(btn);
         document.body.appendChild(reopened);
-      }, 10_500);
+      }, 3600);
 
       const promise = fillPekerjaan('Ibu Rumah Tangga');
-      await vi.advanceTimersByTimeAsync(12_000);
+      await vi.advanceTimersByTimeAsync(4500);
       expect(await promise).toBe(true);
     });
   });
