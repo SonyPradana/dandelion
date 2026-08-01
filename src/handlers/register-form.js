@@ -389,12 +389,14 @@ async function fillSection2(entries) {
   const kab = getVal('Kabupaten');
   const kec = getVal('Kecamatan');
   const kel = getVal('Kelurahan');
+  let alamatOk = true;
   if (prov && kab && kec && kel) {
-    if (await fillAlamatDomisili(prov, kab, kec, kel)) count++;
+    alamatOk = await fillAlamatDomisili(prov, kab, kec, kel);
+    if (alamatOk) count++;
   }
 
   notify.info('Section 2', `Terisi: ${count} field`, 2000);
-  return true;
+  return alamatOk;
 }
 
 /** @returns {Promise<void>} */

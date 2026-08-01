@@ -86,6 +86,57 @@ describe('fillAlamatDomisili', () => {
       await vi.advanceTimersByTimeAsync(500);
       expect(await promise).toBe(true);
     });
+
+    it('should prefer exact match over partial match', async () => {
+      const l1 = makeModal('Daftar Provinsi', ['Jawa Tengah']);
+      document.body.appendChild(l1);
+
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kabupaten/Kota', ['Kab. Semarang']).childNodes);
+      }, 50);
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kecamatan', ['Ungaran Barat']).childNodes);
+      }, 150);
+
+      // "Kejibar" partial-matches target "Keji" and comes first in DOM,
+      // but exact match "Keji" must win
+      let clickedKel = null;
+      setTimeout(() => {
+        const l4 = makeModal('Daftar Kelurahan', ['Kejibar', 'Keji']);
+        l1.replaceChildren(...l4.childNodes);
+        l1.querySelectorAll('button')[0].addEventListener('click', () => {
+          clickedKel = 'Kejibar';
+        });
+        l1.querySelectorAll('button')[1].addEventListener('click', () => {
+          clickedKel = 'Keji';
+        });
+      }, 250);
+
+      const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji');
+      await vi.advanceTimersByTimeAsync(500);
+      expect(await promise).toBe(true);
+      expect(clickedKel).toBe('Keji');
+    });
+
+    it('should retry a level when its options load late', async () => {
+      const l1 = makeModal('Daftar Provinsi', ['Jawa Tengah']);
+      document.body.appendChild(l1);
+
+      // Level 2 content only appears after level 1's wait already timed out (5s + 500ms)
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kabupaten/Kota', ['Kab. Semarang']).childNodes);
+      }, 5600);
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kecamatan', ['Ungaran Barat']).childNodes);
+      }, 6000);
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kelurahan', ['Keji']).childNodes);
+      }, 6400);
+
+      const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji');
+      await vi.advanceTimersByTimeAsync(7000);
+      expect(await promise).toBe(true);
+    });
   });
 
   describe('failure cases', () => {
@@ -108,37 +159,37 @@ describe('fillAlamatDomisili', () => {
       ).toBe(false);
     });
 
-    it('should return false when modal never appears', { timeout: 15_000 }, async () => {
+    it('should return false when modal never appears', { timeout: 20_000 }, async () => {
       const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji');
-      await vi.advanceTimersByTimeAsync(6000);
+      await vi.advanceTimersByTimeAsync(11_000);
       expect(await promise).toBe(false);
     });
 
     it(
       'should return false when subtitle does not match in modal',
-      { timeout: 15_000 },
+      { timeout: 20_000 },
       async () => {
         const modal = makeModal('Wrong Title', ['Jawa Tengah']);
         document.body.appendChild(modal);
 
         const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji');
-        await vi.advanceTimersByTimeAsync(6000);
+        await vi.advanceTimersByTimeAsync(11_000);
         expect(await promise).toBe(false);
       },
     );
 
-    it('should return false when no button matches in modal', { timeout: 15_000 }, async () => {
+    it('should return false when no button matches in modal', { timeout: 20_000 }, async () => {
       const modal = makeModal('Daftar Provinsi', ['Something Else']);
       document.body.appendChild(modal);
 
       const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji');
-      await vi.advanceTimersByTimeAsync(6000);
+      await vi.advanceTimersByTimeAsync(11_000);
       expect(await promise).toBe(false);
     });
 
     it(
       'should return false if level 2 fails after level 1 succeeds',
-      { timeout: 15_000 },
+      { timeout: 20_000 },
       async () => {
         const modal = makeModal('Daftar Provinsi', ['Jawa Tengah']);
         document.body.appendChild(modal);
@@ -147,7 +198,7 @@ describe('fillAlamatDomisili', () => {
         // and modal has no matching subtitle → timeout
         const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji');
         // Level 1 verify: poll finds modal, clicks button
-        await vi.advanceTimersByTimeAsync(6000);
+        await vi.advanceTimersByTimeAsync(11_000);
         expect(await promise).toBe(false);
       },
     );

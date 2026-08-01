@@ -10,11 +10,14 @@ function waitForLevel(subtitle, targetValue, timeout = 5000) {
         );
         if (subtitleEl) {
           const buttons = modal.querySelectorAll('button');
+          let partial = null;
           for (const btn of buttons) {
             const text = btn.textContent.trim().toLowerCase();
             if (!text) continue;
-            if (text === target || text.includes(target)) return resolve(btn);
+            if (text === target) return resolve(btn);
+            if (!partial && text.includes(target)) partial = btn;
           }
+          if (partial) return resolve(partial);
         }
       }
       if (Date.now() - start > timeout) return resolve(null);
@@ -22,6 +25,10 @@ function waitForLevel(subtitle, targetValue, timeout = 5000) {
     };
     poll();
   });
+}
+
+function wait(ms) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 export async function fillAlamatDomisili(provinsi, kabupaten, kecamatan, kelurahan) {
@@ -47,7 +54,11 @@ export async function fillAlamatDomisili(provinsi, kabupaten, kecamatan, kelurah
   ];
 
   for (const level of levels) {
-    const btn = await waitForLevel(level.subtitle, level.value);
+    let btn = await waitForLevel(level.subtitle, level.value);
+    if (!btn) {
+      await wait(500);
+      btn = await waitForLevel(level.subtitle, level.value);
+    }
     if (!btn) return false;
     btn.click();
   }
