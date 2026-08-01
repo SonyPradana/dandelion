@@ -49,6 +49,51 @@ describe('fillPekerjaan', () => {
     });
   });
 
+  describe('success — exact match wins over partial', () => {
+    it('should prefer exact "PNS" over partial match when both exist', async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      const trigger = document.createElement('div');
+      trigger.className = 'cursor-pointer';
+      trigger.textContent = 'Pilih';
+      wrapper.appendChild(trigger);
+      document.body.appendChild(wrapper);
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-content';
+      const header = document.createElement('div');
+      header.textContent = 'Pilih Pekerjaan';
+      modal.appendChild(header);
+
+      // Partial match "PNS Pensiunan" appears first in DOM
+      const partialBtn = document.createElement('button');
+      partialBtn.textContent = 'PNS Pensiunan';
+      modal.appendChild(partialBtn);
+
+      // Exact match "PNS" appears later
+      const exactBtn = document.createElement('button');
+      exactBtn.textContent = 'PNS';
+      modal.appendChild(exactBtn);
+
+      document.body.appendChild(modal);
+
+      let clicked = null;
+      partialBtn.addEventListener('click', () => {
+        clicked = 'PNS Pensiunan';
+      });
+      exactBtn.addEventListener('click', () => {
+        clicked = 'PNS';
+      });
+
+      await fillPekerjaan('PNS');
+      expect(clicked).toBe('PNS');
+    });
+  });
+
   describe('success flow', () => {
     it('should click trigger', async () => {
       const trigger = document.querySelector('[class*="cursor-pointer"]');

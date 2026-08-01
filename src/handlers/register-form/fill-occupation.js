@@ -32,11 +32,14 @@ export async function fillPekerjaan(value, firstPickTimeout = 3000, retryTimeout
         for (const modal of modals) {
           if (!isOccupationModal(modal)) continue;
           const buttons = modal.querySelectorAll('button');
+          let partial = null;
           for (const btn of buttons) {
             const text = normalize(btn.textContent);
             if (!text) continue;
-            if (text === target || text.includes(target)) return resolve(btn);
+            if (text === target) return resolve(btn);
+            if (!partial && text.includes(target)) partial = btn;
           }
+          if (partial) return resolve(partial);
         }
         if (Date.now() - start > timeout) return resolve(null);
         setTimeout(poll, 100);
