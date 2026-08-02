@@ -26,6 +26,24 @@
         <p class="subtitle">Quota Token Generator</p>
       </header>
 
+      <section class="presets" aria-label="Quick presets">
+        <div class="preset-card" data-total="40000" data-expiry="7d" data-daily="200">
+          <span class="preset-token">40.000</span>
+          <span class="preset-unit">tokens</span>
+          <span class="preset-expiry">7 days</span>
+        </div>
+        <div class="preset-card" data-total="50000" data-expiry="14d" data-daily="300">
+          <span class="preset-token">50.000</span>
+          <span class="preset-unit">tokens</span>
+          <span class="preset-expiry">14 days</span>
+        </div>
+        <div class="preset-card" data-total="150000" data-expiry="28d" data-daily="500">
+          <span class="preset-token">150.000</span>
+          <span class="preset-unit">tokens</span>
+          <span class="preset-expiry">28 days</span>
+        </div>
+      </section>
+
       <form id="tokenForm">
         <div class="field">
           <label>Private Key (PEM)</label>
@@ -50,11 +68,11 @@
           </div>
           <div class="field">
             <label for="totalLimit">Total Limit (points)</label>
-            <input type="number" id="totalLimit" value="30000" min="0" />
+            <input type="number" id="totalLimit" value="40000" min="0" />
           </div>
           <div class="field">
             <label for="dailyLimit">Daily Limit</label>
-            <input type="number" id="dailyLimit" value="150" min="0" />
+            <input type="number" id="dailyLimit" value="200" min="0" />
           </div>
         </div>
 

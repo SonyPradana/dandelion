@@ -216,3 +216,21 @@ copyShareBtn.addEventListener('click', async () => {
     document.execCommand('copy');
   }
 });
+
+const presetCards = document.querySelectorAll('.preset-card');
+const totalLimitInput = document.getElementById('totalLimit');
+const dailyLimitInput = document.getElementById('dailyLimit');
+const expiryInput = document.getElementById('expiry');
+
+function applyPreset(card) {
+  totalLimitInput.value = card.dataset.total;
+  dailyLimitInput.value = card.dataset.daily;
+  expiryInput.value = card.dataset.expiry;
+  presetCards.forEach((c) => c.classList.toggle('active', c === card));
+}
+
+presetCards.forEach((card) => {
+  card.addEventListener('click', () => applyPreset(card));
+});
+
+applyPreset(presetCards[0]);
