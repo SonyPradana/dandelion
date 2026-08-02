@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,11 +20,6 @@ export default [
       },
     },
     resolve: { alias },
-    transform: {
-      define: {
-        __DANDELION_HOST__: JSON.stringify(process.env.HOST || ''),
-      },
-    },
   },
   {
     input: {

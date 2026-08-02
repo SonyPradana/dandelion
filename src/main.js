@@ -24,7 +24,7 @@ async function main() {
 
   await quotaInit();
 
-  if (isShareTokenUrl(window.location.href, __DANDELION_HOST__)) {
+  if (isShareTokenUrl(window.location.href)) {
     initializeShareToken();
     return;
   }

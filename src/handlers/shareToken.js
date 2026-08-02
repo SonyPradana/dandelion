@@ -8,14 +8,11 @@ const TOKEN_SELECTORS = ['#jwtOutput', '[data-dandelion-token]'];
 
 /**
  * Detects a share-token page by its path.
- * Uses exact segment matching (no regex).
- * Host is only enforced when an official host is provided and is not the
- * local dev marker, otherwise any host is accepted (dev environment).
+ * Uses exact segment matching (no regex). Any host is accepted.
  * @param {string} url
- * @param {string} [officialHost] - Official extension host (from env HOST).
  * @returns {boolean}
  */
-export function isShareTokenUrl(url, officialHost = '') {
+export function isShareTokenUrl(url) {
   let parsed = null;
   try {
     parsed = new URL(url);
@@ -25,13 +22,7 @@ export function isShareTokenUrl(url, officialHost = '') {
 
   const segments = parsed.pathname.split('/').filter(Boolean);
   const isSharePath = segments[0] === 's' || segments[0] === 'share';
-  if (!isSharePath || !segments[1]) return false;
-
-  if (officialHost && officialHost !== 'localhost') {
-    return parsed.hostname === officialHost;
-  }
-
-  return true;
+  return isSharePath && Boolean(segments[1]);
 }
 
 function findTokenElement() {

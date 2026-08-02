@@ -44,14 +44,10 @@ describe('isShareTokenUrl', () => {
     expect(isShareTokenUrl('https://dandelion.web.id/share/')).toBe(false);
   });
 
-  it('enforces host when officialHost is set', () => {
-    expect(isShareTokenUrl('https://evil.example.com/s/abc', 'dandelion.web.id')).toBe(false);
-    expect(isShareTokenUrl('https://dandelion.web.id/s/abc', 'dandelion.web.id')).toBe(true);
-  });
-
-  it('skips host check for empty or localhost host (dev)', () => {
-    expect(isShareTokenUrl('http://localhost:3000/s/abc', 'localhost')).toBe(true);
-    expect(isShareTokenUrl('http://any.dev/share/abc', '')).toBe(true);
+  it('accepts any host', () => {
+    expect(isShareTokenUrl('https://evil.example.com/share/abc')).toBe(true);
+    expect(isShareTokenUrl('http://localhost:3000/s/abc')).toBe(true);
+    expect(isShareTokenUrl('http://any.dev/share/abc')).toBe(true);
   });
 });
 

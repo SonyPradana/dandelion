@@ -5,9 +5,6 @@
     "style": "deny",
     "perf": "deny"
   },
-  "globals": {
-    "__DANDELION_HOST__": "readonly"
-  },
   "rules": {
     "eslint/prefer-named-capture-group": "off",
     "func-style": "off",
