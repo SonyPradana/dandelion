@@ -1,3 +1,4 @@
+import { h } from '../utils/dom';
 import { createBasePanel, createPanelButton } from './notification/base';
 import { notify } from './notification';
 import { setFlashData, clearFlashData } from '../utils/flashSession';
@@ -5,11 +6,13 @@ import { addKvRow, rebuildKvRows, S } from './flashKvRow';
 
 const PANEL_ID = 'dandelion-flash-data';
 
-export function showFlashDataPanel() {
+export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey, validate } = {}) {
+  const _setData = setData || setFlashData;
+  const _clearData = clearData || clearFlashData;
   const existing = document.getElementById(PANEL_ID);
   if (existing) existing.remove();
 
-  clearFlashData();
+  _clearData();
 
   const { panel, contentArea, setHeader, remove } = createBasePanel(PANEL_ID);
 
@@ -177,9 +180,38 @@ export function showFlashDataPanel() {
       return;
     }
 
-    clearFlashData();
-    setFlashData({ pinneds: { ...sharedData } });
+    let data = sharedData;
+    if (normalizeKey) {
+      const normalized = {};
+      for (const [k, v] of Object.entries(data)) {
+        normalized[normalizeKey(k)] = v;
+      }
+      data = normalized;
+    }
+
+    if (validate) {
+      const errors = validate(data);
+      if (errors.length > 0) {
+        const { contentArea, setHeader, remove } = createBasePanel(
+          `dandelion-validation-${Date.now()}-${Math.random()}`,
+        );
+        contentArea.append(
+          setHeader('Register Form', '#4ade80'),
+          h(
+            'ul',
+            { style: 'margin:0;padding-left:16px;list-style:disc;line-height:1.6' },
+            ...errors.map((e) => h('li', null, h('b', null, e.key), ': ' + e.message)),
+          ),
+        );
+        setTimeout(remove, 3000);
+        return;
+      }
+    }
+
+    _clearData();
+    _setData({ pinneds: { ...data } });
     notify.info('Flash Data', 'Tersimpan', 1500);
+    if (onSave) onSave(data);
   };
 
   btnContainer.appendChild(useBtn);

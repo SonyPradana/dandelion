@@ -193,11 +193,16 @@ class ControlPanel {
     if (slot) {
       if (slot.contains(element)) return;
 
-      if (slotId === 3 && slot.children.length >= 5) {
-        slot.children[0].remove();
+      if (slotId === 3) {
+        const nonPinned = Array.from(slot.children).filter((c) => !c.dataset.pinned);
+        if (nonPinned.length >= 5) {
+          nonPinned[0].remove();
+        }
       }
 
       if (slotId === 2 && element.id === 'dandelion-debug-toggle') {
+        slot.prepend(element);
+      } else if (element.dataset.pinned) {
         slot.prepend(element);
       } else {
         slot.appendChild(element);

@@ -38,3 +38,7 @@ bus.on('notChecked:didProcessItem', () => {
 bus.on('zenMode:didProcessItem', () => {
   increment('formZen');
 });
+
+bus.on('registerForm:sectionComplete', () => {
+  incrementBatch({ registerForm: 1 });
+});

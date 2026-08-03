@@ -34,6 +34,7 @@ describe('productivityTracker', () => {
         dropdown: 1,
         formNotChecked: 5,
         formZen: 5,
+        registerForm: 25,
       });
     });
 
@@ -164,6 +165,7 @@ describe('productivityTracker', () => {
       expect(result.counts).toHaveProperty('dropdown');
       expect(result.counts).toHaveProperty('formNotChecked');
       expect(result.counts).toHaveProperty('formZen');
+      expect(result.counts).toHaveProperty('registerForm');
     });
   });
 

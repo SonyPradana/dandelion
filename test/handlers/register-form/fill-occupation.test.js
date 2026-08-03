@@ -1,0 +1,305 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+import { fillPekerjaan } from '../../../src/handlers/register-form/fill-occupation.js';
+
+const html = readFileSync(resolve('test/__fixtures__/register-form/occupation.html'), 'utf8');
+
+function loadFixture() {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  document.body.replaceChildren(...doc.body.children);
+}
+
+describe('fillPekerjaan', () => {
+  beforeEach(() => {
+    loadFixture();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe('success — exact match', () => {
+    it('should match "Ibu Rumah Tangga"', async () => {
+      expect(await fillPekerjaan('Ibu Rumah Tangga')).toBe(true);
+    });
+
+    it('should match "Karyawan Swasta"', async () => {
+      expect(await fillPekerjaan('Karyawan Swasta')).toBe(true);
+    });
+
+    it('should match "Petani"', async () => {
+      expect(await fillPekerjaan('Petani')).toBe(true);
+    });
+  });
+
+  describe('success — partial match', () => {
+    it('should match partial "Rumah" for "Ibu Rumah Tangga"', async () => {
+      expect(await fillPekerjaan('Rumah')).toBe(true);
+    });
+
+    it('should match partial "PNS"', async () => {
+      expect(await fillPekerjaan('PNS')).toBe(true);
+    });
+
+    it('should match partial "swasta" lowercase', async () => {
+      expect(await fillPekerjaan('swasta')).toBe(true);
+    });
+  });
+
+  describe('success — exact match wins over partial', () => {
+    it('should prefer exact "PNS" over partial match when both exist', async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      const trigger = document.createElement('div');
+      trigger.className = 'cursor-pointer';
+      trigger.textContent = 'Pilih';
+      wrapper.appendChild(trigger);
+      document.body.appendChild(wrapper);
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-content';
+      const header = document.createElement('div');
+      header.textContent = 'Pilih Pekerjaan';
+      modal.appendChild(header);
+
+      // Partial match "PNS Pensiunan" appears first in DOM
+      const partialBtn = document.createElement('button');
+      partialBtn.textContent = 'PNS Pensiunan';
+      modal.appendChild(partialBtn);
+
+      // Exact match "PNS" appears later
+      const exactBtn = document.createElement('button');
+      exactBtn.textContent = 'PNS';
+      modal.appendChild(exactBtn);
+
+      document.body.appendChild(modal);
+
+      let clicked = null;
+      partialBtn.addEventListener('click', () => {
+        clicked = 'PNS Pensiunan';
+      });
+      exactBtn.addEventListener('click', () => {
+        clicked = 'PNS';
+      });
+
+      await fillPekerjaan('PNS');
+      expect(clicked).toBe('PNS');
+    });
+  });
+
+  describe('success flow', () => {
+    it('should click trigger', async () => {
+      const trigger = document.querySelector('[class*="cursor-pointer"]');
+      const clickSpy = vi.spyOn(trigger, 'click');
+
+      await fillPekerjaan('Ibu Rumah Tangga');
+      expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('should click the correct modal button', async () => {
+      const modalBtn = document.querySelector('.modal-content button');
+      const clickSpy = vi.spyOn(modalBtn, 'click');
+
+      await fillPekerjaan('Ibu Rumah Tangga');
+      expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('should select option that loads asynchronously', { timeout: 15_000 }, async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'w-full';
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      const trigger = document.createElement('div');
+      trigger.className = 'cursor-pointer';
+      trigger.textContent = 'Pilih';
+      wrapper.appendChild(trigger);
+      document.body.appendChild(wrapper);
+
+      setTimeout(() => {
+        const modal = document.createElement('div');
+        modal.className = 'modal-content';
+        const header = document.createElement('div');
+        header.textContent = 'Pilih Pekerjaan';
+        modal.appendChild(header);
+        const btn = document.createElement('button');
+        btn.textContent = 'Ibu Rumah Tangga';
+        modal.appendChild(btn);
+        document.body.appendChild(modal);
+      }, 200);
+
+      const promise = fillPekerjaan('Ibu Rumah Tangga');
+      await vi.advanceTimersByTimeAsync(2000);
+      expect(await promise).toBe(true);
+    });
+
+    it('should retry when first attempt finds no option', { timeout: 15_000 }, async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'w-full';
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      const trigger = document.createElement('div');
+      trigger.className = 'cursor-pointer';
+      trigger.textContent = 'Pilih';
+      wrapper.appendChild(trigger);
+      document.body.appendChild(wrapper);
+
+      const emptyModal = document.createElement('div');
+      emptyModal.className = 'modal-content';
+      const header = document.createElement('div');
+      header.textContent = 'Pilih Pekerjaan';
+      emptyModal.appendChild(header);
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'p-0 border-none';
+      emptyModal.appendChild(closeBtn);
+      document.body.appendChild(emptyModal);
+
+      setTimeout(() => {
+        document.body.querySelectorAll('.modal-content').forEach((el) => el.remove());
+        const reopened = document.createElement('div');
+        reopened.className = 'modal-content';
+        const h2 = document.createElement('div');
+        h2.textContent = 'Pilih Pekerjaan';
+        reopened.appendChild(h2);
+        const btn = document.createElement('button');
+        btn.textContent = 'Ibu Rumah Tangga';
+        reopened.appendChild(btn);
+        document.body.appendChild(reopened);
+      }, 3600);
+
+      const promise = fillPekerjaan('Ibu Rumah Tangga');
+      await vi.advanceTimersByTimeAsync(4500);
+      expect(await promise).toBe(true);
+    });
+  });
+
+  describe('failure cases', () => {
+    it('should return false when wrapper not found', async () => {
+      document.body.replaceChildren(document.createElement('div'));
+      expect(await fillPekerjaan('Ibu Rumah Tangga')).toBe(false);
+    });
+
+    it('should return false when trigger not found', async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'w-full';
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      document.body.appendChild(wrapper);
+
+      expect(await fillPekerjaan('Ibu Rumah Tangga')).toBe(false);
+    });
+
+    it('should return false when modal never appears', { timeout: 15_000 }, async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'w-full';
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      const trigger = document.createElement('div');
+      trigger.className = 'cursor-pointer';
+      trigger.textContent = 'Pilih';
+      wrapper.appendChild(trigger);
+      document.body.appendChild(wrapper);
+
+      const promise = fillPekerjaan('Ibu Rumah Tangga');
+      await vi.advanceTimersByTimeAsync(22_000);
+      expect(await promise).toBe(false);
+    });
+
+    it('should return false when no button matches in modal', { timeout: 15_000 }, async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'w-full';
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      const trigger = document.createElement('div');
+      trigger.className = 'cursor-pointer';
+      trigger.textContent = 'Pilih';
+      wrapper.appendChild(trigger);
+      document.body.appendChild(wrapper);
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-content';
+      const header = document.createElement('div');
+      header.textContent = 'Pilih Pekerjaan';
+      modal.appendChild(header);
+      const btn = document.createElement('button');
+      btn.textContent = 'Something Else';
+      modal.appendChild(btn);
+      document.body.appendChild(modal);
+
+      const promise = fillPekerjaan('Ibu Rumah Tangga');
+      await vi.advanceTimersByTimeAsync(22_000);
+      expect(await promise).toBe(false);
+    });
+
+    it('should return false when label does not match', async () => {
+      document.body.replaceChildren();
+      const wrapper = document.createElement('div');
+      wrapper.className = 'w-full';
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Other Label *';
+      wrapper.appendChild(label);
+      document.body.appendChild(wrapper);
+
+      expect(await fillPekerjaan('Ibu Rumah Tangga')).toBe(false);
+    });
+
+    it('should ignore "Pilih Pekerjaan" modal header when finding form label', async () => {
+      document.body.replaceChildren();
+      const modal = document.createElement('div');
+      modal.className = 'modal-content';
+      const header = document.createElement('div');
+      header.className = 'text-lg font-semibold';
+      header.textContent = 'Pilih Pekerjaan';
+      modal.appendChild(header);
+      const btn = document.createElement('button');
+      btn.textContent = 'Ibu Rumah Tangga';
+      modal.appendChild(btn);
+      document.body.appendChild(modal);
+
+      const wrapper = document.createElement('div');
+      const label = document.createElement('div');
+      label.className = 'mb-1 font-semibold';
+      label.textContent = 'Pekerjaan *';
+      wrapper.appendChild(label);
+      const trigger = document.createElement('div');
+      trigger.className = 'cursor-pointer';
+      trigger.textContent = 'Pilih';
+      wrapper.appendChild(trigger);
+      document.body.appendChild(wrapper);
+
+      expect(await fillPekerjaan('Ibu Rumah Tangga')).toBe(true);
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle mixed case input', async () => {
+      expect(await fillPekerjaan('ibu rumah tangga')).toBe(true);
+    });
+
+    it('should handle extra whitespace', async () => {
+      expect(await fillPekerjaan('  Ibu Rumah Tangga  ')).toBe(true);
+    });
+  });
+});
