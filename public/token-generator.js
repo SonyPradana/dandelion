@@ -16,6 +16,7 @@ if (!crypto.subtle) {
 }
 
 import { SignJWT, importPKCS8 } from 'https://esm.sh/jose@6.2.3';
+import { TOKEN_PRESETS } from './token-presets.js';
 
 const privateKeyEl = document.getElementById('privateKey');
 const form = document.getElementById('tokenForm');
@@ -216,3 +217,39 @@ copyShareBtn.addEventListener('click', async () => {
     document.execCommand('copy');
   }
 });
+
+const totalLimitInput = document.getElementById('totalLimit');
+const dailyLimitInput = document.getElementById('dailyLimit');
+const expiryInput = document.getElementById('expiry');
+
+let presetCards = null;
+
+function applyPreset(card) {
+  totalLimitInput.value = card.dataset.total;
+  dailyLimitInput.value = card.dataset.daily;
+  expiryInput.value = card.dataset.expiry;
+  presetCards.forEach((c) => c.classList.toggle('active', c === card));
+}
+
+function renderPresets() {
+  const container = document.getElementById('presets');
+  container.innerHTML = '';
+  TOKEN_PRESETS.forEach((preset) => {
+    const card = document.createElement('div');
+    card.className = 'preset-card';
+    card.dataset.total = preset.total;
+    card.dataset.expiry = `${preset.days}d`;
+    card.dataset.daily = preset.daily;
+    card.innerHTML = `
+      <span class="preset-token">${preset.total.toLocaleString('id-ID')}</span>
+      <span class="preset-unit">tokens</span>
+      <span class="preset-expiry">${preset.days} days</span>
+    `;
+    card.addEventListener('click', () => applyPreset(card));
+    container.appendChild(card);
+  });
+  presetCards = document.querySelectorAll('.preset-card');
+}
+
+renderPresets();
+applyPreset(presetCards[0]);
