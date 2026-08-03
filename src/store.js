@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   PRODUCTIVITY: 'productivity_stats',
   DEVICE_ID: 'device_id',
   QUOTA_TOKEN: 'dandelion_quota_token',
+  SHARE_TOKEN_APPLIED: 'dandelion_share_token_applied',
   CACHE: 'license-cache',
 };
 
@@ -198,6 +199,19 @@ class DandelionStore {
     await this._browser.storage.local.remove(STORAGE_KEYS.QUOTA_TOKEN);
   }
 
+  async getShareTokenApplied() {
+    const result = await this._browser.storage.local.get(STORAGE_KEYS.SHARE_TOKEN_APPLIED);
+    return result[STORAGE_KEYS.SHARE_TOKEN_APPLIED] === true;
+  }
+
+  async setShareTokenApplied() {
+    await this._browser.storage.local.set({ [STORAGE_KEYS.SHARE_TOKEN_APPLIED]: true });
+  }
+
+  async clearShareTokenApplied() {
+    await this._browser.storage.local.remove(STORAGE_KEYS.SHARE_TOKEN_APPLIED);
+  }
+
   async getCache() {
     try {
       const result = await this._browser.storage.local.get(STORAGE_KEYS.CACHE);
@@ -253,6 +267,9 @@ export const setDeviceId = (...a) => store.setDeviceId(...a);
 export const getQuotaToken = (...a) => store.getQuotaToken(...a);
 export const saveQuotaToken = (...a) => store.saveQuotaToken(...a);
 export const removeQuotaToken = (...a) => store.removeQuotaToken(...a);
+export const getShareTokenApplied = (...a) => store.getShareTokenApplied(...a);
+export const setShareTokenApplied = (...a) => store.setShareTokenApplied(...a);
+export const clearShareTokenApplied = (...a) => store.clearShareTokenApplied(...a);
 export const getCache = (...a) => store.getCache(...a);
 export const setCache = (...a) => store.setCache(...a);
 export const clearCache = (...a) => store.clearCache(...a);

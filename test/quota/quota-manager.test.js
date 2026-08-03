@@ -18,6 +18,7 @@ import {
   canUseTokens,
   removeToken,
   saveToken,
+  applyShareToken,
   getToken,
 } from '../../src/quota/quota-manager.js';
 
@@ -215,6 +216,34 @@ describe('quota-manager', () => {
       const s = getStatus();
       expect(s.status).toBe('none');
       expect(s.isFreePlan).toBe(true);
+    });
+  });
+
+  describe('applyShareToken', () => {
+    it('should save and activate a token from another device', async () => {
+      await store.setDeviceId('test-device');
+      verifyLicense.mockResolvedValue({
+        license_id: 'other-device',
+        features: ['premium'],
+        // oxlint-disable-next-line unicorn/numeric-separators-style
+        total_limit: 100000,
+        daily_limit: 100,
+        version_allowed: ['*'],
+      });
+      await applyShareToken('share-jwt');
+      expect(await getToken()).toBe('share-jwt');
+      const s = getStatus();
+      expect(s.status).toBe('valid');
+      expect(s.isFreePlan).toBe(false);
+    });
+
+    it('should throw when verifyLicense returns null', async () => {
+      verifyLicense.mockResolvedValue(null);
+      await expect(applyShareToken('bad-token')).rejects.toThrow('Token tidak valid');
+    });
+
+    it('should throw for invalid token string', async () => {
+      await expect(applyShareToken('')).rejects.toThrow('Invalid token string');
     });
   });
 

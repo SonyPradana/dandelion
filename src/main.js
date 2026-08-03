@@ -11,6 +11,7 @@ import { validateChain, isDailyLimitReached } from './utils/productivityTracker.
 import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quota-manager.js';
 import { controlPanel } from './components/controlPanel.js';
 import { notify } from './components/notification';
+import { initializeShareToken, isShareTokenUrl } from './handlers/shareToken.js';
 
 store.init(browser);
 
@@ -23,6 +24,11 @@ async function main() {
   controlPanel.setPosition(config.panelPosition || 'top-right');
 
   await quotaInit();
+
+  if (isShareTokenUrl(window.location.href)) {
+    initializeShareToken();
+    return;
+  }
 
   const result = await validateChain();
   if (!result.valid) {

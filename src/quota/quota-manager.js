@@ -61,6 +61,7 @@ function versionMatch(pattern, version) {
  */
 export async function init(store = globalStore) {
   await getOrCreateDeviceId(store);
+  const shareApplied = await store.getShareTokenApplied();
 
   const cached = await getCache(store);
   if (cached) {
@@ -110,7 +111,7 @@ export async function init(store = globalStore) {
       return;
     }
 
-    if (payload.license_id && payload.license_id !== _state.deviceId) {
+    if (!shareApplied && payload.license_id && payload.license_id !== _state.deviceId) {
       _state.status = 'none';
       _state.payload = { ...FREE_PLAN };
       _state.isFreePlan = true;
@@ -251,10 +252,34 @@ export async function saveToken(jwtString, store = globalStore) {
 }
 
 /**
+ * Saves a token applied from a share link.
+ * Verifies only the signature and expiry — does NOT enforce device binding,
+ * so tokens shared from other devices can be applied.
+ * @param {string} jwtString
+ * @param {import('../store.js').DandelionStore} [store]
+ * @returns {Promise<object>} Verified JWT payload.
+ */
+export async function applyShareToken(jwtString, store = globalStore) {
+  if (typeof jwtString !== 'string' || jwtString.trim().length === 0) {
+    throw new Error('Invalid token string');
+  }
+  const payload = await verifyLicense(jwtString.trim());
+  if (!payload) {
+    throw new Error('Token tidak valid atau sudah kadaluarsa');
+  }
+  await store.saveQuotaToken(jwtString.trim());
+  await store.setShareTokenApplied();
+  await store.clearCache();
+  await init(store);
+  return payload;
+}
+
+/**
  * @param {import('../store.js').DandelionStore} [store]
  */
 export async function removeToken(store = globalStore) {
   await store.removeQuotaToken();
+  await store.clearShareTokenApplied();
   await store.clearCache();
   _state.status = 'none';
   _state.payload = { ...FREE_PLAN };
