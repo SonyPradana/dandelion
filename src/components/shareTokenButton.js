@@ -1,20 +1,17 @@
+import { h } from '../utils/dom';
+
 /**
  * Creates the "Terapkan" button for applying a token from a share page.
  * Disabled by default and only enabled after the token has been pre-verified.
  * @returns {HTMLButtonElement}
  */
 export function shareTokenButton() {
-  const btn = document.createElement('button');
-  btn.id = 'dandelion-share-token-apply';
-  btn.textContent = '🚀 Terapkan';
-  btn.title = 'Terapkan token share';
-  btn.disabled = true;
-
   const styleId = 'dandelion-share-token-style';
   if (!document.getElementById(styleId)) {
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
+    document.head.appendChild(
+      h('style', {
+        id: styleId,
+        textContent: `
       #dandelion-share-token-apply:disabled {
         opacity: 0.4;
         cursor: not-allowed;
@@ -31,15 +28,16 @@ export function shareTokenButton() {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 0 18px 4px rgba(34, 197, 94, 0.45);
         }
       }
-      .dandelion-running {
-        opacity: 0.5 !important;
-        cursor: not-allowed !important;
-        filter: grayscale(1) !important;
-        pointer-events: none !important;
-        animation: none !important;
-      }
-    `;
-    document.head.appendChild(style);
+        .dandelion-running {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+          filter: grayscale(1) !important;
+          pointer-events: none !important;
+          animation: none !important;
+        }
+      `,
+      }),
+    );
   }
 
   const baseStyle = `
@@ -61,7 +59,13 @@ export function shareTokenButton() {
     pointer-events: auto;
   `;
 
-  btn.style.cssText = baseStyle;
+  const btn = h('button', {
+    id: 'dandelion-share-token-apply',
+    textContent: '🚀 Terapkan',
+    title: 'Terapkan token share',
+    disabled: true,
+    style: baseStyle,
+  });
 
   /**
    * Enables or disables the button.

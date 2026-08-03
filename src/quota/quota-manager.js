@@ -245,7 +245,7 @@ export async function saveToken(jwtString, store = globalStore) {
 }
 
 /**
- * Saves a token applied from a share link (verification santai).
+ * Saves a token applied from a share link.
  * Verifies only the signature and expiry — does NOT enforce device binding,
  * so tokens shared from other devices can be applied.
  * @param {string} jwtString
