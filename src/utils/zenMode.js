@@ -5,6 +5,7 @@ import { store as globalStore } from '../store.js';
  * @property {boolean} active - Whether Zen Mode is enabled.
  * @property {string[]} queue - List of IDs to visit.
  * @property {number} total - Total number of IDs initially in the queue.
+ * @property {'zen'|'zero'} [mode] - Which automation owns the queue (Zen or Zero Mode).
  */
 
 /**

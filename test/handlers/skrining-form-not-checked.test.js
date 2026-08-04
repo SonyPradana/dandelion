@@ -157,7 +157,7 @@ describe('skrining-form-not-checked', () => {
       expect(rowChildren[1]).toBe(mainBtn);
     });
 
-    it('should NOT mount Zero button when zero-mode feature is disabled', async () => {
+    it('should NOT mount Zero or zen buttons when zen-mode feature is disabled', async () => {
       document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
       vi.mocked(isFeatureEnabled).mockReturnValue(false);
 
@@ -167,21 +167,10 @@ describe('skrining-form-not-checked', () => {
 
       expect(document.getElementById('dandelion-zero-row')).toBeFalsy();
       expect(document.getElementById('dandelion-zero-toggle')).toBeFalsy();
+      expect(document.getElementById('dandelion-zen-mode-toggle')).toBeFalsy();
 
       const mainBtn = document.getElementById('dandelion-not-checked-automation');
       expect(mainBtn).toBeTruthy();
-    });
-
-    it('should NOT mount zen button when zen-mode feature is disabled', async () => {
-      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
-      vi.mocked(isFeatureEnabled).mockReturnValue(false);
-
-      initialize();
-
-      await vi.advanceTimersByTimeAsync(0);
-
-      expect(document.getElementById('dandelion-zen-mode-toggle')).toBeFalsy();
-      expect(document.getElementById('dandelion-not-checked-automation')).toBeTruthy();
     });
 
     it('should dim (not activate) the zen button while Zero is running', async () => {

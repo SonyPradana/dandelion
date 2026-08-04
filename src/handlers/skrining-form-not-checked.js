@@ -36,8 +36,10 @@ let isStandardAutomationActive = false;
  */
 export function initialize() {
   startStateMonitor();
-  if (isFeatureEnabled('zen-mode')) initializeZenMode();
-  if (isFeatureEnabled('zero-mode')) initializeZeroMode();
+  if (isFeatureEnabled('zen-mode')) {
+    initializeZenMode();
+    initializeZeroMode();
+  }
 }
 
 /**
@@ -117,8 +119,8 @@ async function ensureButtonsMounted(isProcessing) {
   const hasPending = pendingResult !== null;
   const isRunningLocally = hasPending;
 
-  const zeroEnabled = isFeatureEnabled('zero-mode');
   const zenEnabled = isFeatureEnabled('zen-mode');
+  const zeroEnabled = zenEnabled;
 
   if (!mainBtn) {
     mainBtn = button('dandelion-not-checked-automation');
@@ -148,8 +150,7 @@ async function ensureButtonsMounted(isProcessing) {
       profileIndicator.addEventListener('mouseleave', hideProfile);
 
       mainBtn.addEventListener('click', async () => {
-        if (isStandardAutomationActive || (await isZenModeActive()) || (await isZeroRunning()))
-          return;
+        if (isStandardAutomationActive || (await isZenModeActive())) return;
 
         const pending = await store.storageGet(STORAGE_KEY);
 
@@ -208,8 +209,7 @@ async function ensureButtonsMounted(isProcessing) {
       zeroBtn = zeroButton(false);
 
       zeroBtn.addEventListener('click', async () => {
-        if (isStandardAutomationActive || (await isZenModeActive()) || (await isZeroRunning()))
-          return;
+        if (isStandardAutomationActive || (await isZenModeActive())) return;
         startZeroAutomation();
       });
 
@@ -245,8 +245,7 @@ async function ensureButtonsMounted(isProcessing) {
     debugBtn = debugButton();
     if (debugBtn) {
       debugBtn.addEventListener('click', async () => {
-        if (isStandardAutomationActive || (await isZenModeActive()) || (await isZeroRunning()))
-          return;
+        if (isStandardAutomationActive || (await isZenModeActive())) return;
         await toggleHelperMode();
       });
       controlPanel.mount(debugBtn, 2);

@@ -14,7 +14,6 @@ import { notify } from '../components/notification';
 import bus from '../utils/hooks';
 import { showFlashDataPanelIfEnabled } from './flashData';
 import { clearFlashData } from '../utils/flashSession';
-import { isZeroRunning } from './zero-mode';
 
 let isAutomationActive = false;
 
@@ -30,12 +29,7 @@ export function initializeZenMode() {
 
     try {
       const state = await getZenModeState();
-      if (
-        state.active &&
-        state.queue.length > 0 &&
-        !isAutomationActive &&
-        !(await isZeroRunning())
-      ) {
+      if (state.active && state.queue.length > 0 && !isAutomationActive && state.mode !== 'zero') {
         resumeZenAutomation();
       }
       setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
@@ -98,6 +92,7 @@ export async function startZenAutomation() {
     active: true,
     queue: pendingIds,
     total: pendingIds.length,
+    mode: 'zen',
   };
   await setZenModeState(state);
   isAutomationActive = true;

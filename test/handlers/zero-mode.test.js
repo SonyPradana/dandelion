@@ -23,10 +23,17 @@ vi.mock('../../src/handlers/flashData', () => ({
   showFlashDataPanelIfEnabled: vi.fn(),
 }));
 
+vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
+  waitForRow: vi.fn(() => new Promise(() => {})),
+  waitForElement: vi.fn(),
+  clickFinishServiceButton: vi.fn(),
+  hasRemainingForms: vi.fn().mockResolvedValue(false),
+}));
+
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { startZeroAutomation, isZeroRunning, getZeroQueue } from '../../src/handlers/zero-mode';
-import { isInNotCheckedList } from '../../src/utils/notChecked';
+import { waitForRow, waitForElement } from '../../src/handlers/inspection/not-checked-utils';
 
 describe('zero-mode', () => {
   beforeEach(async () => {
@@ -53,8 +60,28 @@ describe('zero-mode', () => {
     vi.useRealTimers();
   });
 
+  async function flushAll() {
+    for (let i = 0; i < 20; i += 1) {
+      await vi.advanceTimersByTimeAsync(0);
+    }
+  }
+
   describe('startZeroAutomation', () => {
-    it('should partition pending rows into uncheck and zen targets', async () => {
+    it('should save the pending rows to the shared zen state with mode zero', async () => {
+      mockNotify.confirm.mockResolvedValue(true);
+
+      await startZeroAutomation();
+
+      const state = await store.getZenModeState();
+      expect(state).toEqual({
+        active: true,
+        queue: ['rowfrmabc000002'],
+        total: 1,
+        mode: 'zero',
+      });
+    });
+
+    it('should keep the same queue regardless of the notCheckedList membership', async () => {
       await store.setConfig({
         activeProfile: 'profile1',
         profiles: {
@@ -67,27 +94,13 @@ describe('zero-mode', () => {
           },
         },
       });
-
-      expect(await isInNotCheckedList('rowfrmabc000002')).toBe(true);
       mockNotify.confirm.mockResolvedValue(true);
 
       await startZeroAutomation();
 
-      const queueRaw = await store.storageGet('dandelion_zero_queue');
-      expect(queueRaw).toBeTruthy();
-      const queue = JSON.parse(queueRaw);
-      expect(queue).toEqual([{ id: 'rowfrmabc000002', action: 'uncheck' }]);
-    });
-
-    it('should queue non-listed pending rows as zen targets', async () => {
-      mockNotify.confirm.mockResolvedValue(true);
-
-      await startZeroAutomation();
-
-      const queueRaw = await store.storageGet('dandelion_zero_queue');
-      expect(queueRaw).toBeTruthy();
-      const queue = JSON.parse(queueRaw);
-      expect(queue).toEqual([{ id: 'rowfrmabc000002', action: 'zen' }]);
+      const state = await store.getZenModeState();
+      expect(state.queue).toEqual(['rowfrmabc000002']);
+      expect(state.mode).toBe('zero');
     });
 
     it('should alert when no pending rows found', async () => {
@@ -108,18 +121,23 @@ describe('zero-mode', () => {
       );
     });
 
-    it('should not start when user cancels', async () => {
+    it('should clear flash data when user cancels', async () => {
       mockNotify.confirm.mockResolvedValue(false);
+      const { clearFlashData } = await import('../../src/utils/flashSession');
 
       await startZeroAutomation();
 
-      expect(await store.storageGet('dandelion_zero_queue')).toBeNull();
-      expect(await isZeroRunning()).toBe(false);
+      expect(clearFlashData).toHaveBeenCalled();
+      expect(await store.getZenModeState()).toEqual({
+        active: false,
+        queue: [],
+        total: 0,
+      });
     });
   });
 
-  describe('getZeroQueue / isZeroRunning', () => {
-    it('should expose remaining queue ids after starting', async () => {
+  describe('processNextZeroItem', () => {
+    it('should uncheck an item that is in the notCheckedList', async () => {
       await store.setConfig({
         activeProfile: 'profile1',
         profiles: {
@@ -132,15 +150,84 @@ describe('zero-mode', () => {
           },
         },
       });
+
+      document.body.innerHTML = '';
+      const rowEl = document.createElement('div');
+      rowEl.id = 'rowfrmabc000002';
+      rowEl.innerHTML = '<label>Form Title</label><button type="button">Input Data</button>';
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      grid.appendChild(rowEl);
+      document.body.appendChild(grid);
+
+      const confirmBtn = { click: vi.fn() };
+      vi.mocked(waitForRow).mockResolvedValue(rowEl);
+      vi.mocked(waitForElement).mockResolvedValue(confirmBtn);
+
       mockNotify.confirm.mockResolvedValue(true);
 
       await startZeroAutomation();
+      await flushAll();
+
+      expect(waitForElement).toHaveBeenCalledWith('button', 'Tidak Periksa', 6000);
+      expect(confirmBtn.click).toHaveBeenCalled();
+      expect(await getZeroQueue()).toEqual([]);
+    });
+
+    it('should visit and fill an item that is NOT in the notCheckedList', async () => {
+      document.body.innerHTML = '';
+      const rowEl = document.createElement('div');
+      rowEl.id = 'rowfrmabc000002';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Input Data';
+      btn.click = vi.fn();
+      rowEl.appendChild(btn);
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      grid.appendChild(rowEl);
+      document.body.appendChild(grid);
+
+      vi.mocked(waitForRow).mockResolvedValue(rowEl);
+
+      mockNotify.confirm.mockResolvedValue(true);
+
+      await startZeroAutomation();
+      await flushAll();
+
+      expect(waitForElement).not.toHaveBeenCalled();
+      expect(btn.click).toHaveBeenCalled();
+      expect(grid.style.backgroundColor).toBe('#e0f2fe');
+      expect(await getZeroQueue()).toEqual(['rowfrmabc000002']);
+    });
+  });
+
+  describe('getZeroQueue / isZeroRunning', () => {
+    it('should expose the shared queue only for zero sessions', async () => {
+      await store.setZenModeState({
+        active: true,
+        queue: ['rowfrmabc000002'],
+        total: 1,
+        mode: 'zero',
+      });
 
       expect(await getZeroQueue()).toEqual(['rowfrmabc000002']);
       expect(await isZeroRunning()).toBe(true);
     });
 
-    it('should report not running when no queue exists', async () => {
+    it('should report not running for zen-mode sessions', async () => {
+      await store.setZenModeState({
+        active: true,
+        queue: ['rowfrmabc000002'],
+        total: 1,
+        mode: 'zen',
+      });
+
+      expect(await isZeroRunning()).toBe(false);
+      expect(await getZeroQueue()).toEqual([]);
+    });
+
+    it('should report not running when no state exists', async () => {
       expect(await isZeroRunning()).toBe(false);
       expect(await getZeroQueue()).toEqual([]);
     });
