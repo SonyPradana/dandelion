@@ -1,5 +1,14 @@
 [
   {
+    "date": "4 Agustus 2026",
+    "version": "1.7",
+    "details": [
+      "Zero Mode — penggabungan Zen Mode dan fitur tidak-periksa dalam satu klik: form yang masuk daftar tidak-periksa otomatis di-uncheck, sisanya diisi otomatis",
+      "Fitur kini terikat JWT — hanya feature yang terdaftar di token yang aktif (zen-mode, zero-mode)",
+      "zero-mode terdaftar di generator token web dan CLI"
+    ]
+  },
+  {
     "date": "23 Juni 2026",
     "version": "1.6",
     "details": [

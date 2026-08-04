@@ -30,13 +30,31 @@ vi.mock('../../src/handlers/zen-mode', () => ({
   initializeZenMode: vi.fn(),
 }));
 
+vi.mock('../../src/handlers/zero-mode', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    startZeroAutomation: vi.fn(),
+    initializeZeroMode: vi.fn(),
+    isZeroRunning: vi.fn().mockResolvedValue(false),
+  };
+});
+
+vi.mock('../../src/quota/quota-manager', () => ({
+  isFeatureEnabled: vi.fn().mockReturnValue(true),
+}));
+
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { initialize } from '../../src/handlers/skrining-form-not-checked';
+import { isZeroRunning } from '../../src/handlers/zero-mode';
+import { isFeatureEnabled } from '../../src/quota/quota-manager';
 
 describe('skrining-form-not-checked', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.mocked(isFeatureEnabled).mockReturnValue(true);
+    vi.mocked(isZeroRunning).mockResolvedValue(false);
     vi.useFakeTimers();
     store.init(new MemoryBackend());
     document.body.innerHTML = rowsHtml;
@@ -114,6 +132,70 @@ describe('skrining-form-not-checked', () => {
       const mainBtn = document.getElementById('dandelion-not-checked-automation');
       expect(mainBtn).toBeTruthy();
       expect(mainBtn.classList.contains('dandelion-running')).toBe(true);
+    });
+
+    it('should mount Zero button in a row left of the not-checked button', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      const zeroRow = document.getElementById('dandelion-zero-row');
+      expect(zeroRow).toBeTruthy();
+
+      const zeroBtn = document.getElementById('dandelion-zero-toggle');
+      expect(zeroBtn).toBeTruthy();
+      expect(zeroBtn.textContent).toBe('Zero');
+      expect(zeroBtn.style.background).toBe('#ffffff');
+      expect(zeroBtn.style.color).toBe('#000000');
+      expect(zeroBtn.style.fontWeight).toBe('bold');
+
+      const mainBtn = document.getElementById('dandelion-not-checked-automation');
+      const rowChildren = Array.from(zeroRow.children);
+      expect(rowChildren[0]).toBe(zeroBtn);
+      expect(rowChildren[1]).toBe(mainBtn);
+    });
+
+    it('should NOT mount Zero button when zero-mode feature is disabled', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+      vi.mocked(isFeatureEnabled).mockReturnValue(false);
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-zero-row')).toBeFalsy();
+      expect(document.getElementById('dandelion-zero-toggle')).toBeFalsy();
+
+      const mainBtn = document.getElementById('dandelion-not-checked-automation');
+      expect(mainBtn).toBeTruthy();
+    });
+
+    it('should NOT mount zen button when zen-mode feature is disabled', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+      vi.mocked(isFeatureEnabled).mockReturnValue(false);
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-zen-mode-toggle')).toBeFalsy();
+      expect(document.getElementById('dandelion-not-checked-automation')).toBeTruthy();
+    });
+
+    it('should dim (not activate) the zen button while Zero is running', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+      vi.mocked(isZeroRunning).mockResolvedValue(true);
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
+      expect(zenBtn).toBeTruthy();
+      expect(zenBtn.classList.contains('dandelion-dimmed')).toBe(true);
+      expect(zenBtn.classList.contains('dandelion-zen-active')).toBe(false);
     });
   });
 });

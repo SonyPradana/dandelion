@@ -27,6 +27,12 @@ if (!args.privateKey || !args.expiry) {
   console.error('  -d, --daily-limit      Grace daily limit after total exhausted (default: 100)');
   console.error('  --version-allowed      Comma-separated version list (e.g. "1.*")');
   console.error('  --features             Comma-separated feature names');
+  console.error(
+    '                         Known: skriningform, skrining, skrining-form-not-checked,',
+  );
+  console.error(
+    '                           zen-mode, zero-mode, registerForm, flashData, skrining-send',
+  );
   console.error('  --token-id             Custom token ID (default: auto-generated)');
   console.error('');
   console.error('Examples:');
@@ -34,7 +40,7 @@ if (!args.privateKey || !args.expiry) {
     '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 7d -p 30000 --version-allowed "1.*" --token-id aB3xK9mQ',
   );
   console.error(
-    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 12m -p 0 -d 200 --features skriningform --token-id X7pL2nR8',
+    '  node scripts/gen-quota-token.mjs -k keys/license-priv.pem -e 12m -p 0 -d 200 --features skriningform,zero-mode --token-id X7pL2nR8',
   );
   process.exit(1);
 }
