@@ -34,6 +34,7 @@ import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { startZeroAutomation, isZeroRunning, getZeroQueue } from '../../src/handlers/zero-mode';
 import { waitForRow, waitForElement } from '../../src/handlers/inspection/not-checked-utils';
+import bus from '../../src/utils/hooks';
 
 describe('zero-mode', () => {
   beforeEach(async () => {
@@ -197,6 +198,44 @@ describe('zero-mode', () => {
       expect(await getZeroQueue()).toEqual([]);
     });
 
+    it('should emit the existing notChecked event when unchecking an item', async () => {
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            notChecked: {
+              notCheckedList: 'rowfrmabc000002',
+            },
+            zenMode: {},
+          },
+        },
+      });
+
+      document.body.innerHTML = '';
+      const rowEl = document.createElement('div');
+      rowEl.id = 'rowfrmabc000002';
+      rowEl.innerHTML = '<label>Form Title</label><button type="button">Input Data</button>';
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      grid.appendChild(rowEl);
+      document.body.appendChild(grid);
+
+      const confirmBtn = { click: vi.fn() };
+      vi.mocked(waitForRow).mockResolvedValue(rowEl);
+      vi.mocked(waitForElement).mockResolvedValue(confirmBtn);
+
+      mockNotify.confirm.mockResolvedValue(true);
+
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await startZeroAutomation();
+      await flushAll();
+
+      expect(emitSpy).toHaveBeenCalledWith('notChecked:didProcessItem');
+      expect(emitSpy).not.toHaveBeenCalledWith('zenMode:didProcessItem');
+    });
+
     it('should visit and fill an item that is NOT in the notCheckedList', async () => {
       document.body.innerHTML = '';
       const rowEl = document.createElement('div');
@@ -222,6 +261,33 @@ describe('zero-mode', () => {
       expect(btn.click).toHaveBeenCalled();
       expect(grid.style.backgroundColor).toBe('#e0f2fe');
       expect(await getZeroQueue()).toEqual(['rowfrmabc000002']);
+    });
+
+    it('should emit the existing zenMode event when filling an item', async () => {
+      document.body.innerHTML = '';
+      const rowEl = document.createElement('div');
+      rowEl.id = 'rowfrmabc000002';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Input Data';
+      btn.click = vi.fn();
+      rowEl.appendChild(btn);
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      grid.appendChild(rowEl);
+      document.body.appendChild(grid);
+
+      vi.mocked(waitForRow).mockResolvedValue(rowEl);
+
+      mockNotify.confirm.mockResolvedValue(true);
+
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await startZeroAutomation();
+      await flushAll();
+
+      expect(emitSpy).toHaveBeenCalledWith('zenMode:didProcessItem');
+      expect(emitSpy).not.toHaveBeenCalledWith('notChecked:didProcessItem');
     });
   });
 

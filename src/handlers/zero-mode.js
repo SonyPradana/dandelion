@@ -183,7 +183,7 @@ async function processNextZeroItem() {
   if (btn) {
     if (row) row.style.backgroundColor = '#e0f2fe';
     btn.click();
-    bus.emit('zeroMode:didProcessItem');
+    bus.emit('zenMode:didProcessItem');
     return;
   }
 
@@ -220,7 +220,7 @@ async function processUncheckItem(rowElement, row) {
     const confirmBtn = await waitForElement('button', 'Tidak Periksa', 6000);
     await getNextFromQueue();
     confirmBtn.click();
-    bus.emit('zeroMode:didUncheck');
+    bus.emit('notChecked:didProcessItem');
 
     setTimeout(() => {
       window.location.reload();
