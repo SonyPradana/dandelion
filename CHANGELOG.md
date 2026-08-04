@@ -5,18 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.7.0] - 2026-08-04
-
-### Added
-
-- Zero Mode handler combining Zen Mode auto-fill with not-checked unchecking in one click
-- Feature gating by JWT token — only features listed in the token are enabled (zen-mode)
-
-### Changed
-
-- Zero Mode now shares the same queue state as Zen Mode so skip and stop controls work correctly
-- Token generator gates Zero Mode under the zen-mode feature
-
 ## [1.6.0] - 2026-06-23
 
 ### Added
