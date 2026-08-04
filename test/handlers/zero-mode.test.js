@@ -103,6 +103,29 @@ describe('zero-mode', () => {
       expect(state.mode).toBe('zero');
     });
 
+    it('should report uncheck and fill counts in the confirm message', async () => {
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            notChecked: {
+              notCheckedList: 'rowfrmabc000001;rowfrmabc000002',
+            },
+            zenMode: {},
+          },
+        },
+      });
+      mockNotify.confirm.mockResolvedValue(true);
+
+      await startZeroAutomation();
+
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ditemukan 1 form aktif (1 di-uncheck, 0 diisi). Mulai Zero Mode?'),
+      );
+    });
+
     it('should alert when no pending rows found', async () => {
       document.body.innerHTML = `
         <div class="grid">

@@ -84,9 +84,18 @@ export async function startZeroAutomation() {
     return;
   }
 
+  let uncheckCount = 0;
+  for (const id of pendingIds) {
+    if (await isInNotCheckedList(id)) {
+      uncheckCount += 1;
+    }
+  }
+
   const confirmPromise = notify.confirm(
     'Zero Mode',
-    `Ditemukan ${pendingIds.length} form aktif. Mulai Zero Mode?`,
+    `Ditemukan ${pendingIds.length} form aktif (${uncheckCount} di-uncheck, ${
+      pendingIds.length - uncheckCount
+    } diisi). Mulai Zero Mode?`,
   );
   showFlashDataPanelIfEnabled();
 

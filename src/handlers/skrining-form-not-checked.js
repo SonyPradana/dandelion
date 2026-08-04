@@ -7,7 +7,7 @@ import { zeroButton } from '../components/zeroButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
-import { isZenModeActive, clearZenMode } from '../utils/zenMode';
+import { isZenModeActive, isZenRunning, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
 import { startZeroAutomation, initializeZeroMode, isZeroRunning } from './zero-mode';
 import { controlPanel } from '../components/controlPanel';
@@ -58,6 +58,10 @@ function startStateMonitor() {
       await ensureButtonsMounted(isProcessing);
 
       const pendingData = await store.storageGet(STORAGE_KEY);
+
+      if (!pendingData) {
+        isStandardAutomationActive = false;
+      }
 
       if (pendingData) {
         const ids = JSON.parse(pendingData);
@@ -209,7 +213,13 @@ async function ensureButtonsMounted(isProcessing) {
       zeroBtn = zeroButton(false);
 
       zeroBtn.addEventListener('click', async () => {
-        if (isStandardAutomationActive || (await isZenModeActive())) return;
+        if (isStandardAutomationActive || (await isZenRunning())) return;
+
+        if (await isZeroRunning()) {
+          await clearZenMode();
+          return;
+        }
+
         startZeroAutomation();
       });
 
@@ -313,7 +323,7 @@ async function updateUIForRunningState(mainBtn, debugBtn, zenBtn, zeroBtn, state
       zenBtn.setDimmed(true);
       zenBtn.setActive(false);
     }
-    if (zeroBtn) zeroBtn.setRunning(true);
+    if (zeroBtn) zeroBtn.setActive(true);
   }
 
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {

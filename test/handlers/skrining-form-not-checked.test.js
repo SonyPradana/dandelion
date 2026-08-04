@@ -17,6 +17,7 @@ vi.mock('../../src/components/notification', () => ({
 
 vi.mock('../../src/utils/zenMode', () => ({
   isZenModeActive: vi.fn().mockResolvedValue(false),
+  isZenRunning: vi.fn().mockResolvedValue(false),
   clearZenMode: vi.fn(),
   getZenModeState: vi.fn().mockResolvedValue({ active: false, queue: [], total: 0 }),
   peekNextFromQueue: vi.fn().mockResolvedValue(null),
@@ -47,14 +48,16 @@ vi.mock('../../src/quota/quota-manager', () => ({
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { initialize } from '../../src/handlers/skrining-form-not-checked';
-import { isZeroRunning } from '../../src/handlers/zero-mode';
+import { isZeroRunning, startZeroAutomation } from '../../src/handlers/zero-mode';
 import { isFeatureEnabled } from '../../src/quota/quota-manager';
+import { clearZenMode, isZenRunning } from '../../src/utils/zenMode';
 
 describe('skrining-form-not-checked', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.mocked(isFeatureEnabled).mockReturnValue(true);
     vi.mocked(isZeroRunning).mockResolvedValue(false);
+    vi.mocked(isZenRunning).mockResolvedValue(false);
     vi.useFakeTimers();
     store.init(new MemoryBackend());
     document.body.innerHTML = rowsHtml;
@@ -185,6 +188,41 @@ describe('skrining-form-not-checked', () => {
       expect(zenBtn).toBeTruthy();
       expect(zenBtn.classList.contains('dandelion-dimmed')).toBe(true);
       expect(zenBtn.classList.contains('dandelion-zen-active')).toBe(false);
+
+      const zeroBtn = document.getElementById('dandelion-zero-toggle');
+      expect(zeroBtn.classList.contains('dandelion-zen-active')).toBe(true);
+    });
+
+    it('should stop Zero (toggle-off) when clicking the Zero button while it is running', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+      vi.mocked(isZeroRunning).mockResolvedValue(true);
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      const zeroBtn = document.getElementById('dandelion-zero-toggle');
+      zeroBtn.click();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(clearZenMode).toHaveBeenCalled();
+      expect(startZeroAutomation).not.toHaveBeenCalled();
+    });
+
+    it('should ignore Zero button click while Zen owns the queue', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+      vi.mocked(isZenRunning).mockResolvedValue(true);
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      const zeroBtn = document.getElementById('dandelion-zero-toggle');
+      zeroBtn.click();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(startZeroAutomation).not.toHaveBeenCalled();
+      expect(clearZenMode).not.toHaveBeenCalled();
     });
   });
 });
