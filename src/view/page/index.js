@@ -291,6 +291,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const importLink = document.getElementById('import-link');
   const importFileInput = document.getElementById('import-file-input');
 
+  document.getElementById('open-config-editor')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    window.location.href = 'config-editor.html';
+  });
+
   // --- Produktifitas Tab Logic ---
   function rd(current, prev) {
     const pv = document.createElement('span');

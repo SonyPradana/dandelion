@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Konfigurasi Dandelion</title>
+    <link rel="stylesheet" href="config-editor.css" />
+  </head>
+  <body>
+    <header class="ce-header">
+      <div class="ce-header-left">
+        <h1 class="ce-title">Edit Konfigurasi (JSON)</h1>
+        <span class="ce-file-label">config.json</span>
+      </div>
+
+      <div class="ce-actions">
+        <span class="ce-stats" id="ce-stats" title="Jumlah karakter dan ukuran file">0 char · 0 B</span>
+        <button type="button" class="ce-btn primary" id="ce-save-btn">💾 Save</button>
+        <button type="button" class="ce-btn" id="ce-reset-btn">↺ Reset</button>
+        <button type="button" class="ce-btn" id="ce-close-btn">✕ Close</button>
+      </div>
+    </header>
+
+    <main class="ce-main">
+      <textarea
+        id="ce-editor"
+        class="ce-editor"
+        spellcheck="false"
+        aria-label="Editor konfigurasi JSON"
+      ></textarea>
+    </main>
+
+    <div id="ce-toast" class="ce-toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="config-editor.js"></script>
+  </body>
+</html>
