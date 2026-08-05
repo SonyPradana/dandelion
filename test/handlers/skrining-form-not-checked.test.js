@@ -48,6 +48,7 @@ vi.mock('../../src/quota/quota-manager', () => ({
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { initialize } from '../../src/handlers/skrining-form-not-checked';
+import { controlPanel } from '../../src/components/controlPanel';
 import { isZeroRunning, startZeroAutomation } from '../../src/handlers/zero-mode';
 import { isFeatureEnabled } from '../../src/quota/quota-manager';
 import { clearZenMode, isZenRunning } from '../../src/utils/zenMode';
@@ -60,6 +61,7 @@ describe('skrining-form-not-checked', () => {
     vi.mocked(isZenRunning).mockResolvedValue(false);
     vi.useFakeTimers();
     store.init(new MemoryBackend());
+    controlPanel.setPosition('top-right');
     document.body.innerHTML = rowsHtml;
 
     await store.setConfig({
@@ -153,7 +155,27 @@ describe('skrining-form-not-checked', () => {
       expect(zeroBtn.style.background).toBe('#ffffff');
       expect(zeroBtn.style.color).toBe('#000000');
       expect(zeroBtn.style.fontWeight).toBe('bold');
+      expect(zeroBtn.style.textDecoration).toBe('line-through');
 
+      const mainBtn = document.getElementById('dandelion-not-checked-automation');
+      const rowChildren = Array.from(zeroRow.children);
+      expect(rowChildren[0]).toBe(zeroBtn);
+      expect(rowChildren[1]).toBe(mainBtn);
+    });
+
+    it('should reverse the Zero row when the panel is docked left', async () => {
+      controlPanel.setPosition('top-left');
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      const zeroRow = document.getElementById('dandelion-zero-row');
+      expect(zeroRow).toBeTruthy();
+      expect(zeroRow.style.flexDirection).toBe('row-reverse');
+
+      const zeroBtn = document.getElementById('dandelion-zero-toggle');
       const mainBtn = document.getElementById('dandelion-not-checked-automation');
       const rowChildren = Array.from(zeroRow.children);
       expect(rowChildren[0]).toBe(zeroBtn);

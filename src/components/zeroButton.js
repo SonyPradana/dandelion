@@ -39,6 +39,7 @@ export function zeroButton(isActive = false) {
         borderRadius: '8px',
         fontSize: '1rem',
         fontWeight: 'bold',
+        textDecoration: 'line-through',
         cursor: 'pointer',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
         transition: 'all 0.2s ease-in-out',

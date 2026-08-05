@@ -204,7 +204,7 @@ async function ensureButtonsMounted(isProcessing) {
       zeroRow.id = 'dandelion-zero-row';
       zeroRow.style.cssText = `
         display: flex;
-        flex-direction: row;
+        flex-direction: ${controlPanel.isDockedLeft ? 'row-reverse' : 'row'};
         align-items: center;
         gap: 8px;
         pointer-events: auto;
@@ -223,7 +223,7 @@ async function ensureButtonsMounted(isProcessing) {
         startZeroAutomation();
       });
 
-      // [Zero] on the left, [🙈] on the right, same row
+      // Zero first in DOM; dock side decides visual order (left dock reverses the row).
       zeroRow.appendChild(zeroBtn);
       if (mainBtn) zeroRow.appendChild(mainBtn);
 

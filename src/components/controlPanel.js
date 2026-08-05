@@ -60,6 +60,10 @@ class ControlPanel {
     return POSITIONS[this.position];
   }
 
+  get isDockedLeft() {
+    return this.position.endsWith('left');
+  }
+
   setPosition(position) {
     if (!POSITIONS[position]) {
       throw new Error(`Invalid position: "${position}". Use: ${Object.keys(POSITIONS).join(', ')}`);
@@ -97,6 +101,11 @@ class ControlPanel {
       this.slots[4].style.bottom = cfg.slot4Vertical === 'bottom' ? '0' : '';
       this.slots[4].style.right = cfg.slot4Side === 'right' ? `calc(100% + ${PANEL_GAP}px)` : '';
       this.slots[4].style.left = cfg.slot4Side === 'left' ? `calc(100% + ${PANEL_GAP}px)` : '';
+    }
+
+    const zeroRow = document.getElementById('dandelion-zero-row');
+    if (zeroRow) {
+      zeroRow.style.flexDirection = this.isDockedLeft ? 'row-reverse' : 'row';
     }
   }
 
