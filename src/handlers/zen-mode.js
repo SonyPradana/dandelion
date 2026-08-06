@@ -29,7 +29,7 @@ export function initializeZenMode() {
 
     try {
       const state = await getZenModeState();
-      if (state.active && state.queue.length > 0 && !isAutomationActive) {
+      if (state.active && state.queue.length > 0 && !isAutomationActive && state.mode !== 'zero') {
         resumeZenAutomation();
       }
       setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
@@ -92,6 +92,7 @@ export async function startZenAutomation() {
     active: true,
     queue: pendingIds,
     total: pendingIds.length,
+    mode: 'zen',
   };
   await setZenModeState(state);
   isAutomationActive = true;

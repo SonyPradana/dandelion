@@ -1,12 +1,15 @@
 import { store } from '../store';
+import { isFeatureEnabled } from '../quota/quota-manager';
 import { button } from '../components/button';
 import { debugButton } from '../components/debugButton';
 import { zenModeButton } from '../components/zenModeButton';
+import { zeroButton } from '../components/zeroButton';
 import { createRowMarker } from '../components/rowMarker';
 import { updateStatusPanel, removeStatusPanel } from '../components/statusPanel';
 import { getNotCheckedList } from '../utils/notChecked';
-import { isZenModeActive, clearZenMode } from '../utils/zenMode';
+import { isZenModeActive, isZenRunning, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
+import { startZeroAutomation, initializeZeroMode, isZeroRunning } from './zero-mode';
 import { controlPanel } from '../components/controlPanel';
 import { notify } from '../components/notification';
 import { createProfileComponent } from '../components/profile';
@@ -33,7 +36,10 @@ let isStandardAutomationActive = false;
  */
 export function initialize() {
   startStateMonitor();
-  initializeZenMode();
+  if (isFeatureEnabled('zen-mode')) {
+    initializeZenMode();
+    initializeZeroMode();
+  }
 }
 
 /**
@@ -52,6 +58,10 @@ function startStateMonitor() {
       await ensureButtonsMounted(isProcessing);
 
       const pendingData = await store.storageGet(STORAGE_KEY);
+
+      if (!pendingData) {
+        isStandardAutomationActive = false;
+      }
 
       if (pendingData) {
         const ids = JSON.parse(pendingData);
@@ -84,8 +94,11 @@ async function ensureButtonsMounted(isProcessing) {
   let debugBtn = document.getElementById('dandelion-debug-toggle');
   let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
   let profileIndicator = document.getElementById('dandelion-profile-indicator');
+  let zeroRow = document.getElementById('dandelion-zero-row');
+  let zeroBtn = document.getElementById('dandelion-zero-toggle');
 
   if (!isProcessing) {
+    if (zeroRow) controlPanel.remove(zeroRow);
     if (mainBtn) controlPanel.remove(mainBtn);
     if (debugBtn) controlPanel.remove(debugBtn);
     if (zenBtn) controlPanel.remove(zenBtn);
@@ -102,15 +115,20 @@ async function ensureButtonsMounted(isProcessing) {
     return;
   }
 
-  const [pendingResult, zenActive] = await Promise.all([
+  const [pendingResult, zenActive, zeroActive] = await Promise.all([
     store.storageGet(STORAGE_KEY),
     isZenModeActive(),
+    isZeroRunning(),
   ]);
   const hasPending = pendingResult !== null;
   const isRunningLocally = hasPending;
 
+  const zenEnabled = isFeatureEnabled('zen-mode');
+  const zeroEnabled = zenEnabled;
+
   if (!mainBtn) {
     mainBtn = button('dandelion-not-checked-automation');
+
     if (mainBtn) {
       if (!profileIndicator) {
         const cfg = await store.getFullConfig();
@@ -177,16 +195,51 @@ async function ensureButtonsMounted(isProcessing) {
           await startAutomation(stats.pendingIds, stats.foundIds.length);
         }
       });
-      controlPanel.mount(mainBtn, 1);
-      controlPanel.mount(profileIndicator, 4);
     }
   }
 
-  if (!zenBtn) {
+  if (zeroEnabled) {
+    if (!zeroRow) {
+      zeroRow = document.createElement('div');
+      zeroRow.id = 'dandelion-zero-row';
+      zeroRow.style.cssText = `
+        display: flex;
+        flex-direction: ${controlPanel.isDockedLeft ? 'row-reverse' : 'row'};
+        align-items: center;
+        gap: 8px;
+        pointer-events: auto;
+      `;
+
+      zeroBtn = zeroButton(false);
+
+      zeroBtn.addEventListener('click', async () => {
+        if (isStandardAutomationActive || (await isZenRunning())) return;
+
+        if (await isZeroRunning()) {
+          await clearZenMode();
+          return;
+        }
+
+        startZeroAutomation();
+      });
+
+      // Zero first in DOM; dock side decides visual order (left dock reverses the row).
+      zeroRow.appendChild(zeroBtn);
+      if (mainBtn) zeroRow.appendChild(mainBtn);
+
+      controlPanel.mount(zeroRow, 1);
+      if (profileIndicator) controlPanel.mount(profileIndicator, 4);
+    }
+  } else {
+    if (mainBtn) controlPanel.mount(mainBtn, 1);
+    if (profileIndicator) controlPanel.mount(profileIndicator, 4);
+  }
+
+  if (zenEnabled && !zenBtn) {
     zenBtn = zenModeButton(zenActive);
     if (zenBtn) {
       zenBtn.addEventListener('click', async () => {
-        if (isStandardAutomationActive) return;
+        if (isStandardAutomationActive || (await isZeroRunning())) return;
 
         if (await isZenModeActive()) {
           await clearZenMode();
@@ -209,10 +262,14 @@ async function ensureButtonsMounted(isProcessing) {
     }
   }
 
-  if (isRunningLocally || zenActive) {
-    await updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive);
+  if (isRunningLocally || zenActive || zeroActive) {
+    await updateUIForRunningState(mainBtn, debugBtn, zenBtn, zeroBtn, {
+      isRunningLocally,
+      zenActive,
+      zeroActive,
+    });
   } else {
-    restoreUIState(mainBtn, debugBtn, zenBtn);
+    restoreUIState(mainBtn, debugBtn, zenBtn, zeroBtn);
   }
 }
 
@@ -222,8 +279,8 @@ async function ensureButtonsMounted(isProcessing) {
  * @param {HTMLElement} debugBtn
  * @param {HTMLElement} zenBtn
  */
-function restoreUIState(mainBtn, debugBtn, zenBtn) {
-  [mainBtn, debugBtn, zenBtn].forEach((btn) => btn?.reset?.());
+function restoreUIState(mainBtn, debugBtn, zenBtn, zeroBtn) {
+  [mainBtn, debugBtn, zenBtn, zeroBtn].forEach((btn) => btn?.reset?.());
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.classList.remove('dandelion-dimmed');
   });
@@ -234,20 +291,39 @@ function restoreUIState(mainBtn, debugBtn, zenBtn) {
  * @param {HTMLElement} mainBtn - The primary automation button.
  * @param {HTMLElement} debugBtn - The debug/helper mode toggle button.
  * @param {HTMLElement} zenBtn - The zen mode toggle button.
- * @param {boolean} isRunningLocally - Not Checked automation is active.
- * @param {boolean} zenActive - Zen Mode is active.
+ * @param {HTMLElement} zeroBtn - The zero mode toggle button.
+ * @param {Object} state - Running state flags.
+ * @param {boolean} state.isRunningLocally - Not Checked automation is active.
+ * @param {boolean} state.zenActive - Zen Mode is active.
+ * @param {boolean} state.zeroActive - Zero Mode is active.
  */
-async function updateUIForRunningState(mainBtn, debugBtn, zenBtn, isRunningLocally, zenActive) {
+async function updateUIForRunningState(mainBtn, debugBtn, zenBtn, zeroBtn, state) {
+  const { isRunningLocally, zenActive, zeroActive } = state;
+
   if (isRunningLocally) {
     if (mainBtn) mainBtn.setRunning(true);
     if (debugBtn) debugBtn.setDimmed(true);
     if (zenBtn) zenBtn.setDimmed(true);
+    if (zeroBtn) zeroBtn.setDimmed(true);
   }
 
   if (zenActive) {
     if (mainBtn) mainBtn.setDimmed(true);
     if (debugBtn) debugBtn.setDimmed(true);
     if (zenBtn) zenBtn.setActive(true);
+    if (zeroBtn) zeroBtn.setDimmed(true);
+  }
+
+  // Zero borrows zen-mode state, so when Zero is running it takes precedence
+  // over the mirrored zen session: the untoken zen button is dimmed, not active.
+  if (zeroActive) {
+    if (mainBtn) mainBtn.setDimmed(true);
+    if (debugBtn) debugBtn.setDimmed(true);
+    if (zenBtn) {
+      zenBtn.setDimmed(true);
+      zenBtn.setActive(false);
+    }
+    if (zeroBtn) zeroBtn.setActive(true);
   }
 
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
@@ -365,8 +441,9 @@ async function finishAutomation() {
   const mainBtn = document.getElementById('dandelion-not-checked-automation');
   const debugBtn = document.getElementById('dandelion-debug-toggle');
   const zenBtn = document.getElementById('dandelion-zen-mode-toggle');
+  const zeroBtn = document.getElementById('dandelion-zero-toggle');
 
-  [mainBtn, debugBtn, zenBtn].forEach((btn) => btn?.reset?.());
+  [mainBtn, debugBtn, zenBtn, zeroBtn].forEach((btn) => btn?.reset?.());
 
   document.querySelectorAll(`.${ROW_MARKER_CLASS}`).forEach((m) => {
     m.style.opacity = '1';

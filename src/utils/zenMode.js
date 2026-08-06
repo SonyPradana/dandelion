@@ -5,6 +5,7 @@ import { store as globalStore } from '../store.js';
  * @property {boolean} active - Whether Zen Mode is enabled.
  * @property {string[]} queue - List of IDs to visit.
  * @property {number} total - Total number of IDs initially in the queue.
+ * @property {'zen'|'zero'} [mode] - Which automation owns the queue (Zen or Zero Mode).
  */
 
 /**
@@ -34,6 +35,16 @@ export async function setZenModeState(state, store = globalStore) {
 export async function isZenModeActive(store = globalStore) {
   const state = await getZenModeState(store);
   return state.active;
+}
+
+/**
+ * Checks if the Zen automation owns the current queue.
+ * @param {import('../store.js').DandelionStore} [store]
+ * @returns {Promise<boolean>}
+ */
+export async function isZenRunning(store = globalStore) {
+  const state = await getZenModeState(store);
+  return state.active && state.mode !== 'zero' && state.queue.length > 0;
 }
 
 /**

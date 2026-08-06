@@ -45,6 +45,7 @@ describe('zen-mode', () => {
         active: true,
         queue: ['rowfrmabc000002'],
         total: 1,
+        mode: 'zen',
       });
     });
 
