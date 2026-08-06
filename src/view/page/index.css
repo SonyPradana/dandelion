@@ -355,6 +355,33 @@ body {
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
 }
 
+.json-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+  box-sizing: border-box;
+  background: #fff;
+  color: #111;
+}
+.json-textarea:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
 .license-actions {
   display: flex;
   gap: 10px;

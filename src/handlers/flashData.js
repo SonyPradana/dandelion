@@ -20,5 +20,5 @@ export async function showFlashDataPanelIfEnabled(store = globalStore) {
   if (!isFeatureEnabled('flashData')) return;
   const config = await store.getActiveConfig();
   if (config.flashData?.enabled === false) return;
-  showFlashDataPanel();
+  showFlashDataPanel({ initialData: config.zenMode?.defaultPinneds });
 }

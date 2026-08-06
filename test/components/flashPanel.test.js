@@ -78,4 +78,31 @@ describe('flashPanel', () => {
     expect(kvKeys.length).toBe(1);
     expect(kvKeys[0].value).toBe('test-field');
   });
+
+  it('should prefill JSON textarea with initialData', () => {
+    showFlashDataPanel({ initialData: { NIK: '', 'LPM|text': 'coba' } });
+    const textarea = document.querySelector('textarea');
+    const parsed = JSON.parse(textarea.value);
+    expect(parsed).toEqual({ NIK: '', 'LPM|text': 'coba' });
+  });
+
+  it('should show initialData keys in KV tab', () => {
+    showFlashDataPanel({ initialData: { NIK: '', 'LPM|text': 'coba' } });
+    const kvBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Tabel KV',
+    );
+    kvBtn.click();
+    const kvKeys = Array.from(document.querySelectorAll('.flash-kv-key')).map((k) => k.value);
+    expect(kvKeys).toEqual(['NIK', 'LPM|text']);
+  });
+
+  it('should persist initialData when Gunakan is clicked', async () => {
+    showFlashDataPanel({ initialData: { NIK: '123' } });
+    const gunakanBtn = Array.from(document.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Gunakan',
+    );
+    gunakanBtn.click();
+    const data = await store.getFlashData();
+    expect(data).toEqual({ pinneds: { NIK: '123' }, _timestamp: expect.any(Number) });
+  });
 });

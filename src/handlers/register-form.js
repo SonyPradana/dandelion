@@ -46,6 +46,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       setData: setRegisterFormFlashData,
       clearData: clearRegisterFormFlashData,
       validate: validateRegisterFormFields,
+      initialData: registerFormConfig.defaultPinneds,
     });
 
     waitForModal().then(() => {

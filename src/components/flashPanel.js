@@ -6,7 +6,14 @@ import { addKvRow, rebuildKvRows, S } from './flashKvRow';
 
 const PANEL_ID = 'dandelion-flash-data';
 
-export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey, validate } = {}) {
+export function showFlashDataPanel({
+  setData,
+  clearData,
+  onSave,
+  normalizeKey,
+  validate,
+  initialData,
+} = {}) {
   const _setData = setData || setFlashData;
   const _clearData = clearData || clearFlashData;
   const existing = document.getElementById(PANEL_ID);
@@ -24,6 +31,15 @@ export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey, v
   // ─── shared state ─────────────────────────────────────────────
   let sharedData = {};
   let currentTab = 'json';
+
+  if (initialData && typeof initialData === 'object' && !Array.isArray(initialData)) {
+    sharedData = {};
+    for (const [k, v] of Object.entries(initialData)) {
+      if (typeof v === 'string' || typeof v === 'number') {
+        sharedData[k] = String(v);
+      }
+    }
+  }
 
   function syncFromJson() {
     try {
@@ -163,6 +179,7 @@ export function showFlashDataPanel({ setData, clearData, onSave, normalizeKey, v
 
   jsonTabBtn.onclick = () => activateTab('json');
   kvTabBtn.onclick = () => activateTab('kv');
+  jsonTextarea.value = JSON.stringify(sharedData, null, 2);
   activateTab('json');
 
   // ─── action buttons ───────────────────────────────────────────

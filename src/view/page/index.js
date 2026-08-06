@@ -122,8 +122,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const registerFormCountdownDurationInput = document.getElementById(
     'register-form-countdown-duration',
   );
+  const registerFormDefaultFlashInput = document.getElementById('register-form-default-flash');
   const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
   const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
+  const zenModeDefaultFlashInput = document.getElementById('zen-mode-default-flash');
   const flashDataEnabledCheckbox = document.getElementById('flash-data-enabled');
   const silenceInfoNotificationCheckbox = document.getElementById('silence-info-notification');
 
@@ -165,10 +167,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerFormRetryMaxInput.value = rf.retryMax ?? 3;
     registerFormRetryDelayInput.value = rf.retryDelay ?? 2000;
     registerFormCountdownDurationInput.value = rf.countdownDuration ?? 5000;
+    registerFormDefaultFlashInput.value = JSON.stringify(rf.defaultPinneds || {}, null, 2);
 
     const zm = profileSettings.zenMode || {};
     zenModeEnabledCheckbox.checked = zm.enabled !== false;
     zenModeTimeoutInput.value = zm.timeout || 3500;
+    zenModeDefaultFlashInput.value = JSON.stringify(zm.defaultPinneds || {}, null, 2);
 
     const fd = profileSettings.flashData || {};
     flashDataEnabledCheckbox.checked = fd.enabled !== false;
@@ -228,6 +232,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       const selectedProfile = loadedConfig.activeProfile;
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
+      /** @param {string} text @param {string} label @returns {object|null} */
+      const parseJsonField = (text, label) => {
+        const trimmed = text.trim();
+        if (!trimmed) return {};
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return parsed;
+          }
+          saveConfigBtn.textContent = `Gagal: ${label} harus objek JSON`;
+          setTimeout(() => {
+            saveConfigBtn.textContent = 'Simpan';
+          }, 2000);
+          return null;
+        } catch (error) {
+          saveConfigBtn.textContent = `Gagal: ${label} — ${error.message}`;
+          setTimeout(() => {
+            saveConfigBtn.textContent = 'Simpan';
+          }, 2500);
+          return null;
+        }
+      };
+
       loadedConfig.activeProfile = selectedProfile;
 
       if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
@@ -253,12 +280,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.registerForm.countdownDuration =
         parseInt(registerFormCountdownDurationInput.value) || 5000;
 
+      const registerFormDefaults = parseJsonField(
+        registerFormDefaultFlashInput.value,
+        'Template Flash Data Register Form',
+      );
+      if (registerFormDefaults === null) return;
+      profileSettings.registerForm.defaultPinneds = registerFormDefaults;
+
       if (!profileSettings.zenMode) profileSettings.zenMode = {};
       profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;
       profileSettings.zenMode.timeout = Math.min(
         30_000,
         Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000),
       );
+
+      const zenModeDefaults = parseJsonField(
+        zenModeDefaultFlashInput.value,
+        'Template Flash Data Mode Zen',
+      );
+      if (zenModeDefaults === null) return;
+      profileSettings.zenMode.defaultPinneds = zenModeDefaults;
 
       if (!profileSettings.flashData) profileSettings.flashData = {};
       profileSettings.flashData.enabled = flashDataEnabledCheckbox.checked;
