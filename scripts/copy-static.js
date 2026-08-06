@@ -12,6 +12,8 @@ const copies = [
   ['src/view/components/ProfileManager.css', `${outDir}/view/components/ProfileManager.css`],
   ['src/view/page/index.html', `${outDir}/view/page/index.html`],
   ['src/view/page/index.css', `${outDir}/view/page/index.css`],
+  ['src/view/page/config-editor.html', `${outDir}/view/page/config-editor.html`],
+  ['src/view/page/config-editor.css', `${outDir}/view/page/config-editor.css`],
 ];
 
 for (const [src, dest] of copies) {

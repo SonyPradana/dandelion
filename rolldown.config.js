@@ -25,6 +25,7 @@ export default [
     input: {
       'view/popup': 'src/view/popup.js',
       'view/page/index': 'src/view/page/index.js',
+      'view/page/config-editor': 'src/view/page/config-editor.js',
     },
     output: {
       dir: outDir,
