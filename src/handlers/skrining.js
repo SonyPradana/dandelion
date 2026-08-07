@@ -1,4 +1,6 @@
 import bus from '../utils/hooks';
+import { registerCleanup } from '../refreshState.js';
+import { ensureReloadButton } from '../components/reloadButton.js';
 
 export function initializeSkrining() {
   const radioClickedSet = new Set();
@@ -52,7 +54,7 @@ export function initializeSkrining() {
     }
   }
 
-  document.addEventListener('click', (event) => {
+  function handleClick(event) {
     if (!event.target) return;
 
     // Stop button
@@ -65,5 +67,13 @@ export function initializeSkrining() {
     if (event.target.id === 'nextGenBtn') {
       startObserver();
     }
+  }
+
+  document.addEventListener('click', handleClick);
+  registerCleanup(() => {
+    document.removeEventListener('click', handleClick);
+    stopObserver();
   });
+
+  ensureReloadButton();
 }

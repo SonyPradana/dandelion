@@ -17,6 +17,7 @@ import bus from '../utils/hooks';
 import { showFlashDataPanelIfEnabled } from './flashData';
 import { clearFlashData } from '../utils/flashSession';
 import { store } from '../store.js';
+import { registerCleanup } from '../refreshState';
 
 const ZERO_RELOAD_DELAY = 1000;
 
@@ -28,9 +29,14 @@ let isZeroAutomationActive = false;
  */
 export function initializeZeroMode() {
   let isPolling = false;
+  let stopped = false;
+
+  registerCleanup(() => {
+    stopped = true;
+  });
 
   async function poll() {
-    if (isPolling) return;
+    if (isPolling || stopped) return;
     isPolling = true;
 
     try {
@@ -43,7 +49,7 @@ export function initializeZeroMode() {
       ) {
         resumeZeroAutomation();
       }
-      setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
+      if (!stopped) setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
     } finally {
       isPolling = false;
     }

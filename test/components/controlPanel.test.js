@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { controlPanel } from '../../src/components/controlPanel';
 
 describe('controlPanel', () => {
@@ -124,5 +124,21 @@ describe('controlPanel', () => {
     const panel = document.getElementById('dandelion-control-panel');
     expect(panel.style.top).toBe('0.75rem');
     expect(panel.style.left).toBe('0.75rem');
+  });
+
+  it('should run onInit callbacks when the panel is created', () => {
+    const cb = vi.fn();
+    controlPanel.onInit(cb);
+    controlPanel.init();
+    expect(cb).toHaveBeenCalled();
+  });
+
+  it('should run onInit callbacks again when the panel is recreated', () => {
+    const cb = vi.fn();
+    controlPanel.onInit(cb);
+    controlPanel.init();
+    document.getElementById('dandelion-control-panel').remove();
+    controlPanel.init();
+    expect(cb).toHaveBeenCalledTimes(2);
   });
 });

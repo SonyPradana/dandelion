@@ -1,4 +1,5 @@
 import { controlPanel } from '../components/controlPanel.js';
+import { ensureReloadButton } from '../components/reloadButton.js';
 import { notify } from '../components/notification';
 import { button } from '../components/button.js';
 import { h } from '../utils/dom.js';
@@ -279,6 +280,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
   }
 
   controlPanel.mount(monkeyBtn, 1);
+  ensureReloadButton();
 }
 
 /**

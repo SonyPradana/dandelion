@@ -1,6 +1,8 @@
 import { h } from '../../utils/dom';
 import { createBasePanel, createPanelButton } from './base';
 
+export const ACTION_PANEL_PREFIX = 'dandelion-action-';
+
 /**
  * Custom Notification API
  */
@@ -104,8 +106,8 @@ export const notify = {
    * Custom Action panel
    */
   action(title, message, actions = [], { pinned } = {}) {
-    document.querySelectorAll('[id^="dandelion-action-"]').forEach((el) => el.remove());
-    const id = `dandelion-action-${Date.now()}`;
+    document.querySelectorAll(`[id^="${ACTION_PANEL_PREFIX}"]`).forEach((el) => el.remove());
+    const id = `${ACTION_PANEL_PREFIX}${Date.now()}`;
     const { panel, setHeader, remove } = createBasePanel(id, pinned);
 
     panel.append(

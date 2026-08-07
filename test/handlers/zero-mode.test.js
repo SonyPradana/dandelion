@@ -13,6 +13,7 @@ const mockNotify = vi.hoisted(() => ({
 
 vi.mock('../../src/components/notification', () => ({
   notify: mockNotify,
+  ACTION_PANEL_PREFIX: 'dandelion-action-',
 }));
 
 vi.mock('../../src/utils/flashSession', () => ({
@@ -32,7 +33,13 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
 
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
-import { startZeroAutomation, isZeroRunning, getZeroQueue } from '../../src/handlers/zero-mode';
+import {
+  startZeroAutomation,
+  isZeroRunning,
+  getZeroQueue,
+  initializeZeroMode,
+} from '../../src/handlers/zero-mode';
+import { teardown } from '../../src/refreshState';
 import { waitForRow, waitForElement } from '../../src/handlers/inspection/not-checked-utils';
 import bus from '../../src/utils/hooks';
 
@@ -288,6 +295,20 @@ describe('zero-mode', () => {
 
       expect(emitSpy).toHaveBeenCalledWith('zenMode:didProcessItem');
       expect(emitSpy).not.toHaveBeenCalledWith('notChecked:didProcessItem');
+    });
+  });
+
+  describe('initializeZeroMode', () => {
+    it('should stop the poll loop after teardown', async () => {
+      initializeZeroMode();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+      teardown();
+      await vi.advanceTimersByTimeAsync(20_000);
+
+      expect(vi.getTimerCount()).toBe(0);
     });
   });
 

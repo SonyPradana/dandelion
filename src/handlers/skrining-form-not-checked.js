@@ -11,6 +11,8 @@ import { isZenModeActive, isZenRunning, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
 import { startZeroAutomation, initializeZeroMode, isZeroRunning } from './zero-mode';
 import { controlPanel } from '../components/controlPanel';
+import { ensureReloadButton, RELOAD_BTN_ID } from '../components/reloadButton';
+import { registerCleanup } from '../refreshState';
 import { notify } from '../components/notification';
 import { createProfileComponent } from '../components/profile';
 import {
@@ -47,9 +49,14 @@ export function initialize() {
  */
 function startStateMonitor() {
   let isPolling = false;
+  let stopped = false;
+
+  registerCleanup(() => {
+    stopped = true;
+  });
 
   async function poll() {
-    if (isPolling) return;
+    if (isPolling || stopped) return;
     isPolling = true;
 
     try {
@@ -78,7 +85,7 @@ function startStateMonitor() {
       }
     } finally {
       isPolling = false;
-      setTimeout(poll, 2000);
+      if (!stopped) setTimeout(poll, 2000);
     }
   }
 
@@ -103,6 +110,7 @@ async function ensureButtonsMounted(isProcessing) {
     if (debugBtn) controlPanel.remove(debugBtn);
     if (zenBtn) controlPanel.remove(zenBtn);
     if (profileIndicator) controlPanel.remove(profileIndicator);
+    controlPanel.remove(RELOAD_BTN_ID);
 
     if (!isStandardAutomationActive) {
       const [pendingResult, zenActive] = await Promise.all([
@@ -271,6 +279,8 @@ async function ensureButtonsMounted(isProcessing) {
   } else {
     restoreUIState(mainBtn, debugBtn, zenBtn, zeroBtn);
   }
+
+  ensureReloadButton();
 }
 
 /**

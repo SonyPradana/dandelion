@@ -13,6 +13,7 @@ const mockNotify = vi.hoisted(() => ({
 
 vi.mock('../../src/components/notification', () => ({
   notify: mockNotify,
+  ACTION_PANEL_PREFIX: 'dandelion-action-',
 }));
 
 vi.mock('../../src/utils/zenMode', () => ({
@@ -49,6 +50,7 @@ import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { initialize } from '../../src/handlers/skrining-form-not-checked';
 import { controlPanel } from '../../src/components/controlPanel';
+import { teardown, refreshState, setReinit } from '../../src/refreshState';
 import { isZeroRunning, startZeroAutomation } from '../../src/handlers/zero-mode';
 import { isFeatureEnabled } from '../../src/quota/quota-manager';
 import { clearZenMode, isZenRunning } from '../../src/utils/zenMode';
@@ -245,6 +247,75 @@ describe('skrining-form-not-checked', () => {
 
       expect(startZeroAutomation).not.toHaveBeenCalled();
       expect(clearZenMode).not.toHaveBeenCalled();
+    });
+
+    it('should mount the reload button on processing page', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-reload-btn')).toBeTruthy();
+    });
+
+    it('should NOT mount the reload button on non-processing page', async () => {
+      document.body.innerHTML = '<div>Tidak ada status</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-reload-btn')).toBeFalsy();
+    });
+
+    it('should remove the reload button when page changes from processing to non-processing', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-reload-btn')).toBeTruthy();
+
+      document.body.innerHTML = '<div>Selesai</div>';
+
+      await vi.advanceTimersByTimeAsync(2000);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-reload-btn')).toBeFalsy();
+    });
+
+    it('should stop the state monitor loop after teardown', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+      teardown();
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('should not accumulate state monitor loops across refreshState', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+      setReinit(initialize);
+
+      initialize();
+      await vi.advanceTimersByTimeAsync(0);
+
+      const before = vi.getTimerCount();
+
+      const result = await refreshState();
+      expect(result.ok).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(5000);
+
+      expect(vi.getTimerCount()).toBe(before);
     });
   });
 });

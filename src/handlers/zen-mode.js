@@ -14,6 +14,7 @@ import { notify } from '../components/notification';
 import bus from '../utils/hooks';
 import { showFlashDataPanelIfEnabled } from './flashData';
 import { clearFlashData } from '../utils/flashSession';
+import { registerCleanup } from '../refreshState';
 
 let isAutomationActive = false;
 
@@ -22,9 +23,14 @@ let isAutomationActive = false;
  */
 export function initializeZenMode() {
   let isPolling = false;
+  let stopped = false;
+
+  registerCleanup(() => {
+    stopped = true;
+  });
 
   async function poll() {
-    if (isPolling) return;
+    if (isPolling || stopped) return;
     isPolling = true;
 
     try {
@@ -32,7 +38,7 @@ export function initializeZenMode() {
       if (state.active && state.queue.length > 0 && !isAutomationActive && state.mode !== 'zero') {
         resumeZenAutomation();
       }
-      setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
+      if (!stopped) setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
     } finally {
       isPolling = false;
     }

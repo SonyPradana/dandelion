@@ -1,4 +1,4 @@
-const PANEL_ID = 'dandelion-control-panel';
+export const PANEL_ID = 'dandelion-control-panel';
 const PANEL_GAP = 8;
 
 const POSITIONS = {
@@ -48,6 +48,7 @@ class ControlPanel {
   panel = null;
   slots = {};
   position = 'top-right';
+  _onInitCallbacks = [];
 
   constructor({ position = 'top-right' } = {}) {
     if (!POSITIONS[position]) {
@@ -109,9 +110,32 @@ class ControlPanel {
     }
   }
 
+  _isRunningInitCallbacks = false;
+
+  onInit(cb) {
+    this._onInitCallbacks.push(cb);
+  }
+
+  _runInitCallbacks() {
+    if (this._isRunningInitCallbacks) return;
+    this._isRunningInitCallbacks = true;
+    try {
+      for (const cb of this._onInitCallbacks) {
+        try {
+          cb(this.panel);
+        } catch (error) {
+          console.error('[Dandelion] control panel init callback error:', error);
+        }
+      }
+    } finally {
+      this._isRunningInitCallbacks = false;
+    }
+  }
+
   init() {
     if (document.getElementById(PANEL_ID)) {
       this.panel = document.getElementById(PANEL_ID);
+      this._runInitCallbacks();
       return;
     }
 
@@ -179,6 +203,7 @@ class ControlPanel {
     this.slots[4] = slot4;
 
     document.body.appendChild(this.panel);
+    this._runInitCallbacks();
   }
 
   createSlot(id, gridRow, specificStyles) {
@@ -216,6 +241,13 @@ class ControlPanel {
       } else {
         slot.appendChild(element);
       }
+    }
+  }
+
+  mountCorner(element) {
+    this.init();
+    if (!this.corner.contains(element)) {
+      this.corner.appendChild(element);
     }
   }
 

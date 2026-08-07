@@ -4,7 +4,7 @@ import { notify } from './notification';
 import { setFlashData, clearFlashData } from '../utils/flashSession';
 import { addKvRow, rebuildKvRows, S } from './flashKvRow';
 
-const PANEL_ID = 'dandelion-flash-data';
+export const PANEL_ID = 'dandelion-flash-data';
 
 export function showFlashDataPanel({
   setData,

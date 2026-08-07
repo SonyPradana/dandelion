@@ -1,6 +1,6 @@
 import { createNotCheckedToggle } from './notCheckedToggle';
 
-const ROW_MARKER_CLASS = 'dandelion-row-marker';
+export const ROW_MARKER_CLASS = 'dandelion-row-marker';
 let stylesInitialized = false;
 
 function initializeStyles() {

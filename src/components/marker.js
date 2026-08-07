@@ -2,7 +2,7 @@ import { createExcludeToggle } from './excludeToggle';
 import { createPinToggle } from './pinToggle';
 import { detectFieldType } from '../handlers/skriningform/fill-pinned-fields';
 
-const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
+export const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
 let stylesInitialized = false;
 
 function initializeStyles() {

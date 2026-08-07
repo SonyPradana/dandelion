@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -13,6 +13,7 @@ const mockNotify = vi.hoisted(() => ({
 
 vi.mock('../../src/components/notification', () => ({
   notify: mockNotify,
+  ACTION_PANEL_PREFIX: 'dandelion-action-',
 }));
 
 vi.mock('../../src/utils/flashSession', () => ({
@@ -25,13 +26,36 @@ vi.mock('../../src/handlers/flashData', () => ({
 
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
-import { startZenAutomation } from '../../src/handlers/zen-mode';
+import { startZenAutomation, initializeZenMode } from '../../src/handlers/zen-mode';
+import { teardown } from '../../src/refreshState';
 
 describe('zen-mode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     store.init(new MemoryBackend());
     document.body.innerHTML = rowsHtml;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe('initializeZenMode', () => {
+    it('should stop the poll loop after teardown', async () => {
+      vi.useFakeTimers();
+
+      initializeZenMode();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
+
+      teardown();
+      await vi.advanceTimersByTimeAsync(20_000);
+
+      expect(vi.getTimerCount()).toBe(0);
+
+      vi.useRealTimers();
+    });
   });
 
   describe('startZenAutomation', () => {

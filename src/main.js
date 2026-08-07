@@ -12,6 +12,7 @@ import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quo
 import { controlPanel } from './components/controlPanel.js';
 import { notify } from './components/notification';
 import { initializeShareToken, isShareTokenUrl } from './handlers/shareToken.js';
+import { setReinit } from './refreshState.js';
 
 store.init(browser);
 
@@ -25,26 +26,31 @@ async function main() {
 
   await quotaInit();
 
-  if (isShareTokenUrl(window.location.href)) {
-    initializeShareToken();
-    return;
+  if (!isShareTokenUrl(window.location.href)) {
+    const result = await validateChain();
+    if (!result.valid) {
+      console.warn('[Dandelion] Chain validation FAILED:', result.errors);
+      return;
+    }
+
+    if ((await isDailyLimitReached()) || (await isLimitReached())) return;
   }
 
-  const result = await validateChain();
-  if (!result.valid) {
-    console.warn('[Dandelion] Chain validation FAILED:', result.errors);
-    return;
-  }
-
-  if ((await isDailyLimitReached()) || (await isLimitReached())) return;
-
-  initialize();
+  await initialize();
 }
 
 main();
 
+setReinit(initialize);
+
 async function initialize() {
   const currentURL = window.location.href;
+
+  if (isShareTokenUrl(currentURL)) {
+    await initializeShareToken();
+    return;
+  }
+
   const config = await store.getActiveConfig();
 
   const flashData = await getFlashDataIfEnabled();
