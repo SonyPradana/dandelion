@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-08-10
+
+### Added
+
+- Configurable default flash data template for Zen Mode and register form (#117)
+- JSON config editor page for direct configuration editing (#116)
+- Zero Mode unifying Zen mode and not-checked unchecking, with toggle-off and auto-reset automation (#115)
+- Token refresh handler for share pages (#114)
+- Token preset cards in token generator for faster token creation (#113)
+- Registration form filling from flash data with per-section retry and attendance confirmation (#112)
+
+### Fixed
+
+- Register form handler state not resetting on register button trigger (#119)
+- Resolve web-ext lint warnings for Firefox extension build (#111)
+
 ## [1.6.0] - 2026-06-23
 
 ### Added

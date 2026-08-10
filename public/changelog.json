@@ -1,5 +1,14 @@
 [
   {
+    "date": "10 Agustus 2026",
+    "version": "1.7",
+    "details": [
+      "Formulir pendaftaran kini bisa diisi langsung dari data isian sebelumnya",
+      "Zero Mode — satu mode baru yang memadukan mode fokus dan pengisian form",
+      "Tautan berbagi token kini bisa langsung diterapkan tanpa copy-paste manual"
+    ]
+  },
+  {
     "date": "23 Juni 2026",
     "version": "1.6",
     "details": [
