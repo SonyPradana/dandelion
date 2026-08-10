@@ -74,7 +74,10 @@ async function handleSave() {
 
   if (!parsed.profiles || !parsed.activeProfile) {
     setInvalid(true);
-    showToast('Struktur konfigurasi tidak valid. Pastikan ada "profiles" dan "activeProfile".', 'error');
+    showToast(
+      'Struktur konfigurasi tidak valid. Pastikan ada "profiles" dan "activeProfile".',
+      'error',
+    );
     return;
   }
 
