@@ -35,15 +35,10 @@ export function initializeZeroMode() {
 
     try {
       const state = await getZenModeState();
-      if (
-        state.active &&
-        state.mode === 'zero' &&
-        state.queue.length > 0 &&
-        !isZeroAutomationActive
-      ) {
+      if (state.active && state.mode === 'zero' && !isZeroAutomationActive) {
         resumeZeroAutomation();
       }
-      setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
+      setTimeout(poll, state.active ? 500 : 10_000);
     } finally {
       isPolling = false;
     }
