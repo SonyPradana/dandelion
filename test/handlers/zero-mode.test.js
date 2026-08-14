@@ -321,4 +321,35 @@ describe('zero-mode', () => {
       expect(await getZeroQueue()).toEqual([]);
     });
   });
+
+  describe('completion', () => {
+    it('should resume an empty-but-active zero session and offer to finish the service', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith('Konfirmasi', 'Selesaikan Layanan?');
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+  });
 });
