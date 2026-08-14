@@ -204,7 +204,7 @@ export const notify = {
 
       const tick = () => {
         const remainingMs = Math.max(0, duration - (Date.now() - start));
-        const label = `OK (${Math.ceil(remainingMs / 1000)}d)`;
+        const label = remainingMs > 0 ? `OK (${Math.ceil(remainingMs / 1000)}d)` : 'OK';
 
         if (label !== lastLabel) {
           lastLabel = label;
