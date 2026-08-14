@@ -131,5 +131,71 @@ describe('notify', () => {
       okBtn.click();
       await expect(promise).resolves.toBe(true);
     });
+
+    it('should show initial countdown label based on duration', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise, dismiss } = notify.countdown('Count', null, 5000);
+      const okBtn = document.querySelector('[id^="dandelion-countdown-"] button');
+      expect(okBtn.textContent).toBe('OK (5d)');
+      dismiss();
+      await expect(promise).resolves.toBe(false);
+    });
+
+    it('should update countdown text based on elapsed ms', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise, dismiss } = notify.countdown('Count', null, 5000);
+      const okBtn = document.querySelector('[id^="dandelion-countdown-"] button');
+
+      expect(okBtn.textContent).toBe('OK (5d)');
+      vi.advanceTimersByTime(1000);
+      expect(okBtn.textContent).toBe('OK (4d)');
+      vi.advanceTimersByTime(1000);
+      expect(okBtn.textContent).toBe('OK (3d)');
+      vi.advanceTimersByTime(2000);
+      expect(okBtn.textContent).toBe('OK (1d)');
+
+      dismiss();
+      await expect(promise).resolves.toBe(false);
+    });
+
+    it('should resolve exactly when duration elapses even if not a multiple of 1000ms', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise } = notify.countdown('Count', null, 1500);
+      const okBtn = document.querySelector('[id^="dandelion-countdown-"] button');
+
+      expect(okBtn.textContent).toBe('OK (2d)');
+
+      let outcome = 'pending';
+      promise.then((v) => {
+        outcome = `resolved:${v}`;
+      });
+
+      vi.advanceTimersByTime(1400);
+      await Promise.resolve();
+      expect(outcome).toBe('pending');
+      expect(okBtn.textContent).toBe('OK (1d)');
+
+      vi.advanceTimersByTime(100);
+      await Promise.resolve();
+      expect(outcome).toBe('resolved:true');
+    });
+
+    it('should shrink the progress bar in sync with elapsed ms', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise } = notify.countdown('Count', null, 5000);
+      const fill = document.querySelector('[id^="dandelion-countdown-"] > div > div');
+
+      expect(fill.style.width).toBe('100%');
+      vi.advanceTimersByTime(1000);
+      expect(fill.style.width).toBe('80%');
+      vi.advanceTimersByTime(1000);
+      expect(fill.style.width).toBe('60%');
+      vi.advanceTimersByTime(1000);
+      expect(fill.style.width).toBe('40%');
+      vi.advanceTimersByTime(2000);
+      expect(fill.style.width).toBe('0%');
+
+      await expect(promise).resolves.toBe(true);
+    });
   });
 });

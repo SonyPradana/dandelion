@@ -136,6 +136,7 @@ export const notify = {
   countdown(title, message, duration = 5000) {
     let resolved = false;
     let timer = null;
+    let timeoutTimer = null;
     let _cleanup = null;
     let _resolve = null;
 
@@ -144,7 +145,8 @@ export const notify = {
 
       const id = `dandelion-countdown-${Date.now()}`;
       const { panel, setHeader, remove } = createBasePanel(id);
-      let remaining = Math.ceil(duration / 1000);
+      const start = Date.now();
+      let lastLabel = '';
 
       panel.append(setHeader(title, '#60a5fa'));
 
@@ -161,9 +163,7 @@ export const notify = {
 
       const progressFill = document.createElement('div');
       progressFill.style.cssText =
-        'width: 100%; height: 100%; background: #60a5fa; border-radius: 2px; transition: width ' +
-        duration +
-        'ms linear;';
+        'width: 100%; height: 100%; background: #60a5fa; border-radius: 2px;';
 
       progressContainer.appendChild(progressFill);
       panel.appendChild(progressContainer);
@@ -172,7 +172,7 @@ export const notify = {
       btnContainer.style.display = 'flex';
       btnContainer.style.gap = '5px';
 
-      const okBtn = createPanelButton(`OK (${remaining}s)`, 'success');
+      const okBtn = createPanelButton('');
       okBtn.style.flex = '1';
 
       const dismissBtn = createPanelButton('Dismiss', 'default');
@@ -186,6 +186,7 @@ export const notify = {
         if (resolved) return;
         resolved = true;
         clearInterval(timer);
+        clearTimeout(timeoutTimer);
         remove();
       };
 
@@ -201,18 +202,31 @@ export const notify = {
         _resolve(false);
       };
 
-      requestAnimationFrame(() => {
-        progressFill.style.width = '0%';
-      });
+      const tick = () => {
+        const remainingMs = Math.max(0, duration - (Date.now() - start));
+        const label = remainingMs > 0 ? `OK (${Math.ceil(remainingMs / 1000)}d)` : 'OK';
 
-      timer = setInterval(() => {
-        remaining--;
-        okBtn.textContent = `OK (${remaining}s)`;
-        if (remaining <= 0 && !resolved) {
+        if (label !== lastLabel) {
+          lastLabel = label;
+          okBtn.textContent = label;
+        }
+
+        const pct = duration > 0 ? (remainingMs / duration) * 100 : 0;
+        progressFill.style.width = `${pct}%`;
+
+        if (remainingMs <= 0 && !resolved) {
           _cleanup();
           _resolve(true);
         }
-      }, 1000);
+      };
+
+      tick();
+      timer = setInterval(tick, 200);
+      timeoutTimer = setTimeout(() => {
+        if (resolved) return;
+        _cleanup();
+        _resolve(true);
+      }, duration);
     });
 
     return {
