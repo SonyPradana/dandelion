@@ -22,7 +22,12 @@ import { fillPekerjaan } from './register-form/fill-occupation.js';
 import { fillAlamatDomisili } from './register-form/fill-residence-address.js';
 import { submitSection2 } from './register-form/submit-section-2.js';
 import { submitSection3 } from './register-form/submit-section-3.js';
-import { confirmAttendance } from './register-form/confirm-attendance.js';
+import {
+  searchAttendance,
+  completeAttendance,
+  completeDoneAttendance,
+  detectAttendancePosition,
+} from './register-form/confirm-attendance.js';
 import { fillDataWali } from './register-form/fill-data-wali.js';
 import { fillNikWali } from './register-form/fill-nik-wali.js';
 
@@ -49,29 +54,34 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       return;
     }
 
-    if (isRegisterFormFlowOpen()) {
+    const resuming = isRegisterFormResumable();
+    if (isRegisterFormFlowOpen() && !resuming) {
       registerFormAbort = true;
       await resetRegisterForm(null);
       return;
     }
 
     registerFormAbort = false;
-    closeSuccessModalIfOpen();
+    if (resuming) {
+      document.querySelectorAll('[id^="dandelion-action-"]').forEach((p) => p.remove());
+    } else {
+      closeSuccessModalIfOpen();
 
-    const target = Array.from(document.querySelectorAll('button')).find((btn) =>
-      btn.textContent?.trim().includes('Daftar Baru'),
-    );
-    if (target) target.click();
+      const target = Array.from(document.querySelectorAll('button')).find((btn) =>
+        btn.textContent?.trim().includes('Daftar Baru'),
+      );
+      if (target) target.click();
 
-    showFlashDataPanel({
-      setData: setRegisterFormFlashData,
-      clearData: clearRegisterFormFlashData,
-      validate: validateRegisterFormFields,
-      initialData: registerFormConfig.defaultPinneds,
-    });
+      showFlashDataPanel({
+        setData: setRegisterFormFlashData,
+        clearData: clearRegisterFormFlashData,
+        validate: validateRegisterFormFields,
+        initialData: registerFormConfig.defaultPinneds,
+      });
 
-    const opened = await waitForModal();
-    if (!opened) return;
+      const opened = await waitForModal();
+      if (!opened) return;
+    }
 
     const completed = {};
     /** @param {number} ms */
@@ -121,8 +131,8 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
             const step = detectCurrentStep();
             let startSection = 1;
             if (step === 'section-2' || completed[1]) startSection = 2;
-            if (completed[2]) startSection = 3;
-            if (completed[3]) startSection = 4;
+            if (step === 'section-3' || completed[2]) startSection = 3;
+            if (step === 'section-4' || completed[3]) startSection = 4;
             stateEl.textContent = `Mulai ${startSection}/4`;
 
             // ── Section 1 ──
@@ -262,7 +272,16 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
             }
             const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
             if (nik) {
-              const ticket = await confirmAttendance(nik, countdownDuration);
+              const pos = detectAttendancePosition();
+              let ticket = null;
+              if (pos === 'done') {
+                ticket = await completeDoneAttendance();
+              } else {
+                const searchResult = await searchAttendance(nik, { skip: pos === 'hadir' });
+                if (searchResult) {
+                  ticket = await completeAttendance(searchResult.ticket, countdownDuration);
+                }
+              }
               if (ticket) {
                 stateEl.textContent = `Selesai — ${ticket}`;
                 bus.emit('registerForm:sectionComplete', { section: 4 });
@@ -359,11 +378,27 @@ function closeSuccessModalIfOpen() {
 }
 
 /** @returns {string} */
-function detectCurrentStep() {
+export function detectCurrentStep() {
   const greenBars = document.querySelectorAll(String.raw`.stepper .bg-\[\#16B3AC\]`);
+  if (greenBars.length === 3) return 'section-3';
   if (greenBars.length === 2) return 'section-2';
   if (greenBars.length === 1) return 'section-1';
+  const modal = document.querySelector(
+    String.raw`.fixed.top-0.left-0.z-1000.w-full.h-full.flex.justify-center.items-center.backdrop-blur-5`,
+  );
+  if (modal && modal.textContent.includes('Formulir Pendaftaran')) {
+    const hasSubmitBtn = Array.from(modal.querySelectorAll('button')).some((btn) =>
+      ['Pilih', 'Daftarkan dengan NIK'].includes(btn.textContent.trim()),
+    );
+    if (hasSubmitBtn) return 'section-3';
+  }
+  if (detectAttendancePosition()) return 'section-4';
   return 'unknown';
+}
+
+/** @returns {boolean} */
+export function isRegisterFormResumable() {
+  return ['section-2', 'section-3', 'section-4'].includes(detectCurrentStep());
 }
 
 /**
