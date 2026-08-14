@@ -136,6 +136,7 @@ export const notify = {
   countdown(title, message, duration = 5000) {
     let resolved = false;
     let timer = null;
+    let timeoutTimer = null;
     let _cleanup = null;
     let _resolve = null;
 
@@ -144,7 +145,8 @@ export const notify = {
 
       const id = `dandelion-countdown-${Date.now()}`;
       const { panel, setHeader, remove } = createBasePanel(id);
-      let remaining = Math.ceil(duration / 1000);
+      const start = Date.now();
+      let lastLabel = '';
 
       panel.append(setHeader(title, '#60a5fa'));
 
@@ -172,7 +174,7 @@ export const notify = {
       btnContainer.style.display = 'flex';
       btnContainer.style.gap = '5px';
 
-      const okBtn = createPanelButton(`OK (${remaining}s)`, 'success');
+      const okBtn = createPanelButton('');
       okBtn.style.flex = '1';
 
       const dismissBtn = createPanelButton('Dismiss', 'default');
@@ -186,6 +188,7 @@ export const notify = {
         if (resolved) return;
         resolved = true;
         clearInterval(timer);
+        clearTimeout(timeoutTimer);
         remove();
       };
 
@@ -205,14 +208,28 @@ export const notify = {
         progressFill.style.width = '0%';
       });
 
-      timer = setInterval(() => {
-        remaining--;
-        okBtn.textContent = `OK (${remaining}s)`;
-        if (remaining <= 0 && !resolved) {
+      const tick = () => {
+        const remainingMs = Math.max(0, duration - (Date.now() - start));
+        const label = `OK (${Math.ceil(remainingMs / 1000)}d)`;
+
+        if (label !== lastLabel) {
+          lastLabel = label;
+          okBtn.textContent = label;
+        }
+
+        if (remainingMs <= 0 && !resolved) {
           _cleanup();
           _resolve(true);
         }
-      }, 1000);
+      };
+
+      tick();
+      timer = setInterval(tick, 200);
+      timeoutTimer = setTimeout(() => {
+        if (resolved) return;
+        _cleanup();
+        _resolve(true);
+      }, duration);
     });
 
     return {
