@@ -179,5 +179,23 @@ describe('notify', () => {
       await Promise.resolve();
       expect(outcome).toBe('resolved:true');
     });
+
+    it('should shrink the progress bar in sync with elapsed ms', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise } = notify.countdown('Count', null, 5000);
+      const fill = document.querySelector('[id^="dandelion-countdown-"] > div > div');
+
+      expect(fill.style.width).toBe('100%');
+      vi.advanceTimersByTime(1000);
+      expect(fill.style.width).toBe('80%');
+      vi.advanceTimersByTime(1000);
+      expect(fill.style.width).toBe('60%');
+      vi.advanceTimersByTime(1000);
+      expect(fill.style.width).toBe('40%');
+      vi.advanceTimersByTime(2000);
+      expect(fill.style.width).toBe('0%');
+
+      await expect(promise).resolves.toBe(true);
+    });
   });
 });

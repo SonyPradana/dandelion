@@ -163,9 +163,7 @@ export const notify = {
 
       const progressFill = document.createElement('div');
       progressFill.style.cssText =
-        'width: 100%; height: 100%; background: #60a5fa; border-radius: 2px; transition: width ' +
-        duration +
-        'ms linear;';
+        'width: 100%; height: 100%; background: #60a5fa; border-radius: 2px;';
 
       progressContainer.appendChild(progressFill);
       panel.appendChild(progressContainer);
@@ -204,10 +202,6 @@ export const notify = {
         _resolve(false);
       };
 
-      requestAnimationFrame(() => {
-        progressFill.style.width = '0%';
-      });
-
       const tick = () => {
         const remainingMs = Math.max(0, duration - (Date.now() - start));
         const label = `OK (${Math.ceil(remainingMs / 1000)}d)`;
@@ -216,6 +210,9 @@ export const notify = {
           lastLabel = label;
           okBtn.textContent = label;
         }
+
+        const pct = duration > 0 ? (remainingMs / duration) * 100 : 0;
+        progressFill.style.width = `${pct}%`;
 
         if (remainingMs <= 0 && !resolved) {
           _cleanup();
