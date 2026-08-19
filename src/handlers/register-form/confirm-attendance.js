@@ -85,7 +85,8 @@ function findTicketInModal(modal) {
 }
 
 /**
- * Deteksi posisi alur "cari dan hadirkan" di halaman kehadiran.
+ * Detect the current sub-position within the "search & mark present" flow.
+ *
  * @returns {'search'|'confirm'|'hadir'|'done'|null}
  */
 export function detectAttendancePosition() {
@@ -107,7 +108,8 @@ export function detectAttendancePosition() {
 }
 
 /**
- * Cari peserta di halaman kehadiran dan buka modal "Tandai Hadir?".
+ * Search for the participant and open the "Mark Present?" confirmation modal.
+ *
  * @param {string} nik
  * @param {{ skip?: boolean }} [options]
  * @returns {Promise<{ modal: Element, ticket: string|null }|null>}
@@ -142,7 +144,8 @@ export async function searchAttendance(nik, { skip = false } = {}) {
 }
 
 /**
- * Tandai hadir secara manual lewat countdown dan selesaikan dari modal "Berhasil Hadir".
+ * Complete the manual attendance via countdown and the "Successfully Present" modal.
+ *
  * @param {string|null} ticket
  * @param {number} [countdownDuration=5000]
  * @returns {Promise<string|null|false>}
@@ -186,7 +189,8 @@ export async function completeAttendance(ticket, countdownDuration = 5000) {
 }
 
 /**
- * Selesaikan alur ketika modal "Berhasil Hadir" sudah terbuka (posisi 'done').
+ * Finish the flow when the "Successfully Present" modal is already open (position 'done').
+ *
  * @returns {Promise<string|null>}
  */
 export async function completeDoneAttendance() {
