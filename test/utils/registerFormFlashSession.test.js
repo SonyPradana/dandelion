@@ -5,6 +5,9 @@ import {
   setRegisterFormFlashData,
   getRegisterFormFlashData,
   clearRegisterFormFlashData,
+  setRegisterFormStep,
+  getRegisterFormStep,
+  clearRegisterFormStep,
 } from '../../src/utils/registerFormFlashSession.js';
 
 describe('registerFormFlashSession', () => {
@@ -144,5 +147,48 @@ describe('registerFormFlashSession', () => {
       const otherData = await getRegisterFormFlashData(600_000, otherStore);
       expect(otherData.key).toBe('other');
     });
+  });
+});
+
+describe('registerFormStep', () => {
+  beforeEach(() => {
+    store.init(new MemoryBackend());
+  });
+
+  it('getRegisterFormStep should return null when no step', async () => {
+    expect(await getRegisterFormStep()).toBeNull();
+  });
+
+  it('setRegisterFormStep should store step', async () => {
+    await setRegisterFormStep('section-4');
+    expect(await getRegisterFormStep()).toBe('section-4');
+  });
+
+  it('getRegisterFormStep should return null for expired step', async () => {
+    await setRegisterFormStep('section-4');
+    expect(await getRegisterFormStep(-1)).toBeNull();
+  });
+
+  it('clearRegisterFormStep should remove step', async () => {
+    await setRegisterFormStep('section-4');
+    await clearRegisterFormStep();
+    expect(await getRegisterFormStep()).toBeNull();
+  });
+
+  it('should not interfere with flash data', async () => {
+    await setRegisterFormFlashData({ nik: '123' });
+    await setRegisterFormStep('section-4');
+    const data = await getRegisterFormFlashData();
+    expect(data.nik).toBe('123');
+    expect(await getRegisterFormStep()).toBe('section-4');
+  });
+
+  it('clearRegisterFormStep should not affect flash data', async () => {
+    await setRegisterFormFlashData({ nik: '123' });
+    await setRegisterFormStep('section-4');
+    await clearRegisterFormStep();
+    const data = await getRegisterFormFlashData();
+    expect(data.nik).toBe('123');
+    expect(await getRegisterFormStep()).toBeNull();
   });
 });

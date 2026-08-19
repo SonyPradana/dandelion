@@ -7,6 +7,9 @@ import {
   setRegisterFormFlashData,
   getRegisterFormFlashData,
   clearRegisterFormFlashData,
+  setRegisterFormStep,
+  getRegisterFormStep,
+  clearRegisterFormStep,
 } from '../utils/registerFormFlashSession.js';
 import { validateRegisterFormFields } from '../utils/registerFormValidator.js';
 import bus from '../utils/hooks';
@@ -54,7 +57,8 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       return;
     }
 
-    const resuming = isRegisterFormResumable();
+    const savedStep = await getRegisterFormStep();
+    const resuming = savedStep != null;
     if (isRegisterFormFlowOpen() && !resuming) {
       registerFormAbort = true;
       await resetRegisterForm(null);
@@ -128,7 +132,8 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
             }
 
             const entries = Object.entries(flashData.pinneds);
-            const step = detectCurrentStep();
+            const domStep = detectCurrentStep();
+            const step = savedStep || domStep;
             let startSection = 1;
             if (step === 'section-2' || completed[1]) startSection = 2;
             if (step === 'section-3' || completed[2]) startSection = 3;
@@ -261,6 +266,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
                 return;
               }
               completed[3] = true;
+              await setRegisterFormStep('section-4');
               bus.emit('registerForm:sectionComplete', { section: 3 });
               stateEl.textContent = 'Mulai 4/4';
             }
@@ -297,6 +303,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
                 );
                 actionPanel.remove();
               } else {
+                await clearRegisterFormStep();
                 notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
               }
             } else {
@@ -322,6 +329,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
    */
   async function resetRegisterForm(message = 'NIK sudah pernah diperiksa, task dibatalkan') {
     await clearRegisterFormFlashData();
+    await clearRegisterFormStep();
     const flashPanel = document.getElementById('dandelion-flash-data');
     if (flashPanel) flashPanel.remove();
     document.querySelector('[id^="dandelion-action-"]')?.remove();
@@ -392,13 +400,12 @@ export function detectCurrentStep() {
     );
     if (hasSubmitBtn) return 'section-3';
   }
-  if (detectAttendancePosition()) return 'section-4';
   return 'unknown';
 }
 
 /** @returns {boolean} */
 export function isRegisterFormResumable() {
-  return ['section-2', 'section-3', 'section-4'].includes(detectCurrentStep());
+  return ['section-2', 'section-3'].includes(detectCurrentStep());
 }
 
 /**

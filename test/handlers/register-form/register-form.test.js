@@ -28,13 +28,6 @@ function makeFormModal(buttonLabel) {
   return modal;
 }
 
-function makeBerhasilHadirModal() {
-  const modal = document.createElement('div');
-  modal.className = 'rounded-lg bg-white p-4';
-  modal.textContent = 'Berhasil Hadir';
-  document.body.appendChild(modal);
-}
-
 describe('detectCurrentStep', () => {
   beforeEach(() => {
     document.body.replaceChildren();
@@ -74,16 +67,11 @@ describe('detectCurrentStep', () => {
     expect(detectCurrentStep()).toBe('unknown');
   });
 
-  it('should return section-4 when attendance page is in search state', () => {
+  it('should return unknown when searchNik exists but no stepper/modal', () => {
     const input = document.createElement('input');
     input.id = 'searchNik';
     document.body.appendChild(input);
-    expect(detectCurrentStep()).toBe('section-4');
-  });
-
-  it('should return section-4 when Berhasil Hadir modal is open', () => {
-    makeBerhasilHadirModal();
-    expect(detectCurrentStep()).toBe('section-4');
+    expect(detectCurrentStep()).toBe('unknown');
   });
 });
 
@@ -111,10 +99,10 @@ describe('isRegisterFormResumable', () => {
     expect(isRegisterFormResumable()).toBe(true);
   });
 
-  it('should be true on section-4', () => {
+  it('should be false when searchNik exists (section-4 is not DOM-resumable)', () => {
     const input = document.createElement('input');
     input.id = 'searchNik';
     document.body.appendChild(input);
-    expect(isRegisterFormResumable()).toBe(true);
+    expect(isRegisterFormResumable()).toBe(false);
   });
 });
