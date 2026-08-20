@@ -60,6 +60,11 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
     const savedStep = await getRegisterFormStep();
     const resuming = savedStep != null;
     if (isRegisterFormFlowOpen() && !resuming) {
+      const close = await notify.confirm(
+        'Register Form',
+        'Task sedang berjalan. Tutup dan bersihkan state?',
+      );
+      if (!close) return;
       registerFormAbort = true;
       await resetRegisterForm(null);
       return;
