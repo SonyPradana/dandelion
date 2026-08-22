@@ -266,9 +266,14 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
               }
               const submitted3 = await submitSection3();
               if (!submitted3) {
-                notify.alert('Register Form', 'Gagal di section 3', 3000);
-                isRegisterFormRunning = false;
-                return;
+                const hasSuccessModal = Array.from(
+                  document.querySelectorAll('.rounded-lg.bg-white.p-4'),
+                ).some((m) => m.textContent.includes('Berhasil Daftar'));
+                if (hasSuccessModal) {
+                  notify.alert('Register Form', 'Gagal di section 3', 3000);
+                  isRegisterFormRunning = false;
+                  return;
+                }
               }
               completed[3] = true;
               await setRegisterFormStep('section-4');
