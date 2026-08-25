@@ -55,23 +55,25 @@ Env values come from two files, loaded by `scripts/load-env.js` (dotenvx) in thi
    `serve.ts` also imports the loader so decrypted production values reach
    the server on machines that hold `.env.keys`.
 
-| Variable               | Required for         | Description                                                                     |
-| ---------------------- | -------------------- | ------------------------------------------------------------------------------- |
-| `TARGET_HOST`          | build                | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`) |
-| `FIREFOX_EXTENSION_ID` | build:firefox        | Addon ID (e.g. `@dandelion`)                                                    |
-| `AMO_JWT_ISSUER`       | sign:firefox         | AMO API key issuer                                                              |
-| `AMO_JWT_SECRET`       | sign:firefox         | AMO API key secret                                                              |
-| `CHROME_EXTENSION_KEY` | build:chrome, serve  | Base64-encoded public key (extension ID derivation)                             |
-| `HOST`                 | build:firefox, serve | Server hostname (default: `localhost`) — Firefox update_url derivs from this    |
-| `PORT`                 | serve                | Starting port for incremental scan (default: `3000`)                            |
-| `TLS_CERT`             | serve                | TLS certificate path (default: `keys/localhost.pem`)                            |
-| `TLS_KEY`              | serve                | TLS private key path (default: `keys/localhost-key.pem`)                        |
+| Variable               | Required for         | Description                                                                           |
+| ---------------------- | -------------------- | ------------------------------------------------------------------------------------- |
+| `TARGET_HOST`          | build                | Semicolon-separated host permissions (e.g. `https://example.com;https://*.org`)       |
+| `FIREFOX_EXTENSION_ID` | build:firefox        | Addon ID (e.g. `@dandelion`)                                                          |
+| `AMO_JWT_ISSUER`       | sign:firefox         | AMO API key issuer                                                                    |
+| `AMO_JWT_SECRET`       | sign:firefox         | AMO API key secret                                                                    |
+| `CHROME_EXTENSION_KEY` | build:chrome, serve  | Base64-encoded public key (extension ID derivation)                                   |
+| `HOST`                 | build:firefox, serve | Server hostname (default: `localhost`); update_url fallback when `PUBLIC_URL` not set |
+| `PORT`                 | serve                | Starting port for incremental scan (default: `3000`)                                  |
+| `TLS_CERT`             | serve                | TLS certificate path (default: `keys/localhost.pem`)                                  |
+| `TLS_KEY`              | serve                | TLS private key path (default: `keys/localhost-key.pem`)                              |
 
 Get AMO API keys at: https://addons.mozilla.org/en-US/developers/addon/api/key/
 
 ### Owner: encrypting `.env.production` (one-time)
 
-Every non-server variable is stored encrypted:
+Core identity and build variables are stored encrypted. HOST and
+PORT/TLS\_\* stay out — server falls back to code defaults + PM2, and
+PUBLIC_URL already covers the Firefox update URL:
 
 ```bash
 pnpm exec dotenvx set -f .env.production AMO_JWT_ISSUER "<value>"
@@ -80,8 +82,12 @@ pnpm exec dotenvx set -f .env.production TARGET_HOST "<value>"
 pnpm exec dotenvx set -f .env.production CHROME_EXTENSION_KEY "<value>"
 pnpm exec dotenvx set -f .env.production FIREFOX_EXTENSION_ID "<value>"
 pnpm exec dotenvx set -f .env.production PUBLIC_URL "<value>"   # optional — preferred for update URLs
-pnpm exec dotenvx set -f .env.production HOST "<value>"         # optional — update URL fallback; server falls back to defaults/PM2
 ```
+
+> **`HOST`** intentionally omitted — when `PUBLIC_URL` is set (encrypted
+> above), Firefox build uses it directly. Server defaults to `localhost`
+> via code + PM2. Override in your local `.env` only if you need a
+> non-default hostname.
 
 The first command generates `.env.keys` containing `DOTENV_PRIVATE_KEY_PRODUCTION`
 (gitignored). Back that private key up in your password manager — it is required on
