@@ -29,12 +29,12 @@
     "verify:firefox": "web-ext lint --source-dir dist/firefox"
   },
   "dependencies": {
+    "@dotenvx/dotenvx": "^2.21.0",
     "jose": "^6.2.3"
   },
   "devDependencies": {
     "archiver": "^8.0.0",
     "cross-env": "^10.1.0",
-    "dotenv": "^17.4.2",
     "happy-dom": "^20.10.5",
     "oxfmt": "^0.53.0",
     "oxlint": "^1.68.0",

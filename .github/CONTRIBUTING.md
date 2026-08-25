@@ -11,34 +11,49 @@
 
 ```bash
 pnpm install
-cp .env.example .env   # then fill in your env vars
-pnpm build             # builds both Chrome and Firefox
-pnpm verify:firefox    # runs web-ext lint
+cp .env.example .env    # REQUIRED — fill in your own values (gitignored)
+pnpm build              # builds both Chrome and Firefox
+pnpm verify:firefox     # runs web-ext lint
 ```
+
+Builds fail on purpose when no env file exists, or when encrypted
+`.env.production` values cannot be decrypted. Forks/contributors must always
+run with their **own** identity — never the owner's production config.
 
 ## Scripts
 
-| Script                 | Description                            |
-| ---------------------- | -------------------------------------- |
-| `pnpm lint`            | Run oxlint on all files                |
-| `pnpm lint:fix`        | Auto-fix lint errors                   |
-| `pnpm format`          | Auto-format with oxfmt                 |
-| `pnpm format:check`    | Check formatting (CI)                  |
-| `pnpm build`           | Build Chrome + Firefox                 |
-| `pnpm build:chrome`    | Build Chrome only → `dist/chrome/`     |
-| `pnpm build:firefox`   | Build Firefox only → `dist/firefox/`   |
-| `pnpm sign:firefox`    | Sign Firefox via AMO (requires `.env`) |
-| `pnpm release:chrome`  | Build + zip Chrome → `artifacts/`      |
-| `pnpm release:firefox` | Build + sign + copy XPI → `artifacts/` |
-| `pnpm release`         | Release both                           |
-| `pnpm verify:firefox`  | `web-ext lint` on `dist/firefox/`      |
-| `pnpm clean`           | Delete `dist/`                         |
-| `pnpm clean:chrome`    | Delete `dist/chrome/`                  |
-| `pnpm clean:firefox`   | Delete `dist/firefox/`                 |
+| Script                 | Description                                             |
+| ---------------------- | ------------------------------------------------------- |
+| `pnpm lint`            | Run oxlint on all files                                 |
+| `pnpm lint:fix`        | Auto-fix lint errors                                    |
+| `pnpm format`          | Auto-format with oxfmt                                  |
+| `pnpm format:check`    | Check formatting (CI)                                   |
+| `pnpm build`           | Build Chrome + Firefox                                  |
+| `pnpm build:chrome`    | Build Chrome only → `dist/chrome/`                      |
+| `pnpm build:firefox`   | Build Firefox only → `dist/firefox/`                    |
+| `pnpm sign:firefox`    | Sign Firefox via AMO (requires your AMO keys in `.env`) |
+| `pnpm release:chrome`  | Build + zip Chrome → `artifacts/`                       |
+| `pnpm release:firefox` | Build + sign + copy XPI → `artifacts/`                  |
+| `pnpm release`         | Release both                                            |
+| `pnpm verify:firefox`  | `web-ext lint` on `dist/firefox/`                       |
+| `pnpm clean`           | Delete `dist/`                                          |
+| `pnpm clean:chrome`    | Delete `dist/chrome/`                                   |
+| `pnpm clean:firefox`   | Delete `dist/firefox/`                                  |
 
 ## Environment Variables
 
-Copy `.env.example` to `.env` and fill in:
+Env values come from two files, loaded by `scripts/load-env.js` (dotenvx) in this order:
+
+1. `.env.production` — **the owner's production config**. Committed to git but
+   **fully encrypted** (dotenvx AES-256-GCM/ECIES) except `PORT`/`TLS_CERT`/`TLS_KEY`.
+   Decrypting requires the private key in `.env.keys` (gitignored, owner-only).
+   **Contributors/forks: ignore this file.** It exists so the owner can move
+   between devices with a `git clone` + one password-manager line — not as a
+   shared config. Builds never inherit the owner's identity.
+2. `.env` — **your personal env** (gitignored). Any value here overrides
+   `.env.production`. Bun (`serve.ts`) auto-loads this natively, and
+   `serve.ts` also imports the loader so decrypted production values reach
+   the server on machines that hold `.env.keys`.
 
 | Variable               | Required for         | Description                                                                     |
 | ---------------------- | -------------------- | ------------------------------------------------------------------------------- |
@@ -46,13 +61,63 @@ Copy `.env.example` to `.env` and fill in:
 | `FIREFOX_EXTENSION_ID` | build:firefox        | Addon ID (e.g. `@dandelion`)                                                    |
 | `AMO_JWT_ISSUER`       | sign:firefox         | AMO API key issuer                                                              |
 | `AMO_JWT_SECRET`       | sign:firefox         | AMO API key secret                                                              |
-| `CHROME_EXTENSION_KEY` | build:chrome         | Base64-encoded public key (extension ID derivation)                             |
+| `CHROME_EXTENSION_KEY` | build:chrome, serve  | Base64-encoded public key (extension ID derivation)                             |
 | `HOST`                 | build:firefox, serve | Server hostname (default: `localhost`) — Firefox update_url derivs from this    |
 | `PORT`                 | serve                | Starting port for incremental scan (default: `3000`)                            |
 | `TLS_CERT`             | serve                | TLS certificate path (default: `keys/localhost.pem`)                            |
 | `TLS_KEY`              | serve                | TLS private key path (default: `keys/localhost-key.pem`)                        |
 
 Get AMO API keys at: https://addons.mozilla.org/en-US/developers/addon/api/key/
+
+### Owner: encrypting `.env.production` (one-time)
+
+Every non-server variable is stored encrypted:
+
+```bash
+pnpm exec dotenvx set -f .env.production AMO_JWT_ISSUER "<value>"
+pnpm exec dotenvx set -f .env.production AMO_JWT_SECRET "<value>"
+pnpm exec dotenvx set -f .env.production TARGET_HOST "<value>"
+pnpm exec dotenvx set -f .env.production CHROME_EXTENSION_KEY "<value>"
+pnpm exec dotenvx set -f .env.production FIREFOX_EXTENSION_ID "<value>"
+pnpm exec dotenvx set -f .env.production PUBLIC_URL "<value>"   # optional — preferred for update URLs
+pnpm exec dotenvx set -f .env.production HOST "<value>"         # optional — update URL fallback; server falls back to defaults/PM2
+```
+
+The first command generates `.env.keys` containing `DOTENV_PRIVATE_KEY_PRODUCTION`
+(gitignored). Back that private key up in your password manager — it is required on
+every machine that builds, releases, or serves. Never commit plaintext credentials;
+if a plaintext copy exists in your local `.env`, remove it so it does not silently
+override decrypted values.
+
+Verify decryption works (safe — no network calls, no AMO uploads):
+
+```bash
+node scripts/load-env.js && echo "DEKRIPSI-OK"
+```
+
+The built-in guard exits with `Failed to decrypt N value(s)` when `.env.keys`
+is missing or holds the wrong private key. Save `pnpm sign:firefox` for real
+releases — with working decryption it will actually upload to AMO.
+
+### Owner: moving to another folder or device
+
+```bash
+git clone <repo>            # brings the encrypted .env.production
+# paste .env.keys (the DOTENV_PRIVATE_KEY_PRODUCTION line) from your password manager
+# restore keys/development.pem from backup (or re-derive CHROME_EXTENSION_KEY)
+mkcert -install && mkcert -key-file keys/localhost-key.pem -cert-file keys/localhost.pem localhost 127.0.0.1
+pnpm install
+```
+
+### Contributors / forks
+
+Ignore `.env.production` entirely — you cannot decrypt it and must not reuse the
+owner's identity anyway (extension IDs, hosts, AMO credentials). Copy the template,
+fill in **your own** values, and build:
+
+```bash
+cp .env.example .env
+```
 
 ## Build Pipeline
 
@@ -73,13 +138,14 @@ The `CHROME_EXTENSION_KEY` environment variable injects a `manifest.key` into
 The key lives in `keys/development.pem` (RSA private key). Generate it once:
 
 ```bash
-# One-time: extract public key → base64 → paste into .env as CHROME_EXTENSION_KEY
+# One-time: extract public key → base64 → store as CHROME_EXTENSION_KEY
+# (encrypted in .env.production via dotenvx, or plaintext in your local .env)
 openssl rsa -pubout -in keys/development.pem | openssl base64 -A
 ```
 
-After the value is saved in `.env`, the PEM file is no longer needed — only
-`CHROME_EXTENSION_KEY` is read at build time and by the update server for
-extension ID derivation.
+After the value is saved in `.env.production` (or your local `.env`), the PEM
+file is no longer needed — only `CHROME_EXTENSION_KEY` is read at build time
+and by the update server for extension ID derivation.
 
 **If the PEM and/or `CHROME_EXTENSION_KEY` are both lost**, generate a new key
 pair — the extension ID will change and existing installs become a separate
@@ -114,7 +180,7 @@ Chrome auto-update is not supported for self-hosted extensions since v117+. User
 pnpm release:firefox
 ```
 
-Requires `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` in `.env`.
+Requires `AMO_JWT_ISSUER` and `AMO_JWT_SECRET` (encrypted in `.env.production`, decrypted via `DOTENV_PRIVATE_KEY_PRODUCTION` from `.env.keys`).
 
 Output: `artifacts/dandelion-firefox-v<version>-signed.xpi`
 
@@ -127,7 +193,7 @@ The Bun server hosts the update manifest, artifact downloads (`.zip` / `.xpi`), 
 ### Setup
 
 ```bash
-cp .env.example .env   # ensure HOST, PORT are configured
+cp .env.example .env   # ensure HOST, PORT are configured (Bun reads only .env natively)
 ```
 
 ### Run
@@ -381,6 +447,7 @@ Without `await init()`, `getStatus()` returns `isFreePlan: true` (default state)
   workflows/ci.yml     — CI pipeline
   CONTRIBUTING.md      — this file
 scripts/
+  load-env.js           — dotenvx env loader (.env.production → .env overlay)
   build-firefox-manifest.js — Firefox manifest injector
   build-chrome-manifest.js  — Chrome manifest injector
   copy-static.js        — copies HTML/CSS/icons

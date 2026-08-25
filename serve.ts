@@ -2,6 +2,7 @@ import { readdirSync, existsSync, readFileSync, statSync, watch, mkdirSync } fro
 import { join, extname } from 'path';
 import { Database } from 'bun:sqlite';
 import { verifyLicense } from './src/quota/verify.js';
+import './scripts/load-env.js';
 
 // ── Routes ──
 //   /                     → Landing page (index.html)
