@@ -48,21 +48,6 @@ function waitForDaftarEnabled(timeout = 8000) {
   });
 }
 
-function waitForSuccessModal(timeout = 8000) {
-  return new Promise((resolve) => {
-    const start = Date.now();
-    const poll = () => {
-      const modals = document.querySelectorAll('.rounded-lg.bg-white.p-4');
-      for (const m of modals) {
-        if (m.textContent.includes('Berhasil Daftar')) return resolve(m);
-      }
-      if (Date.now() - start > timeout) return resolve(null);
-      setTimeout(poll, 200);
-    };
-    poll();
-  });
-}
-
 function findTutupButton(modal) {
   const btns = modal.querySelectorAll('button');
   for (const btn of btns) {
@@ -84,12 +69,27 @@ export async function submitSection3(timeout = 12_000) {
   if (!daftar) return false;
   daftar.click();
 
-  const success = await waitForSuccessModal(timeout);
-  if (!success) return false;
-
-  const tutup = findTutupButton(success);
-  if (!tutup) return false;
-  tutup.click();
-
-  return true;
+  const start = Date.now();
+  let seen = false;
+  return new Promise((resolve) => {
+    const poll = () => {
+      const modals = document.querySelectorAll('.rounded-lg.bg-white.p-4');
+      let found = false;
+      for (const m of modals) {
+        if (m.textContent.includes('Berhasil Daftar')) {
+          found = true;
+          seen = true;
+          const tutup = findTutupButton(m);
+          if (tutup) {
+            tutup.click();
+            return resolve(true);
+          }
+        }
+      }
+      if (seen && !found) return resolve(true);
+      if (Date.now() - start > timeout) return resolve(false);
+      setTimeout(poll, 200);
+    };
+    poll();
+  });
 }

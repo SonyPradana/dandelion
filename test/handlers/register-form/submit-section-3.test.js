@@ -68,6 +68,78 @@ describe('submitSection3', () => {
     });
   });
 
+  describe('race condition: user clicks Tutup manually', () => {
+    it('should return true when success modal appears and disappears before handler finds Tutup', async () => {
+      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
+      document.body.appendChild(modal);
+
+      setTimeout(() => {
+        const inner = modal.querySelector('.rounded-lg');
+        inner.replaceChildren();
+        const msg = document.createElement('div');
+        msg.textContent = 'Formulir Pendaftaran';
+        inner.appendChild(msg);
+        const daftarBtn = document.createElement('button');
+        daftarBtn.textContent = 'Daftarkan dengan NIK';
+        inner.appendChild(daftarBtn);
+      }, 800);
+
+      setTimeout(() => {
+        const inner = modal.querySelector('.rounded-lg');
+        inner.replaceChildren();
+        const msg = document.createElement('div');
+        msg.textContent = 'Berhasil Daftar';
+        inner.appendChild(msg);
+        // No Tutup button — simulate user seeing modal but handler can't find Tutup
+      }, 1500);
+
+      setTimeout(() => {
+        // User clicks Tutup manually — modal disappears
+        modal.remove();
+      }, 2500);
+
+      const promise = submitSection3();
+      await vi.advanceTimersByTimeAsync(3500);
+      expect(await promise).toBe(true);
+    });
+
+    it('should return true when success modal appears with Tutup but user clicks first', async () => {
+      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
+      document.body.appendChild(modal);
+
+      setTimeout(() => {
+        const inner = modal.querySelector('.rounded-lg');
+        inner.replaceChildren();
+        const msg = document.createElement('div');
+        msg.textContent = 'Formulir Pendaftaran';
+        inner.appendChild(msg);
+        const daftarBtn = document.createElement('button');
+        daftarBtn.textContent = 'Daftarkan dengan NIK';
+        inner.appendChild(daftarBtn);
+      }, 800);
+
+      setTimeout(() => {
+        const inner = modal.querySelector('.rounded-lg');
+        inner.replaceChildren();
+        const msg = document.createElement('div');
+        msg.textContent = 'Berhasil Daftar';
+        inner.appendChild(msg);
+        const tutupBtn = document.createElement('button');
+        tutupBtn.textContent = 'Tutup';
+        inner.appendChild(tutupBtn);
+      }, 1500);
+
+      setTimeout(() => {
+        // User clicks Tutup manually before handler can
+        modal.remove();
+      }, 1700);
+
+      const promise = submitSection3();
+      await vi.advanceTimersByTimeAsync(3000);
+      expect(await promise).toBe(true);
+    });
+  });
+
   describe('failure cases', () => {
     it('should return false when form modal never appears', async () => {
       const promise = submitSection3();
@@ -113,7 +185,7 @@ describe('submitSection3', () => {
       expect(await promise).toBe(false);
     });
 
-    it('should return false when Tutup button is missing from success modal', async () => {
+    it('should return false when Tutup button is missing and modal stays visible', async () => {
       const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
       document.body.appendChild(modal);
 
