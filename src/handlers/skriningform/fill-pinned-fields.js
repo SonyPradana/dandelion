@@ -48,8 +48,11 @@ export async function fillPinnedFields(pinneds, respectInput = false) {
       fillRadioButton(questionElement, value);
       radio++;
     } else if (field.type === 'combobox') {
-      await fillDropdowns(questionElement, value);
-      dropdown++;
+      // Skip count when the field already has a value.
+      if (!isFieldFilled(questionElement)) {
+        await fillDropdowns(questionElement, value);
+        dropdown++;
+      }
     }
   }
 

@@ -253,9 +253,10 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
       });
 
       if (targetOptionElement) {
+        const alreadyFilled = questionElement && isFieldFilled(questionElement);
         targetOptionElement.closest('.sv-list__item').click();
         if (dataName) skipList.push(dataName);
-        count++;
+        if (!alreadyFilled) count++;
         await new Promise((resolve) => setTimeout(resolve, 200));
       } else {
         chevronButton.click(); // Close drop down

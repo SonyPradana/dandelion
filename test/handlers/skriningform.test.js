@@ -3,6 +3,10 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const formHtml = readFileSync(resolve('test/__fixtures__/form.html'), 'utf8');
+const formFilledDropdownHtml = readFileSync(
+  resolve('test/__fixtures__/form-filled-dropdown.html'),
+  'utf8',
+);
 
 const mockNotify = vi.hoisted(() => ({
   alert: vi.fn(),
@@ -62,6 +66,20 @@ describe('skriningform', () => {
     const btn = document.getElementById('dandelion-auto-fill');
     btn.click();
     await vi.advanceTimersByTimeAsync(2000);
+  }
+
+  async function waitForBusResult(getResult, timeout = 3000) {
+    vi.useRealTimers();
+    const start = Date.now();
+    while (!getResult()) {
+      if (Date.now() - start > timeout) break;
+      await new Promise((r) => setTimeout(r, 10));
+    }
+  }
+
+  function didFillResult(emitSpy) {
+    const call = emitSpy.mock.calls.find((c) => c[0] === 'skriningForm:didFill');
+    return call?.[1]?.result;
   }
 
   describe('initializeSkriningForm', () => {
@@ -129,6 +147,59 @@ describe('skriningform', () => {
       const selectedItem = document.querySelector('.sv-list__item--selected');
       expect(selectedItem).toBeTruthy();
       expect(selectedItem.textContent.trim()).toBe('Opsi A');
+    });
+  });
+
+  describe('dropdown double-count', () => {
+    it('should not count dropdown that is already filled when re-filling', async () => {
+      vi.useFakeTimers();
+      document.body.innerHTML = formFilledDropdownHtml;
+
+      await initializeSkriningForm();
+
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await clickAutoFill();
+      await vi.runAllTimersAsync();
+      await waitForBusResult(() => didFillResult(emitSpy) !== undefined);
+
+      // q1 already filled -> skipped; only q2 (empty) counted.
+      expect(didFillResult(emitSpy).dropdown).toBe(1);
+    });
+  });
+
+  describe('pinned dropdown double-count', () => {
+    it('should not count pinned dropdown that is already filled', async () => {
+      vi.useFakeTimers();
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            formSkrining: {
+              radioButtonKeywords: '',
+              dropdownKeywords: '',
+              pinneds: {},
+            },
+          },
+        },
+      });
+      document.body.innerHTML = formFilledDropdownHtml;
+
+      await initializeSkriningForm({
+        pinneds: {
+          'abcxyz000123|defuvw000456|ghi000789|text': 'Opsi B',
+        },
+      });
+
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await clickAutoFill();
+      await vi.runAllTimersAsync();
+      await waitForBusResult(() => didFillResult(emitSpy) !== undefined);
+
+      // q1 dropdown is already filled -> pinned fill should be skipped and not counted.
+      expect(didFillResult(emitSpy).dropdown).toBe(0);
     });
   });
 
