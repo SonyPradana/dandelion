@@ -7,6 +7,7 @@ const formFilledDropdownHtml = readFileSync(
   resolve('test/__fixtures__/form-filled-dropdown.html'),
   'utf8',
 );
+const formCrossPopupHtml = readFileSync(resolve('test/__fixtures__/form-cross-popup.html'), 'utf8');
 
 const mockNotify = vi.hoisted(() => ({
   alert: vi.fn(),
@@ -165,6 +166,75 @@ describe('skriningform', () => {
 
       // q1 already filled -> skipped; only q2 (empty) counted.
       expect(didFillResult(emitSpy).dropdown).toBe(1);
+    });
+  });
+
+  describe('dropdown scope per-field popup', () => {
+    it('should only match options from the field being processed', async () => {
+      vi.useFakeTimers();
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            formSkrining: {
+              radioButtonKeywords: '',
+              dropdownKeywords: 'X',
+              pinneds: {},
+            },
+          },
+        },
+      });
+      document.body.innerHTML = formCrossPopupHtml;
+
+      await initializeSkriningForm();
+
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await clickAutoFill();
+      await vi.runAllTimersAsync();
+      await waitForBusResult(() => didFillResult(emitSpy) !== undefined);
+
+      // Only q1 has "X" in its own popup. q2's popup lacks "X", so a global
+      // lookup would wrongly match q1's open popup and count q2 too. Scoped
+      // per-field keeps the count to the single matching field.
+      expect(didFillResult(emitSpy).dropdown).toBe(1);
+    });
+  });
+
+  describe('ensureFill dedupe', () => {
+    it('should not double-count a pinned field re-filled by ensure fill', async () => {
+      vi.useFakeTimers();
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            formSkrining: {
+              radioButtonKeywords: '',
+              dropdownKeywords: '',
+              pinneds: {
+                'abcxyz000123|defuvw000456|ghi000789|text': 'X',
+                'abcxyz000123|defuvw000456|ghi000790|text': 'Y',
+              },
+              ensureFill: true,
+            },
+          },
+        },
+      });
+      document.body.innerHTML = formCrossPopupHtml;
+
+      await initializeSkriningForm();
+
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await clickAutoFill();
+      await vi.runAllTimersAsync();
+      await waitForBusResult(() => didFillResult(emitSpy) !== undefined);
+
+      // Two distinct pinned fields filled once each. Even though ensureFill
+      // runs a second pass (pass 2), the same fields must not be counted twice.
+      expect(didFillResult(emitSpy).dropdown).toBe(2);
     });
   });
 
