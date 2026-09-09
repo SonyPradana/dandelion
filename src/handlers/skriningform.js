@@ -16,6 +16,9 @@ import { createProfileComponent } from '../components/profile';
 import bus from '../utils/hooks';
 import { notify } from '../components/notification';
 
+const FORM_DOM_RETRY_MAX = 3;
+const FORM_DOM_RETRY_DELAY = 3000;
+
 /**
  * ⚠️ Legal / UX Notice:
  * This button only triggers local form filling.
@@ -96,12 +99,14 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     const zenConfig = activeConfig.zenMode || {};
     if (zenConfig.enabled !== false) {
       const timeout = Math.min(30_000, Math.max(500, zenConfig.timeout || 5000));
-      const cd = notify.countdown('Zen Mode Asist', '⏳ menunggu...', timeout);
+      const cd = notify.countdown('Zen Mode Asist', '⏳ menunggu...', timeout, {
+        keepOpenOnTimeout: true,
+      });
       dismissCountdown = cd.dismiss;
       cd.promise.then(async (result) => {
         dismissCountdown = null;
         if (result) {
-          await performFormFill();
+          await assistFormFill(cd);
         }
       });
     }
@@ -130,6 +135,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     );
     const pinneds = { ...configPinneds, ...flashData.pinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
+    const seen = new Set();
 
     let result = await processWithRecursion(
       radioButtonKeywords,
@@ -137,6 +143,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
       pinneds,
       excludes,
       respectInput,
+      seen,
     );
 
     if (ensureFill) {
@@ -146,6 +153,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
         pinneds,
         excludes,
         true,
+        seen,
       );
       result = {
         radio: result.radio + retryResult.radio,
@@ -158,6 +166,25 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     bus.emit('skriningForm:didFill', { result });
   }
 
+  async function assistFormFill(cd) {
+    const hasDom = () => document.querySelectorAll('[data-name]').length > 0;
+    if (hasDom()) {
+      await performFormFill();
+      cd.close();
+      return;
+    }
+    for (let retry = 1; retry <= FORM_DOM_RETRY_MAX; retry++) {
+      cd.restart(FORM_DOM_RETRY_DELAY, `⏳ menunggu... (${retry}/${FORM_DOM_RETRY_MAX})`);
+      await new Promise((r) => setTimeout(r, FORM_DOM_RETRY_DELAY));
+      if (hasDom()) {
+        await performFormFill();
+        cd.close();
+        return;
+      }
+    }
+    cd.close();
+  }
+
   if (tombol) {
     tombol.addEventListener('click', performFormFill);
     controlPanel.mount(tombol, 1);
@@ -168,7 +195,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
    * @param {string[]} config - List of radioInput konfuguration
    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
    */
-  function fillRadioButtons(config, skipList = [], respectInput = false) {
+  function fillRadioButtons(config, skipList = [], respectInput = false, seen = new Set()) {
     const allMatchingLabels = Array.from(
       document.querySelectorAll('span.sd-item__control-label'),
     ).filter((span) => {
@@ -192,7 +219,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
           if (skipList.includes(dataName)) {
             return;
           }
-          if (respectInput && isRadioFilled(questionElement)) {
+          if (respectInput && (isRadioFilled(questionElement) || seen.has(dataName))) {
             return;
           }
         }
@@ -200,8 +227,14 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
         const radioInput = parentLabel.querySelector('input[type="radio"]');
         if (radioInput && !radioInput.checked) {
           radioInput.click();
-          if (dataName) skipList.push(dataName);
-          count++;
+          if (dataName) {
+            if (!seen.has(dataName)) {
+              seen.add(dataName);
+              count++;
+            }
+          } else {
+            count++;
+          }
         }
       }
     });
@@ -213,7 +246,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
    * @param {string[]} config - List of radioInput konfuguration
    * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
    */
-  async function fillDropdowns(config, skipList = [], respectInput = false) {
+  async function fillDropdowns(config, skipList = [], respectInput = false, seen = new Set()) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
     let count = 0;
 
@@ -228,7 +261,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
         if (skipList.includes(dataName)) {
           continue;
         }
-        if (respectInput && isFieldFilled(questionElement)) {
+        if (respectInput && (isFieldFilled(questionElement) || seen.has(dataName))) {
           if (dataName) skipList.push(dataName);
           continue;
         }
@@ -238,14 +271,15 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
 
       await new Promise((resolve) => setTimeout(resolve, 300));
 
-      const visibleOptions = Array.from(
-        document.querySelectorAll(
-          '.sv-popup--dropdown .sv-string-viewer, .sv-popup--dropdown-overlay .sv-string-viewer',
-        ),
-      ).filter((option) => {
-        const popup = option.closest('.sv-popup');
-        return popup && popup.style.display !== 'none';
-      });
+      const targetPopup = questionElement?.querySelector(
+        '.sv-popup--dropdown, .sv-popup--dropdown-overlay',
+      );
+      const visibleOptions = targetPopup
+        ? Array.from(targetPopup.querySelectorAll('.sv-string-viewer')).filter((option) => {
+            const popup = option.closest('.sv-popup');
+            return popup && popup.style.display !== 'none';
+          })
+        : [];
 
       const targetOptionElement = visibleOptions.find((span) => {
         const text = span.textContent.trim();
@@ -253,9 +287,19 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
       });
 
       if (targetOptionElement) {
+        const alreadyFilled = questionElement && isFieldFilled(questionElement);
         targetOptionElement.closest('.sv-list__item').click();
         if (dataName) skipList.push(dataName);
-        count++;
+        if (!alreadyFilled) {
+          if (dataName) {
+            if (!seen.has(dataName)) {
+              seen.add(dataName);
+              count++;
+            }
+          } else {
+            count++;
+          }
+        }
         await new Promise((resolve) => setTimeout(resolve, 200));
       } else {
         chevronButton.click(); // Close drop down
@@ -272,6 +316,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     pinneds,
     excludes,
     respectInput = false,
+    seen = new Set(),
   ) {
     let radioTotal = 0;
     let dropdownTotal = 0;
@@ -282,9 +327,9 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     for (let round = 0; round < MAX_ROUNDS; round++) {
       const prevCount = document.querySelectorAll('[data-name]').length;
 
-      const radioCount = fillRadioButtons(radioKw, excludes, respectInput);
-      const dropdownCount = await fillDropdowns(dropdownKw, excludes, respectInput);
-      const pinnedCount = await fillPinnedFields(pinneds, respectInput);
+      const radioCount = fillRadioButtons(radioKw, excludes, respectInput, seen);
+      const dropdownCount = await fillDropdowns(dropdownKw, excludes, respectInput, seen);
+      const pinnedCount = await fillPinnedFields(pinneds, respectInput, seen);
 
       radioTotal += radioCount;
       dropdownTotal += dropdownCount;
