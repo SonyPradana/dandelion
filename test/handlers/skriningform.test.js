@@ -33,6 +33,7 @@ vi.mock('../../src/utils/zenMode', () => ({
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { initializeSkriningForm } from '../../src/handlers/skriningform';
+import { isZenModeActive } from '../../src/utils/zenMode';
 import bus from '../../src/utils/hooks';
 
 globalThis.CSS ??= { escape: (v) => v };
@@ -429,6 +430,70 @@ describe('skriningform', () => {
       expect(busResult.result).toHaveProperty('freetext');
       expect(busResult.result).toHaveProperty('total');
       expect(busResult.result.total).toBeGreaterThan(0);
+    });
+  });
+
+  describe('zen/zero assist DOM-readiness retry', () => {
+    let cdMock = null;
+
+    beforeEach(() => {
+      vi.mocked(isZenModeActive).mockReset();
+      vi.mocked(isZenModeActive).mockResolvedValue(false);
+      vi.mocked(isZenModeActive).mockResolvedValueOnce(true);
+      cdMock = { dismiss: vi.fn(), close: vi.fn(), restart: vi.fn() };
+      mockNotify.countdown.mockReturnValueOnce({ ...cdMock, promise: Promise.resolve(true) });
+    });
+
+    it('should fill normally when the form DOM is ready on the first attempt', async () => {
+      vi.useFakeTimers();
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await initializeSkriningForm();
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(2000);
+      await waitForBusResult(() => didFillResult(emitSpy) !== undefined);
+
+      expect(didFillResult(emitSpy).total).toBeGreaterThan(0);
+      expect(cdMock.restart).not.toHaveBeenCalled();
+      expect(cdMock.close).toHaveBeenCalled();
+    });
+
+    it('should retry inside the countdown panel until form fields appear', async () => {
+      vi.useFakeTimers();
+      document.body.innerHTML = '<div class="loading"></div>';
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await initializeSkriningForm();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(cdMock.restart).toHaveBeenCalledTimes(1);
+      expect(cdMock.restart).toHaveBeenCalledWith(3000, '⏳ menunggu... (1/3)');
+
+      document.body.innerHTML = formHtml;
+      await vi.advanceTimersByTimeAsync(3000);
+      await vi.advanceTimersByTimeAsync(2000);
+      await waitForBusResult(() => didFillResult(emitSpy) !== undefined);
+
+      expect(cdMock.restart).toHaveBeenCalledTimes(1);
+      expect(didFillResult(emitSpy).total).toBeGreaterThan(0);
+      expect(cdMock.close).toHaveBeenCalled();
+    });
+
+    it('should stop silently when no fields appear after all retries', async () => {
+      vi.useFakeTimers();
+      document.body.innerHTML = '';
+      const emitSpy = vi.spyOn(bus, 'emit');
+
+      await initializeSkriningForm();
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(cdMock.restart.mock.calls).toEqual([
+        [3000, '⏳ menunggu... (1/3)'],
+        [3000, '⏳ menunggu... (2/3)'],
+        [3000, '⏳ menunggu... (3/3)'],
+      ]);
+      expect(emitSpy).not.toHaveBeenCalledWith('skriningForm:didFill', expect.anything());
+      expect(cdMock.close).toHaveBeenCalled();
     });
   });
 });

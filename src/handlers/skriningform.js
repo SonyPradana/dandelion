@@ -16,6 +16,9 @@ import { createProfileComponent } from '../components/profile';
 import bus from '../utils/hooks';
 import { notify } from '../components/notification';
 
+const FORM_DOM_RETRY_MAX = 3;
+const FORM_DOM_RETRY_DELAY = 3000;
+
 /**
  * ⚠️ Legal / UX Notice:
  * This button only triggers local form filling.
@@ -96,12 +99,14 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     const zenConfig = activeConfig.zenMode || {};
     if (zenConfig.enabled !== false) {
       const timeout = Math.min(30_000, Math.max(500, zenConfig.timeout || 5000));
-      const cd = notify.countdown('Zen Mode Asist', '⏳ menunggu...', timeout);
+      const cd = notify.countdown('Zen Mode Asist', '⏳ menunggu...', timeout, {
+        keepOpenOnTimeout: true,
+      });
       dismissCountdown = cd.dismiss;
       cd.promise.then(async (result) => {
         dismissCountdown = null;
         if (result) {
-          await performFormFill();
+          await assistFormFill(cd);
         }
       });
     }
@@ -159,6 +164,25 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     }
 
     bus.emit('skriningForm:didFill', { result });
+  }
+
+  async function assistFormFill(cd) {
+    const hasDom = () => document.querySelectorAll('[data-name]').length > 0;
+    if (hasDom()) {
+      await performFormFill();
+      cd.close();
+      return;
+    }
+    for (let retry = 1; retry <= FORM_DOM_RETRY_MAX; retry++) {
+      cd.restart(FORM_DOM_RETRY_DELAY, `⏳ menunggu... (${retry}/${FORM_DOM_RETRY_MAX})`);
+      await new Promise((r) => setTimeout(r, FORM_DOM_RETRY_DELAY));
+      if (hasDom()) {
+        await performFormFill();
+        cd.close();
+        return;
+      }
+    }
+    cd.close();
   }
 
   if (tombol) {
