@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './load-env.js';
 import { cmd } from 'web-ext';
 import path from 'path';
 import { fileURLToPath } from 'url';

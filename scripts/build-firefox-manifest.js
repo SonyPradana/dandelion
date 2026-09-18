@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './load-env.js';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

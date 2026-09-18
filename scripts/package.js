@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './load-env.js';
 import { ZipArchive } from 'archiver';
 import fs from 'fs';
 import path from 'path';
