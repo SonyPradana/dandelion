@@ -58,8 +58,8 @@ export async function fillPinnedFields(pinneds, respectInput = false, seen = new
     } else if (field.type === 'combobox') {
       // Skip count when the field already has a value.
       if (!isFieldFilled(questionElement)) {
-        await fillDropdowns(questionElement, value);
-        if (shouldCount(dataName)) dropdown++;
+        const didFill = await fillDropdowns(questionElement, value);
+        if (didFill && shouldCount(dataName)) dropdown++;
       }
     }
   }
@@ -223,7 +223,7 @@ function fillRadioButton(questionElement, targetLabel) {
  */
 async function fillDropdowns(questionElement, targetValue) {
   const chevronButton = questionElement.querySelector('.sd-dropdown_chevron-button');
-  if (!chevronButton) return;
+  if (!chevronButton) return false;
 
   // Open dropdown
   chevronButton.click();
@@ -249,9 +249,11 @@ async function fillDropdowns(questionElement, targetValue) {
   if (targetOption) {
     targetOption.closest('.sv-list__item').click();
     await new Promise((resolve) => setTimeout(resolve, 200));
-  } else {
-    // Close dropdown if no match found
-    chevronButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    return true;
   }
+
+  // Close dropdown if no match found
+  chevronButton.click();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  return false;
 }

@@ -32,6 +32,7 @@ const FORM_DOM_RETRY_DELAY = 3000;
 export async function initializeSkriningForm(flashData = {}, store = globalStore) {
   let isDebugEnabled = false; // Initial state is off
   let dismissCountdown = null;
+  let fillCancelled = false;
 
   const tombol = button('dandelion-auto-fill');
   const fullConfig = await store.getFullConfig();
@@ -103,6 +104,9 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
         keepOpenOnTimeout: true,
       });
       dismissCountdown = cd.dismiss;
+      cd.setOnDismiss?.(() => {
+        fillCancelled = true;
+      });
       cd.promise.then(async (result) => {
         dismissCountdown = null;
         if (result) {
@@ -167,18 +171,39 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
   }
 
   async function assistFormFill(cd) {
-    const hasDom = () => document.querySelectorAll('[data-name]').length > 0;
-    if (hasDom()) {
+    const hasDom = () =>
+      Array.from(document.querySelectorAll('[data-name]')).some((el) =>
+        el.querySelector(
+          'input[type="radio"], .sd-dropdown_chevron-button, textarea, input[type="text"]:not(.sd-dropdown__filter-string-input), input[type="number"]',
+        ),
+      );
+
+    const fillIfAllowed = async () => {
+      if (fillCancelled) {
+        cd.close();
+        return;
+      }
       await performFormFill();
       cd.close();
+    };
+
+    if (hasDom()) {
+      await fillIfAllowed();
       return;
     }
     for (let retry = 1; retry <= FORM_DOM_RETRY_MAX; retry++) {
+      if (fillCancelled) {
+        cd.close();
+        return;
+      }
       cd.restart(FORM_DOM_RETRY_DELAY, `⏳ menunggu... (${retry}/${FORM_DOM_RETRY_MAX})`);
       await new Promise((r) => setTimeout(r, FORM_DOM_RETRY_DELAY));
-      if (hasDom()) {
-        await performFormFill();
+      if (fillCancelled) {
         cd.close();
+        return;
+      }
+      if (hasDom()) {
+        await fillIfAllowed();
         return;
       }
     }

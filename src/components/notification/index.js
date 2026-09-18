@@ -146,6 +146,7 @@ export const notify = {
     let lastLabel = '';
     let tick = null;
     let arm = null;
+    let onDismiss = null;
 
     const promise = new Promise((resolve) => {
       _resolve = resolve;
@@ -207,6 +208,7 @@ export const notify = {
         if (resolved) return;
         _cleanup();
         _resolve(false);
+        if (onDismiss) onDismiss();
       };
 
       tick = () => {
@@ -258,6 +260,9 @@ export const notify = {
       },
       restart(nextDuration, label) {
         if (arm) arm(nextDuration === undefined ? currentDuration : nextDuration, label);
+      },
+      setOnDismiss(cb) {
+        onDismiss = cb;
       },
     };
   },
