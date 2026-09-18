@@ -13,7 +13,7 @@ import { isFieldFilled } from './respect-input';
  *   "LPM002-quest|freetext": "Tidak ada"
  * }
  */
-export async function fillPinnedFields(pinneds, respectInput = false) {
+export async function fillPinnedFields(pinneds, respectInput = false, seen = new Set()) {
   let radio = 0;
   let freetext = 0;
   let dropdown = 0;
@@ -32,24 +32,35 @@ export async function fillPinnedFields(pinneds, respectInput = false) {
     }
   }
 
+  function shouldCount(dataName) {
+    if (!dataName) return true;
+    if (seen.has(dataName)) return false;
+    seen.add(dataName);
+    return true;
+  }
+
   async function fillField(questionElement, value, respectInput = false) {
-    if (respectInput && isFieldFilled(questionElement)) return;
+    const dataName = questionElement.getAttribute('data-name');
+    if (respectInput && (isFieldFilled(questionElement) || seen.has(dataName))) return;
 
     const field = detectFieldType(questionElement);
     if (!field) return;
 
     if (field.type === 'text') {
       fillTextarea(questionElement, value);
-      freetext++;
+      if (shouldCount(dataName)) freetext++;
     } else if (field.type === 'number') {
       fillNumberInput(questionElement, value);
-      freetext++;
+      if (shouldCount(dataName)) freetext++;
     } else if (field.type === 'radio') {
       fillRadioButton(questionElement, value);
-      radio++;
+      if (shouldCount(dataName)) radio++;
     } else if (field.type === 'combobox') {
-      await fillDropdowns(questionElement, value);
-      dropdown++;
+      // Skip count when the field already has a value.
+      if (!isFieldFilled(questionElement)) {
+        const didFill = await fillDropdowns(questionElement, value);
+        if (didFill && shouldCount(dataName)) dropdown++;
+      }
     }
   }
 
@@ -212,21 +223,22 @@ function fillRadioButton(questionElement, targetLabel) {
  */
 async function fillDropdowns(questionElement, targetValue) {
   const chevronButton = questionElement.querySelector('.sd-dropdown_chevron-button');
-  if (!chevronButton) return;
+  if (!chevronButton) return false;
 
   // Open dropdown
   chevronButton.click();
   await new Promise((resolve) => setTimeout(resolve, 300));
 
-  // Find visible options
-  const visibleOptions = Array.from(
-    document.querySelectorAll(
-      '.sv-popup--dropdown .sv-string-viewer, .sv-popup--dropdown-overlay .sv-string-viewer',
-    ),
-  ).filter((option) => {
-    const popup = option.closest('.sv-popup');
-    return popup && popup.style.display !== 'none';
-  });
+  // Find visible options (scoped to this field's own popup only)
+  const targetPopup = questionElement.querySelector(
+    '.sv-popup--dropdown, .sv-popup--dropdown-overlay',
+  );
+  const visibleOptions = targetPopup
+    ? Array.from(targetPopup.querySelectorAll('.sv-string-viewer')).filter((option) => {
+        const popup = option.closest('.sv-popup');
+        return popup && popup.style.display !== 'none';
+      })
+    : [];
 
   // Find matching option
   const targetOption = visibleOptions.find((span) => {
@@ -237,9 +249,11 @@ async function fillDropdowns(questionElement, targetValue) {
   if (targetOption) {
     targetOption.closest('.sv-list__item').click();
     await new Promise((resolve) => setTimeout(resolve, 200));
-  } else {
-    // Close dropdown if no match found
-    chevronButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    return true;
   }
+
+  // Close dropdown if no match found
+  chevronButton.click();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  return false;
 }

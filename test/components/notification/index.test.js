@@ -123,6 +123,27 @@ describe('notify', () => {
       await expect(promise).resolves.toBe(false);
     });
 
+    it('should resolve false when closed via the × control', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise } = notify.countdown('Count', null, 5000);
+      const panel = document.querySelector('[id^="dandelion-countdown-"]');
+      const closeBtn = panel.querySelector('.dandelion-panel-close');
+      closeBtn.click();
+      await expect(promise).resolves.toBe(false);
+    });
+
+    it('should invoke onDismiss when closed via the × control', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const countdown = notify.countdown('Count', null, 5000);
+      const onDismiss = vi.fn();
+      countdown.setOnDismiss(onDismiss);
+      const panel = document.querySelector('[id^="dandelion-countdown-"]');
+      const closeBtn = panel.querySelector('.dandelion-panel-close');
+      closeBtn.click();
+      await expect(countdown.promise).resolves.toBe(false);
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+    });
+
     it('should resolve true on OK click', async () => {
       const { notify } = await import('../../../src/components/notification/index');
       const { promise, dismiss: _dismiss2 } = notify.countdown('Count', null, 5000);
@@ -196,6 +217,79 @@ describe('notify', () => {
       expect(fill.style.width).toBe('0%');
 
       await expect(promise).resolves.toBe(true);
+    });
+
+    it('should keep the panel open when keepOpenOnTimeout is true', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise, close } = notify.countdown('Count', null, 1500, {
+        keepOpenOnTimeout: true,
+      });
+
+      let outcome = 'pending';
+      promise.then((v) => {
+        outcome = `resolved:${v}`;
+      });
+
+      vi.advanceTimersByTime(1500);
+      await Promise.resolve();
+      expect(outcome).toBe('resolved:true');
+
+      const panels = document.querySelectorAll('[id^="dandelion-countdown-"]');
+      const panel = panels[panels.length - 1];
+      expect(panel).toBeTruthy();
+      expect(panel.classList.contains('dandelion-panel-hide')).toBe(false);
+      close();
+      expect(panel.classList.contains('dandelion-panel-hide')).toBe(true);
+    });
+
+    it('should restart the whole countdown and update the message via restart()', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise, restart } = notify.countdown('Count', 'menunggu...', 5000);
+      const fills = document.querySelectorAll('[id^="dandelion-countdown-"] > div > div');
+      const fill = fills[fills.length - 1];
+      const panels = document.querySelectorAll('[id^="dandelion-countdown-"]');
+      const panel = panels[panels.length - 1];
+      const okBtn = panel.querySelector('button');
+      const msgEl = [...panel.querySelectorAll('div')].find(
+        (el) => el.textContent === 'menunggu...',
+      );
+
+      expect(okBtn.textContent).toBe('OK (5d)');
+      expect(msgEl.textContent).toBe('menunggu...');
+
+      restart(3000, 'menunggu... (1/3)');
+      expect(fill.style.width).toBe('100%');
+      expect(okBtn.textContent).toBe('OK (3d)');
+      expect(msgEl.textContent).toBe('menunggu... (1/3)');
+
+      restart(2000);
+      expect(msgEl.textContent).toBe('menunggu... (1/3)');
+
+      vi.advanceTimersByTime(1000);
+      expect(okBtn.textContent).toBe('OK (1d)');
+
+      vi.advanceTimersByTime(1000);
+      await Promise.resolve();
+      await expect(promise).resolves.toBe(true);
+    });
+
+    it('should close an already-resolved keepOpen countdown via close()', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise, close } = notify.countdown('Count', null, 1500, {
+        keepOpenOnTimeout: true,
+      });
+
+      vi.advanceTimersByTime(1500);
+      await Promise.resolve();
+      await expect(promise).resolves.toBe(true);
+
+      const panels = document.querySelectorAll('[id^="dandelion-countdown-"]');
+      const panel = panels[panels.length - 1];
+      expect(panel).toBeTruthy();
+      expect(panel.classList.contains('dandelion-panel-hide')).toBe(false);
+
+      close();
+      expect(panel.classList.contains('dandelion-panel-hide')).toBe(true);
     });
   });
 });

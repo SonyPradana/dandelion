@@ -131,27 +131,36 @@ export const notify = {
 
   /**
    * Countdown notification with progress bar and auto-OK on timeout.
-   * Returns { promise, dismiss } where promise resolves true (OK/timeout) or false (dismiss).
+   * Returns { promise, dismiss, close, restart } where promise resolves
+   * true (OK/timeout) or false (dismiss).
    */
-  countdown(title, message, duration = 5000) {
+  countdown(title, message, duration = 5000, { keepOpenOnTimeout = false } = {}) {
     let resolved = false;
     let timer = null;
     let timeoutTimer = null;
     let _cleanup = null;
     let _resolve = null;
+    let removePanel = null;
+    let start = null;
+    let currentDuration = duration;
+    let lastLabel = '';
+    let tick = null;
+    let arm = null;
+    let onDismiss = null;
+    let handleDismiss = null;
 
     const promise = new Promise((resolve) => {
       _resolve = resolve;
 
       const id = `dandelion-countdown-${Date.now()}`;
       const { panel, setHeader, remove } = createBasePanel(id);
-      const start = Date.now();
-      let lastLabel = '';
+      removePanel = remove;
 
       panel.append(setHeader(title, '#60a5fa'));
 
+      let msgEl = null;
       if (message) {
-        const msgEl = document.createElement('div');
+        msgEl = document.createElement('div');
         msgEl.style.cssText = 'font-size: 11px; line-height: 1.4; opacity: 0.9;';
         msgEl.textContent = message;
         panel.appendChild(msgEl);
@@ -182,28 +191,34 @@ export const notify = {
       btnContainer.appendChild(dismissBtn);
       panel.appendChild(btnContainer);
 
-      _cleanup = () => {
+      _cleanup = (keepOpen = false) => {
         if (resolved) return;
         resolved = true;
         clearInterval(timer);
         clearTimeout(timeoutTimer);
-        remove();
+        if (!keepOpen) remove();
       };
 
-      okBtn.onclick = () => {
-        if (resolved) return;
-        _cleanup();
-        _resolve(true);
-      };
-
-      dismissBtn.onclick = () => {
+      handleDismiss = () => {
         if (resolved) return;
         _cleanup();
         _resolve(false);
+        if (onDismiss) onDismiss();
       };
 
-      const tick = () => {
-        const remainingMs = Math.max(0, duration - (Date.now() - start));
+      const closeControl = panel.querySelector('.dandelion-panel-close');
+      if (closeControl) closeControl.onclick = handleDismiss;
+
+      okBtn.onclick = () => {
+        if (resolved) return;
+        _cleanup(keepOpenOnTimeout);
+        _resolve(true);
+      };
+
+      dismissBtn.onclick = handleDismiss;
+
+      tick = () => {
+        const remainingMs = Math.max(0, currentDuration - (Date.now() - start));
         const label = remainingMs > 0 ? `OK (${Math.ceil(remainingMs / 1000)}d)` : 'OK';
 
         if (label !== lastLabel) {
@@ -211,30 +226,45 @@ export const notify = {
           okBtn.textContent = label;
         }
 
-        const pct = duration > 0 ? (remainingMs / duration) * 100 : 0;
+        const pct = currentDuration > 0 ? (remainingMs / currentDuration) * 100 : 0;
         progressFill.style.width = `${pct}%`;
 
         if (remainingMs <= 0 && !resolved) {
-          _cleanup();
+          _cleanup(keepOpenOnTimeout);
           _resolve(true);
         }
       };
 
-      tick();
-      timer = setInterval(tick, 200);
-      timeoutTimer = setTimeout(() => {
-        if (resolved) return;
-        _cleanup();
-        _resolve(true);
-      }, duration);
+      arm = (nextDuration, label) => {
+        start = Date.now();
+        currentDuration = nextDuration;
+        lastLabel = '';
+        if (label !== undefined && msgEl) msgEl.textContent = label;
+        clearInterval(timer);
+        clearTimeout(timeoutTimer);
+        resolved = false;
+        tick();
+        timer = setInterval(tick, 200);
+        timeoutTimer = setTimeout(() => {
+          if (resolved) return;
+          _cleanup(keepOpenOnTimeout);
+          _resolve(true);
+        }, currentDuration);
+      };
+      arm(duration);
     });
 
     return {
       promise,
-      dismiss() {
-        if (resolved) return;
-        _cleanup();
-        _resolve(false);
+      dismiss: handleDismiss,
+      close() {
+        removePanel();
+      },
+      restart(nextDuration, label) {
+        if (arm) arm(nextDuration === undefined ? currentDuration : nextDuration, label);
+      },
+      setOnDismiss(cb) {
+        onDismiss = cb;
       },
     };
   },

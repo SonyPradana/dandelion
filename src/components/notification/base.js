@@ -58,6 +58,7 @@ export function createBasePanel(id, pinned) {
 
     const closeBtn = document.createElement('div');
     closeBtn.textContent = '×';
+    closeBtn.classList.add('dandelion-panel-close');
     closeBtn.style.cssText = `
       cursor: pointer;
       opacity: 0.5;
