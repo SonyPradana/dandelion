@@ -68,7 +68,7 @@ describe('countUnresolvedRows', () => {
     expect(countUnresolvedRows()).toBe(1);
   });
 
-  it('skips rows with a disabled or non-clickable button and no status', () => {
+  it('counts a disabled-button row without a done state as unresolved', () => {
     document.body.innerHTML = `
       <div class="grid">
         <div id="rowfrmabc000001">
@@ -77,6 +77,6 @@ describe('countUnresolvedRows', () => {
         <div>Dalam Pemeriksaan</div>
       </div>
     `;
-    expect(countUnresolvedRows()).toBe(0);
+    expect(countUnresolvedRows()).toBe(1);
   });
 });

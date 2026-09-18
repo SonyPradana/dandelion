@@ -49,10 +49,9 @@ export function getQueueStats(masterList) {
 }
 
 /**
- * Counts rows that are still active, skipped, or blank on the list page.
+ * Counts rows that are not yet marked done on the list page.
  * A row is done only when it shows 'Selesai diperiksa' or a non-gray
- * success icon; otherwise it is unresolved while its button is still
- * clickable or it has no resolved status at all.
+ * success icon; every other row is unresolved regardless of its button.
  * @returns {number} Unresolved row count. 0 means the task is complete.
  */
 export function countUnresolvedRows() {
@@ -61,18 +60,13 @@ export function countUnresolvedRows() {
 
   rowElements.forEach((el) => {
     const row = el.closest('.grid, tr');
-    const button = el.querySelector('button');
     if (!row) return;
 
     const successImg = row.querySelector('img[src*="icon-success"]');
     const isDone =
       row.textContent.includes('Selesai diperiksa') ||
       (successImg && !successImg.src.includes('gray'));
-    if (isDone) return;
-
-    const isClickable =
-      button && !button.disabled && !button.classList.contains('cursor-not-allowed');
-    if (isClickable || !button) unresolved += 1;
+    if (!isDone) unresolved += 1;
   });
 
   return unresolved;
