@@ -123,6 +123,27 @@ describe('notify', () => {
       await expect(promise).resolves.toBe(false);
     });
 
+    it('should resolve false when closed via the × control', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const { promise } = notify.countdown('Count', null, 5000);
+      const panel = document.querySelector('[id^="dandelion-countdown-"]');
+      const closeBtn = panel.querySelector('.dandelion-panel-close');
+      closeBtn.click();
+      await expect(promise).resolves.toBe(false);
+    });
+
+    it('should invoke onDismiss when closed via the × control', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const countdown = notify.countdown('Count', null, 5000);
+      const onDismiss = vi.fn();
+      countdown.setOnDismiss(onDismiss);
+      const panel = document.querySelector('[id^="dandelion-countdown-"]');
+      const closeBtn = panel.querySelector('.dandelion-panel-close');
+      closeBtn.click();
+      await expect(countdown.promise).resolves.toBe(false);
+      expect(onDismiss).toHaveBeenCalledTimes(1);
+    });
+
     it('should resolve true on OK click', async () => {
       const { notify } = await import('../../../src/components/notification/index');
       const { promise, dismiss: _dismiss2 } = notify.countdown('Count', null, 5000);

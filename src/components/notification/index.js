@@ -147,6 +147,7 @@ export const notify = {
     let tick = null;
     let arm = null;
     let onDismiss = null;
+    let handleDismiss = null;
 
     const promise = new Promise((resolve) => {
       _resolve = resolve;
@@ -198,18 +199,23 @@ export const notify = {
         if (!keepOpen) remove();
       };
 
+      handleDismiss = () => {
+        if (resolved) return;
+        _cleanup();
+        _resolve(false);
+        if (onDismiss) onDismiss();
+      };
+
+      const closeControl = panel.querySelector('.dandelion-panel-close');
+      if (closeControl) closeControl.onclick = handleDismiss;
+
       okBtn.onclick = () => {
         if (resolved) return;
         _cleanup(keepOpenOnTimeout);
         _resolve(true);
       };
 
-      dismissBtn.onclick = () => {
-        if (resolved) return;
-        _cleanup();
-        _resolve(false);
-        if (onDismiss) onDismiss();
-      };
+      dismissBtn.onclick = handleDismiss;
 
       tick = () => {
         const remainingMs = Math.max(0, currentDuration - (Date.now() - start));
@@ -250,11 +256,7 @@ export const notify = {
 
     return {
       promise,
-      dismiss() {
-        if (resolved) return;
-        _cleanup();
-        _resolve(false);
-      },
+      dismiss: handleDismiss,
       close() {
         removePanel();
       },
