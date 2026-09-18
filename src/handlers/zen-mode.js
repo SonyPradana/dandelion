@@ -8,7 +8,7 @@ import {
 import {
   waitForRow,
   clickFinishServiceButton,
-  hasRemainingForms,
+  countUnresolvedRows,
 } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import bus from '../utils/hooks';
@@ -114,15 +114,26 @@ async function processNextZenItem() {
   const nextId = await peekNextFromQueue();
 
   if (!nextId) {
+    // Empty queue ≠ task complete; re-check DOM before offering to finish.
     await clearZenMode();
     await clearFlashData();
     isAutomationActive = false;
 
-    if (!(await hasRemainingForms())) {
-      await notify.alert('Zen Mode', 'Zen Mode Selesai!');
-      if (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+    const unresolved = countUnresolvedRows();
+    if (unresolved > 0) {
+      const confirmed = await notify.confirm(
+        'Zen Mode',
+        `Ada ${unresolved} item yang belum selesai. Tetap selesaikan layanan?`,
+      );
+      if (confirmed) {
         clickFinishServiceButton();
       }
+      return;
+    }
+
+    await notify.alert('Zen Mode', 'Zen Mode Selesai!');
+    if (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+      clickFinishServiceButton();
     }
     return;
   }

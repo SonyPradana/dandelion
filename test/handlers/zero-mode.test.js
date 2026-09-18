@@ -28,12 +28,17 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   waitForElement: vi.fn(),
   clickFinishServiceButton: vi.fn(),
   hasRemainingForms: vi.fn().mockResolvedValue(false),
+  countUnresolvedRows: vi.fn(),
 }));
 
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { startZeroAutomation, isZeroRunning, getZeroQueue } from '../../src/handlers/zero-mode';
-import { waitForRow, waitForElement } from '../../src/handlers/inspection/not-checked-utils';
+import {
+  waitForRow,
+  waitForElement,
+  countUnresolvedRows,
+} from '../../src/handlers/inspection/not-checked-utils';
 import bus from '../../src/utils/hooks';
 
 describe('zero-mode', () => {
@@ -339,6 +344,98 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith('Konfirmasi', 'Selesaikan Layanan?');
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should confirm with the unresolved count before finishing when rows remain', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      vi.mocked(countUnresolvedRows).mockReturnValue(2);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ada 2 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should not click finish when user declines with unresolved rows', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      vi.mocked(countUnresolvedRows).mockReturnValue(3);
+      mockNotify.confirm.mockResolvedValue(false);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ada 3 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+      expect(clickFinishServiceButton).not.toHaveBeenCalled();
+    });
+
+    it('should keep the normal completion flow when no unresolved rows remain', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      vi.mocked(countUnresolvedRows).mockReturnValue(0);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZeroMode();

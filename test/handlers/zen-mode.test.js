@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
@@ -23,9 +23,22 @@ vi.mock('../../src/handlers/flashData', () => ({
   showFlashDataPanelIfEnabled: vi.fn(),
 }));
 
+vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
+  waitForRow: vi.fn(),
+  waitForElement: vi.fn(),
+  clickFinishServiceButton: vi.fn(),
+  hasRemainingForms: vi.fn().mockResolvedValue(false),
+  countUnresolvedRows: vi.fn(),
+}));
+
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { startZenAutomation } from '../../src/handlers/zen-mode';
+import {
+  countUnresolvedRows,
+  waitForRow,
+  clickFinishServiceButton,
+} from '../../src/handlers/inspection/not-checked-utils';
 
 describe('zen-mode', () => {
   beforeEach(() => {
@@ -74,6 +87,99 @@ describe('zen-mode', () => {
       await startZenAutomation();
 
       expect(clearFlashData).toHaveBeenCalled();
+    });
+  });
+
+  describe('completion', () => {
+    async function flushAll() {
+      for (let i = 0; i < 20; i += 1) {
+        await vi.advanceTimersByTimeAsync(0);
+      }
+    }
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    async function startWithDoneRow() {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZenMode } = await import('../../src/handlers/zen-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmzzz'],
+        total: 1,
+        mode: 'zen',
+      });
+
+      const rowEl = document.createElement('div');
+      rowEl.id = 'rowfrmzzz';
+      const row = document.createElement('div');
+      row.className = 'grid';
+      row.innerHTML = '<div>Selesai diperiksa</div>';
+      row.appendChild(rowEl);
+      document.body.innerHTML = '';
+      document.body.appendChild(row);
+
+      waitForRow.mockResolvedValue(rowEl);
+      return { initializeZenMode };
+    }
+
+    it('should confirm with the unresolved count before finishing when rows remain', async () => {
+      const { initializeZenMode } = await startWithDoneRow();
+
+      countUnresolvedRows.mockReturnValue(2);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Zen Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Ada 2 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should not click finish when user declines with unresolved rows', async () => {
+      const { initializeZenMode } = await startWithDoneRow();
+
+      countUnresolvedRows.mockReturnValue(3);
+      mockNotify.confirm.mockResolvedValue(false);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Ada 3 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+      expect(clickFinishServiceButton).not.toHaveBeenCalled();
+    });
+
+    it('should keep the normal completion flow when no unresolved rows remain', async () => {
+      const { initializeZenMode } = await startWithDoneRow();
+
+      countUnresolvedRows.mockReturnValue(0);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Zen Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith('Konfirmasi', 'Selesaikan Layanan?');
+      expect(clickFinishServiceButton).toHaveBeenCalled();
     });
   });
 });
