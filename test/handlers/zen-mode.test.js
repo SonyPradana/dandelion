@@ -91,6 +91,9 @@ describe('zen-mode', () => {
   });
 
   describe('completion', () => {
+    /**
+     * Advances the fake timer until all queued microtasks and timers settle.
+     */
     async function flushAll() {
       for (let i = 0; i < 20; i += 1) {
         await vi.advanceTimersByTimeAsync(0);
@@ -101,6 +104,10 @@ describe('zen-mode', () => {
       vi.useRealTimers();
     });
 
+    /**
+     * Boots Zen Mode with a queue holding one already-finished row so the
+     * processing chain drains into the completion branch.
+     */
     async function startWithDoneRow() {
       vi.useFakeTimers();
       vi.resetModules();
@@ -179,6 +186,33 @@ describe('zen-mode', () => {
         expect.stringContaining('Zen Mode Selesai!'),
       );
       expect(mockNotify.confirm).toHaveBeenCalledWith('Konfirmasi', 'Selesaikan Layanan?');
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should show the unresolved confirmation instead of Zen Mode Selesai! when a skipped row remains', async () => {
+      const { initializeZenMode } = await startWithDoneRow();
+      const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+
+      document.body.innerHTML += `
+        <div class="grid">
+          <div id="rowfrmskip1"></div>
+          <div>Tidak diperiksa</div>
+        </div>
+      `;
+      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Zen Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
       expect(clickFinishServiceButton).toHaveBeenCalled();
     });
   });

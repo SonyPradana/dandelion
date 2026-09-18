@@ -66,6 +66,9 @@ describe('zero-mode', () => {
     vi.useRealTimers();
   });
 
+  /**
+   * Advances the fake timer until all queued microtasks and timers settle.
+   */
   async function flushAll() {
     for (let i = 0; i < 20; i += 1) {
       await vi.advanceTimersByTimeAsync(0);
@@ -447,6 +450,43 @@ describe('zero-mode', () => {
       );
       expect(mockNotify.confirm).toHaveBeenCalledWith('Konfirmasi', 'Selesaikan Layanan?');
       expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should show the unresolved confirmation instead of Zero Mode Selesai! when a skipped row remains', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = `
+        <div class="grid">
+          <div id="rowfrmskip1"></div>
+          <div>Tidak diperiksa</div>
+        </div>
+      `;
+      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
     });
   });
 });

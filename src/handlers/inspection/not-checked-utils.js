@@ -50,9 +50,9 @@ export function getQueueStats(masterList) {
 
 /**
  * Counts rows that are still active, skipped, or blank on the list page.
- * A row is done when it shows 'Selesai diperiksa'/'Tidak diperiksa' or a
- * non-gray success icon; otherwise it is unresolved while its button is
- * still clickable or it has no resolved status at all.
+ * A row is done only when it shows 'Selesai diperiksa' or a non-gray
+ * success icon; otherwise it is unresolved while its button is still
+ * clickable or it has no resolved status at all.
  * @returns {number} Unresolved row count. 0 means the task is complete.
  */
 export function countUnresolvedRows() {
@@ -67,7 +67,6 @@ export function countUnresolvedRows() {
     const successImg = row.querySelector('img[src*="icon-success"]');
     const isDone =
       row.textContent.includes('Selesai diperiksa') ||
-      row.textContent.includes('Tidak diperiksa') ||
       (successImg && !successImg.src.includes('gray'));
     if (isDone) return;
 
