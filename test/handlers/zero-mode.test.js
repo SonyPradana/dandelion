@@ -28,7 +28,7 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   waitForElement: vi.fn(),
   clickFinishServiceButton: vi.fn(),
   hasRemainingForms: vi.fn().mockResolvedValue(false),
-  countUnresolvedRows: vi.fn(),
+  getActiveRowIds: vi.fn(() => []),
 }));
 
 import { store } from '../../src/store';
@@ -37,7 +37,7 @@ import { startZeroAutomation, isZeroRunning, getZeroQueue } from '../../src/hand
 import {
   waitForRow,
   waitForElement,
-  countUnresolvedRows,
+  getActiveRowIds,
 } from '../../src/handlers/inspection/not-checked-utils';
 import bus from '../../src/utils/hooks';
 
@@ -60,6 +60,9 @@ describe('zero-mode', () => {
         },
       },
     });
+
+    const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+    getActiveRowIds.mockImplementation(actual.getActiveRowIds);
   });
 
   afterEach(() => {
@@ -347,6 +350,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
+      getActiveRowIds.mockReturnValue([]);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZeroMode();
@@ -376,7 +380,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
-      vi.mocked(countUnresolvedRows).mockReturnValue(2);
+      getActiveRowIds.mockReturnValue(['rowfrmabc000001', 'rowfrmabc000002']);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZeroMode();
@@ -409,7 +413,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
-      vi.mocked(countUnresolvedRows).mockReturnValue(3);
+      getActiveRowIds.mockReturnValue(['rowfrmabc000001', 'rowfrmabc000002', 'rowfrmabc000003']);
       mockNotify.confirm.mockResolvedValue(false);
 
       initializeZeroMode();
@@ -438,7 +442,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
-      vi.mocked(countUnresolvedRows).mockReturnValue(0);
+      getActiveRowIds.mockReturnValue([]);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZeroMode();
@@ -452,7 +456,7 @@ describe('zero-mode', () => {
       expect(clickFinishServiceButton).toHaveBeenCalled();
     });
 
-    it('should show the unresolved confirmation instead of Zero Mode Selesai! when a skipped row remains', async () => {
+    it('should show the unresolved confirmation instead of Zero Mode Selesai! when a pending row keeps its button', async () => {
       vi.resetModules();
       const { store: freshStore } = await import('../../src/store');
       const { MemoryBackend } = await import('../__support__/memory-backend');
@@ -469,11 +473,13 @@ describe('zero-mode', () => {
 
       document.body.innerHTML = `
         <div class="grid">
-          <div id="rowfrmskip1"></div>
+          <div id="rowfrmskip1">
+            <button type="button">Input Data</button>
+          </div>
           <div>Tidak diperiksa</div>
         </div>
       `;
-      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+      getActiveRowIds.mockImplementation(actual.getActiveRowIds);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZeroMode();

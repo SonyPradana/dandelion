@@ -1,74 +1,76 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { countUnresolvedRows } from '../../../src/handlers/inspection/not-checked-utils';
+import { getActiveRowIds } from '../../../src/handlers/inspection/not-checked-utils';
 
 const rowsHtml = readFileSync(resolve('test/__fixtures__/rows.html'), 'utf8');
 
-describe('countUnresolvedRows', () => {
+describe('getActiveRowIds', () => {
   beforeEach(() => {
     document.body.innerHTML = rowsHtml;
   });
 
-  it('counts only unresolved rows from the fixture', () => {
-    expect(countUnresolvedRows()).toBe(2);
+  it('returns only rows with a clickable button from the fixture', () => {
+    expect(getActiveRowIds()).toEqual(['rowfrmabc000002']);
   });
 
-  it('counts a skipped row as unresolved', () => {
+  it('treats a skipped row without a button as inactive', () => {
     document.body.innerHTML = `
       <div class="grid">
         <div id="rowfrmabc000001"></div>
         <div>Tidak diperiksa</div>
       </div>
     `;
-    expect(countUnresolvedRows()).toBe(1);
+    expect(getActiveRowIds()).toEqual([]);
   });
 
-  it('treats a skipped row with a non-gray success icon as done', () => {
+  it('counts a skipped row with a clickable button as active', () => {
+    document.body.innerHTML = `
+      <div class="grid">
+        <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
+        <div>Tidak diperiksa</div>
+      </div>
+    `;
+    expect(getActiveRowIds()).toEqual(['rowfrmabc000001']);
+  });
+
+  it('treats a row with a non-gray success icon as done', () => {
     document.body.innerHTML = `
       <div class="grid">
         <div id="rowfrmabc000001">
+          <button type="button">Input Data</button>
           <img src="icon-success.png" />
         </div>
         <div>Tidak diperiksa</div>
       </div>
     `;
-    expect(countUnresolvedRows()).toBe(0);
+    expect(getActiveRowIds()).toEqual([]);
   });
 
-  it('treats a row with a gray success icon as unresolved', () => {
+  it('treats a row with a gray success icon and clickable button as active', () => {
     document.body.innerHTML = `
       <div class="grid">
         <div id="rowfrmabc000001">
+          <button type="button">Input Data</button>
           <img src="icon-success-gray.png" />
         </div>
         <div>Tidak diperiksa</div>
       </div>
     `;
-    expect(countUnresolvedRows()).toBe(1);
+    expect(getActiveRowIds()).toEqual(['rowfrmabc000001']);
   });
 
-  it('returns 0 when every row shows a done state', () => {
+  it('returns empty when every row shows a done state', () => {
     document.body.innerHTML = `
       <div class="grid">
         <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
         <div>Selesai diperiksa</div>
       </div>
     `;
-    expect(countUnresolvedRows()).toBe(0);
+    expect(getActiveRowIds()).toEqual([]);
   });
 
-  it('counts an incomplete row as unresolved even without buttons', () => {
-    document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001"></div>
-        <div>Dalam Pemeriksaan</div>
-      </div>
-    `;
-    expect(countUnresolvedRows()).toBe(1);
-  });
-
-  it('counts a disabled-button row without a done state as unresolved', () => {
+  it('treats a disabled-button row as inactive', () => {
     document.body.innerHTML = `
       <div class="grid">
         <div id="rowfrmabc000001">
@@ -77,6 +79,16 @@ describe('countUnresolvedRows', () => {
         <div>Dalam Pemeriksaan</div>
       </div>
     `;
-    expect(countUnresolvedRows()).toBe(1);
+    expect(getActiveRowIds()).toEqual([]);
+  });
+
+  it('returns the row id for a pending row with a clickable button', () => {
+    document.body.innerHTML = `
+      <div class="grid">
+        <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
+        <div>Dalam Pemeriksaan</div>
+      </div>
+    `;
+    expect(getActiveRowIds()).toEqual(['rowfrmabc000001']);
   });
 });

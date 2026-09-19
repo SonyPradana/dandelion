@@ -8,7 +8,7 @@ import {
 import {
   waitForRow,
   clickFinishServiceButton,
-  countUnresolvedRows,
+  getActiveRowIds,
 } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import bus from '../utils/hooks';
@@ -45,28 +45,7 @@ export function initializeZenMode() {
  * Scans the page for any available and active form buttons.
  */
 export async function startZenAutomation() {
-  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]'));
-  const pendingIds = [];
-
-  rowElements.forEach((el) => {
-    const row = el.closest('.grid, tr');
-    const button = el.querySelector('button');
-
-    // Check if row is not "Done"
-    const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
-    const isDone =
-      row &&
-      (row.textContent.includes('Selesai diperiksa') ||
-        (successImg && !successImg.src.includes('gray')));
-
-    // Check if button is clickable
-    const isClickable =
-      button && !button.disabled && !button.classList.contains('cursor-not-allowed');
-
-    if (!isDone && isClickable) {
-      pendingIds.push(el.id);
-    }
-  });
+  const pendingIds = getActiveRowIds();
 
   if (pendingIds.length === 0) {
     await notify.alert('Zen Mode', 'Tidak ada form aktif yang ditemukan di halaman ini.');
@@ -119,7 +98,7 @@ async function processNextZenItem() {
     await clearFlashData();
     isAutomationActive = false;
 
-    const unresolved = countUnresolvedRows();
+    const unresolved = getActiveRowIds().length;
     if (unresolved > 0) {
       const confirmed = await notify.confirm(
         'Zen Mode',

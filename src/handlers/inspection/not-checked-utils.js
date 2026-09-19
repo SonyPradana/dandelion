@@ -49,27 +49,33 @@ export function getQueueStats(masterList) {
 }
 
 /**
- * Counts rows that are not yet marked done on the list page.
- * A row is done only when it shows 'Selesai diperiksa' or a non-gray
- * success icon; every other row is unresolved regardless of its button.
- * @returns {number} Unresolved row count. 0 means the task is complete.
+ * Collects the IDs of rows that are still active on the list page.
+ * A row is done when it shows 'Selesai diperiksa' or a non-gray success
+ * icon; it is active when it is not done and its button is clickable.
+ * @returns {string[]} IDs of rows with an actionable button.
  */
-export function countUnresolvedRows() {
+export function getActiveRowIds() {
   const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]'));
-  let unresolved = 0;
+  const activeIds = [];
 
   rowElements.forEach((el) => {
     const row = el.closest('.grid, tr');
+    const button = el.querySelector('button');
     if (!row) return;
 
     const successImg = row.querySelector('img[src*="icon-success"]');
     const isDone =
       row.textContent.includes('Selesai diperiksa') ||
       (successImg && !successImg.src.includes('gray'));
-    if (!isDone) unresolved += 1;
+    const isClickable =
+      button && !button.disabled && !button.classList.contains('cursor-not-allowed');
+
+    if (!isDone && isClickable) {
+      activeIds.push(el.id);
+    }
   });
 
-  return unresolved;
+  return activeIds;
 }
 
 /**

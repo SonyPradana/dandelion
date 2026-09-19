@@ -28,23 +28,25 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   waitForElement: vi.fn(),
   clickFinishServiceButton: vi.fn(),
   hasRemainingForms: vi.fn().mockResolvedValue(false),
-  countUnresolvedRows: vi.fn(),
+  getActiveRowIds: vi.fn(() => []),
 }));
 
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { startZenAutomation } from '../../src/handlers/zen-mode';
 import {
-  countUnresolvedRows,
+  getActiveRowIds,
   waitForRow,
   clickFinishServiceButton,
 } from '../../src/handlers/inspection/not-checked-utils';
 
 describe('zen-mode', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     store.init(new MemoryBackend());
     document.body.innerHTML = rowsHtml;
+    const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+    getActiveRowIds.mockImplementation(actual.getActiveRowIds);
   });
 
   describe('startZenAutomation', () => {
@@ -139,7 +141,7 @@ describe('zen-mode', () => {
     it('should confirm with the unresolved count before finishing when rows remain', async () => {
       const { initializeZenMode } = await startWithDoneRow();
 
-      countUnresolvedRows.mockReturnValue(2);
+      getActiveRowIds.mockReturnValue(['rowfrmzzz', 'rowfrmskip2']);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -159,7 +161,7 @@ describe('zen-mode', () => {
     it('should not click finish when user declines with unresolved rows', async () => {
       const { initializeZenMode } = await startWithDoneRow();
 
-      countUnresolvedRows.mockReturnValue(3);
+      getActiveRowIds.mockReturnValue(['rowfrmzzz', 'rowfrmskip2', 'rowfrmskip3']);
       mockNotify.confirm.mockResolvedValue(false);
 
       initializeZenMode();
@@ -175,7 +177,7 @@ describe('zen-mode', () => {
     it('should keep the normal completion flow when no unresolved rows remain', async () => {
       const { initializeZenMode } = await startWithDoneRow();
 
-      countUnresolvedRows.mockReturnValue(0);
+      getActiveRowIds.mockReturnValue([]);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -189,17 +191,19 @@ describe('zen-mode', () => {
       expect(clickFinishServiceButton).toHaveBeenCalled();
     });
 
-    it('should show the unresolved confirmation instead of Zen Mode Selesai! when a skipped row remains', async () => {
+    it('should show the unresolved confirmation instead of Zen Mode Selesai! when a pending row keeps its button', async () => {
       const { initializeZenMode } = await startWithDoneRow();
       const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
 
       document.body.innerHTML += `
         <div class="grid">
-          <div id="rowfrmskip1"></div>
+          <div id="rowfrmskip1">
+            <button type="button">Input Data</button>
+          </div>
           <div>Tidak diperiksa</div>
         </div>
       `;
-      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+      getActiveRowIds.mockImplementation(actual.getActiveRowIds);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
