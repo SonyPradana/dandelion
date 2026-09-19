@@ -50,6 +50,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');
   let loadedConfig = null;
+  let profileManager = null;
+
+  browser.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== 'local') return;
+    const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
+    if (configKeys.some((key) => changes[key])) {
+      loadedConfig = await store.refreshConfig();
+      refreshUiFromStore();
+    }
+  });
 
   // Initialize KeywordList components
   const notCheckedList = new KeywordList(
@@ -127,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
-    const profileSettings = loadedConfig.profiles[selectedProfile];
+    const profileSettings = loadedConfig.profiles[selectedProfile] || {};
 
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
@@ -176,16 +186,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateFormForProfile(config.activeProfile);
 
-    void new ProfileManager('profile-manager-container', config.profiles, config.activeProfile, {
-      onSwitch: (newActiveProfile) => {
-        loadedConfig.activeProfile = newActiveProfile;
-        updateFormForProfile(newActiveProfile);
-        store.setConfig(loadedConfig);
+    profileManager = new ProfileManager(
+      'profile-manager-container',
+      config.profiles,
+      config.activeProfile,
+      {
+        onSwitch: (newActiveProfile) => {
+          loadedConfig.activeProfile = newActiveProfile;
+          updateFormForProfile(newActiveProfile);
+          store.setConfig(loadedConfig);
+        },
+        onChange: () => {
+          store.setConfig(loadedConfig);
+        },
       },
-      onChange: () => {
-        store.setConfig(loadedConfig);
-      },
-    });
+    );
   });
 
   if (saveConfigBtn) {
@@ -264,6 +279,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     importFileInput.click();
   });
 
+  function refreshUiFromStore() {
+    if (!loadedConfig) return;
+    if (profileManager) {
+      profileManager.setData(loadedConfig.profiles, loadedConfig.activeProfile);
+    }
+    updateFormForProfile(loadedConfig.activeProfile);
+  }
+
+  async function applyImportedConfig(importedConfig) {
+    await store.setConfig(importedConfig);
+    loadedConfig = await store.refreshConfig();
+    refreshUiFromStore();
+
+    saveConfigBtn.textContent = 'Diimpor!';
+    setTimeout(() => {
+      saveConfigBtn.textContent = 'Simpan';
+    }, 1500);
+  }
+
   importFileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -272,11 +306,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       try {
         const importedConfig = JSON.parse(e.target.result);
         if (!importedConfig.profiles || !importedConfig.activeProfile)
-          throw new Error('Invalid config file format.');
-        store.setConfig(importedConfig);
-        loadedConfig = await store.getFullConfig();
-        updateFormForProfile(loadedConfig.activeProfile);
+          throw new Error('Format file konfigurasi tidak valid.');
+        await applyImportedConfig(importedConfig);
       } catch {
+        saveConfigBtn.textContent = 'Import gagal!';
+        setTimeout(() => {
+          saveConfigBtn.textContent = 'Simpan';
+        }, 2000);
       } finally {
         importFileInput.value = '';
       }

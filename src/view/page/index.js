@@ -33,8 +33,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
-  browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.dandelion_terms) {
+  browser.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== 'local') return;
+
+    if (changes.dandelion_terms) {
       const terms = changes.dandelion_terms.newValue;
       const version = browser.runtime.getManifest().version;
       if (!terms?.agreed || terms.version !== version) {
@@ -48,6 +50,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         activePopup.remove();
         activePopup = null;
       }
+    }
+
+    const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
+    if (configKeys.some((key) => changes[key])) {
+      loadedConfig = await store.refreshConfig();
+      refreshUiFromStore();
     }
   });
 
@@ -78,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let loadedConfig = null;
+  let profileManager = null;
 
   const radioButtonKeywordsList = new KeywordList(
     'form-skrining-radio-keywords-input',
@@ -132,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
 
-    const profileSettings = loadedConfig.profiles[selectedProfile];
+    const profileSettings = loadedConfig.profiles[selectedProfile] || {};
 
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
@@ -198,16 +207,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateFormForProfile(config.activeProfile);
 
-    void new ProfileManager('profile-manager-container', config.profiles, config.activeProfile, {
-      onSwitch: (newActiveProfile) => {
-        loadedConfig.activeProfile = newActiveProfile;
-        updateFormForProfile(newActiveProfile);
-        store.setConfig(loadedConfig);
+    profileManager = new ProfileManager(
+      'profile-manager-container',
+      config.profiles,
+      config.activeProfile,
+      {
+        onSwitch: (newActiveProfile) => {
+          loadedConfig.activeProfile = newActiveProfile;
+          updateFormForProfile(newActiveProfile);
+          store.setConfig(loadedConfig);
+        },
+        onChange: () => {
+          store.setConfig(loadedConfig);
+        },
       },
-      onChange: () => {
-        store.setConfig(loadedConfig);
-      },
-    });
+    );
 
     const panelPosition = config.panelPosition || 'top-right';
     const posBtns = document.querySelectorAll('.pos-option');
@@ -804,6 +818,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  async function refreshUiFromStore() {
+    if (!loadedConfig) return;
+    if (profileManager) {
+      profileManager.setData(loadedConfig.profiles, loadedConfig.activeProfile);
+    }
+    updateFormForProfile(loadedConfig.activeProfile);
+
+    silenceInfoNotificationCheckbox.checked = loadedConfig.silenceInfoNotification ?? false;
+
+    const posBtns = document.querySelectorAll('.pos-option');
+    posBtns.forEach((btn) =>
+      btn.classList.toggle(
+        'active',
+        btn.dataset.pos === (loadedConfig.panelPosition || 'top-right'),
+      ),
+    );
+  }
+
+  async function applyImportedConfig(importedConfig) {
+    await store.setConfig(importedConfig);
+    loadedConfig = await store.refreshConfig();
+    await refreshUiFromStore();
+
+    saveConfigBtn.textContent = 'Diimpor!';
+    setTimeout(() => {
+      saveConfigBtn.textContent = 'Simpan';
+    }, 1500);
+  }
+
   importLink.addEventListener('click', (event) => {
     event.preventDefault();
     importFileInput.click();
@@ -821,13 +864,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const importedConfig = JSON.parse(e.target.result);
 
         if (!importedConfig.profiles || !importedConfig.activeProfile) {
-          throw new Error('Invalid config file format.');
+          throw new Error('Format file konfigurasi tidak valid.');
         }
 
-        store.setConfig(importedConfig);
-        loadedConfig = await store.getFullConfig();
-        updateFormForProfile(loadedConfig.activeProfile);
+        await applyImportedConfig(importedConfig);
       } catch {
+        saveConfigBtn.textContent = 'Import gagal!';
+        setTimeout(() => {
+          saveConfigBtn.textContent = 'Simpan';
+        }, 2000);
       } finally {
         importFileInput.value = '';
       }

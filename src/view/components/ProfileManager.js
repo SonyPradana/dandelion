@@ -16,6 +16,12 @@ export class ProfileManager {
     this.render();
   }
 
+  setData(profiles, activeProfile) {
+    this.profiles = profiles;
+    this.activeProfile = activeProfile;
+    this.render();
+  }
+
   getProfileDisplayName(key) {
     const profile = this.profiles[key];
     if (profile && profile.name) return profile.name;

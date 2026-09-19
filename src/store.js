@@ -112,8 +112,13 @@ class DandelionStore {
   }
 
   async setConfig(config) {
-    await this._browser.storage.local.set(config);
     this._configCache = config;
+    await this._browser.storage.local.set(config);
+  }
+
+  async refreshConfig() {
+    this._configCache = null;
+    return await this.getFullConfig();
   }
 
   async setActiveProfile(profileKey) {
@@ -252,6 +257,7 @@ export const setAgreement = (...a) => store.setAgreement(...a);
 export const getFullConfig = (...a) => store.getFullConfig(...a);
 export const getActiveConfig = (...a) => store.getActiveConfig(...a);
 export const setConfig = (...a) => store.setConfig(...a);
+export const refreshConfig = (...a) => store.refreshConfig(...a);
 export const setActiveProfile = (...a) => store.setActiveProfile(...a);
 export const onProfileSwitch = (...a) => store.onProfileSwitch(...a);
 export const getFlashData = (...a) => store.getFlashData(...a);

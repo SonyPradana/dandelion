@@ -80,6 +80,39 @@ describe('config', () => {
     expect(reloaded.panelPosition).toBe('bottom-left');
   });
 
+  it('getFullConfig should return the newly set config without re-reading storage', async () => {
+    await store.getFullConfig();
+    const getSpy = vi.spyOn(backend.storage.local, 'get');
+    await store.setConfig({
+      activeProfile: 'profile3',
+      panelPosition: 'bottom-right',
+      profiles: {},
+    });
+    const reloaded = await store.getFullConfig();
+    expect(reloaded.activeProfile).toBe('profile3');
+    expect(reloaded.panelPosition).toBe('bottom-right');
+    expect(getSpy).not.toHaveBeenCalled();
+  });
+
+  it('non-config storage writes should keep the warm cache intact', async () => {
+    await store.getFullConfig();
+    const getSpy = vi.spyOn(backend.storage.local, 'get');
+    await getSpy.mockClear();
+
+    await backend.storage.local.set({ flash_data: { pinneds: { a: 'b' } } });
+
+    const reloaded = await store.getFullConfig();
+    expect(reloaded.activeProfile).toBe('profile1');
+    expect(getSpy).not.toHaveBeenCalled();
+  });
+
+  it('refreshConfig should re-read from storage even when cache is warm', async () => {
+    await store.getFullConfig();
+    await backend.storage.local.set({ activeProfile: 'profile2' });
+    const reloaded = await store.refreshConfig();
+    expect(reloaded.activeProfile).toBe('profile2');
+  });
+
   it('getActiveConfig should return profile settings', async () => {
     const active = await store.getActiveConfig();
     expect(active).toHaveProperty('formSkrining');

@@ -123,4 +123,12 @@ editor.addEventListener('keydown', (event) => {
   }
 });
 
+browser.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local') return;
+  const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
+  if (configKeys.some((key) => changes[key])) {
+    loadConfig();
+  }
+});
+
 loadConfig();
