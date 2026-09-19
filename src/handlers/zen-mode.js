@@ -29,7 +29,7 @@ export function initializeZenMode() {
 
     try {
       const state = await getZenModeState();
-      if (state.active && state.queue.length > 0 && !isAutomationActive && state.mode !== 'zero') {
+      if (state.active && !isAutomationActive && state.mode !== 'zero') {
         resumeZenAutomation();
       }
       setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
@@ -93,7 +93,13 @@ async function processNextZenItem() {
   const nextId = await peekNextFromQueue();
 
   if (!nextId) {
-    // Empty queue ≠ task complete; re-check DOM before offering to finish.
+    // Empty queue ≠ task complete; only decide on the list page and re-check
+    // DOM before offering to finish.
+    if (!document.getElementById('tableLayanan')) {
+      isAutomationActive = false;
+      return;
+    }
+
     await clearZenMode();
     await clearFlashData();
     isAutomationActive = false;

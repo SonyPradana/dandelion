@@ -472,11 +472,13 @@ describe('zero-mode', () => {
       });
 
       document.body.innerHTML = `
-        <div class="grid">
-          <div id="rowfrmskip1">
-            <button type="button">Input Data</button>
+        <div id="tableLayanan">
+          <div class="grid">
+            <div id="rowfrmskip1">
+              <button type="button">Input Data</button>
+            </div>
+            <div>Tidak diperiksa</div>
           </div>
-          <div>Tidak diperiksa</div>
         </div>
       `;
       getActiveRowIds.mockImplementation(actual.getActiveRowIds);
@@ -493,6 +495,32 @@ describe('zero-mode', () => {
         'Zero Mode',
         expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
       );
+    });
+
+    it('should defer completion while the list page is not showing', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      getActiveRowIds.mockReturnValue([]);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalled();
+      expect(mockNotify.confirm).not.toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: true });
     });
   });
 });

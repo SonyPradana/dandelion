@@ -108,7 +108,13 @@ async function processNextZeroItem() {
   const nextId = await peekNextFromQueue();
 
   if (!nextId) {
-    // Empty queue ≠ task complete; re-check DOM before offering to finish.
+    // Empty queue ≠ task complete; only decide on the list page and re-check
+    // DOM before offering to finish.
+    if (!document.getElementById('tableLayanan')) {
+      isZeroAutomationActive = false;
+      return;
+    }
+
     await clearZenMode();
     await clearFlashData();
     isZeroAutomationActive = false;

@@ -131,8 +131,8 @@ describe('zen-mode', () => {
       row.className = 'grid';
       row.innerHTML = '<div>Selesai diperiksa</div>';
       row.appendChild(rowEl);
-      document.body.innerHTML = '';
-      document.body.appendChild(row);
+      document.body.innerHTML = '<div id="tableLayanan"></div>';
+      document.querySelector('#tableLayanan').appendChild(row);
 
       waitForRow.mockResolvedValue(rowEl);
       return { initializeZenMode };
@@ -218,6 +218,38 @@ describe('zen-mode', () => {
         expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
       );
       expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should defer completion while the list page is not showing', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZenMode } = await import('../../src/handlers/zen-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmzzz'],
+        total: 1,
+        mode: 'zen',
+      });
+
+      document.body.innerHTML = `
+        <div class="grid">
+          <div id="rowfrmzzz"><div>Selesai diperiksa</div></div>
+        </div>
+      `;
+      waitForRow.mockResolvedValue(document.getElementById('rowfrmzzz'));
+      getActiveRowIds.mockReturnValue([]);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalled();
+      expect(mockNotify.confirm).not.toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: true });
     });
   });
 });
