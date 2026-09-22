@@ -1,4 +1,9 @@
 /**
+ * ID of the services container on the list page.
+ */
+export const TABLE_ID = 'tableLayanan';
+
+/**
  * Checks if the page is in a state ready for processing (active examination).
  * @returns {boolean} True if the page indicators show an active processing state.
  */

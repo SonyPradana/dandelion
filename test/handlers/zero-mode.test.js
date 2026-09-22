@@ -29,6 +29,7 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   clickFinishServiceButton: vi.fn(),
   hasRemainingForms: vi.fn().mockResolvedValue(false),
   getActiveRowIds: vi.fn(() => []),
+  TABLE_ID: 'tableLayanan',
 }));
 
 import { store } from '../../src/store';
@@ -40,6 +41,8 @@ import {
   getActiveRowIds,
 } from '../../src/handlers/inspection/not-checked-utils';
 import bus from '../../src/utils/hooks';
+
+let TABLE_ID = null;
 
 describe('zero-mode', () => {
   beforeEach(async () => {
@@ -63,6 +66,7 @@ describe('zero-mode', () => {
 
     const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
     getActiveRowIds.mockImplementation(actual.getActiveRowIds);
+    TABLE_ID = actual.TABLE_ID;
   });
 
   afterEach(() => {
@@ -472,7 +476,7 @@ describe('zero-mode', () => {
       });
 
       document.body.innerHTML = `
-        <div id="tableLayanan">
+        <div id="${TABLE_ID}">
           <div class="grid">
             <div id="rowfrmskip1">
               <button type="button">Input Data</button>

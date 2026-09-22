@@ -9,6 +9,7 @@ import {
   waitForRow,
   clickFinishServiceButton,
   getActiveRowIds,
+  TABLE_ID,
 } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import bus from '../utils/hooks';
@@ -95,7 +96,7 @@ async function processNextZenItem() {
   if (!nextId) {
     // Empty queue ≠ task complete; only decide on the list page and re-check
     // DOM before offering to finish.
-    if (!document.getElementById('tableLayanan')) {
+    if (!document.getElementById(TABLE_ID)) {
       isAutomationActive = false;
       return;
     }

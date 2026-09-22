@@ -29,6 +29,7 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   clickFinishServiceButton: vi.fn(),
   hasRemainingForms: vi.fn().mockResolvedValue(false),
   getActiveRowIds: vi.fn(() => []),
+  TABLE_ID: 'tableLayanan',
 }));
 
 import { store } from '../../src/store';
@@ -40,6 +41,8 @@ import {
   clickFinishServiceButton,
 } from '../../src/handlers/inspection/not-checked-utils';
 
+let TABLE_ID = null;
+
 describe('zen-mode', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -47,6 +50,7 @@ describe('zen-mode', () => {
     document.body.innerHTML = rowsHtml;
     const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
     getActiveRowIds.mockImplementation(actual.getActiveRowIds);
+    TABLE_ID = actual.TABLE_ID;
   });
 
   describe('startZenAutomation', () => {
@@ -131,8 +135,8 @@ describe('zen-mode', () => {
       row.className = 'grid';
       row.innerHTML = '<div>Selesai diperiksa</div>';
       row.appendChild(rowEl);
-      document.body.innerHTML = '<div id="tableLayanan"></div>';
-      document.querySelector('#tableLayanan').appendChild(row);
+      document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
+      document.querySelector(`#${TABLE_ID}`).appendChild(row);
 
       waitForRow.mockResolvedValue(rowEl);
       return { initializeZenMode };

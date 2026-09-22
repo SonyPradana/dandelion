@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { getActiveRowIds } from '../../../src/handlers/inspection/not-checked-utils';
+import { getActiveRowIds, TABLE_ID } from '../../../src/handlers/inspection/not-checked-utils';
 
 const rowsHtml = readFileSync(resolve('test/__fixtures__/rows.html'), 'utf8');
 
@@ -155,7 +155,7 @@ describe('getActiveRowIds', () => {
 
     it('scans a full list and returns only the still-active rows', () => {
       document.body.innerHTML = `
-        <div id="tableLayanan">
+        <div id="${TABLE_ID}">
           <div class="grid">
             <div id="rowfrmabc1001">
               <img src="/images/icons/icon-success-gray.svg" alt="" />
