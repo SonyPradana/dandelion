@@ -526,5 +526,33 @@ describe('zero-mode', () => {
       expect(mockNotify.confirm).not.toHaveBeenCalled();
       expect(await freshStore.getZenModeState()).toMatchObject({ active: true });
     });
+
+    it('should keep the queue when the list rows are not on the page', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmA', 'rowfrmB'],
+        total: 2,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      waitForRow.mockResolvedValue(null);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(waitForRow).not.toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({
+        queue: ['rowfrmA', 'rowfrmB'],
+      });
+    });
   });
 });

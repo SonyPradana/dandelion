@@ -288,7 +288,11 @@ describe('zen-mode', () => {
 
       expect(await freshStore.getZenModeState()).toMatchObject({ active: true });
 
-      document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
+      document.body.innerHTML = `<div id="${TABLE_ID}">
+        <div class="grid">
+          <div id="rowfrmzzz"><div>Selesai diperiksa</div></div>
+        </div>
+      </div>`;
       await vi.advanceTimersByTimeAsync(500);
       await flushAll();
 
@@ -297,6 +301,34 @@ describe('zen-mode', () => {
         expect.stringContaining('Zen Mode Selesai!'),
       );
       expect(await freshStore.getZenModeState()).toMatchObject({ active: false });
+    });
+
+    it('should keep the queue when the list rows are not on the page', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZenMode } = await import('../../src/handlers/zen-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmA', 'rowfrmB'],
+        total: 2,
+        mode: 'zen',
+      });
+
+      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      waitForRow.mockResolvedValue(null);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(waitForRow).not.toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({
+        queue: ['rowfrmA', 'rowfrmB'],
+      });
     });
   });
 });

@@ -106,6 +106,11 @@ async function resumeZeroAutomation() {
  * Processes the next item in the Zero Mode queue.
  */
 async function processNextZeroItem() {
+  if (!document.querySelector('[id^="rowfrm"],[id^="row-FRM"]')) {
+    isZeroAutomationActive = false;
+    return;
+  }
+
   const nextId = await peekNextFromQueue();
 
   if (!nextId) {
