@@ -255,5 +255,48 @@ describe('zen-mode', () => {
       expect(mockNotify.confirm).not.toHaveBeenCalled();
       expect(await freshStore.getZenModeState()).toMatchObject({ active: true });
     });
+
+    it('should finish within half a second after the list page becomes available', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZenMode } = await import('../../src/handlers/zen-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmzzz'],
+        total: 1,
+        mode: 'zen',
+      });
+
+      document.body.innerHTML = `
+        <div class="grid">
+          <div id="rowfrmzzz"><div>Selesai diperiksa</div></div>
+        </div>
+      `;
+      waitForRow.mockResolvedValue(document.getElementById('rowfrmzzz'));
+      getActiveRowIds.mockReturnValue([]);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      await vi.advanceTimersByTimeAsync(500);
+      await flushAll();
+
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: true });
+
+      document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
+      await vi.advanceTimersByTimeAsync(500);
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Zen Mode Selesai!'),
+      );
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: false });
+    });
   });
 });

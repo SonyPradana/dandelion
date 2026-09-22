@@ -33,7 +33,7 @@ export function initializeZenMode() {
       if (state.active && !isAutomationActive && state.mode !== 'zero') {
         resumeZenAutomation();
       }
-      setTimeout(poll, state.active && state.queue.length > 0 ? 500 : 10_000);
+      setTimeout(poll, state.active ? 500 : 10_000);
     } finally {
       isPolling = false;
     }
