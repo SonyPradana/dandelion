@@ -818,7 +818,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  /** Re-sync profile manager, panel position, and silence toggle from loadedConfig. */
   async function refreshUiFromStore() {
     if (!loadedConfig) return;
     if (profileManager) {
@@ -837,7 +836,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
   }
 
-  /** Persist imported config and refresh UI from storage. */
   async function applyImportedConfig(importedConfig) {
     await store.setConfig(importedConfig);
     loadedConfig = await store.refreshConfig();

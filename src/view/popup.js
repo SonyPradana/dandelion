@@ -279,7 +279,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     importFileInput.click();
   });
 
-  /** Re-sync profile manager and form fields with loadedConfig. */
   function refreshUiFromStore() {
     if (!loadedConfig) return;
     if (profileManager) {
@@ -288,7 +287,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateFormForProfile(loadedConfig.activeProfile);
   }
 
-  /** Persist imported config and refresh UI from storage. */
   async function applyImportedConfig(importedConfig) {
     await store.setConfig(importedConfig);
     loadedConfig = await store.refreshConfig();

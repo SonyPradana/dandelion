@@ -16,7 +16,6 @@ export class ProfileManager {
     this.render();
   }
 
-  /** Replace profiles data and re-render. */
   setData(profiles, activeProfile) {
     this.profiles = profiles;
     this.activeProfile = activeProfile;
