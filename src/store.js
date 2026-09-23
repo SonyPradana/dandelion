@@ -101,6 +101,11 @@ class DandelionStore {
         'scrollToBottom',
         'notChecked',
       ]);
+
+      // A newer write may have completed while migrating; it owns the cache.
+      if (this._configCache !== migrated) {
+        return this._configCache ?? (await this.getFullConfig());
+      }
     }
 
     this._configCache = migrated;

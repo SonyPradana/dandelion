@@ -210,6 +210,33 @@ describe('config', () => {
     expect(backend.dump().activeProfile).toBe('profile2');
   });
 
+  it('legacy migration should not overwrite the cache written during migration', async () => {
+    await backend.storage.local.set({ formSelector: 'https://example.test/form', profiles: {} });
+
+    const originalRemove = backend.storage.local.remove;
+    let releaseRemove = null;
+    backend.storage.local.remove = vi.fn((...args) => {
+      const snapshot = originalRemove.call(backend.storage.local, ...args);
+      return new Promise((resolve) => {
+        releaseRemove = () => snapshot.then(resolve);
+      });
+    });
+
+    const readPromise = store.getFullConfig();
+
+    await Promise.resolve();
+
+    const newer = { activeProfile: 'profile3', panelPosition: 'center', profiles: {} };
+    await store.setConfig(newer);
+
+    releaseRemove();
+    const config = await readPromise;
+
+    expect(config.panelPosition).toBe('center');
+    const cached = await store.getFullConfig();
+    expect(cached.panelPosition).toBe('center');
+  });
+
   it('getActiveConfig should return profile settings', async () => {
     const active = await store.getActiveConfig();
     expect(active).toHaveProperty('formSkrining');
