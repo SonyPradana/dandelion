@@ -91,11 +91,6 @@ async function resumeZenAutomation() {
  * Processes the next item in the Zen Mode queue.
  */
 async function processNextZenItem() {
-  if (!document.querySelector('[id^="rowfrm"],[id^="row-FRM"]')) {
-    isAutomationActive = false;
-    return;
-  }
-
   const nextId = await peekNextFromQueue();
 
   if (!nextId) {
@@ -126,6 +121,11 @@ async function processNextZenItem() {
     if (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
       clickFinishServiceButton();
     }
+    return;
+  }
+
+  if (!document.querySelector('[id^="rowfrm"],[id^="row-FRM"]')) {
+    isAutomationActive = false;
     return;
   }
 

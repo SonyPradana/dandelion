@@ -554,5 +554,34 @@ describe('zero-mode', () => {
         queue: ['rowfrmA', 'rowfrmB'],
       });
     });
+
+    it('should complete when the queue is empty and the list shows no rows', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
+      getActiveRowIds.mockReturnValue([]);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: false });
+    });
   });
 });

@@ -330,5 +330,34 @@ describe('zen-mode', () => {
         queue: ['rowfrmA', 'rowfrmB'],
       });
     });
+
+    it('should complete when the queue is empty and the list shows no rows', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZenMode } = await import('../../src/handlers/zen-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zen',
+      });
+
+      document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
+      getActiveRowIds.mockReturnValue([]);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Zen Mode Selesai!'),
+      );
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: false });
+    });
   });
 });
