@@ -138,6 +138,78 @@ describe('config', () => {
     expect(cached.panelPosition).toBe('bottom-right');
   });
 
+  it('setConfig should drop the cache when the storage write fails', async () => {
+    const base = await store.getFullConfig();
+    base.panelPosition = 'bottom-right';
+    await store.setConfig(base);
+
+    backend.storage.local.set = vi.fn(() => Promise.reject(new Error('quota-exceeded')));
+
+    await expect(
+      store.setConfig({ activeProfile: 'profile1', panelPosition: 'top-left', profiles: {} }),
+    ).rejects.toThrow('quota-exceeded');
+
+    const reloaded = await store.getFullConfig();
+    expect(reloaded.panelPosition).toBe('bottom-right');
+  });
+
+  it('setConfig failure should preserve a cache written by a newer generation', async () => {
+    await store.setConfig({ activeProfile: 'profile1', panelPosition: 'top-right', profiles: {} });
+
+    const originalSet = backend.storage.local.set;
+    let rejectFirst = null;
+    backend.storage.local.set = vi.fn((data) => {
+      if (!rejectFirst) {
+        return new Promise((_resolve, reject) => {
+          rejectFirst = reject;
+        });
+      }
+      return originalSet.call(backend.storage.local, data);
+    });
+
+    const failedPromise = store.setConfig({
+      activeProfile: 'profile1',
+      panelPosition: 'bottom-left',
+      profiles: {},
+    });
+
+    await store.setConfig({
+      activeProfile: 'profile1',
+      panelPosition: 'center',
+      profiles: {},
+    });
+
+    rejectFirst(new Error('quota-exceeded'));
+    await expect(failedPromise).rejects.toThrow('quota-exceeded');
+
+    const cached = await store.getFullConfig();
+    expect(cached.panelPosition).toBe('center');
+  });
+
+  it('legacy migration should not persist when a write lands during the read', async () => {
+    await backend.storage.local.set({ formSelector: 'https://example.test/form', profiles: {} });
+
+    const originalGet = backend.storage.local.get;
+    let releaseRead = null;
+    backend.storage.local.get = vi.fn((...args) => {
+      const snapshot = originalGet.call(backend.storage.local, ...args);
+      return new Promise((resolve) => {
+        releaseRead = () => snapshot.then(resolve);
+      });
+    });
+
+    const readPromise = store.getFullConfig();
+
+    const newer = { activeProfile: 'profile2', panelPosition: 'bottom-left', profiles: {} };
+    await store.setConfig(newer);
+
+    releaseRead();
+    const config = await readPromise;
+
+    expect(config.activeProfile).toBe('profile2');
+    expect(backend.dump().activeProfile).toBe('profile2');
+  });
+
   it('getActiveConfig should return profile settings', async () => {
     const active = await store.getActiveConfig();
     expect(active).toHaveProperty('formSkrining');

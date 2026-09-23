@@ -76,12 +76,18 @@ class DandelionStore {
     }
   }
 
-  /** Return config from cache, reading storage only when cold. */
   async getFullConfig() {
     if (this._configCache) return this._configCache;
 
     const generation = this._configGeneration;
     const result = await this._browser.storage.local.get(null);
+
+    // A write or refresh landed while we were reading: keep the newer value
+    // and never persist a migration computed from the stale snapshot.
+    if (generation !== this._configGeneration) {
+      return this._configCache ?? (await this.getFullConfig());
+    }
+
     const isOldFormat =
       result.formSelector !== undefined ||
       result.profiles?.profile1?.radioButtonKeywords !== undefined;
@@ -95,11 +101,6 @@ class DandelionStore {
         'scrollToBottom',
         'notChecked',
       ]);
-    }
-
-    if (generation !== this._configGeneration) {
-      // A write or refresh landed while we were reading: keep the newer value.
-      return this._configCache ?? (await this.getFullConfig());
     }
 
     this._configCache = migrated;
@@ -120,14 +121,21 @@ class DandelionStore {
     };
   }
 
-  /** Persist config: cache first, then storage. Bumps the generation. */
   async setConfig(config) {
-    this._configGeneration += 1;
+    const generation = (this._configGeneration += 1);
     this._configCache = config;
-    await this._browser.storage.local.set(config);
+    try {
+      await this._browser.storage.local.set(config);
+    } catch (error) {
+      if (generation === this._configGeneration) {
+        // Write failed without a newer write in between: drop the cache so the
+        // next getFullConfig re-reads what actually persisted.
+        this._configCache = null;
+      }
+      throw error;
+    }
   }
 
-  /** Drop the cache and re-read config from storage. */
   async refreshConfig() {
     this._configGeneration += 1;
     this._configCache = null;
