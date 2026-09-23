@@ -15,10 +15,12 @@ const STORAGE_KEYS = {
 class DandelionStore {
   _backend = null;
   _configCache = null;
+  _configGeneration = 0;
 
   init(backend) {
     this._backend = backend;
     this._configCache = null;
+    this._configGeneration += 1;
   }
 
   get _browser() {
@@ -74,9 +76,11 @@ class DandelionStore {
     }
   }
 
+  /** Return config from cache, reading storage only when cold. */
   async getFullConfig() {
     if (this._configCache) return this._configCache;
 
+    const generation = this._configGeneration;
     const result = await this._browser.storage.local.get(null);
     const isOldFormat =
       result.formSelector !== undefined ||
@@ -91,6 +95,11 @@ class DandelionStore {
         'scrollToBottom',
         'notChecked',
       ]);
+    }
+
+    if (generation !== this._configGeneration) {
+      // A write or refresh landed while we were reading: keep the newer value.
+      return this._configCache ?? (await this.getFullConfig());
     }
 
     this._configCache = migrated;
@@ -111,12 +120,16 @@ class DandelionStore {
     };
   }
 
+  /** Persist config: cache first, then storage. Bumps the generation. */
   async setConfig(config) {
+    this._configGeneration += 1;
     this._configCache = config;
     await this._browser.storage.local.set(config);
   }
 
+  /** Drop the cache and re-read config from storage. */
   async refreshConfig() {
+    this._configGeneration += 1;
     this._configCache = null;
     return await this.getFullConfig();
   }

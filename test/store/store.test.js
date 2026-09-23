@@ -113,6 +113,31 @@ describe('config', () => {
     expect(reloaded.activeProfile).toBe('profile2');
   });
 
+  it('refreshConfig should return the newest config when a write lands mid-read', async () => {
+    const base = await store.getFullConfig();
+    base.panelPosition = 'bottom-right';
+
+    const originalGet = backend.storage.local.get;
+    let releaseRead = null;
+    backend.storage.local.get = vi.fn((...args) => {
+      const snapshot = originalGet.call(backend.storage.local, ...args);
+      return new Promise((resolve) => {
+        releaseRead = () => snapshot.then(resolve);
+      });
+    });
+
+    const refreshPromise = store.refreshConfig();
+
+    await store.setConfig(base);
+
+    releaseRead();
+    const refreshed = await refreshPromise;
+
+    expect(refreshed.panelPosition).toBe('bottom-right');
+    const cached = await store.getFullConfig();
+    expect(cached.panelPosition).toBe('bottom-right');
+  });
+
   it('getActiveConfig should return profile settings', async () => {
     const active = await store.getActiveConfig();
     expect(active).toHaveProperty('formSkrining');
