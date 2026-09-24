@@ -88,6 +88,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let loadedConfig = null;
   let profileManager = null;
+  let formDirty = false;
+
+  document.getElementById('config-body').addEventListener('input', () => {
+    formDirty = true;
+  });
 
   const radioButtonKeywordsList = new KeywordList(
     'form-skrining-radio-keywords-input',
@@ -216,6 +221,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         onSwitch: (newActiveProfile) => {
           loadedConfig.activeProfile = newActiveProfile;
           updateFormForProfile(newActiveProfile);
+          formDirty = false;
           store.setConfig(loadedConfig);
         },
         onChange: () => {
@@ -335,6 +341,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       store.setConfig(loadedConfig);
+      formDirty = false;
 
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
@@ -824,6 +831,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (profileManager) {
       profileManager.setData(loadedConfig.profiles, loadedConfig.activeProfile);
     }
+    if (formDirty) return;
+
     updateFormForProfile(loadedConfig.activeProfile);
 
     silenceInfoNotificationCheckbox.checked = loadedConfig.silenceInfoNotification ?? false;
@@ -835,11 +844,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.dataset.pos === (loadedConfig.panelPosition || 'top-right'),
       ),
     );
+
+    formDirty = false;
   }
 
   async function applyImportedConfig(importedConfig) {
     await store.setConfig(importedConfig);
     loadedConfig = await store.refreshConfig();
+    formDirty = false;
     await refreshUiFromStore();
 
     saveConfigBtn.textContent = 'Diimpor!';

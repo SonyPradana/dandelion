@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const configWrapper = document.getElementById('config-wrapper');
   let loadedConfig = null;
   let profileManager = null;
+  let formDirty = false;
 
   browser.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
@@ -60,6 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadedConfig = await store.refreshConfig();
       refreshUiFromStore();
     }
+  });
+
+  configWrapper.addEventListener('input', () => {
+    formDirty = true;
   });
 
   // Initialize KeywordList components
@@ -195,6 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         onSwitch: (newActiveProfile) => {
           loadedConfig.activeProfile = newActiveProfile;
           updateFormForProfile(newActiveProfile);
+          formDirty = false;
           store.setConfig(loadedConfig);
         },
         onChange: () => {
@@ -239,6 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
 
       store.setConfig(loadedConfig);
+      formDirty = false;
 
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
@@ -285,12 +292,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (profileManager) {
       profileManager.setData(loadedConfig.profiles, loadedConfig.activeProfile);
     }
+    if (formDirty) return;
     updateFormForProfile(loadedConfig.activeProfile);
+    formDirty = false;
   }
 
   async function applyImportedConfig(importedConfig) {
     await store.setConfig(importedConfig);
     loadedConfig = await store.refreshConfig();
+    formDirty = false;
     refreshUiFromStore();
 
     saveConfigBtn.textContent = 'Diimpor!';

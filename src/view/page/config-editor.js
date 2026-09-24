@@ -117,9 +117,12 @@ editor.addEventListener('keydown', (event) => {
 browser.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local') return;
   const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
-  if (configKeys.some((key) => changes[key])) {
-    loadConfig();
+  if (!configKeys.some((key) => changes[key])) return;
+  if (editor.value !== savedText) {
+    showToast('Konfigurasi berubah di tempat lain. Simpan atau muat ulang.', 'error');
+    return;
   }
+  loadConfig();
 });
 
 loadConfig();
