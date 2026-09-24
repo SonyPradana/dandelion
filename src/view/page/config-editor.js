@@ -1,5 +1,6 @@
 import browser from '@bridge/browser';
 import { store } from '../../store.js';
+import { parseConfig, validateConfig } from '../../utils/configValidator.js';
 
 const editor = document.getElementById('ce-editor');
 const statsEl = document.getElementById('ce-stats');
@@ -57,32 +58,22 @@ async function loadConfig() {
 
 async function handleSave() {
   const text = editor.value;
-  let parsed = null;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
+  const parsed = parseConfig(text);
+  if (!parsed.ok) {
     setInvalid(true);
-    showToast(`JSON tidak valid: ${error.message}`, 'error');
+    showToast(parsed.error, 'error');
     return;
   }
 
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+  const validation = validateConfig(parsed.value);
+  if (!validation.valid) {
     setInvalid(true);
-    showToast('Struktur konfigurasi tidak valid. Harus berupa objek JSON.', 'error');
-    return;
-  }
-
-  if (!parsed.profiles || !parsed.activeProfile) {
-    setInvalid(true);
-    showToast(
-      'Struktur konfigurasi tidak valid. Pastikan ada "profiles" dan "activeProfile".',
-      'error',
-    );
+    showToast(validation.errors[0], 'error');
     return;
   }
 
   try {
-    await store.setConfig(parsed);
+    await store.setConfig(parsed.value);
   } catch (error) {
     setInvalid(true);
     showToast(`Gagal menyimpan: ${error.message}`, 'error');

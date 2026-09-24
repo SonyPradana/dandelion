@@ -16,6 +16,7 @@ import {
   TARGET_MODE,
 } from '../utils/productivityTracker';
 import { init, getStatus } from '../quota/quota-manager.js';
+import { parseConfig, validateConfig } from '../utils/configValidator.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
@@ -303,18 +304,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async (e) => {
+      importFileInput.value = '';
       try {
-        const importedConfig = JSON.parse(e.target.result);
-        if (!importedConfig.profiles || !importedConfig.activeProfile)
-          throw new Error('Format file konfigurasi tidak valid.');
-        await applyImportedConfig(importedConfig);
-      } catch {
+        const parsed = parseConfig(e.target.result);
+        if (!parsed.ok) throw new Error(parsed.error);
+        const validation = validateConfig(parsed.value);
+        if (!validation.valid) throw new Error(validation.errors[0]);
+
+        const profileCount = Object.keys(parsed.value.profiles).length;
+        const activeName =
+          parsed.value.profiles[parsed.value.activeProfile]?.name || parsed.value.activeProfile;
+        if (
+          !confirm(
+            `Impor ${profileCount} profil (aktif: ${activeName})?\nKonfigurasi saat ini akan ditimpa. Lanjutkan?`,
+          )
+        ) {
+          return;
+        }
+
+        await applyImportedConfig(parsed.value);
+      } catch (error) {
+        alert(error.message);
         saveConfigBtn.textContent = 'Import gagal!';
         setTimeout(() => {
           saveConfigBtn.textContent = 'Simpan';
         }, 2000);
-      } finally {
-        importFileInput.value = '';
       }
     };
     reader.readAsText(file);
