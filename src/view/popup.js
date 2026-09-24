@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
-          const selectedProfile = profileManager?.activeProfile || loadedConfig.activeProfile;
+          const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
           }
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (saveConfigBtn) {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
-      const selectedProfile = profileManager?.activeProfile || loadedConfig.activeProfile;
+      const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       loadedConfig.activeProfile = selectedProfile;
@@ -291,10 +291,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function refreshUiFromStore() {
     if (!loadedConfig) return;
+    if (formDirty && formActiveProfile && !loadedConfig.profiles[formActiveProfile]) {
+      formDirty = false;
+      formActiveProfile = null;
+    }
     const targetActive =
-      formDirty && formActiveProfile && loadedConfig.profiles[formActiveProfile]
-        ? formActiveProfile
-        : loadedConfig.activeProfile;
+      formDirty && formActiveProfile ? formActiveProfile : loadedConfig.activeProfile;
     if (profileManager) {
       profileManager.setData(loadedConfig.profiles, targetActive);
     }
