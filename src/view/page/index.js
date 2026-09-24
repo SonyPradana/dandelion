@@ -90,8 +90,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   let profileManager = null;
   let formDirty = false;
 
-  document.getElementById('config-body').addEventListener('input', () => {
-    formDirty = true;
+  document.getElementById('config-body').addEventListener('input', (event) => {
+    if (event.isTrusted) formDirty = true;
   });
 
   const radioButtonKeywordsList = new KeywordList(

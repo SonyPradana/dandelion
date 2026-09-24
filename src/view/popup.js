@@ -63,8 +63,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  configWrapper.addEventListener('input', () => {
-    formDirty = true;
+  configWrapper.addEventListener('input', (event) => {
+    if (event.isTrusted) formDirty = true;
   });
 
   // Initialize KeywordList components
