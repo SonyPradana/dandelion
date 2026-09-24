@@ -11,6 +11,7 @@ import {
   waitForElement,
   clickFinishServiceButton,
   getActiveRowIds,
+  countUnresolvedRows,
   TABLE_ID,
 } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
@@ -120,7 +121,7 @@ async function processNextZeroItem() {
     await clearFlashData();
     isZeroAutomationActive = false;
 
-    const unresolved = getActiveRowIds().length;
+    const unresolved = countUnresolvedRows();
     if (unresolved > 0) {
       const confirmed = await notify.confirm(
         'Zero Mode',

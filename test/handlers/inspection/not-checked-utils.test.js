@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
-import { getActiveRowIds, TABLE_ID } from '../../../src/handlers/inspection/not-checked-utils';
+import {
+  getActiveRowIds,
+  countUnresolvedRows,
+  TABLE_ID,
+} from '../../../src/handlers/inspection/not-checked-utils';
 
 const rowsHtml = readFileSync(resolve('test/__fixtures__/rows.html'), 'utf8');
 
@@ -190,5 +194,57 @@ describe('getActiveRowIds', () => {
       `;
       expect(getActiveRowIds()).toEqual(['rowfrmabc1001', 'rowfrmabc1004']);
     });
+  });
+});
+
+describe('countUnresolvedRows', () => {
+  beforeEach(() => {
+    document.body.innerHTML = rowsHtml;
+  });
+
+  it('counts a disabled-button row without a done state as unresolved', () => {
+    document.body.innerHTML = `
+      <div class="grid">
+        <div id="rowfrmabc000001">
+          <button type="button" disabled>Input Data</button>
+        </div>
+        <div>Dalam Pemeriksaan</div>
+      </div>
+    `;
+    expect(countUnresolvedRows()).toBe(1);
+  });
+
+  it('counts a non-clickable row without a done state as unresolved', () => {
+    document.body.innerHTML = `
+      <div class="grid">
+        <div id="rowfrmabc000001">
+          <span class="badge">Tidak diperiksa</span>
+          <div class="cursor-not-allowed">Tidak Periksa</div>
+        </div>
+      </div>
+    `;
+    expect(countUnresolvedRows()).toBe(1);
+  });
+
+  it('ignores rows that show a done state', () => {
+    document.body.innerHTML = `
+      <div class="grid">
+        <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
+        <div>Selesai diperiksa</div>
+      </div>
+    `;
+    expect(countUnresolvedRows()).toBe(0);
+  });
+
+  it('treats a non-gray success icon row as done', () => {
+    document.body.innerHTML = `
+      <div class="grid">
+        <div id="rowfrmabc000001">
+          <button type="button">Input Data</button>
+          <img src="icon-success.png" />
+        </div>
+      </div>
+    `;
+    expect(countUnresolvedRows()).toBe(0);
   });
 });

@@ -9,6 +9,7 @@ import {
   waitForRow,
   clickFinishServiceButton,
   getActiveRowIds,
+  countUnresolvedRows,
   TABLE_ID,
 } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
@@ -105,7 +106,7 @@ async function processNextZenItem() {
     await clearFlashData();
     isAutomationActive = false;
 
-    const unresolved = getActiveRowIds().length;
+    const unresolved = countUnresolvedRows();
     if (unresolved > 0) {
       const confirmed = await notify.confirm(
         'Zen Mode',

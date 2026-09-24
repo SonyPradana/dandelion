@@ -84,6 +84,31 @@ export function getActiveRowIds() {
 }
 
 /**
+ * Counts rows that are not yet marked done on the list page.
+ * Unlike getActiveRowIds, this ignores the button state: a non-done row is
+ * unresolved even when its button is disabled or non-clickable, so the
+ * completion gate never reports zero while such a row remains.
+ * @returns {number} Unresolved row count. 0 means the task is complete.
+ */
+export function countUnresolvedRows() {
+  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]'));
+  let unresolved = 0;
+
+  rowElements.forEach((el) => {
+    const row = el.closest('.grid, tr');
+    if (!row) return;
+
+    const successImg = row.querySelector('img[src*="icon-success"]');
+    const isDone =
+      row.textContent.includes('Selesai diperiksa') ||
+      (successImg && !successImg.src.includes('gray'));
+    if (!isDone) unresolved += 1;
+  });
+
+  return unresolved;
+}
+
+/**
  * Checks if there are still rows with "Dalam Pemeriksaan" status.
  * @param {number} [timeout=5000] - Maximum time to wait in milliseconds.
  * @returns {Promise<boolean>} Resolves to true if any form is still being examined.

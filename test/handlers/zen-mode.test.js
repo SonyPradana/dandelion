@@ -29,6 +29,7 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   clickFinishServiceButton: vi.fn(),
   hasRemainingForms: vi.fn().mockResolvedValue(false),
   getActiveRowIds: vi.fn(() => []),
+  countUnresolvedRows: vi.fn(() => 0),
   TABLE_ID: 'tableLayanan',
 }));
 
@@ -37,6 +38,7 @@ import { MemoryBackend } from '../__support__/memory-backend';
 import { startZenAutomation } from '../../src/handlers/zen-mode';
 import {
   getActiveRowIds,
+  countUnresolvedRows,
   waitForRow,
   clickFinishServiceButton,
 } from '../../src/handlers/inspection/not-checked-utils';
@@ -50,6 +52,7 @@ describe('zen-mode', () => {
     document.body.innerHTML = rowsHtml;
     const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
     getActiveRowIds.mockImplementation(actual.getActiveRowIds);
+    countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
     TABLE_ID = actual.TABLE_ID;
   });
 
@@ -145,7 +148,7 @@ describe('zen-mode', () => {
     it('should confirm with the unresolved count before finishing when rows remain', async () => {
       const { initializeZenMode } = await startWithDoneRow();
 
-      getActiveRowIds.mockReturnValue(['rowfrmzzz', 'rowfrmskip2']);
+      countUnresolvedRows.mockReturnValue(['rowfrmzzz', 'rowfrmskip2'].length);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -165,7 +168,7 @@ describe('zen-mode', () => {
     it('should not click finish when user declines with unresolved rows', async () => {
       const { initializeZenMode } = await startWithDoneRow();
 
-      getActiveRowIds.mockReturnValue(['rowfrmzzz', 'rowfrmskip2', 'rowfrmskip3']);
+      countUnresolvedRows.mockReturnValue(['rowfrmzzz', 'rowfrmskip2', 'rowfrmskip3'].length);
       mockNotify.confirm.mockResolvedValue(false);
 
       initializeZenMode();
@@ -181,7 +184,7 @@ describe('zen-mode', () => {
     it('should keep the normal completion flow when no unresolved rows remain', async () => {
       const { initializeZenMode } = await startWithDoneRow();
 
-      getActiveRowIds.mockReturnValue([]);
+      countUnresolvedRows.mockReturnValue(0);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -207,7 +210,7 @@ describe('zen-mode', () => {
           <div>Tidak diperiksa</div>
         </div>
       `;
-      getActiveRowIds.mockImplementation(actual.getActiveRowIds);
+      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -245,7 +248,7 @@ describe('zen-mode', () => {
         </div>
       `;
       waitForRow.mockResolvedValue(document.getElementById('rowfrmzzz'));
-      getActiveRowIds.mockReturnValue([]);
+      countUnresolvedRows.mockReturnValue(0);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -277,7 +280,7 @@ describe('zen-mode', () => {
         </div>
       `;
       waitForRow.mockResolvedValue(document.getElementById('rowfrmzzz'));
-      getActiveRowIds.mockReturnValue([]);
+      countUnresolvedRows.mockReturnValue(0);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -347,7 +350,7 @@ describe('zen-mode', () => {
       });
 
       document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
-      getActiveRowIds.mockReturnValue([]);
+      countUnresolvedRows.mockReturnValue(0);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZenMode();
@@ -358,6 +361,36 @@ describe('zen-mode', () => {
         expect.stringContaining('Zen Mode Selesai!'),
       );
       expect(await freshStore.getZenModeState()).toMatchObject({ active: false });
+    });
+
+    it('should not complete when a non-done row keeps a disabled button', async () => {
+      const { initializeZenMode } = await startWithDoneRow();
+      const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+
+      document.body.innerHTML += `
+        <div class="grid">
+          <div id="rowfrmskip1">
+            <button type="button" disabled>Input Data</button>
+          </div>
+          <div>Dalam Pemeriksaan</div>
+        </div>
+      `;
+      getActiveRowIds.mockImplementation(actual.getActiveRowIds);
+      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZenMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Zen Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zen Mode',
+        expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+      expect(clickFinishServiceButton).toHaveBeenCalled();
     });
   });
 });
