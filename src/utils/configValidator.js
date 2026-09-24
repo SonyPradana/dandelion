@@ -31,6 +31,15 @@ const PROFILE_BOOLEAN_FIELDS = [
   'flashData.enabled',
 ];
 
+const PANEL_POSITIONS = new Set(['top-left', 'top-right', 'bottom-left', 'bottom-right']);
+
+const ALLOWED_TOP_LEVEL_KEYS = new Set([
+  'profiles',
+  'activeProfile',
+  'panelPosition',
+  'silenceInfoNotification',
+]);
+
 function getByPath(obj, path) {
   return path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
 }
@@ -66,7 +75,7 @@ export function validateConfig(raw) {
   } else {
     if (typeof raw.activeProfile !== 'string' || !raw.activeProfile) {
       errors.push('"activeProfile" wajib diisi.');
-    } else if (!profiles[raw.activeProfile]) {
+    } else if (!Object.hasOwn(profiles, raw.activeProfile)) {
       errors.push(`Profil aktif "${raw.activeProfile}" tidak ditemukan di "profiles".`);
     }
   }
@@ -108,6 +117,22 @@ export function validateConfig(raw) {
     typeof raw.silenceInfoNotification !== 'boolean'
   ) {
     errors.push('"silenceInfoNotification" harus berupa boolean.');
+  }
+
+  if (
+    raw.panelPosition !== undefined &&
+    raw.panelPosition !== null &&
+    !PANEL_POSITIONS.has(raw.panelPosition)
+  ) {
+    errors.push(
+      '"panelPosition" tidak valid. Gunakan salah satu: top-left, top-right, bottom-left, bottom-right.',
+    );
+  }
+
+  for (const key of Object.keys(raw)) {
+    if (!ALLOWED_TOP_LEVEL_KEYS.has(key)) {
+      errors.push(`Key "${key}" tidak didukung.`);
+    }
   }
 
   return { valid: errors.length === 0, errors };

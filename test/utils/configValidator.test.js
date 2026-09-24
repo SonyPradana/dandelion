@@ -134,4 +134,32 @@ describe('validateConfig', () => {
     const result = validateConfig(bad);
     expect(result.errors.length).toBe(2);
   });
+
+  it('should reject inherited profile keys via activeProfile', () => {
+    const bad = { activeProfile: 'toString', profiles: { profile1: {} } };
+    const result = validateConfig(bad);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes('toString') && e.includes('profiles'))).toBe(true);
+  });
+
+  it('should reject unsupported panelPosition values', () => {
+    const badQuote = { ...validConfig, panelPosition: '"' };
+    const badMiddle = { ...validConfig, panelPosition: 'middle' };
+    expect(validateConfig(badQuote).valid).toBe(false);
+    expect(validateConfig(badMiddle).valid).toBe(false);
+  });
+
+  it('should accept all supported panelPosition values', () => {
+    for (const pos of ['top-left', 'top-right', 'bottom-left', 'bottom-right']) {
+      const result = validateConfig({ ...validConfig, panelPosition: pos });
+      expect(result.valid).toBe(true);
+    }
+  });
+
+  it('should reject unknown top-level keys', () => {
+    const bad = { ...validConfig, dandelion_terms: { agreed: true } };
+    const result = validateConfig(bad);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes('dandelion_terms'))).toBe(true);
+  });
 });
