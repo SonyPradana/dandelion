@@ -162,4 +162,20 @@ describe('validateConfig', () => {
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.includes('dandelion_terms'))).toBe(true);
   });
+
+  it('should reject profiles missing required sections', () => {
+    const bad = structuredClone(validConfig);
+    delete bad.profiles.profile1.zenMode;
+    const result = validateConfig(bad);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes('zenMode'))).toBe(true);
+  });
+
+  it('should reject null required sections', () => {
+    const bad = structuredClone(validConfig);
+    bad.profiles.profile1.formSkrining = null;
+    const result = validateConfig(bad);
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes('formSkrining'))).toBe(true);
+  });
 });

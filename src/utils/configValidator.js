@@ -40,6 +40,15 @@ const ALLOWED_TOP_LEVEL_KEYS = new Set([
   'silenceInfoNotification',
 ]);
 
+const PROFILE_SECTIONS = [
+  'formSkrining',
+  'notChecked',
+  'registerForm',
+  'skrining',
+  'zenMode',
+  'flashData',
+];
+
 function getByPath(obj, path) {
   return path.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
 }
@@ -85,6 +94,12 @@ export function validateConfig(raw) {
       if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
         errors.push(`Profil "${key}" harus berupa objek.`);
         continue;
+      }
+      for (const section of PROFILE_SECTIONS) {
+        const value = profile[section];
+        if (!value || typeof value !== 'object' || Array.isArray(value)) {
+          errors.push(`Profil "${key}": bagian "${section}" wajib berupa objek.`);
+        }
       }
       for (const field of PROFILE_STRING_FIELDS) {
         const value = getByPath(profile, field);

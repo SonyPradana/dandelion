@@ -50,9 +50,12 @@ function insertText(text) {
 
 async function loadConfig() {
   store.init(browser);
+  const before = editor.value;
   const config = await store.getFullConfig();
-  savedText = JSON.stringify(config, null, 2);
-  editor.value = savedText;
+  const text = JSON.stringify(config, null, 2);
+  if (editor.value !== before) return;
+  savedText = text;
+  editor.value = text;
   updateStats();
 }
 
