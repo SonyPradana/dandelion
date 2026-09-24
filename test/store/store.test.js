@@ -138,6 +138,38 @@ describe('config', () => {
     expect(cached.panelPosition).toBe('bottom-right');
   });
 
+  it('refreshConfig should await an in-flight write before reading', async () => {
+    const base = await store.getFullConfig();
+    base.panelPosition = 'bottom-right';
+
+    const originalGet = backend.storage.local.get;
+    const originalSet = backend.storage.local.set;
+    const getSpy = vi.fn((...args) => originalGet.call(backend.storage.local, ...args));
+    backend.storage.local.get = getSpy;
+
+    let releaseWrite = null;
+    backend.storage.local.set = vi.fn((...args) => {
+      const snapshot = originalSet.call(backend.storage.local, ...args);
+      return new Promise((resolve) => {
+        releaseWrite = () => snapshot.then(resolve);
+      });
+    });
+
+    const writePromise = store.setConfig(base);
+    const refreshPromise = store.refreshConfig();
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(getSpy).not.toHaveBeenCalled();
+
+    releaseWrite();
+    await writePromise;
+
+    const refreshed = await refreshPromise;
+    expect(getSpy).toHaveBeenCalled();
+    expect(refreshed.panelPosition).toBe('bottom-right');
+  });
+
   it('setConfig should drop the cache when the storage write fails', async () => {
     const base = await store.getFullConfig();
     base.panelPosition = 'bottom-right';
@@ -215,7 +247,12 @@ describe('config', () => {
 
     const originalRemove = backend.storage.local.remove;
     let releaseRemove = null;
+    let onRemoveCalled = null;
+    const removeCalled = new Promise((resolve) => {
+      onRemoveCalled = resolve;
+    });
     backend.storage.local.remove = vi.fn((...args) => {
+      onRemoveCalled();
       const snapshot = originalRemove.call(backend.storage.local, ...args);
       return new Promise((resolve) => {
         releaseRemove = () => snapshot.then(resolve);
@@ -224,7 +261,7 @@ describe('config', () => {
 
     const readPromise = store.getFullConfig();
 
-    await Promise.resolve();
+    await removeCalled;
 
     const newer = { activeProfile: 'profile3', panelPosition: 'center', profiles: {} };
     await store.setConfig(newer);

@@ -129,8 +129,10 @@ class DandelionStore {
   async setConfig(config) {
     const generation = (this._configGeneration += 1);
     this._configCache = config;
+    const pending = this._browser.storage.local.set(config);
+    this._pendingWrite = pending;
     try {
-      await this._browser.storage.local.set(config);
+      await pending;
     } catch (error) {
       if (generation === this._configGeneration) {
         // Write failed without a newer write in between: drop the cache so the
@@ -138,12 +140,17 @@ class DandelionStore {
         this._configCache = null;
       }
       throw error;
+    } finally {
+      if (this._pendingWrite === pending) {
+        this._pendingWrite = null;
+      }
     }
   }
 
   async refreshConfig() {
     this._configGeneration += 1;
     this._configCache = null;
+    if (this._pendingWrite) await this._pendingWrite;
     return await this.getFullConfig();
   }
 

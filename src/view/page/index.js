@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let loadedConfig = null;
   let profileManager = null;
   let formDirty = false;
+  let formActiveProfile = null;
 
   document.getElementById('config-body').addEventListener('input', (event) => {
     if (event.isTrusted) formDirty = true;
@@ -146,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
-
+    formActiveProfile = selectedProfile;
     const profileSettings = loadedConfig.profiles[selectedProfile] || {};
 
     const fs = profileSettings.formSkrining || {};
@@ -202,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
-          const selectedProfile = loadedConfig.activeProfile;
+          const selectedProfile = profileManager?.activeProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
           }
@@ -250,7 +251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
 
-      const selectedProfile = loadedConfig.activeProfile;
+      const selectedProfile = profileManager?.activeProfile || loadedConfig.activeProfile;
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       /** @param {string} text @param {string} label @returns {object|null} */
@@ -828,8 +829,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function refreshUiFromStore() {
     if (!loadedConfig) return;
+    const targetActive =
+      formDirty && formActiveProfile && loadedConfig.profiles[formActiveProfile]
+        ? formActiveProfile
+        : loadedConfig.activeProfile;
     if (profileManager) {
-      profileManager.setData(loadedConfig.profiles, loadedConfig.activeProfile);
+      profileManager.setData(loadedConfig.profiles, targetActive);
     }
     if (formDirty) return;
 

@@ -59,7 +59,15 @@ export class ProfileManager {
         domTimeout: 5000,
       },
       skrining: { url: '' },
-      zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
+      registerForm: {
+        url: '',
+        retryMax: 3,
+        retryDelay: 2000,
+        countdownDuration: 5000,
+        defaultPinneds: {},
+      },
+      zenMode: { domTimeout: 5000, enabled: false, timeout: 5000, defaultPinneds: {} },
+      flashData: { enabled: false, maxAge: 600_000 },
     };
 
     this.render();
