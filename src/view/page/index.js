@@ -229,7 +229,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               )}"?`,
             )
           ) {
-            profileManager.setData(loadedConfig.profiles, loadedConfig.activeProfile);
+            profileManager.setData(
+              loadedConfig.profiles,
+              formActiveProfile || loadedConfig.activeProfile,
+            );
             return;
           }
           loadedConfig.activeProfile = newActiveProfile;
