@@ -264,6 +264,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!loadedConfig) return;
 
       const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
+      if (!loadedConfig.profiles[selectedProfile]) {
+        loadedConfig.profiles[selectedProfile] = {};
+      }
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       /** @param {string} text @param {string} label @returns {object|null} */
@@ -841,10 +844,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function refreshUiFromStore() {
     if (!loadedConfig) return;
-    if (formDirty && formActiveProfile && !loadedConfig.profiles[formActiveProfile]) {
-      formDirty = false;
-      formActiveProfile = null;
-    }
     const targetActive =
       formDirty && formActiveProfile ? formActiveProfile : loadedConfig.activeProfile;
     if (profileManager) {

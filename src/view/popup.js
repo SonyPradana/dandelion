@@ -228,6 +228,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
       const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
+      if (!loadedConfig.profiles[selectedProfile]) {
+        loadedConfig.profiles[selectedProfile] = {};
+      }
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       loadedConfig.activeProfile = selectedProfile;
@@ -303,10 +306,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function refreshUiFromStore() {
     if (!loadedConfig) return;
-    if (formDirty && formActiveProfile && !loadedConfig.profiles[formActiveProfile]) {
-      formDirty = false;
-      formActiveProfile = null;
-    }
     const targetActive =
       formDirty && formActiveProfile ? formActiveProfile : loadedConfig.activeProfile;
     if (profileManager) {
