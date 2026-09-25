@@ -28,13 +28,23 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   waitForElement: vi.fn(),
   clickFinishServiceButton: vi.fn(),
   hasRemainingForms: vi.fn().mockResolvedValue(false),
+  getActiveRowIds: vi.fn(() => []),
+  countUnresolvedRows: vi.fn(() => 0),
+  TABLE_ID: 'tableLayanan',
 }));
 
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { startZeroAutomation, isZeroRunning, getZeroQueue } from '../../src/handlers/zero-mode';
-import { waitForRow, waitForElement } from '../../src/handlers/inspection/not-checked-utils';
+import {
+  waitForRow,
+  waitForElement,
+  getActiveRowIds,
+  countUnresolvedRows,
+} from '../../src/handlers/inspection/not-checked-utils';
 import bus from '../../src/utils/hooks';
+
+let TABLE_ID = null;
 
 describe('zero-mode', () => {
   beforeEach(async () => {
@@ -55,12 +65,20 @@ describe('zero-mode', () => {
         },
       },
     });
+
+    const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+    getActiveRowIds.mockImplementation(actual.getActiveRowIds);
+    countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+    TABLE_ID = actual.TABLE_ID;
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
+  /**
+   * Advances the fake timer until all queued microtasks and timers settle.
+   */
   async function flushAll() {
     for (let i = 0; i < 20; i += 1) {
       await vi.advanceTimersByTimeAsync(0);
@@ -339,6 +357,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
+      countUnresolvedRows.mockReturnValue(0);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZeroMode();
@@ -349,6 +368,269 @@ describe('zero-mode', () => {
         expect.stringContaining('Zero Mode Selesai!'),
       );
       expect(mockNotify.confirm).toHaveBeenCalledWith('Konfirmasi', 'Selesaikan Layanan?');
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should confirm with the unresolved count before finishing when rows remain', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      countUnresolvedRows.mockReturnValue(['rowfrmabc000001', 'rowfrmabc000002'].length);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ada 2 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should not click finish when user declines with unresolved rows', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      countUnresolvedRows.mockReturnValue(
+        ['rowfrmabc000001', 'rowfrmabc000002', 'rowfrmabc000003'].length,
+      );
+      mockNotify.confirm.mockResolvedValue(false);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ada 3 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+      expect(clickFinishServiceButton).not.toHaveBeenCalled();
+    });
+
+    it('should keep the normal completion flow when no unresolved rows remain', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      countUnresolvedRows.mockReturnValue(0);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith('Konfirmasi', 'Selesaikan Layanan?');
+      expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+
+    it('should show the unresolved confirmation instead of Zero Mode Selesai! when a pending row keeps its button', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = `
+        <div id="${TABLE_ID}">
+          <div class="grid">
+            <div id="rowfrmskip1">
+              <button type="button">Input Data</button>
+            </div>
+            <div>Tidak diperiksa</div>
+          </div>
+        </div>
+      `;
+      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
+    });
+
+    it('should defer completion while the list page is not showing', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      countUnresolvedRows.mockReturnValue(0);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalled();
+      expect(mockNotify.confirm).not.toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: true });
+    });
+
+    it('should keep the queue when the list rows are not on the page', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmA', 'rowfrmB'],
+        total: 2,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      waitForRow.mockResolvedValue(null);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(waitForRow).not.toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({
+        queue: ['rowfrmA', 'rowfrmB'],
+      });
+    });
+
+    it('should complete when the queue is empty and the list shows no rows', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
+      countUnresolvedRows.mockReturnValue(0);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(await freshStore.getZenModeState()).toMatchObject({ active: false });
+    });
+
+    it('should not complete when a non-done row keeps a disabled button', async () => {
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend } = await import('../__support__/memory-backend');
+      const { initializeZeroMode } = await import('../../src/handlers/zero-mode');
+      const { clickFinishServiceButton } =
+        await import('../../src/handlers/inspection/not-checked-utils');
+      const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
+
+      freshStore.init(new MemoryBackend());
+      await freshStore.setZenModeState({
+        active: true,
+        queue: [],
+        total: 1,
+        mode: 'zero',
+      });
+
+      document.body.innerHTML = `
+        <div id="${TABLE_ID}">
+          <div class="grid">
+            <div id="rowfrmskip1">
+              <button type="button" disabled>Input Data</button>
+            </div>
+            <div>Dalam Pemeriksaan</div>
+          </div>
+        </div>
+      `;
+      getActiveRowIds.mockImplementation(actual.getActiveRowIds);
+      countUnresolvedRows.mockImplementation(actual.countUnresolvedRows);
+      mockNotify.confirm.mockResolvedValue(true);
+
+      initializeZeroMode();
+      await flushAll();
+
+      expect(mockNotify.alert).not.toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Zero Mode Selesai!'),
+      );
+      expect(mockNotify.confirm).toHaveBeenCalledWith(
+        'Zero Mode',
+        expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
+      );
       expect(clickFinishServiceButton).toHaveBeenCalled();
     });
   });

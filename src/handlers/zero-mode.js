@@ -10,7 +10,9 @@ import {
   waitForRow,
   waitForElement,
   clickFinishServiceButton,
-  hasRemainingForms,
+  getActiveRowIds,
+  countUnresolvedRows,
+  TABLE_ID,
 } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
 import bus from '../utils/hooks';
@@ -51,28 +53,7 @@ export function initializeZeroMode() {
  * Scans the page for any available and active form buttons.
  */
 export async function startZeroAutomation() {
-  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]'));
-  const pendingIds = [];
-
-  rowElements.forEach((el) => {
-    const row = el.closest('.grid, tr');
-    const button = el.querySelector('button');
-
-    // Check if row is not "Done"
-    const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
-    const isDone =
-      row &&
-      (row.textContent.includes('Selesai diperiksa') ||
-        (successImg && !successImg.src.includes('gray')));
-
-    // Check if button is clickable
-    const isClickable =
-      button && !button.disabled && !button.classList.contains('cursor-not-allowed');
-
-    if (!isDone && isClickable) {
-      pendingIds.push(el.id);
-    }
-  });
+  const pendingIds = getActiveRowIds();
 
   if (pendingIds.length === 0) {
     await notify.alert('Zero Mode', 'Tidak ada form aktif yang ditemukan di halaman ini.');
@@ -129,16 +110,38 @@ async function processNextZeroItem() {
   const nextId = await peekNextFromQueue();
 
   if (!nextId) {
+    // Empty queue ≠ task complete; only decide on the list page and re-check
+    // DOM before offering to finish.
+    if (!document.getElementById(TABLE_ID)) {
+      isZeroAutomationActive = false;
+      return;
+    }
+
     await clearZenMode();
     await clearFlashData();
     isZeroAutomationActive = false;
 
-    if (!(await hasRemainingForms())) {
-      await notify.alert('Zero Mode', 'Zero Mode Selesai!');
-      if (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+    const unresolved = countUnresolvedRows();
+    if (unresolved > 0) {
+      const confirmed = await notify.confirm(
+        'Zero Mode',
+        `Ada ${unresolved} item yang belum selesai. Tetap selesaikan layanan?`,
+      );
+      if (confirmed) {
         clickFinishServiceButton();
       }
+      return;
     }
+
+    await notify.alert('Zero Mode', 'Zero Mode Selesai!');
+    if (await notify.confirm('Konfirmasi', 'Selesaikan Layanan?')) {
+      clickFinishServiceButton();
+    }
+    return;
+  }
+
+  if (!document.querySelector('[id^="rowfrm"],[id^="row-FRM"]')) {
+    isZeroAutomationActive = false;
     return;
   }
 

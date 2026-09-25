@@ -1,4 +1,9 @@
 /**
+ * ID of the services container on the list page.
+ */
+export const TABLE_ID = 'tableLayanan';
+
+/**
  * Checks if the page is in a state ready for processing (active examination).
  * @returns {boolean} True if the page indicators show an active processing state.
  */
@@ -46,6 +51,61 @@ export function getQueueStats(masterList) {
   });
 
   return { foundIds, pendingIds, doneIds };
+}
+
+/**
+ * Collects the IDs of rows that are still active on the list page.
+ * A row is done when it shows 'Selesai diperiksa' or a non-gray success
+ * icon; it is active when it is not done and its button is clickable.
+ * @returns {string[]} IDs of rows with an actionable button.
+ */
+export function getActiveRowIds() {
+  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]'));
+  const activeIds = [];
+
+  rowElements.forEach((el) => {
+    const row = el.closest('.grid, tr');
+    const button = el.querySelector('button');
+    if (!row) return;
+
+    const successImg = row.querySelector('img[src*="icon-success"]');
+    const isDone =
+      row.textContent.includes('Selesai diperiksa') ||
+      (successImg && !successImg.src.includes('gray'));
+    const isClickable =
+      button && !button.disabled && !button.classList.contains('cursor-not-allowed');
+
+    if (!isDone && isClickable) {
+      activeIds.push(el.id);
+    }
+  });
+
+  return activeIds;
+}
+
+/**
+ * Counts rows that are not yet marked done on the list page.
+ * Unlike getActiveRowIds, this ignores the button state: a non-done row is
+ * unresolved even when its button is disabled or non-clickable, so the
+ * completion gate never reports zero while such a row remains.
+ * @returns {number} Unresolved row count. 0 means the task is complete.
+ */
+export function countUnresolvedRows() {
+  const rowElements = Array.from(document.querySelectorAll('[id^="rowfrm"],[id^="row-FRM"]'));
+  let unresolved = 0;
+
+  rowElements.forEach((el) => {
+    const row = el.closest('.grid, tr');
+    if (!row) return;
+
+    const successImg = row.querySelector('img[src*="icon-success"]');
+    const isDone =
+      row.textContent.includes('Selesai diperiksa') ||
+      (successImg && !successImg.src.includes('gray'));
+    if (!isDone) unresolved += 1;
+  });
+
+  return unresolved;
 }
 
 /**
