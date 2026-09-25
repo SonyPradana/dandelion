@@ -17,6 +17,7 @@ import {
 } from '../utils/productivityTracker';
 import { init, getStatus } from '../quota/quota-manager.js';
 import { parseConfig, validateConfig } from '../utils/configValidator.js';
+import { migrateConfig } from '../configuration.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
@@ -306,7 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    await store.setConfig(importedConfig);
+    await store.setConfig(migrateConfig(importedConfig));
     loadedConfig = await store.refreshConfig();
     formDirty = false;
     refreshUiFromStore();

@@ -27,6 +27,7 @@ import {
   getRemainingToday,
 } from '../../quota/quota-manager.js';
 import { parseConfig, validateConfig } from '../../utils/configValidator.js';
+import { migrateConfig } from '../../configuration.js';
 
 let activePopup = null;
 
@@ -856,7 +857,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    await store.setConfig(importedConfig);
+    await store.setConfig(migrateConfig(importedConfig));
     loadedConfig = await store.refreshConfig();
     formDirty = false;
     await refreshUiFromStore();

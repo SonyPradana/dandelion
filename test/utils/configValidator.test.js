@@ -115,6 +115,18 @@ describe('validateConfig', () => {
     const result = validateConfig(bad);
     expect(result.valid).toBe(false);
     expect(result.errors[0]).toContain('retryMax');
+    expect(result.errors[0]).toContain('negatif');
+  });
+
+  it('should report negative numbers with a distinct message from non-numbers', () => {
+    const bad = structuredClone(validConfig);
+    bad.profiles.profile1.registerForm.retryMax = -1;
+    bad.profiles.profile1.notChecked.automationDelay = '2000';
+    const result = validateConfig(bad);
+    expect(result.errors.some((e) => e.includes('retryMax') && e.includes('negatif'))).toBe(true);
+    expect(result.errors.some((e) => e.includes('automationDelay') && e.includes('angka'))).toBe(
+      true,
+    );
   });
 
   it('should flag non-boolean flags', () => {

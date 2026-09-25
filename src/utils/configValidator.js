@@ -109,12 +109,11 @@ export function validateConfig(raw) {
       }
       for (const field of PROFILE_NUMBER_FIELDS) {
         const value = getByPath(profile, field);
-        if (
-          value !== undefined &&
-          value !== null &&
-          (typeof value !== 'number' || !Number.isFinite(value) || value < 0)
-        ) {
+        if (value === undefined || value === null) continue;
+        if (typeof value !== 'number' || !Number.isFinite(value)) {
           errors.push(`Profil "${key}": "${field}" harus berupa angka.`);
+        } else if (value < 0) {
+          errors.push(`Profil "${key}": "${field}" tidak boleh negatif.`);
         }
       }
       for (const field of PROFILE_BOOLEAN_FIELDS) {
