@@ -201,6 +201,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       config.activeProfile,
       {
         onSwitch: (newActiveProfile) => {
+          if (
+            formDirty &&
+            !confirm(
+              `Ada perubahan belum disimpan. Pindah ke profil "${profileManager.getProfileDisplayName(
+                newActiveProfile,
+              )}"?`,
+            )
+          ) {
+            profileManager.setData(loadedConfig.profiles, loadedConfig.activeProfile);
+            return;
+          }
           loadedConfig.activeProfile = newActiveProfile;
           updateFormForProfile(newActiveProfile);
           formDirty = false;
