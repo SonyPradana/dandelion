@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-09-26
+
+### Fixed
+
+- Show confirmation dialog before closing register form when flow panel is still opne (#123).
+- Handle slow server and manual close in section 3 success model (#124).
+- Stop counting already-filled dropdown on re-fill (#128).
+- Prevent false completion claim in Zero-mode or Zero-mode (#130).
+- Apply imported configuration to store and refresh all config UI (#131).
+
+### Added
+
+- Show extension version in config page, popup and JSON editor (#132).
+
 ## [1.7.1] - 2026-08-19
 
 ### Fixed
