@@ -15,10 +15,12 @@ const STORAGE_KEYS = {
 class DandelionStore {
   _backend = null;
   _configCache = null;
+  _configGeneration = 0;
 
   init(backend) {
     this._backend = backend;
     this._configCache = null;
+    this._configGeneration += 1;
   }
 
   get _browser() {
@@ -77,7 +79,14 @@ class DandelionStore {
   async getFullConfig() {
     if (this._configCache) return this._configCache;
 
+    const generation = this._configGeneration;
     const result = await this._browser.storage.local.get(null);
+
+    // A write or refresh landed while we were reading
+    if (generation !== this._configGeneration) {
+      return this._configCache ?? (await this.getFullConfig());
+    }
+
     const isOldFormat =
       result.formSelector !== undefined ||
       result.profiles?.profile1?.radioButtonKeywords !== undefined;
@@ -91,6 +100,10 @@ class DandelionStore {
         'scrollToBottom',
         'notChecked',
       ]);
+
+      if (this._configCache !== migrated) {
+        return this._configCache ?? (await this.getFullConfig());
+      }
     }
 
     this._configCache = migrated;
@@ -112,8 +125,30 @@ class DandelionStore {
   }
 
   async setConfig(config) {
-    await this._browser.storage.local.set(config);
+    const generation = (this._configGeneration += 1);
     this._configCache = config;
+    const pending = this._browser.storage.local.set(config);
+    this._pendingWrite = pending;
+    try {
+      await pending;
+    } catch (error) {
+      if (generation === this._configGeneration) {
+        // Write failed without a newer write in between
+        this._configCache = null;
+      }
+      throw error;
+    } finally {
+      if (this._pendingWrite === pending) {
+        this._pendingWrite = null;
+      }
+    }
+  }
+
+  async refreshConfig() {
+    this._configGeneration += 1;
+    this._configCache = null;
+    if (this._pendingWrite) await this._pendingWrite;
+    return await this.getFullConfig();
   }
 
   async setActiveProfile(profileKey) {
@@ -252,6 +287,7 @@ export const setAgreement = (...a) => store.setAgreement(...a);
 export const getFullConfig = (...a) => store.getFullConfig(...a);
 export const getActiveConfig = (...a) => store.getActiveConfig(...a);
 export const setConfig = (...a) => store.setConfig(...a);
+export const refreshConfig = (...a) => store.refreshConfig(...a);
 export const setActiveProfile = (...a) => store.setActiveProfile(...a);
 export const onProfileSwitch = (...a) => store.onProfileSwitch(...a);
 export const getFlashData = (...a) => store.getFlashData(...a);
