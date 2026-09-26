@@ -26,6 +26,8 @@ import {
   removeToken,
   getRemainingToday,
 } from '../../quota/quota-manager.js';
+import { parseConfig, validateConfig } from '../../utils/configValidator.js';
+import { migrateConfig } from '../../configuration.js';
 
 let activePopup = null;
 
@@ -33,8 +35,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
-  browser.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && changes.dandelion_terms) {
+  browser.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== 'local') return;
+
+    if (changes.dandelion_terms) {
       const terms = changes.dandelion_terms.newValue;
       const version = browser.runtime.getManifest().version;
       if (!terms?.agreed || terms.version !== version) {
@@ -48,6 +52,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         activePopup.remove();
         activePopup = null;
       }
+    }
+
+    const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
+    if (configKeys.some((key) => changes[key])) {
+      loadedConfig = await store.refreshConfig();
+      refreshUiFromStore();
     }
   });
 
@@ -78,6 +88,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   let loadedConfig = null;
+  let profileManager = null;
+  let formDirty = false;
+  let formActiveProfile = null;
+
+  document.getElementById('config-body').addEventListener('input', (event) => {
+    if (event.isTrusted) formDirty = true;
+  });
 
   const radioButtonKeywordsList = new KeywordList(
     'form-skrining-radio-keywords-input',
@@ -131,8 +148,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
-
-    const profileSettings = loadedConfig.profiles[selectedProfile];
+    formActiveProfile = selectedProfile;
+    const profileSettings = loadedConfig.profiles[selectedProfile] || {};
 
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
@@ -187,7 +204,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
-          const selectedProfile = loadedConfig.activeProfile;
+          const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
           }
@@ -198,16 +215,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateFormForProfile(config.activeProfile);
 
-    void new ProfileManager('profile-manager-container', config.profiles, config.activeProfile, {
-      onSwitch: (newActiveProfile) => {
-        loadedConfig.activeProfile = newActiveProfile;
-        updateFormForProfile(newActiveProfile);
-        store.setConfig(loadedConfig);
+    profileManager = new ProfileManager(
+      'profile-manager-container',
+      config.profiles,
+      config.activeProfile,
+      {
+        onSwitch: (newActiveProfile) => {
+          if (
+            formDirty &&
+            !confirm(
+              `Ada perubahan belum disimpan. Pindah ke profil "${profileManager.getProfileDisplayName(
+                newActiveProfile,
+              )}"?`,
+            )
+          ) {
+            profileManager.setData(
+              loadedConfig.profiles,
+              formActiveProfile || loadedConfig.activeProfile,
+            );
+            return;
+          }
+          loadedConfig.activeProfile = newActiveProfile;
+          updateFormForProfile(newActiveProfile);
+          formDirty = false;
+          store.setConfig(loadedConfig);
+        },
+        onChange: () => {
+          store.setConfig(loadedConfig);
+        },
       },
-      onChange: () => {
-        store.setConfig(loadedConfig);
-      },
-    });
+    );
 
     const panelPosition = config.panelPosition || 'top-right';
     const posBtns = document.querySelectorAll('.pos-option');
@@ -229,7 +266,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
 
-      const selectedProfile = loadedConfig.activeProfile;
+      const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
+      if (!loadedConfig.profiles[selectedProfile]) {
+        loadedConfig.profiles[selectedProfile] = {};
+      }
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       /** @param {string} text @param {string} label @returns {object|null} */
@@ -320,6 +360,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       store.setConfig(loadedConfig);
+      formDirty = false;
 
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
@@ -804,6 +845,42 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  async function refreshUiFromStore() {
+    if (!loadedConfig) return;
+    const targetActive =
+      formDirty && formActiveProfile ? formActiveProfile : loadedConfig.activeProfile;
+    if (profileManager) {
+      profileManager.setData(loadedConfig.profiles, targetActive);
+    }
+    if (formDirty) return;
+
+    updateFormForProfile(loadedConfig.activeProfile);
+
+    silenceInfoNotificationCheckbox.checked = loadedConfig.silenceInfoNotification ?? false;
+
+    const posBtns = document.querySelectorAll('.pos-option');
+    posBtns.forEach((btn) =>
+      btn.classList.toggle(
+        'active',
+        btn.dataset.pos === (loadedConfig.panelPosition || 'top-right'),
+      ),
+    );
+
+    formDirty = false;
+  }
+
+  async function applyImportedConfig(importedConfig) {
+    await store.setConfig(migrateConfig(importedConfig));
+    loadedConfig = await store.refreshConfig();
+    formDirty = false;
+    await refreshUiFromStore();
+
+    saveConfigBtn.textContent = 'Diimpor!';
+    setTimeout(() => {
+      saveConfigBtn.textContent = 'Simpan';
+    }, 1500);
+  }
+
   importLink.addEventListener('click', (event) => {
     event.preventDefault();
     importFileInput.click();
@@ -817,19 +894,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const reader = new FileReader();
     reader.onload = async (e) => {
+      importFileInput.value = '';
       try {
-        const importedConfig = JSON.parse(e.target.result);
+        const parsed = parseConfig(e.target.result);
+        if (!parsed.ok) throw new Error(parsed.error);
 
-        if (!importedConfig.profiles || !importedConfig.activeProfile) {
-          throw new Error('Invalid config file format.');
+        const validation = validateConfig(parsed.value);
+        if (!validation.valid) throw new Error(validation.errors[0]);
+
+        const profileCount = Object.keys(parsed.value.profiles).length;
+        const activeName =
+          parsed.value.profiles[parsed.value.activeProfile]?.name || parsed.value.activeProfile;
+        if (
+          !confirm(
+            `Impor ${profileCount} profil (aktif: ${activeName})?\nKonfigurasi saat ini akan ditimpa. Lanjutkan?`,
+          )
+        ) {
+          return;
         }
 
-        store.setConfig(importedConfig);
-        loadedConfig = await store.getFullConfig();
-        updateFormForProfile(loadedConfig.activeProfile);
-      } catch {
-      } finally {
-        importFileInput.value = '';
+        await applyImportedConfig(parsed.value);
+      } catch (error) {
+        alert(error.message);
+        saveConfigBtn.textContent = 'Import gagal!';
+        setTimeout(() => {
+          saveConfigBtn.textContent = 'Simpan';
+        }, 2000);
       }
     };
     reader.readAsText(file);

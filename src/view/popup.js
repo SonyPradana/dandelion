@@ -16,6 +16,8 @@ import {
   TARGET_MODE,
 } from '../utils/productivityTracker';
 import { init, getStatus } from '../quota/quota-manager.js';
+import { parseConfig, validateConfig } from '../utils/configValidator.js';
+import { migrateConfig } from '../configuration.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
@@ -50,6 +52,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   const agreeCheckbox = document.getElementById('agree-checkbox');
   const configWrapper = document.getElementById('config-wrapper');
   let loadedConfig = null;
+  let profileManager = null;
+  let formDirty = false;
+  let formActiveProfile = null;
+
+  browser.storage.onChanged.addListener(async (changes, area) => {
+    if (area !== 'local') return;
+    const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
+    if (configKeys.some((key) => changes[key])) {
+      loadedConfig = await store.refreshConfig();
+      refreshUiFromStore();
+    }
+  });
+
+  configWrapper.addEventListener('input', (event) => {
+    if (event.isTrusted) formDirty = true;
+  });
 
   // Initialize KeywordList components
   const notCheckedList = new KeywordList(
@@ -127,7 +145,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
-    const profileSettings = loadedConfig.profiles[selectedProfile];
+    formActiveProfile = selectedProfile;
+    const profileSettings = loadedConfig.profiles[selectedProfile] || {};
 
     const fs = profileSettings.formSkrining || {};
     formSkriningUrlInput.value = fs.url || '';
@@ -165,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
-          const selectedProfile = loadedConfig.activeProfile;
+          const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
           }
@@ -176,22 +195,45 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     updateFormForProfile(config.activeProfile);
 
-    void new ProfileManager('profile-manager-container', config.profiles, config.activeProfile, {
-      onSwitch: (newActiveProfile) => {
-        loadedConfig.activeProfile = newActiveProfile;
-        updateFormForProfile(newActiveProfile);
-        store.setConfig(loadedConfig);
+    profileManager = new ProfileManager(
+      'profile-manager-container',
+      config.profiles,
+      config.activeProfile,
+      {
+        onSwitch: (newActiveProfile) => {
+          if (
+            formDirty &&
+            !confirm(
+              `Ada perubahan belum disimpan. Pindah ke profil "${profileManager.getProfileDisplayName(
+                newActiveProfile,
+              )}"?`,
+            )
+          ) {
+            profileManager.setData(
+              loadedConfig.profiles,
+              formActiveProfile || loadedConfig.activeProfile,
+            );
+            return;
+          }
+          loadedConfig.activeProfile = newActiveProfile;
+          updateFormForProfile(newActiveProfile);
+          formDirty = false;
+          store.setConfig(loadedConfig);
+        },
+        onChange: () => {
+          store.setConfig(loadedConfig);
+        },
       },
-      onChange: () => {
-        store.setConfig(loadedConfig);
-      },
-    });
+    );
   });
 
   if (saveConfigBtn) {
     saveConfigBtn.addEventListener('click', () => {
       if (!loadedConfig) return;
-      const selectedProfile = loadedConfig.activeProfile;
+      const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
+      if (!loadedConfig.profiles[selectedProfile]) {
+        loadedConfig.profiles[selectedProfile] = {};
+      }
       const profileSettings = loadedConfig.profiles[selectedProfile];
 
       loadedConfig.activeProfile = selectedProfile;
@@ -223,6 +265,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
 
       store.setConfig(loadedConfig);
+      formDirty = false;
 
       saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
@@ -264,21 +307,60 @@ document.addEventListener('DOMContentLoaded', async () => {
     importFileInput.click();
   });
 
+  function refreshUiFromStore() {
+    if (!loadedConfig) return;
+    const targetActive =
+      formDirty && formActiveProfile ? formActiveProfile : loadedConfig.activeProfile;
+    if (profileManager) {
+      profileManager.setData(loadedConfig.profiles, targetActive);
+    }
+    if (formDirty) return;
+    updateFormForProfile(loadedConfig.activeProfile);
+    formDirty = false;
+  }
+
+  async function applyImportedConfig(importedConfig) {
+    await store.setConfig(migrateConfig(importedConfig));
+    loadedConfig = await store.refreshConfig();
+    formDirty = false;
+    refreshUiFromStore();
+
+    saveConfigBtn.textContent = 'Diimpor!';
+    setTimeout(() => {
+      saveConfigBtn.textContent = 'Simpan';
+    }, 1500);
+  }
+
   importFileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async (e) => {
+      importFileInput.value = '';
       try {
-        const importedConfig = JSON.parse(e.target.result);
-        if (!importedConfig.profiles || !importedConfig.activeProfile)
-          throw new Error('Invalid config file format.');
-        store.setConfig(importedConfig);
-        loadedConfig = await store.getFullConfig();
-        updateFormForProfile(loadedConfig.activeProfile);
-      } catch {
-      } finally {
-        importFileInput.value = '';
+        const parsed = parseConfig(e.target.result);
+        if (!parsed.ok) throw new Error(parsed.error);
+        const validation = validateConfig(parsed.value);
+        if (!validation.valid) throw new Error(validation.errors[0]);
+
+        const profileCount = Object.keys(parsed.value.profiles).length;
+        const activeName =
+          parsed.value.profiles[parsed.value.activeProfile]?.name || parsed.value.activeProfile;
+        if (
+          !confirm(
+            `Impor ${profileCount} profil (aktif: ${activeName})?\nKonfigurasi saat ini akan ditimpa. Lanjutkan?`,
+          )
+        ) {
+          return;
+        }
+
+        await applyImportedConfig(parsed.value);
+      } catch (error) {
+        alert(error.message);
+        saveConfigBtn.textContent = 'Import gagal!';
+        setTimeout(() => {
+          saveConfigBtn.textContent = 'Simpan';
+        }, 2000);
       }
     };
     reader.readAsText(file);
