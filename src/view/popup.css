@@ -141,6 +141,16 @@ body {
   font-weight: 600;
 }
 
+.header .version {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .content {
   padding: 30px;
 }

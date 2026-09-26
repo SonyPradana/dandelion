@@ -23,7 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
   if (agreement) {
     agreement.append(
-      html`<div class="header"><h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1></div>`,
+      html`<div class="header">
+        <h1>SYARAT DAN KETENTUAN PENGGUNAAN</h1>
+        <span class="version"></span>
+      </div>`,
       h(
         'div',
         { className: 'content' },
@@ -46,6 +49,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       ),
     );
   }
+
+  const versionLabel = `version ${browser.runtime.getManifest().version}`;
+  document.querySelectorAll('.version').forEach((el) => {
+    el.textContent = versionLabel;
+  });
 
   store.init(browser);
   await init();

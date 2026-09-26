@@ -35,6 +35,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
+  const versionEl = document.querySelector('.app-header .version');
+  if (versionEl) {
+    versionEl.textContent = `version ${browser.runtime.getManifest().version}`;
+  }
+
   browser.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
 
