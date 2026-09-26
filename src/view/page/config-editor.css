@@ -57,12 +57,19 @@ body {
 .ce-version {
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
-  color: #888;
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   padding: 2px 8px;
   white-space: nowrap;
+}
+
+.ce-file-label {
+  color: #888;
+}
+
+.ce-version {
+  color: #6e6e6e;
 }
 
 .ce-actions {
