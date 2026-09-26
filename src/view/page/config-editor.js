@@ -8,6 +8,9 @@ const saveBtn = document.getElementById('ce-save-btn');
 const resetBtn = document.getElementById('ce-reset-btn');
 const closeBtn = document.getElementById('ce-close-btn');
 
+const versionEl = document.querySelector('.ce-version');
+if (versionEl) versionEl.textContent = `version ${browser.runtime.getManifest().version}`;
+
 let savedText = '';
 let toastTimer = null;
 

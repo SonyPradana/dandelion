@@ -53,7 +53,8 @@ body {
   white-space: nowrap;
 }
 
-.ce-file-label {
+.ce-file-label,
+.ce-version {
   font-family: 'Courier New', monospace;
   font-size: 0.75rem;
   color: #888;

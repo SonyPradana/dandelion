@@ -141,6 +141,13 @@ body {
   font-weight: 600;
 }
 
+.header .version {
+  display: block;
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.65);
+}
+
 .content {
   padding: 30px;
 }

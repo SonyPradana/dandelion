@@ -127,6 +127,13 @@ body {
   color: #111;
 }
 
+.app-header h1 .version {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #9ca3af;
+  margin-left: 6px;
+}
+
 /* ── Tab Panes ── */
 .tab-pane {
   display: none;

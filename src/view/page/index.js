@@ -33,6 +33,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
+  const versionEl = document.querySelector('.app-header .version');
+  if (versionEl) {
+    versionEl.textContent = `version ${browser.runtime.getManifest().version}`;
+  }
+
   browser.storage.onChanged.addListener((changes, area) => {
     if (area === 'local' && changes.dandelion_terms) {
       const terms = changes.dandelion_terms.newValue;
