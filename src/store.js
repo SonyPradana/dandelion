@@ -82,8 +82,7 @@ class DandelionStore {
     const generation = this._configGeneration;
     const result = await this._browser.storage.local.get(null);
 
-    // A write or refresh landed while we were reading: keep the newer value
-    // and never persist a migration computed from the stale snapshot.
+    // A write or refresh landed while we were reading
     if (generation !== this._configGeneration) {
       return this._configCache ?? (await this.getFullConfig());
     }
@@ -102,7 +101,6 @@ class DandelionStore {
         'notChecked',
       ]);
 
-      // A newer write may have completed while migrating; it owns the cache.
       if (this._configCache !== migrated) {
         return this._configCache ?? (await this.getFullConfig());
       }
@@ -135,8 +133,7 @@ class DandelionStore {
       await pending;
     } catch (error) {
       if (generation === this._configGeneration) {
-        // Write failed without a newer write in between: drop the cache so the
-        // next getFullConfig re-reads what actually persisted.
+        // Write failed without a newer write in between
         this._configCache = null;
       }
       throw error;
