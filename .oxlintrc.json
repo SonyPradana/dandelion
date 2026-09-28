@@ -34,7 +34,11 @@
     "no-unused-expressions": "off",
     "no-unused-vars": [
       "deny",
-      { "args": "all", "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+      {
+        "args": "all",
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
     ],
     "no-continue": "off",
     "no-shadow": "off",
@@ -44,6 +48,13 @@
     "unicorn/prefer-classlist-toggle": "off",
     "unicorn/prefer-optional-catch-binding": "off",
     "unicorn/no-useless-fallback-in-spread": "off",
-    "unicorn/number-literal-case": "off"
+    "unicorn/number-literal-case": "off",
+    "unicorn/max-nested-calls": [
+      "deny",
+      {
+        "max": 5
+      }
+    ],
+    "one-var": "off"
   }
 }

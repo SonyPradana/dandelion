@@ -125,7 +125,8 @@ class DandelionStore {
   }
 
   async setConfig(config) {
-    const generation = (this._configGeneration += 1);
+    this._configGeneration += 1;
+    const generation = this._configGeneration;
     this._configCache = config;
     const pending = this._browser.storage.local.set(config);
     this._pendingWrite = pending;

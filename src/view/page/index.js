@@ -518,6 +518,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     rightCol.append(html`<div class="prod-col-header">Ringkasan</div>`);
+    const barWidth = Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100));
     rightCol.append(
       prodRow('🏆 Grand Total', overall.grandTotal.toLocaleString()),
       prodRow('📆 Hari Aktif', String(overall.activeDays)),
@@ -535,7 +536,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           { className: 'prod-bar-track' },
           h('div', {
             className: 'prod-bar-fill',
-            style: `width:${Math.min(100, Math.round((periodTotal / MONTHLY_TARGET) * 100))}%`,
+            style: `width:${barWidth}%`,
           }),
         ),
         h(

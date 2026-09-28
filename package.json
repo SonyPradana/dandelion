@@ -29,17 +29,17 @@
     "verify:firefox": "web-ext lint --source-dir dist/firefox"
   },
   "dependencies": {
-    "jose": "^6.2.3"
+    "jose": "^6.2.12"
   },
   "devDependencies": {
     "archiver": "^8.0.0",
     "cross-env": "^10.1.0",
     "dotenv": "^17.4.2",
-    "happy-dom": "^20.10.5",
+    "happy-dom": "^20.14.5",
     "oxfmt": "^0.53.0",
-    "oxlint": "^1.68.0",
-    "rolldown": "^1.1.0",
-    "vitest": "^4.1.8",
-    "web-ext": "^10.3.0"
+    "oxlint": "^1.85.0",
+    "rolldown": "^1.2.11",
+    "vitest": "^4.1.11",
+    "web-ext": "^10.7.0"
   }
 }
