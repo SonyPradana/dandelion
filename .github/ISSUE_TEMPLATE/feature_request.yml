@@ -1,0 +1,57 @@
+name: Feature request
+description: Propose a new feature or an improvement to an existing one
+title: '[Feature] '
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you facing?
+      description: Describe the situation you are in today, not the solution you have in mind.
+      placeholder: >
+        Every morning I open three form pages and retype the same details by hand
+        from a printed document.
+    validations:
+      required: true
+
+  - type: textarea
+    id: gain
+    attributes:
+      label: What do you gain from it?
+      description: >
+        Rough numbers are fine. If you do not have a number, describe what the
+        workaround costs you instead.
+      placeholder: >
+        Saves about 40 seconds per form. I fill 3 forms a day, so that is roughly
+        2 minutes a day. Right now I retype the same data from a printed document
+        every single time.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What should happen instead?
+      description: >
+        Optional. A rough idea is enough, and it is fine to not have one yet.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What have you tried so far?
+      description: >
+        Optional. Workarounds, other extensions, or a manual process that works
+        today.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: Optional. Links, screenshots, or related issues.
+
+  - type: checkboxes
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this has not been proposed yet
+          required: true

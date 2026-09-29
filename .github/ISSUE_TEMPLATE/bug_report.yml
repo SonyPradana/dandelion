@@ -1,0 +1,104 @@
+name: Bug report
+description: Report something that doesn't work as expected
+title: '[Bug] '
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Fill in the required fields if you can. If
+        something is unclear, just say so in the last field.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, and what you were doing at the time.
+      placeholder: The popup shows the old extension version even after I updated.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, starting from a fresh page load.
+      placeholder: |
+        1. Open the options page
+        2. Switch "Not Checked" to "Enabled"
+        3. Close and reopen the popup
+        4. The old value is still there
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: cause
+    attributes:
+      label: Any idea what causes it?
+      description: >
+        A guess is fine. Wrong guesses narrow the search down just as much as
+        right ones.
+      placeholder: >
+        Only happens after I use Import on the config page, so I think the value
+        reaches storage but the popup still reads the old one.
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension version
+      description: Shown in the popup and on the config page.
+      placeholder: '1.7.2'
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Firefox
+        - Edge
+        - Brave
+        - Opera
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version
+      placeholder: Chrome 141.0.7390.55
+    validations:
+      required: true
+
+  - type: input
+    id: last-worked
+    attributes:
+      label: Which version did it last work in?
+      description: Optional. Skip it if you don't know.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else?
+      description: >
+        Screenshots, console errors, how often it happens, anything you think is
+        relevant. All optional.
+
+  - type: checkboxes
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues and this has not been reported yet
+          required: true
