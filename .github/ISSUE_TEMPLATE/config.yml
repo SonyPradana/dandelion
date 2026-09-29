@@ -1,11 +1,1 @@
 blank_issues_enabled: false
-contact_links:
-  - name: Bug report
-    url: https://github.com/SonyPradana/dandelion/issues/new?template=bug_report.yml
-    about: Report something that does not work as expected
-  - name: Feature request
-    url: https://github.com/SonyPradana/dandelion/issues/new?template=feature_request.yml
-    about: Propose a new feature or an improvement
-  - name: Security vulnerability
-    url: https://github.com/SonyPradana/dandelion/security/advisories/new
-    about: Report privately through a security advisory (do not open a public issue)
