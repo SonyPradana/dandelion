@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import {
   getActiveRowIds,
   countUnresolvedRows,
+  getQueueStats,
   TABLE_ID,
 } from '../../../src/handlers/inspection/not-checked-utils';
 
@@ -15,60 +16,34 @@ describe('getActiveRowIds', () => {
   });
 
   it('returns only rows with a clickable button from the fixture', () => {
-    expect(getActiveRowIds()).toEqual(['rowfrmabc000002']);
+    expect(getActiveRowIds()).toEqual(['rowfrm000002', 'rowfrm000004']);
   });
 
-  it('treats a skipped row without a button as inactive', () => {
+  it('treats a "Selesai Pemeriksaan" row with a clickable button as done', () => {
     document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001"></div>
-        <div>Tidak diperiksa</div>
+      <div class="grid grid-cols-5">
+        <div id="rowfrm000001"><button type="button">Input Data</button></div>
+        <div>Selesai Pemeriksaan</div>
       </div>
     `;
     expect(getActiveRowIds()).toEqual([]);
   });
 
-  it('counts a skipped row with a clickable button as active', () => {
+  it('returns a "Belum Pemeriksaan" row with a clickable button as active', () => {
     document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
-        <div>Tidak diperiksa</div>
+      <div class="grid grid-cols-5">
+        <div id="rowfrm000001"><button type="button">Input Data</button></div>
+        <div>Belum Pemeriksaan</div>
       </div>
     `;
-    expect(getActiveRowIds()).toEqual(['rowfrmabc000001']);
+    expect(getActiveRowIds()).toEqual(['rowfrm000001']);
   });
 
-  it('treats a row with a non-gray success icon as done', () => {
+  it('treats a row without a button as inactive', () => {
     document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001">
-          <button type="button">Input Data</button>
-          <img src="icon-success.png" />
-        </div>
-        <div>Tidak diperiksa</div>
-      </div>
-    `;
-    expect(getActiveRowIds()).toEqual([]);
-  });
-
-  it('treats a row with a gray success icon and clickable button as active', () => {
-    document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001">
-          <button type="button">Input Data</button>
-          <img src="icon-success-gray.png" />
-        </div>
-        <div>Tidak diperiksa</div>
-      </div>
-    `;
-    expect(getActiveRowIds()).toEqual(['rowfrmabc000001']);
-  });
-
-  it('returns empty when every row shows a done state', () => {
-    document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
-        <div>Selesai diperiksa</div>
+      <div class="grid grid-cols-5">
+        <div id="rowfrm000001"></div>
+        <div>Belum Pemeriksaan</div>
       </div>
     `;
     expect(getActiveRowIds()).toEqual([]);
@@ -76,123 +51,71 @@ describe('getActiveRowIds', () => {
 
   it('treats a disabled-button row as inactive', () => {
     document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001">
+      <div class="grid grid-cols-5">
+        <div id="rowfrm000001">
           <button type="button" disabled>Input Data</button>
         </div>
-        <div>Dalam Pemeriksaan</div>
+        <div>Belum Pemeriksaan</div>
       </div>
     `;
     expect(getActiveRowIds()).toEqual([]);
   });
 
-  it('returns the row id for a pending row with a clickable button', () => {
-    document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
-        <div>Dalam Pemeriksaan</div>
-      </div>
-    `;
-    expect(getActiveRowIds()).toEqual(['rowfrmabc000001']);
-  });
-
-  describe('markup list aktual', () => {
-    it('counts an unfilled mandiri row (gray icon, clickable button) as active', () => {
+  describe('mandiri (table) rows', () => {
+    it('treats a non-gray success icon row as done', () => {
       document.body.innerHTML = `
-        <div class="grid">
-          <div id="rowfrmabc1001">
-            <img src="/images/icons/icon-success-gray.svg" alt="" />
-            <button type="button">Input Data</button>
-          </div>
-        </div>
-      `;
-      expect(getActiveRowIds()).toEqual(['rowfrmabc1001']);
-    });
-
-    it('treats a filled mandiri row (non-gray icon, clickable button) as done', () => {
-      document.body.innerHTML = `
-        <div class="grid">
-          <div id="rowfrmabc1002">
-            <img src="/images/icons/icon-success.svg" alt="" />
-            <button type="button">Input Data</button>
-          </div>
-        </div>
+        <table>
+          <tbody>
+            <tr>
+              <td><img src="/images/icons/icon-success.svg" alt="" /></td>
+              <td><div id="rowfrm000002"><button type="button">Input Data</button></div></td>
+            </tr>
+          </tbody>
+        </table>
       `;
       expect(getActiveRowIds()).toEqual([]);
     });
 
-    it('treats a "Tidak diperiksa" row with a non-clickable div as inactive', () => {
+    it('counts a gray success icon row with a clickable button as active', () => {
       document.body.innerHTML = `
-        <div class="grid">
-          <div id="rowfrmabc1003">
-            <span class="badge">Tidak diperiksa</span>
-            <div class="cursor-not-allowed">Tidak Periksa</div>
-          </div>
-        </div>
+        <table>
+          <tbody>
+            <tr>
+              <td><img src="/images/icons/icon-success-gray.svg" alt="" /></td>
+              <td><div id="rowfrm000002"><button type="button">Input Data</button></div></td>
+            </tr>
+          </tbody>
+        </table>
       `;
-      expect(getActiveRowIds()).toEqual([]);
+      expect(getActiveRowIds()).toEqual(['rowfrm000002']);
     });
 
-    it('counts a "Dalam Pemeriksaan" row with a clickable button as active', () => {
-      document.body.innerHTML = `
-        <div class="grid">
-          <div id="rowfrmabc1004">
-            <span class="badge">Dalam Pemeriksaan</span>
-            <button type="button">Input Data</button>
-          </div>
-        </div>
-      `;
-      expect(getActiveRowIds()).toEqual(['rowfrmabc1004']);
-    });
-
-    it('treats a "Selesai diperiksa" row with a clickable button as done', () => {
-      document.body.innerHTML = `
-        <div class="grid">
-          <div id="rowfrmabc1005">
-            <span class="badge">Selesai diperiksa</span>
-            <button type="button">Input Data</button>
-          </div>
-        </div>
-      `;
-      expect(getActiveRowIds()).toEqual([]);
-    });
-
-    it('scans a full list and returns only the still-active rows', () => {
+    it('scans a mixed grid + table list and returns only active rows', () => {
       document.body.innerHTML = `
         <div id="${TABLE_ID}">
-          <div class="grid">
-            <div id="rowfrmabc1001">
-              <img src="/images/icons/icon-success-gray.svg" alt="" />
-              <button type="button">Input Data</button>
-            </div>
+          <div class="grid grid-cols-5">
+            <div id="rowfrm000001"><button type="button">Input Data</button></div>
+            <div>Selesai Pemeriksaan</div>
           </div>
-          <div class="grid">
-            <div id="rowfrmabc1002">
-              <img src="/images/icons/icon-success.svg" alt="" />
-              <button type="button">Input Data</button>
-            </div>
+          <div class="grid grid-cols-5">
+            <div id="rowfrm000002"><button type="button">Input Data</button></div>
+            <div>Belum Pemeriksaan</div>
           </div>
-          <div class="grid">
-            <div id="rowfrmabc1003">
-              <span class="badge">Tidak diperiksa</span>
-              <div class="cursor-not-allowed">Tidak Periksa</div>
-            </div>
-          </div>
-          <div class="grid">
-            <div id="rowfrmabc1004">
-              <span class="badge">Dalam Pemeriksaan</span>
-              <button type="button">Input Data</button>
-            </div>
-          </div>
-          <div class="grid">
-            <div id="rowfrmabc1005">
-              <span class="badge">Selesai diperiksa</span>
-              <button type="button">Input Data</button>
-            </div>
-          </div>
+          <table>
+            <tbody>
+              <tr>
+                <td><img src="/images/icons/icon-success.svg" alt="" /></td>
+                <td><div id="rowfrm000003"><button type="button">Input Data</button></div></td>
+              </tr>
+              <tr>
+                <td><img src="/images/icons/icon-success-gray.svg" alt="" /></td>
+                <td><div id="rowfrm000004"><button type="button">Input Data</button></div></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       `;
-      expect(getActiveRowIds()).toEqual(['rowfrmabc1001', 'rowfrmabc1004']);
+      expect(getActiveRowIds()).toEqual(['rowfrm000002', 'rowfrm000004']);
     });
   });
 });
@@ -202,35 +125,11 @@ describe('countUnresolvedRows', () => {
     document.body.innerHTML = rowsHtml;
   });
 
-  it('counts a disabled-button row without a done state as unresolved', () => {
-    document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001">
-          <button type="button" disabled>Input Data</button>
-        </div>
-        <div>Dalam Pemeriksaan</div>
-      </div>
-    `;
-    expect(countUnresolvedRows()).toBe(1);
-  });
-
-  it('counts a non-clickable row without a done state as unresolved', () => {
-    document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001">
-          <span class="badge">Tidak diperiksa</span>
-          <div class="cursor-not-allowed">Tidak Periksa</div>
-        </div>
-      </div>
-    `;
-    expect(countUnresolvedRows()).toBe(1);
-  });
-
   it('ignores rows that show a done state', () => {
     document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001"><button type="button">Input Data</button></div>
-        <div>Selesai diperiksa</div>
+      <div class="grid grid-cols-5">
+        <div id="rowfrm000001"><button type="button">Input Data</button></div>
+        <div>Selesai Pemeriksaan</div>
       </div>
     `;
     expect(countUnresolvedRows()).toBe(0);
@@ -238,13 +137,66 @@ describe('countUnresolvedRows', () => {
 
   it('treats a non-gray success icon row as done', () => {
     document.body.innerHTML = `
-      <div class="grid">
-        <div id="rowfrmabc000001">
-          <button type="button">Input Data</button>
-          <img src="icon-success.png" />
-        </div>
-      </div>
+      <table>
+        <tbody>
+          <tr>
+            <td><img src="icon-success.svg" alt="" /></td>
+            <td><div id="rowfrm000001"><button type="button">Input Data</button></div></td>
+          </tr>
+        </tbody>
+      </table>
     `;
     expect(countUnresolvedRows()).toBe(0);
+  });
+
+  it('counts a disabled-button row without a done state as unresolved', () => {
+    document.body.innerHTML = `
+      <div class="grid grid-cols-5">
+        <div id="rowfrm000001">
+          <button type="button" disabled>Input Data</button>
+        </div>
+        <div>Belum Pemeriksaan</div>
+      </div>
+    `;
+    expect(countUnresolvedRows()).toBe(1);
+  });
+
+  it('counts a non-clickable row without a done state as unresolved', () => {
+    document.body.innerHTML = `
+      <div class="grid grid-cols-5">
+        <div id="rowfrm000001">
+          <div class="cursor-not-allowed">Input Data</div>
+        </div>
+        <div>Belum Pemeriksaan</div>
+      </div>
+    `;
+    expect(countUnresolvedRows()).toBe(1);
+  });
+});
+
+describe('getQueueStats', () => {
+  beforeEach(() => {
+    document.body.innerHTML = rowsHtml;
+  });
+
+  it('splits master list ids into pending and done', () => {
+    const stats = getQueueStats(['rowfrm000001', 'rowfrm000002', 'rowfrm000003', 'rowfrm000004']);
+
+    expect(stats.foundIds).toEqual([
+      'rowfrm000001',
+      'rowfrm000002',
+      'rowfrm000003',
+      'rowfrm000004',
+    ]);
+    expect(stats.pendingIds).toEqual(['rowfrm000002', 'rowfrm000004']);
+    expect(stats.doneIds).toEqual(['rowfrm000001', 'rowfrm000003']);
+  });
+
+  it('skips master list ids that are not present in the DOM', () => {
+    const stats = getQueueStats(['rowfrm000002', 'rowfrm999999']);
+
+    expect(stats.foundIds).toEqual(['rowfrm000002']);
+    expect(stats.pendingIds).toEqual(['rowfrm000002']);
+    expect(stats.doneIds).toEqual([]);
   });
 });

@@ -27,9 +27,9 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   waitForRow: vi.fn(() => new Promise(() => {})),
   waitForElement: vi.fn(),
   clickFinishServiceButton: vi.fn(),
-  hasRemainingForms: vi.fn().mockResolvedValue(false),
   getActiveRowIds: vi.fn(() => []),
   countUnresolvedRows: vi.fn(() => 0),
+  isRowDone: vi.fn(() => false),
   TABLE_ID: 'tableLayanan',
 }));
 
@@ -94,8 +94,8 @@ describe('zero-mode', () => {
       const state = await store.getZenModeState();
       expect(state).toEqual({
         active: true,
-        queue: ['rowfrmabc000002'],
-        total: 1,
+        queue: ['rowfrm000002', 'rowfrm000004'],
+        total: 2,
         mode: 'zero',
       });
     });
@@ -107,7 +107,7 @@ describe('zero-mode', () => {
           profile1: {
             name: 'Default Profile',
             notChecked: {
-              notCheckedList: 'rowfrmabc000002',
+              notCheckedList: 'rowfrm000002',
             },
             zenMode: {},
           },
@@ -118,7 +118,7 @@ describe('zero-mode', () => {
       await startZeroAutomation();
 
       const state = await store.getZenModeState();
-      expect(state.queue).toEqual(['rowfrmabc000002']);
+      expect(state.queue).toEqual(['rowfrm000002', 'rowfrm000004']);
       expect(state.mode).toBe('zero');
     });
 
@@ -129,7 +129,7 @@ describe('zero-mode', () => {
           profile1: {
             name: 'Default Profile',
             notChecked: {
-              notCheckedList: 'rowfrmabc000001;rowfrmabc000002',
+              notCheckedList: 'rowfrm000002',
             },
             zenMode: {},
           },
@@ -141,7 +141,7 @@ describe('zero-mode', () => {
 
       expect(mockNotify.confirm).toHaveBeenCalledWith(
         'Zero Mode',
-        expect.stringContaining('Ditemukan 1 form aktif (1 di-uncheck, 0 diisi). Mulai Zero Mode?'),
+        expect.stringContaining('Ditemukan 2 form aktif (1 di-uncheck, 1 diisi). Mulai Zero Mode?'),
       );
     });
 
@@ -151,7 +151,7 @@ describe('zero-mode', () => {
           <div id="rowfrm000099">
             <button type="button">Input Data</button>
           </div>
-          <div> Selesai diperiksa </div>
+          <div> Selesai Pemeriksaan </div>
         </div>
       `;
 
@@ -186,7 +186,7 @@ describe('zero-mode', () => {
           profile1: {
             name: 'Default Profile',
             notChecked: {
-              notCheckedList: 'rowfrmabc000002',
+              notCheckedList: 'rowfrm000002',
             },
             zenMode: {},
           },
@@ -195,7 +195,7 @@ describe('zero-mode', () => {
 
       document.body.innerHTML = '';
       const rowEl = document.createElement('div');
-      rowEl.id = 'rowfrmabc000002';
+      rowEl.id = 'rowfrm000002';
       rowEl.innerHTML = '<label>Form Title</label><button type="button">Input Data</button>';
       const grid = document.createElement('div');
       grid.className = 'grid';
@@ -223,7 +223,7 @@ describe('zero-mode', () => {
           profile1: {
             name: 'Default Profile',
             notChecked: {
-              notCheckedList: 'rowfrmabc000002',
+              notCheckedList: 'rowfrm000002',
             },
             zenMode: {},
           },
@@ -232,7 +232,7 @@ describe('zero-mode', () => {
 
       document.body.innerHTML = '';
       const rowEl = document.createElement('div');
-      rowEl.id = 'rowfrmabc000002';
+      rowEl.id = 'rowfrm000002';
       rowEl.innerHTML = '<label>Form Title</label><button type="button">Input Data</button>';
       const grid = document.createElement('div');
       grid.className = 'grid';
@@ -257,7 +257,7 @@ describe('zero-mode', () => {
     it('should visit and fill an item that is NOT in the notCheckedList', async () => {
       document.body.innerHTML = '';
       const rowEl = document.createElement('div');
-      rowEl.id = 'rowfrmabc000002';
+      rowEl.id = 'rowfrm000002';
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = 'Input Data';
@@ -278,13 +278,13 @@ describe('zero-mode', () => {
       expect(waitForElement).not.toHaveBeenCalled();
       expect(btn.click).toHaveBeenCalled();
       expect(grid.style.backgroundColor).toBe('#e0f2fe');
-      expect(await getZeroQueue()).toEqual(['rowfrmabc000002']);
+      expect(await getZeroQueue()).toEqual(['rowfrm000002']);
     });
 
     it('should emit the existing zenMode event when filling an item', async () => {
       document.body.innerHTML = '';
       const rowEl = document.createElement('div');
-      rowEl.id = 'rowfrmabc000002';
+      rowEl.id = 'rowfrm000002';
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.textContent = 'Input Data';
@@ -313,19 +313,19 @@ describe('zero-mode', () => {
     it('should expose the shared queue only for zero sessions', async () => {
       await store.setZenModeState({
         active: true,
-        queue: ['rowfrmabc000002'],
+        queue: ['rowfrm000002'],
         total: 1,
         mode: 'zero',
       });
 
-      expect(await getZeroQueue()).toEqual(['rowfrmabc000002']);
+      expect(await getZeroQueue()).toEqual(['rowfrm000002']);
       expect(await isZeroRunning()).toBe(true);
     });
 
     it('should report not running for zen-mode sessions', async () => {
       await store.setZenModeState({
         active: true,
-        queue: ['rowfrmabc000002'],
+        queue: ['rowfrm000002'],
         total: 1,
         mode: 'zen',
       });
@@ -387,7 +387,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
-      countUnresolvedRows.mockReturnValue(['rowfrmabc000001', 'rowfrmabc000002'].length);
+      countUnresolvedRows.mockReturnValue(['rowfrm000001', 'rowfrm000002'].length);
       mockNotify.confirm.mockResolvedValue(true);
 
       initializeZeroMode();
@@ -420,9 +420,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
-      countUnresolvedRows.mockReturnValue(
-        ['rowfrmabc000001', 'rowfrmabc000002', 'rowfrmabc000003'].length,
-      );
+      countUnresolvedRows.mockReturnValue(['rowfrm000001', 'rowfrm000002', 'rowfrm000003'].length);
       mockNotify.confirm.mockResolvedValue(false);
 
       initializeZeroMode();
@@ -520,7 +518,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
-      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      document.body.innerHTML = '<div class="grid"><div>Belum Pemeriksaan</div></div>';
       countUnresolvedRows.mockReturnValue(0);
       mockNotify.confirm.mockResolvedValue(true);
 
@@ -547,7 +545,7 @@ describe('zero-mode', () => {
         mode: 'zero',
       });
 
-      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      document.body.innerHTML = '<div class="grid"><div>Belum Pemeriksaan</div></div>';
       waitForRow.mockResolvedValue(null);
       mockNotify.confirm.mockResolvedValue(true);
 
@@ -612,7 +610,7 @@ describe('zero-mode', () => {
             <div id="rowfrmskip1">
               <button type="button" disabled>Input Data</button>
             </div>
-            <div>Dalam Pemeriksaan</div>
+            <div>Belum Pemeriksaan</div>
           </div>
         </div>
       `;

@@ -4,6 +4,26 @@
 export const TABLE_ID = 'tableLayanan';
 
 /**
+ * Status badge text shown on a form row once the examination is finished.
+ */
+export const DONE_TEXT = 'Selesai Pemeriksaan';
+
+/**
+ * Checks whether a form row is already finished.
+ * @param {HTMLElement|null} row - The closest .grid / tr container of a row.
+ * @returns {boolean} True if the row no longer needs to be filled.
+ */
+export function isRowDone(row) {
+  if (!row) return false;
+
+  const successImg = row.querySelector('img[src*="icon-success"]');
+
+  return (
+    row.textContent.includes(DONE_TEXT) || Boolean(successImg && !successImg.src.includes('gray'))
+  );
+}
+
+/**
  * Checks if the page is in a state ready for processing (active examination).
  * @returns {boolean} True if the page indicators show an active processing state.
  */
@@ -33,16 +53,7 @@ export function getQueueStats(masterList) {
     const el = document.getElementById(id);
     if (el) {
       foundIds.push(id);
-      const row = el.closest('.grid, tr');
-      const text = row ? row.textContent : '';
-
-      const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
-      const isDone =
-        text.includes('Tidak diperiksa') ||
-        text.includes('Selesai diperiksa') ||
-        (successImg && !successImg.src.includes('gray'));
-
-      if (isDone) {
+      if (isRowDone(el.closest('.grid, tr'))) {
         doneIds.push(id);
       } else {
         pendingIds.push(id);
@@ -68,14 +79,10 @@ export function getActiveRowIds() {
     const button = el.querySelector('button');
     if (!row) return;
 
-    const successImg = row.querySelector('img[src*="icon-success"]');
-    const isDone =
-      row.textContent.includes('Selesai diperiksa') ||
-      (successImg && !successImg.src.includes('gray'));
     const isClickable =
       button && !button.disabled && !button.classList.contains('cursor-not-allowed');
 
-    if (!isDone && isClickable) {
+    if (!isRowDone(row) && isClickable) {
       activeIds.push(el.id);
     }
   });
@@ -98,36 +105,10 @@ export function countUnresolvedRows() {
     const row = el.closest('.grid, tr');
     if (!row) return;
 
-    const successImg = row.querySelector('img[src*="icon-success"]');
-    const isDone =
-      row.textContent.includes('Selesai diperiksa') ||
-      (successImg && !successImg.src.includes('gray'));
-    if (!isDone) unresolved += 1;
+    if (!isRowDone(row)) unresolved += 1;
   });
 
   return unresolved;
-}
-
-/**
- * Checks if there are still rows with "Dalam Pemeriksaan" status.
- * @param {number} [timeout=5000] - Maximum time to wait in milliseconds.
- * @returns {Promise<boolean>} Resolves to true if any form is still being examined.
- */
-export function hasRemainingForms(timeout = 5000) {
-  return new Promise((resolve) => {
-    if (document.body.textContent.includes('Dalam Pemeriksaan')) {
-      return resolve(true);
-    }
-    const startTime = Date.now();
-    const check = () => {
-      if (Date.now() - startTime > timeout) {
-        resolve(false);
-      } else {
-        setTimeout(check, 300);
-      }
-    };
-    check();
-  });
 }
 
 /**
