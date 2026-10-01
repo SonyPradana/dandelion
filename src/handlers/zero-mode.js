@@ -12,6 +12,7 @@ import {
   clickFinishServiceButton,
   getActiveRowIds,
   countUnresolvedRows,
+  isRowDone,
   TABLE_ID,
 } from './inspection/not-checked-utils';
 import { notify } from '../components/notification';
@@ -158,14 +159,9 @@ async function processNextZeroItem() {
   const btn = rowElement.querySelector('button');
 
   // Re-verify if still pending and clickable
-  const successImg = row ? row.querySelector('img[src*="icon-success"]') : null;
-  const isDone =
-    row &&
-    (row.textContent.includes('Selesai diperiksa') ||
-      (successImg && !successImg.src.includes('gray')));
   const isClickable = btn && !btn.disabled && !btn.classList.contains('cursor-not-allowed');
 
-  if (isDone || !isClickable) {
+  if (isRowDone(row) || !isClickable) {
     await getNextFromQueue();
     processNextZeroItem();
     return;
@@ -197,8 +193,7 @@ async function processNextZeroItem() {
  * @param {HTMLElement|null} row - The closest .grid / tr container.
  */
 async function processUncheckItem(rowElement, row) {
-  const rowText = row ? row.textContent : '';
-  if (rowText.includes('Tidak diperiksa') || rowText.includes('Selesai diperiksa')) {
+  if (isRowDone(row)) {
     await getNextFromQueue();
     processNextZeroItem();
     return;

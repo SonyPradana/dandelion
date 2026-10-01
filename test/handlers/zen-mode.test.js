@@ -27,9 +27,9 @@ vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   waitForRow: vi.fn(),
   waitForElement: vi.fn(),
   clickFinishServiceButton: vi.fn(),
-  hasRemainingForms: vi.fn().mockResolvedValue(false),
   getActiveRowIds: vi.fn(() => []),
   countUnresolvedRows: vi.fn(() => 0),
+  isRowDone: vi.fn(() => false),
   TABLE_ID: 'tableLayanan',
 }));
 
@@ -57,7 +57,7 @@ describe('zen-mode', () => {
   });
 
   describe('startZenAutomation', () => {
-    it('should queue only pending (Dalam Pemeriksaan) rows', async () => {
+    it('should queue only pending rows, skipping the finished ones', async () => {
       mockNotify.confirm.mockResolvedValue(true);
 
       await startZenAutomation();
@@ -65,8 +65,8 @@ describe('zen-mode', () => {
       const state = await store.getZenModeState();
       expect(state).toEqual({
         active: true,
-        queue: ['rowfrmabc000002'],
-        total: 1,
+        queue: ['rowfrm000002', 'rowfrm000004'],
+        total: 2,
         mode: 'zen',
       });
     });
@@ -77,7 +77,7 @@ describe('zen-mode', () => {
           <div id="rowfrm000099">
             <button type="button">Input Data</button>
           </div>
-          <div> Selesai diperiksa </div>
+          <div> Selesai Pemeriksaan </div>
         </div>
       `;
 
@@ -136,7 +136,7 @@ describe('zen-mode', () => {
       rowEl.id = 'rowfrmzzz';
       const row = document.createElement('div');
       row.className = 'grid';
-      row.innerHTML = '<div>Selesai diperiksa</div>';
+      row.innerHTML = '<div>Selesai Pemeriksaan</div>';
       row.appendChild(rowEl);
       document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
       document.querySelector(`#${TABLE_ID}`).appendChild(row);
@@ -244,7 +244,7 @@ describe('zen-mode', () => {
 
       document.body.innerHTML = `
         <div class="grid">
-          <div id="rowfrmzzz"><div>Selesai diperiksa</div></div>
+          <div id="rowfrmzzz"><div>Selesai Pemeriksaan</div></div>
         </div>
       `;
       waitForRow.mockResolvedValue(document.getElementById('rowfrmzzz'));
@@ -276,7 +276,7 @@ describe('zen-mode', () => {
 
       document.body.innerHTML = `
         <div class="grid">
-          <div id="rowfrmzzz"><div>Selesai diperiksa</div></div>
+          <div id="rowfrmzzz"><div>Selesai Pemeriksaan</div></div>
         </div>
       `;
       waitForRow.mockResolvedValue(document.getElementById('rowfrmzzz'));
@@ -293,7 +293,7 @@ describe('zen-mode', () => {
 
       document.body.innerHTML = `<div id="${TABLE_ID}">
         <div class="grid">
-          <div id="rowfrmzzz"><div>Selesai diperiksa</div></div>
+          <div id="rowfrmzzz"><div>Selesai Pemeriksaan</div></div>
         </div>
       </div>`;
       await vi.advanceTimersByTimeAsync(500);
@@ -321,7 +321,7 @@ describe('zen-mode', () => {
         mode: 'zen',
       });
 
-      document.body.innerHTML = '<div class="grid"><div>Dalam Pemeriksaan</div></div>';
+      document.body.innerHTML = '<div class="grid"><div>Belum Pemeriksaan</div></div>';
       waitForRow.mockResolvedValue(null);
       mockNotify.confirm.mockResolvedValue(true);
 
@@ -372,7 +372,7 @@ describe('zen-mode', () => {
           <div id="rowfrmskip1">
             <button type="button" disabled>Input Data</button>
           </div>
-          <div>Dalam Pemeriksaan</div>
+          <div>Belum Pemeriksaan</div>
         </div>
       `;
       getActiveRowIds.mockImplementation(actual.getActiveRowIds);
