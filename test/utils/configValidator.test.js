@@ -102,10 +102,10 @@ describe('validateConfig', () => {
 
   it('should flag non-number delay fields', () => {
     const bad = structuredClone(validConfig);
-    bad.profiles.profile1.notChecked.automationDelay = '2000';
+    bad.profiles.profile1.registerForm.retryDelay = '2000';
     const result = validateConfig(bad);
     expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain('automationDelay');
+    expect(result.errors[0]).toContain('retryDelay');
     expect(result.errors[0]).toContain('angka');
   });
 
@@ -121,10 +121,10 @@ describe('validateConfig', () => {
   it('should report negative numbers with a distinct message from non-numbers', () => {
     const bad = structuredClone(validConfig);
     bad.profiles.profile1.registerForm.retryMax = -1;
-    bad.profiles.profile1.notChecked.automationDelay = '2000';
+    bad.profiles.profile1.zenMode.timeout = 'x';
     const result = validateConfig(bad);
     expect(result.errors.some((e) => e.includes('retryMax') && e.includes('negatif'))).toBe(true);
-    expect(result.errors.some((e) => e.includes('automationDelay') && e.includes('angka'))).toBe(
+    expect(result.errors.some((e) => e.includes('zenMode.timeout') && e.includes('angka'))).toBe(
       true,
     );
   });
@@ -142,7 +142,7 @@ describe('validateConfig', () => {
   it('should collect multiple profile errors', () => {
     const bad = structuredClone(validConfig);
     bad.profiles.profile1.formSkrining.url = 1;
-    bad.profiles.profile1.notChecked.itemDelay = 'x';
+    bad.profiles.profile1.registerForm.retryMax = 'x';
     const result = validateConfig(bad);
     expect(result.errors.length).toBe(2);
   });

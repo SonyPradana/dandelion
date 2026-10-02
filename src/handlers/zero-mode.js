@@ -8,7 +8,6 @@ import {
 } from '../utils/zenMode';
 import {
   waitForRow,
-  waitForElement,
   clickFinishServiceButton,
   getActiveRowIds,
   countUnresolvedRows,
@@ -20,8 +19,6 @@ import bus from '../utils/hooks';
 import { showFlashDataPanelIfEnabled } from './flashData';
 import { clearFlashData } from '../utils/flashSession';
 import { store } from '../store.js';
-
-const ZERO_RELOAD_DELAY = 1000;
 
 let isZeroAutomationActive = false;
 
@@ -61,17 +58,17 @@ export async function startZeroAutomation() {
     return;
   }
 
-  let uncheckCount = 0;
+  let skipCount = 0;
   for (const id of pendingIds) {
     if (await isInNotCheckedList(id)) {
-      uncheckCount += 1;
+      skipCount += 1;
     }
   }
 
   const confirmPromise = notify.confirm(
     'Zero Mode',
-    `Ditemukan ${pendingIds.length} form aktif (${uncheckCount} di-uncheck, ${
-      pendingIds.length - uncheckCount
+    `Ditemukan ${pendingIds.length} form aktif (${skipCount} dilewati, ${
+      pendingIds.length - skipCount
     } diisi). Mulai Zero Mode?`,
   );
   showFlashDataPanelIfEnabled();
@@ -167,10 +164,13 @@ async function processNextZeroItem() {
     return;
   }
 
-  // Items in the "Not Checked" master list are marked as not-checked instead
-  // of being visited and filled.
+  // Rows on the "Not Checked" list are skipped outright: no click and no
+  // reload. Zero still emits didProcessItem so the skip counts as processed
+  // work in the productivity tracker.
   if (await isInNotCheckedList(nextId)) {
-    await processUncheckItem(rowElement, row);
+    await getNextFromQueue();
+    bus.emit('notChecked:didProcessItem');
+    processNextZeroItem();
     return;
   }
 
@@ -184,44 +184,6 @@ async function processNextZeroItem() {
   // Fallback
   await getNextFromQueue();
   processNextZeroItem();
-}
-
-/**
- * Marks a form as not-checked: clicks the row label and confirms "Tidak Periksa",
- * then shifts the queue and reloads before continuing.
- * @param {HTMLElement} rowElement - The row element found by waitForRow.
- * @param {HTMLElement|null} row - The closest .grid / tr container.
- */
-async function processUncheckItem(rowElement, row) {
-  if (isRowDone(row)) {
-    await getNextFromQueue();
-    processNextZeroItem();
-    return;
-  }
-
-  const label = row ? row.querySelector('label') : rowElement.querySelector('label');
-  if (!label) {
-    await getNextFromQueue();
-    processNextZeroItem();
-    return;
-  }
-
-  if (row) row.style.backgroundColor = '#fff3e5';
-  label.click();
-
-  try {
-    const confirmBtn = await waitForElement('button', 'Tidak Periksa', 6000);
-    await getNextFromQueue();
-    confirmBtn.click();
-    bus.emit('notChecked:didProcessItem');
-
-    setTimeout(() => {
-      window.location.reload();
-    }, ZERO_RELOAD_DELAY);
-  } catch {
-    await getNextFromQueue();
-    processNextZeroItem();
-  }
 }
 
 /**

@@ -23,9 +23,16 @@ vi.mock('../../src/handlers/flashData', () => ({
   showFlashDataPanelIfEnabled: vi.fn(),
 }));
 
+const mockNotChecked = vi.hoisted(() => ({
+  isInNotCheckedList: vi.fn(async () => false),
+}));
+
+vi.mock('../../src/utils/notChecked', () => ({
+  isInNotCheckedList: mockNotChecked.isInNotCheckedList,
+}));
+
 vi.mock('../../src/handlers/inspection/not-checked-utils', () => ({
   waitForRow: vi.fn(),
-  waitForElement: vi.fn(),
   clickFinishServiceButton: vi.fn(),
   getActiveRowIds: vi.fn(() => []),
   countUnresolvedRows: vi.fn(() => 0),
@@ -42,12 +49,14 @@ import {
   waitForRow,
   clickFinishServiceButton,
 } from '../../src/handlers/inspection/not-checked-utils';
+import { isInNotCheckedList } from '../../src/utils/notChecked';
 
 let TABLE_ID = null;
 
 describe('zen-mode', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    isInNotCheckedList.mockResolvedValue(false);
     store.init(new MemoryBackend());
     document.body.innerHTML = rowsHtml;
     const actual = await vi.importActual('../../src/handlers/inspection/not-checked-utils');
@@ -391,6 +400,124 @@ describe('zen-mode', () => {
         expect.stringContaining('Ada 1 item yang belum selesai. Tetap selesaikan layanan?'),
       );
       expect(clickFinishServiceButton).toHaveBeenCalled();
+    });
+  });
+
+  describe('skipping the "Not Checked" list', () => {
+    /**
+     * Advances the fake timer until all queued microtasks and timers settle.
+     */
+    async function flushAll() {
+      for (let i = 0; i < 20; i += 1) {
+        await vi.advanceTimersByTimeAsync(0);
+      }
+    }
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    /**
+     * Builds a pending row with a clickable button and a "Belum Pemeriksaan"
+     * badge inside the list table.
+     */
+    function mountPendingRow(id) {
+      const rowEl = document.createElement('div');
+      rowEl.id = id;
+      rowEl.innerHTML = '<button type="button">Input Data</button>';
+      const row = document.createElement('div');
+      row.className = 'grid';
+      row.appendChild(rowEl);
+      const badge = document.createElement('div');
+      badge.textContent = 'Belum Pemeriksaan';
+      row.appendChild(badge);
+      document.body.innerHTML = `<div id="${TABLE_ID}"></div>`;
+      document.querySelector(`#${TABLE_ID}`).appendChild(row);
+      return rowEl;
+    }
+
+    it('should dequeue a listed row without clicking or emitting', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend: FreshBackend } = await import('../__support__/memory-backend');
+      const { initializeZenMode: initZen } = await import('../../src/handlers/zen-mode');
+      const hooks = await import('../../src/utils/hooks');
+      const freshBus = hooks.default;
+
+      freshStore.init(new FreshBackend());
+      await freshStore.setConfig({
+        activeProfile: 'p1',
+        profiles: {
+          p1: { name: 'P1', notChecked: { notCheckedList: 'rowfrmA' }, zenMode: {} },
+        },
+      });
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmA'],
+        total: 1,
+        mode: 'zen',
+      });
+
+      const zenSpy = vi.fn();
+      const ncSpy = vi.fn();
+      freshBus.on('zenMode:didProcessItem', zenSpy);
+      freshBus.on('notChecked:didProcessItem', ncSpy);
+      isInNotCheckedList.mockImplementation(async (id) => id === 'rowfrmA');
+
+      const rowEl = mountPendingRow('rowfrmA');
+      const clickSpy = vi.fn();
+      rowEl.querySelector('button').addEventListener('click', clickSpy);
+
+      waitForRow.mockResolvedValue(rowEl);
+      countUnresolvedRows.mockReturnValue(0);
+
+      initZen();
+      await flushAll();
+
+      expect(clickSpy).not.toHaveBeenCalled();
+      expect(zenSpy).not.toHaveBeenCalled();
+      expect(ncSpy).not.toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({ queue: [] });
+    });
+
+    it('should still click rows that are not on the list', async () => {
+      vi.useFakeTimers();
+      vi.resetModules();
+      const { store: freshStore } = await import('../../src/store');
+      const { MemoryBackend: FreshBackend } = await import('../__support__/memory-backend');
+      const { initializeZenMode: initZen } = await import('../../src/handlers/zen-mode');
+      const hooks = await import('../../src/utils/hooks');
+      const freshBus = hooks.default;
+
+      freshStore.init(new FreshBackend());
+      await freshStore.setConfig({
+        activeProfile: 'p1',
+        profiles: { p1: { name: 'P1', notChecked: { notCheckedList: '' }, zenMode: {} } },
+      });
+      await freshStore.setZenModeState({
+        active: true,
+        queue: ['rowfrmB'],
+        total: 1,
+        mode: 'zen',
+      });
+
+      const zenSpy = vi.fn();
+      freshBus.on('zenMode:didProcessItem', zenSpy);
+
+      const rowEl = mountPendingRow('rowfrmB');
+      const clickSpy = vi.fn();
+      rowEl.querySelector('button').addEventListener('click', clickSpy);
+
+      waitForRow.mockResolvedValue(rowEl);
+      isInNotCheckedList.mockResolvedValue(false);
+
+      initZen();
+      await flushAll();
+
+      expect(clickSpy).toHaveBeenCalled();
+      expect(zenSpy).toHaveBeenCalled();
+      expect(await freshStore.getZenModeState()).toMatchObject({ queue: ['rowfrmB'] });
     });
   });
 });

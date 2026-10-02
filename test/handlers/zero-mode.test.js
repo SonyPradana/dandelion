@@ -122,7 +122,7 @@ describe('zero-mode', () => {
       expect(state.mode).toBe('zero');
     });
 
-    it('should report uncheck and fill counts in the confirm message', async () => {
+    it('should report skip and fill counts in the confirm message', async () => {
       await store.setConfig({
         activeProfile: 'profile1',
         profiles: {
@@ -141,7 +141,7 @@ describe('zero-mode', () => {
 
       expect(mockNotify.confirm).toHaveBeenCalledWith(
         'Zero Mode',
-        expect.stringContaining('Ditemukan 2 form aktif (1 di-uncheck, 1 diisi). Mulai Zero Mode?'),
+        expect.stringContaining('Ditemukan 2 form aktif (1 dilewati, 1 diisi). Mulai Zero Mode?'),
       );
     });
 
@@ -179,7 +179,7 @@ describe('zero-mode', () => {
   });
 
   describe('processNextZeroItem', () => {
-    it('should uncheck an item that is in the notCheckedList', async () => {
+    it('should skip an item that is in the notCheckedList without clicking', async () => {
       await store.setConfig({
         activeProfile: 'profile1',
         profiles: {
@@ -196,27 +196,28 @@ describe('zero-mode', () => {
       document.body.innerHTML = '';
       const rowEl = document.createElement('div');
       rowEl.id = 'rowfrm000002';
-      rowEl.innerHTML = '<label>Form Title</label><button type="button">Input Data</button>';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'Input Data';
+      btn.click = vi.fn();
+      rowEl.appendChild(btn);
       const grid = document.createElement('div');
       grid.className = 'grid';
       grid.appendChild(rowEl);
       document.body.appendChild(grid);
 
-      const confirmBtn = { click: vi.fn() };
       vi.mocked(waitForRow).mockResolvedValue(rowEl);
-      vi.mocked(waitForElement).mockResolvedValue(confirmBtn);
 
       mockNotify.confirm.mockResolvedValue(true);
 
       await startZeroAutomation();
       await flushAll();
 
-      expect(waitForElement).toHaveBeenCalledWith('button', 'Tidak Periksa', 6000);
-      expect(confirmBtn.click).toHaveBeenCalled();
+      expect(btn.click).not.toHaveBeenCalled();
       expect(await getZeroQueue()).toEqual([]);
     });
 
-    it('should emit the existing notChecked event when unchecking an item', async () => {
+    it('should never look for the removed "Tidak Periksa" confirm button', async () => {
       await store.setConfig({
         activeProfile: 'profile1',
         profiles: {
@@ -239,9 +240,41 @@ describe('zero-mode', () => {
       grid.appendChild(rowEl);
       document.body.appendChild(grid);
 
-      const confirmBtn = { click: vi.fn() };
       vi.mocked(waitForRow).mockResolvedValue(rowEl);
-      vi.mocked(waitForElement).mockResolvedValue(confirmBtn);
+
+      mockNotify.confirm.mockResolvedValue(true);
+
+      await startZeroAutomation();
+      await flushAll();
+
+      expect(waitForElement).not.toHaveBeenCalled();
+      expect(await getZeroQueue()).toEqual([]);
+    });
+
+    it('should emit the existing notChecked event when skipping an item', async () => {
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            notChecked: {
+              notCheckedList: 'rowfrm000002',
+            },
+            zenMode: {},
+          },
+        },
+      });
+
+      document.body.innerHTML = '';
+      const rowEl = document.createElement('div');
+      rowEl.id = 'rowfrm000002';
+      rowEl.innerHTML = '<label>Form Title</label><button type="button">Input Data</button>';
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      grid.appendChild(rowEl);
+      document.body.appendChild(grid);
+
+      vi.mocked(waitForRow).mockResolvedValue(rowEl);
 
       mockNotify.confirm.mockResolvedValue(true);
 
