@@ -31,7 +31,7 @@ const validConfig = {
         retryDelay: 2000,
         countdownDuration: 5000,
       },
-      skrining: { url: 'https://example.com/skrining' },
+      skrining: { url: 'https://example.com/skrining', answers: {}, excludes: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000 },
       flashData: { enabled: false, maxAge: 600_000 },
     },
@@ -89,6 +89,29 @@ describe('validateConfig', () => {
     expect(
       validateConfig(missingKey).errors.some((e) => e.includes('ghost') && e.includes('profiles')),
     ).toBe(true);
+  });
+
+  it('should flag non-string skrining.excludes', () => {
+    const bad = structuredClone(validConfig);
+    bad.profiles.profile1.skrining = {
+      url: 'https://example.com/skrining',
+      answers: { answer8AA: 'B' },
+      excludes: 42,
+    };
+    const result = validateConfig(bad);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]).toContain('skrining.excludes');
+    expect(result.errors[0]).toContain('teks');
+  });
+
+  it('should accept a skrining answers object', () => {
+    const good = structuredClone(validConfig);
+    good.profiles.profile1.skrining = {
+      url: 'https://example.com/skrining',
+      answers: { answer8AA: 'B' },
+      excludes: 'answer8AA',
+    };
+    expect(validateConfig(good).valid).toBe(true);
   });
 
   it('should flag non-string url fields', () => {

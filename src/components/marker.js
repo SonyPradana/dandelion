@@ -49,6 +49,7 @@ function initializeStyles() {
  * @param {boolean} [options.excludeToggle.initialExcluded]
  * @param {(id: string) => Promise<boolean>} [options.excludeToggle.onToggle]
  * @param {Object} [options.pinToggle] - Options forwarded to createPinToggle
+ * @param {() => string|null} [options.pinToggle.getValue] - Overrides the detected field reader
  * @param {boolean} [options.pinToggle.initialPinned]
  * @param {(id: string, value: string|null) => Promise<boolean>} [options.pinToggle.onToggle]
  * @returns {HTMLDivElement}
@@ -64,9 +65,10 @@ export function debugMarker(identifier, { excludeToggle: excludeOpts, pinToggle:
 
   const questionElement = document.querySelector(`[data-name="${identifier}"]`);
   const field = questionElement ? detectFieldType(questionElement) : null;
+  const getValue = pinOpts?.getValue ?? field?.getValue;
 
-  if (field) {
-    const pinToggle = createPinToggle(identifier, field.getValue, pinOpts);
+  if (getValue) {
+    const pinToggle = createPinToggle(identifier, getValue, pinOpts);
     marker.appendChild(pinToggle);
   }
 

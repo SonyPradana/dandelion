@@ -69,7 +69,7 @@ async function initialize() {
     currentURL.includes(config.skrining.url) &&
     isFeatureEnabled('skrining')
   ) {
-    initializeSkrining();
+    initializeSkrining(config.skrining);
   } else if (
     config.registerForm?.url &&
     currentURL.includes(config.registerForm.url) &&

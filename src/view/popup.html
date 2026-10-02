@@ -106,6 +106,31 @@
                 <label for="skrining-url">URL</label>
                 <input type="text" id="skrining-url" placeholder="Masukkan pola URL skrining" />
               </div>
+
+              <div class="form-group">
+                <label>Jawaban Radio</label>
+                <div id="skrining-answers"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="skrining-excludes-input">ID Dikecualikan</label>
+                <input
+                  type="text"
+                  id="skrining-excludes-input"
+                  placeholder="ID baris pisahkan dengan ;"
+                />
+                <div class="keyword-list-container">
+                  <div class="keyword-list" id="skrining-excludes-list"></div>
+                  <div class="keyword-input-container">
+                    <input
+                      type="text"
+                      id="skrining-excludes-add-input"
+                      placeholder="Tambah ID (answer8AA)"
+                    />
+                    <button type="button" class="btn-add" id="skrining-excludes-add">+</button>
+                  </div>
+                </div>
+              </div>
             </details>
 
             <details class="config-group">

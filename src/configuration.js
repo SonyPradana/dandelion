@@ -29,7 +29,7 @@ const DEFAULT_CONFIG = {
         countdownDuration: 5000,
         defaultPinneds: {},
       },
-      skrining: { url: '' },
+      skrining: { url: '', answers: {}, excludes: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000, defaultPinneds: {} },
       flashData: { enabled: false, maxAge: 600_000 },
     },
@@ -57,7 +57,7 @@ const DEFAULT_CONFIG = {
         countdownDuration: 5000,
         defaultPinneds: {},
       },
-      skrining: { url: '' },
+      skrining: { url: '', answers: {}, excludes: '' },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000, defaultPinneds: {} },
       flashData: { enabled: false, maxAge: 600_000 },
     },
@@ -127,6 +127,8 @@ export function migrateConfig(raw) {
         },
         skrining: {
           url: raw.formSelector ?? '',
+          answers: {},
+          excludes: '',
         },
         registerForm: {
           url: '',

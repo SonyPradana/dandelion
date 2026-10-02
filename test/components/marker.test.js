@@ -44,6 +44,34 @@ describe('marker', () => {
   // NOTE: skip style injection test due to module-level stylesInitialized flag
   // (same pattern as pinToggle/excludeToggle — tested there)
 
+  it('should add pinToggle using pinToggle.getValue when provided', () => {
+    vi.spyOn(fillPinnedFields, 'detectFieldType').mockReturnValue(null);
+    document.body.innerHTML = '<ul id="slider8A"><input type="radio" id="answer8AA" /></ul>';
+
+    const el = debugMarker('answer8AA', { pinToggle: { getValue: () => 'B' } });
+
+    expect(el.querySelector('.dandelion-pin-toggle')).toBeTruthy();
+  });
+
+  it('should prefer pinToggle.getValue over the detected field', async () => {
+    const detected = vi.fn();
+    vi.spyOn(fillPinnedFields, 'detectFieldType').mockReturnValue({
+      type: 'text',
+      getValue: detected,
+    });
+    document.body.innerHTML = '<div data-name="some-field"><input type="text" /></div>';
+
+    const custom = vi.fn(() => 'custom-value');
+    const el = debugMarker('some-field', {
+      pinToggle: { getValue: custom, onToggle: vi.fn().mockResolvedValue(true) },
+    });
+
+    el.querySelector('.dandelion-pin-toggle').dispatchEvent(new MouseEvent('click'));
+    await vi.waitFor(() => expect(custom).toHaveBeenCalled());
+
+    expect(detected).not.toHaveBeenCalled();
+  });
+
   it('should detect number input field from real DOM fixture', () => {
     vi.restoreAllMocks();
 
