@@ -17,6 +17,7 @@ import { notify } from '../components/notification';
 import bus from '../utils/hooks';
 import { showFlashDataPanelIfEnabled } from './flashData';
 import { clearFlashData } from '../utils/flashSession';
+import { isInNotCheckedList } from '../utils/notChecked';
 
 let isAutomationActive = false;
 
@@ -147,6 +148,14 @@ async function processNextZenItem() {
   const isClickable = btn && !btn.disabled && !btn.classList.contains('cursor-not-allowed');
 
   if (isRowDone(row) || !isClickable) {
+    await getNextFromQueue();
+    processNextZenItem();
+    return;
+  }
+
+  // Rows on the "Not Checked" list are skipped outright: no click, no reload,
+  // and no didProcessItem event since nothing was actually filled.
+  if (await isInNotCheckedList(nextId)) {
     await getNextFromQueue();
     processNextZenItem();
     return;

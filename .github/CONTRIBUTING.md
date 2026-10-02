@@ -344,15 +344,17 @@ The public key is **committed** (`src/quota/public-key.js`) — it is not a secr
 
 Auto handlers in `main.js` are gated by `isFeatureEnabled(name)`:
 
-| Feature string              | Handler                  | Description      |
-| --------------------------- | ------------------------ | ---------------- |
-| `skriningform`              | `initializeSkriningForm` | Form skrining    |
-| `skrining`                  | `initializeSkrining`     | Halaman skrining |
-| `skrining-form-not-checked` | `initializeNotChecked`   | Tidak periksa    |
+| Feature string              | Handler                  | Description                          |
+| --------------------------- | ------------------------ | ------------------------------------ |
+| `skriningform`              | `initializeSkriningForm` | Form skrining                        |
+| `skrining`                  | `initializeSkrining`     | Halaman skrining                     |
+| `zen-mode`                  | `initializeNotChecked`   | Panel Zen/Zero + marker daftar skip  |
+| `skrining-form-not-checked` | `initializeNotChecked`   | Sama seperti `zen-mode` (deprecated) |
 
 - **Free Tier**: `isFeatureEnabled()` always returns `true` for all features.
 - **Pro Tier**: only features listed in the token `features[]` array are enabled.
 - Unlisted features are silently skipped — the handler does not run on matching URLs.
+- The not-checked handler is gated by `zen-mode` **or** the deprecated `skrining-form-not-checked`, so tokens issued before the rename keep working.
 
 ### Bundle Initialisation
 

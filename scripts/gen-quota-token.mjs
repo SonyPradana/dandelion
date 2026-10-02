@@ -62,7 +62,7 @@ const features = args.features
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
-  : ['skriningform', 'skrining', 'skrining-form-not-checked', 'zen-mode'];
+  : ['skriningform', 'skrining', 'zen-mode'];
 const versionAllowed = args.versionAllowed
   ? args.versionAllowed
       .split(',')

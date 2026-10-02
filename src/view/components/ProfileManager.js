@@ -53,10 +53,6 @@ export class ProfileManager {
       notChecked: {
         url: '',
         notCheckedList: '',
-        automationDelay: 2000,
-        itemDelay: 1000,
-        reloadDelay: 1000,
-        domTimeout: 5000,
       },
       skrining: { url: '' },
       registerForm: {

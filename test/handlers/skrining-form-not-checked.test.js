@@ -89,12 +89,25 @@ describe('skrining-form-not-checked', () => {
 
       await vi.advanceTimersByTimeAsync(0);
 
-      const mainBtn = document.getElementById('dandelion-not-checked-automation');
-      expect(mainBtn).toBeTruthy();
-      expect(mainBtn.tagName).toBe('BUTTON');
+      const zeroBtn = document.getElementById('dandelion-zero-toggle');
+      expect(zeroBtn).toBeTruthy();
+      expect(zeroBtn.tagName).toBe('BUTTON');
+      expect(document.getElementById('dandelion-zen-mode-toggle')).toBeTruthy();
+      expect(document.getElementById('dandelion-debug-toggle')).toBeTruthy();
 
       const panel = document.getElementById('dandelion-control-panel');
       expect(panel).toBeTruthy();
+    });
+
+    it('should NOT mount the removed auto-uncheck button', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-not-checked-automation')).toBeFalsy();
+      expect(document.getElementById('dandelion-zero-row')).toBeFalsy();
     });
 
     it('should NOT mount control buttons on non-processing page', async () => {
@@ -104,8 +117,9 @@ describe('skrining-form-not-checked', () => {
 
       await vi.advanceTimersByTimeAsync(0);
 
-      const mainBtn = document.getElementById('dandelion-not-checked-automation');
-      expect(mainBtn).toBeFalsy();
+      expect(document.getElementById('dandelion-zero-toggle')).toBeFalsy();
+      expect(document.getElementById('dandelion-zen-mode-toggle')).toBeFalsy();
+      expect(document.getElementById('dandelion-debug-toggle')).toBeFalsy();
     });
 
     it('should remove buttons when page changes from processing to non-processing', async () => {
@@ -115,39 +129,23 @@ describe('skrining-form-not-checked', () => {
 
       await vi.advanceTimersByTimeAsync(0);
 
-      expect(document.getElementById('dandelion-not-checked-automation')).toBeTruthy();
+      expect(document.getElementById('dandelion-zero-toggle')).toBeTruthy();
 
       document.body.innerHTML = '<div>Selesai</div>';
 
       await vi.advanceTimersByTimeAsync(2000);
       await vi.advanceTimersByTimeAsync(0);
 
-      expect(document.getElementById('dandelion-not-checked-automation')).toBeFalsy();
+      expect(document.getElementById('dandelion-zero-toggle')).toBeFalsy();
+      expect(document.getElementById('dandelion-zen-mode-toggle')).toBeFalsy();
     });
 
-    it('should show running state when pending data exists', async () => {
-      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
-      await store.storageSet('dandelion_pending_not_checked', JSON.stringify(['rowfrm000184']));
-      await store.storageSet('dandelion_total_not_checked', '1');
-
-      initialize();
-
-      await vi.advanceTimersByTimeAsync(0);
-
-      const mainBtn = document.getElementById('dandelion-not-checked-automation');
-      expect(mainBtn).toBeTruthy();
-      expect(mainBtn.classList.contains('dandelion-running')).toBe(true);
-    });
-
-    it('should mount Zero button in a row left of the not-checked button', async () => {
+    it('should mount the Zero button directly in the control panel', async () => {
       document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
 
       initialize();
 
       await vi.advanceTimersByTimeAsync(0);
-
-      const zeroRow = document.getElementById('dandelion-zero-row');
-      expect(zeroRow).toBeTruthy();
 
       const zeroBtn = document.getElementById('dandelion-zero-toggle');
       expect(zeroBtn).toBeTruthy();
@@ -157,29 +155,7 @@ describe('skrining-form-not-checked', () => {
       expect(zeroBtn.style.fontWeight).toBe('bold');
       expect(zeroBtn.style.textDecoration).toBe('line-through');
 
-      const mainBtn = document.getElementById('dandelion-not-checked-automation');
-      const rowChildren = Array.from(zeroRow.children);
-      expect(rowChildren[0]).toBe(zeroBtn);
-      expect(rowChildren[1]).toBe(mainBtn);
-    });
-
-    it('should reverse the Zero row when the panel is docked left', async () => {
-      controlPanel.setPosition('top-left');
-      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
-
-      initialize();
-
-      await vi.advanceTimersByTimeAsync(0);
-
-      const zeroRow = document.getElementById('dandelion-zero-row');
-      expect(zeroRow).toBeTruthy();
-      expect(zeroRow.style.flexDirection).toBe('row-reverse');
-
-      const zeroBtn = document.getElementById('dandelion-zero-toggle');
-      const mainBtn = document.getElementById('dandelion-not-checked-automation');
-      const rowChildren = Array.from(zeroRow.children);
-      expect(rowChildren[0]).toBe(zeroBtn);
-      expect(rowChildren[1]).toBe(mainBtn);
+      expect(document.getElementById('dandelion-zero-row')).toBeFalsy();
     });
 
     it('should NOT mount Zero or zen buttons when zen-mode feature is disabled', async () => {
@@ -194,8 +170,8 @@ describe('skrining-form-not-checked', () => {
       expect(document.getElementById('dandelion-zero-toggle')).toBeFalsy();
       expect(document.getElementById('dandelion-zen-mode-toggle')).toBeFalsy();
 
-      const mainBtn = document.getElementById('dandelion-not-checked-automation');
-      expect(mainBtn).toBeTruthy();
+      // The bee helper toggle stays available so the list can still be marked.
+      expect(document.getElementById('dandelion-debug-toggle')).toBeTruthy();
     });
 
     it('should dim (not activate) the zen button while Zero is running', async () => {

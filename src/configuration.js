@@ -20,11 +20,8 @@ const DEFAULT_CONFIG = {
       notChecked: {
         url: '',
         notCheckedList: '',
-        automationDelay: 2000,
-        itemDelay: 1000,
-        reloadDelay: 1000,
-        domTimeout: 5000,
       },
+
       registerForm: {
         url: '',
         retryMax: 3,
@@ -51,11 +48,8 @@ const DEFAULT_CONFIG = {
       notChecked: {
         url: '',
         notCheckedList: '',
-        automationDelay: 2000,
-        itemDelay: 1000,
-        reloadDelay: 1000,
-        domTimeout: 5000,
       },
+
       registerForm: {
         url: '',
         retryMax: 3,
@@ -130,10 +124,6 @@ export function migrateConfig(raw) {
         notChecked: {
           url: raw.notChecked?.url ?? '',
           notCheckedList: oldProfile.notCheckedList ?? '',
-          automationDelay: raw.notChecked?.automationDelay ?? 2000,
-          itemDelay: raw.notChecked?.itemDelay ?? 1000,
-          reloadDelay: raw.notChecked?.reloadDelay ?? 1000,
-          domTimeout: raw.notChecked?.domTimeout ?? 5000,
         },
         skrining: {
           url: raw.formSelector ?? '',

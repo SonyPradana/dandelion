@@ -134,9 +134,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const excludesInput = document.getElementById('form-skrining-excludes');
   const notCheckedUrlInput = document.getElementById('not-checked-url');
   const notCheckedListInput = document.getElementById('not-checked-list-input');
-  const notCheckedAutomationDelayInput = document.getElementById('not-checked-automation-delay');
-  const notCheckedItemDelayInput = document.getElementById('not-checked-item-delay');
-  const notCheckedReloadDelayInput = document.getElementById('not-checked-reload-delay');
   const skriningUrlInput = document.getElementById('skrining-url');
   const registerFormUrlInput = document.getElementById('register-form-url');
   const registerFormRetryMaxInput = document.getElementById('register-form-retry-max');
@@ -175,9 +172,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const nc = profileSettings.notChecked || {};
     notCheckedUrlInput.value = nc.url || '';
     notCheckedListInput.value = nc.notCheckedList || '';
-    notCheckedAutomationDelayInput.value = nc.automationDelay || 2000;
-    notCheckedItemDelayInput.value = nc.itemDelay || 1000;
-    notCheckedReloadDelayInput.value = nc.reloadDelay || 1000;
 
     notCheckedListInput.dispatchEvent(new Event('input', { bubbles: true }));
 
@@ -354,10 +348,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;
       profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
-      profileSettings.notChecked.automationDelay =
-        parseInt(notCheckedAutomationDelayInput.value) || 2000;
-      profileSettings.notChecked.itemDelay = parseInt(notCheckedItemDelayInput.value) || 1000;
-      profileSettings.notChecked.reloadDelay = parseInt(notCheckedReloadDelayInput.value) || 1000;
 
       const activePosBtn = document.querySelector('.pos-option.active');
       if (activePosBtn) {

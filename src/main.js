@@ -52,7 +52,7 @@ async function initialize() {
   if (
     config.notChecked?.url &&
     currentURL.includes(config.notChecked.url) &&
-    isFeatureEnabled('skrining-form-not-checked')
+    (isFeatureEnabled('zen-mode') || isFeatureEnabled('skrining-form-not-checked'))
   ) {
     initializeNotChecked();
   } else if (

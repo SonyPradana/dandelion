@@ -11,10 +11,6 @@ const PROFILE_STRING_FIELDS = [
 ];
 
 const PROFILE_NUMBER_FIELDS = [
-  'notChecked.automationDelay',
-  'notChecked.itemDelay',
-  'notChecked.reloadDelay',
-  'notChecked.domTimeout',
   'registerForm.retryMax',
   'registerForm.retryDelay',
   'registerForm.countdownDuration',
