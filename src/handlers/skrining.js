@@ -1,4 +1,8 @@
 import bus from '../utils/hooks';
+import { button } from '../components/button';
+import { controlPanel } from '../components/controlPanel';
+
+const MANUAL_TRIGGER_ID = 'dandelion-skrining-manual';
 
 export function initializeSkrining() {
   const radioClickedSet = new Set();
@@ -46,6 +50,10 @@ export function initializeSkrining() {
   }
 
   function stopObserver() {
+    if (throttleTimeout) {
+      clearTimeout(throttleTimeout);
+      throttleTimeout = null;
+    }
     if (observer) {
       observer.disconnect();
       observer = null;
@@ -65,5 +73,16 @@ export function initializeSkrining() {
     if (event.target.id === 'nextGenBtn') {
       startObserver();
     }
+
+    // Manual trigger: fill once then stay off
+    if (event.target.id === MANUAL_TRIGGER_ID) {
+      stopObserver();
+      manipulateRadioButtons();
+    }
   });
+
+  const manualTrigger = button(MANUAL_TRIGGER_ID);
+  if (manualTrigger) {
+    controlPanel.mount(manualTrigger, 1);
+  }
 }
