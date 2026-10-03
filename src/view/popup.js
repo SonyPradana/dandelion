@@ -203,6 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.skrining?.answers || {},
       (newAnswers) => {
         if (loadedConfig) {
+          formDirty = true;
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].skrining) {
             loadedConfig.profiles[selectedProfile].skrining = {};
