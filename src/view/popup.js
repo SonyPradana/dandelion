@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.keywordLists = { notCheckedList };
   let pinnedValuesList = null;
+  let skriningAnswersList = null;
 
   function updateConfigState(isAgreed) {
     configWrapper.classList.toggle('disabled', !isAgreed);
@@ -170,6 +171,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
 
+    if (skriningAnswersList) skriningAnswersList.setData(sk.answers || {});
+
     const rf = profileSettings.registerForm || {};
     registerFormUrlInput.value = rf.url || '';
     registerFormRetryMaxInput.value = rf.retryMax ?? 3;
@@ -191,6 +194,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
           }
           loadedConfig.profiles[selectedProfile].formSkrining.pinneds = newPinneds;
+        }
+      },
+    );
+
+    skriningAnswersList = new KeyValueList(
+      'skrining-answers',
+      activeProfileSettings.skrining?.answers || {},
+      (newAnswers) => {
+        if (loadedConfig) {
+          formDirty = true;
+          const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
+          if (!loadedConfig.profiles[selectedProfile].skrining) {
+            loadedConfig.profiles[selectedProfile].skrining = {};
+          }
+          loadedConfig.profiles[selectedProfile].skrining.answers = newAnswers;
         }
       },
     );
@@ -250,6 +268,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
+      if (skriningAnswersList) profileSettings.skrining.answers = skriningAnswersList.getData();
 
       if (!profileSettings.registerForm) profileSettings.registerForm = {};
       profileSettings.registerForm.url = registerFormUrlInput.value;

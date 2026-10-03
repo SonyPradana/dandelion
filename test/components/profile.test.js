@@ -48,6 +48,39 @@ describe('profile', () => {
     expect(onSwitch).not.toHaveBeenCalled();
   });
 
+  it('should stay put when onSwitch resolves false', async () => {
+    const onSwitch = vi.fn().mockResolvedValue(false);
+    const profiles = { p1: { name: 'One' }, p2: { name: 'Two' } };
+    const el = createProfileComponent({ profiles, activeProfile: 'p1', onSwitch });
+
+    el.children[1].click();
+    await vi.waitFor(() => expect(onSwitch).toHaveBeenCalled());
+    await Promise.resolve();
+
+    expect(el.style.opacity).not.toBe('0.5');
+  });
+
+  it('should proceed when onSwitch resolves undefined', async () => {
+    const onSwitch = vi.fn().mockResolvedValue(undefined);
+    const profiles = { p1: { name: 'One' }, p2: { name: 'Two' } };
+    const el = createProfileComponent({ profiles, activeProfile: 'p1', onSwitch });
+
+    el.children[1].click();
+    await vi.waitFor(() => expect(el.style.opacity).toBe('0.5'));
+  });
+
+  it('should stay put when onSwitch rejects', async () => {
+    const onSwitch = vi.fn().mockRejectedValue(new Error('cancelled'));
+    const profiles = { p1: { name: 'One' }, p2: { name: 'Two' } };
+    const el = createProfileComponent({ profiles, activeProfile: 'p1', onSwitch });
+
+    el.children[1].click();
+    await vi.waitFor(() => expect(onSwitch).toHaveBeenCalled());
+    await Promise.resolve();
+
+    expect(el.style.opacity).not.toBe('0.5');
+  });
+
   it('setVisibility(true) should show the container', () => {
     const el = createProfileComponent({ profiles: {}, activeProfile: '' });
     el.setVisibility(true);

@@ -54,7 +54,7 @@ export class ProfileManager {
         url: '',
         notCheckedList: '',
       },
-      skrining: { url: '' },
+      skrining: { url: '', answers: {}, excludes: '' },
       registerForm: {
         url: '',
         retryMax: 3,

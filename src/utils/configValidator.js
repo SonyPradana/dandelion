@@ -7,6 +7,7 @@ const PROFILE_STRING_FIELDS = [
   'notChecked.url',
   'notChecked.notCheckedList',
   'skrining.url',
+  'skrining.excludes',
   'registerForm.url',
 ];
 
