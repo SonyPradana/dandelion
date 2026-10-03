@@ -546,7 +546,8 @@ async function handleRequest(req: Request): Promise<Response> {
       return new Response('View limit reached', { status: 410 });
     }
     db.run('UPDATE shared_tokens SET views = views + 1 WHERE id = ?', [row.id]);
-    return new Response(renderSharePage(row), {
+    const counted: ShareRow = { ...row, views: row.views + 1 };
+    return new Response(renderSharePage(counted), {
       headers: { 'content-type': 'text/html' },
     });
   }
