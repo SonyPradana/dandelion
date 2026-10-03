@@ -82,7 +82,7 @@ export async function getSkriningExcludes(store = globalStore) {
  * @returns {Promise<boolean>} True when now excluded, false when now included.
  */
 export async function toggleSkriningExclude(key, store = globalStore) {
-  const excludes = await getSkriningExcludes(store);
+  const excludes = [...new Set(await getSkriningExcludes(store))];
   const index = excludes.indexOf(key);
 
   if (index > -1) {

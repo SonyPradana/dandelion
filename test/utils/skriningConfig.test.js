@@ -113,6 +113,12 @@ describe('skriningConfig', () => {
       expect(await getSkriningExcludes()).toEqual(['answer1BA']);
     });
 
+    it('toggleSkriningExclude should remove every duplicate entry at once', async () => {
+      await setupConfig({ excludes: 'answer8AA;answer8AA' });
+      expect(await toggleSkriningExclude('answer8AA')).toBe(false);
+      expect(await getSkriningExcludes()).toEqual([]);
+    });
+
     it('toggleSkriningExclude should keep skrining url intact', async () => {
       await setupConfig();
       await toggleSkriningExclude('answer8AA');
