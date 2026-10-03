@@ -85,14 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'not-checked-list-add',
   );
 
-  const skriningExcludesList = new KeywordList(
-    'skrining-excludes-input',
-    'skrining-excludes-list',
-    'skrining-excludes-add-input',
-    'skrining-excludes-add',
-  );
-
-  window.keywordLists = { notCheckedList, skriningExcludesList };
+  window.keywordLists = { notCheckedList };
   let pinnedValuesList = null;
   let skriningAnswersList = null;
 
@@ -149,7 +142,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const notCheckedUrlInput = document.getElementById('not-checked-url');
   const notCheckedListInput = document.getElementById('not-checked-list-input');
   const skriningUrlInput = document.getElementById('skrining-url');
-  const skriningExcludesInput = document.getElementById('skrining-excludes-input');
   const registerFormUrlInput = document.getElementById('register-form-url');
   const registerFormRetryMaxInput = document.getElementById('register-form-retry-max');
   const registerFormRetryDelayInput = document.getElementById('register-form-retry-delay');
@@ -178,8 +170,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const sk = profileSettings.skrining || {};
     skriningUrlInput.value = sk.url || '';
-    skriningExcludesInput.value = sk.excludes || '';
-    skriningExcludesInput.dispatchEvent(new Event('input', { bubbles: true }));
 
     if (skriningAnswersList) skriningAnswersList.setData(sk.answers || {});
 
@@ -277,7 +267,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (!profileSettings.skrining) profileSettings.skrining = {};
       profileSettings.skrining.url = skriningUrlInput.value;
-      profileSettings.skrining.excludes = skriningExcludesInput.value;
       if (skriningAnswersList) profileSettings.skrining.answers = skriningAnswersList.getData();
 
       if (!profileSettings.registerForm) profileSettings.registerForm = {};
