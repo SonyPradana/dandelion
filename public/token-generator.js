@@ -67,6 +67,14 @@ pemFileInput.addEventListener('change', () => {
   reader.readAsText(file);
 });
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function parseExpiry(value) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return new Date(value);
@@ -142,11 +150,11 @@ form.addEventListener('submit', async (e) => {
     jwtOutput.value = jwt;
     summary.innerHTML = `
       <table>
-        <tr><td>Token ID</td><td>${tokenId}</td></tr>
-        <tr><td>Features</td><td>${features.join(', ') || '(none)'}</td></tr>
+        <tr><td>Token ID</td><td>${escapeHtml(tokenId)}</td></tr>
+        <tr><td>Features</td><td>${escapeHtml(features.join(', ') || '(none)')}</td></tr>
         <tr><td>Total limit</td><td>${totalLimit} (${totalLimit === 0 ? 'unlimited' : ''})</td></tr>
         <tr><td>Daily limit</td><td>${dailyLimit}</td></tr>
-        <tr><td>Version allowed</td><td>${versionAllowed.join(', ') || '(all)'}</td></tr>
+        <tr><td>Version allowed</td><td>${escapeHtml(versionAllowed.join(', ') || '(all)')}</td></tr>
         <tr><td>Expires</td><td>${expDate.toISOString()}</td></tr>
       </table>
     `;
