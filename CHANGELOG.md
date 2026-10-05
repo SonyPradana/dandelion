@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-10-05
+
+### Added
+
+- Configurable radio answers and excludes for skrining (#137).
+- Manual trigger button for skrining radio fill (#136).
+
+### Changed
+
+- Not-checked list is now treated as a skip list: rows count toward the purchased quota without clicks, fills, or reloads (#135).
+- Dropped the not-checked delay settings `automationDelay`, `itemDelay`, `reloadDelay` and `domTimeout` from the profile config (#135).
+- The `skrining-form-not-checked` flag is deprecated and now only gates the handler (#135).
+
+### Fixed
+
+- Detect the new DOM done state so finished rows are no longer queued and completion is not claimed early (#134).
+- Render the persisted view count on the share page (#140).
+
 ## [1.7.2] - 2026-09-26
 
 ### Fixed

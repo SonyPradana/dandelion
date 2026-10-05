@@ -1,5 +1,15 @@
 [
   {
+    "date": "5 Oktober 2026",
+    "version": "1.8",
+    "details": [
+      "Skrining dapat dimulai manual ketika halaman error",
+      "Skrining kini bisa menggunakan kunci pertanyaan yang di atur sekali sesuai kebutuhan.",
+      "Skrining kini dapat dikecualikan dan dapat diisi manual seseui kebutuhan.",
+      "Daftar 'tidak periksa' kini diperlakukan sebagai daftar lewati, tidak lagi dimuat ulang."
+    ]
+  },
+  {
     "date": "10 Agustus 2026",
     "version": "1.7",
     "details": [
