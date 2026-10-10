@@ -73,11 +73,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     activePopup = null;
   }
 
-  // Tab switching with deep-link URL sync (?tab=<tab>&section=<section>)
+  // Tab switching with deep-link URL sync (?tab=<tab>&section=<section>).
+  // Section is optional: it is only set by explicit navigation (direct link,
+  // Back/Forward, future search results) — never auto-synced on scroll.
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');
   let currentTab = 'profile';
-  let sectionObserver = null;
   let highlightTimer = null;
 
   function showTab(tab) {
@@ -88,7 +89,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     if (tab === 'produktifitas') renderProduktifitas();
     if (tab === 'quota') renderLicense();
-    watchSections();
   }
 
   function showSection(section, highlight) {
@@ -103,21 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       highlightTimer = setTimeout(() => el.classList.remove('section-highlight'), 1600);
     }
     return true;
-  }
-
-  function watchSections() {
-    if (sectionObserver) sectionObserver.disconnect();
-    const pane = document.getElementById(`tab-${currentTab}`);
-    if (!pane || !('IntersectionObserver' in window)) return;
-    sectionObserver = new IntersectionObserver(
-      (entries) => {
-        const visible = entries.find((entry) => entry.isIntersecting);
-        if (!visible) return;
-        history.replaceState(null, '', buildSearch(currentTab, visible.target.dataset.section));
-      },
-      { rootMargin: '-20% 0px -70% 0px' },
-    );
-    pane.querySelectorAll('[data-section]').forEach((el) => sectionObserver.observe(el));
   }
 
   tabBtns.forEach((btn) => {
