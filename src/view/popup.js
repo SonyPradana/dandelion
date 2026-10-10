@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const openFullPage = document.getElementById('open-full-page');
   openFullPage.addEventListener('click', (event) => {
     event.preventDefault();
-    browser.tabs.create({ url: browser.runtime.getURL('view/page/index.html#profile') });
+    browser.tabs.create({ url: browser.runtime.getURL('view/page/index.html?tab=profile') });
   });
 
   // --- Import/Export Logic ---
