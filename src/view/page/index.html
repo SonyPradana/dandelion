@@ -84,6 +84,19 @@
         <div class="main">
           <header class="app-header">
             <h1>Konfigurasi Dandelion <span class="version"></span></h1>
+            <div class="config-search">
+              <input
+                type="search"
+                id="config-search-input"
+                placeholder="Cari pengaturan…"
+                autocomplete="off"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="config-search-list"
+                aria-label="Cari pengaturan"
+              />
+              <ul id="config-search-list" class="config-search-list hidden" role="listbox"></ul>
+            </div>
           </header>
 
           <section class="tab-pane active" id="tab-profile">

@@ -29,6 +29,8 @@ import {
 import { parseConfig, validateConfig } from '../../utils/configValidator.js';
 import { migrateConfig } from '../../configuration.js';
 import { parseRoute, buildSearch } from './router.js';
+import { SEARCH_INDEX } from './search-index.js';
+import { initSearch } from './search.js';
 
 let activePopup = null;
 
@@ -126,6 +128,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     '',
     buildSearch(initialRoute.tab, initialSectionOk ? initialRoute.section : null),
   );
+
+  initSearch({
+    inputId: 'config-search-input',
+    listId: 'config-search-list',
+    index: SEARCH_INDEX,
+    onNavigate: (tab, section) => {
+      showTab(tab);
+      showSection(section, true);
+      history.pushState(null, '', buildSearch(tab, section));
+    },
+  });
 
   let loadedConfig = null;
   let profileManager = null;

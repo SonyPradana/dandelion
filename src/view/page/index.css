@@ -134,6 +134,84 @@ body {
   margin-left: 6px;
 }
 
+/* ── Config Search ── */
+.config-search {
+  position: relative;
+  margin-top: 1rem;
+  max-width: 480px;
+}
+
+#config-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fff;
+  color: #111;
+}
+
+#config-search-input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.15);
+}
+
+.config-search-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  max-height: 320px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.config-search-list [role='option'] {
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.config-search-list [role='option'].active {
+  background: #eef2ff;
+}
+
+.config-search-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.config-search-title mark {
+  background: #fef08a;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.config-search-sub {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.config-search-empty {
+  padding: 12px 10px;
+  font-size: 0.85rem;
+  color: #888;
+  text-align: center;
+}
+
 /* ── Tab Panes ── */
 .tab-pane {
   display: none;
