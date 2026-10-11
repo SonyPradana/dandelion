@@ -96,12 +96,14 @@ export function highlightMatch(label, query) {
  * @param {object} options
  * @param {string} options.inputId
  * @param {string} options.listId
+ * @param {string} options.statusId - live region for the no-results message
  * @param {Array} options.index
  * @param {(tab: string, section: string | null) => void} options.onNavigate
  */
-export function initSearch({ inputId, listId, index, onNavigate }) {
+export function initSearch({ inputId, listId, statusId, index, onNavigate }) {
   const input = document.getElementById(inputId);
   const list = document.getElementById(listId);
+  const status = document.getElementById(statusId);
   if (!input || !list) {
     return;
   }
@@ -111,6 +113,9 @@ export function initSearch({ inputId, listId, index, onNavigate }) {
   function close() {
     list.classList.add('hidden');
     input.setAttribute('aria-expanded', 'false');
+    if (status) {
+      status.textContent = '';
+    }
     active = -1;
   }
 
@@ -143,11 +148,14 @@ export function initSearch({ inputId, listId, index, onNavigate }) {
     active = results.length > 0 ? 0 : -1;
     list.replaceChildren();
     if (results.length === 0) {
-      const empty = document.createElement('li');
-      empty.className = 'config-search-empty';
-      empty.textContent = 'Tidak ditemukan. Coba kata kunci lain.';
-      list.appendChild(empty);
+      close();
+      if (status) {
+        status.textContent = 'Tidak ditemukan. Coba kata kunci lain.';
+      }
     } else {
+      if (status) {
+        status.textContent = '';
+      }
       results.forEach((entry, position) => {
         const item = document.createElement('li');
         item.setAttribute('role', 'option');
@@ -172,9 +180,9 @@ export function initSearch({ inputId, listId, index, onNavigate }) {
         });
         list.appendChild(item);
       });
+      paintActive();
+      open();
     }
-    paintActive();
-    open();
   }
 
   input.addEventListener('input', () => render(input.value));

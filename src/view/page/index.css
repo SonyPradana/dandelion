@@ -212,6 +212,16 @@ body {
   text-align: center;
 }
 
+.config-search-status {
+  padding: 10px 4px 2px;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.config-search-status:empty {
+  display: none;
+}
+
 /* ── Tab Panes ── */
 .tab-pane {
   display: none;

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { normalize, score, highlightMatch, MAX_RESULTS } from '../../src/view/page/search.js';
+import {
+  normalize,
+  score,
+  highlightMatch,
+  initSearch,
+  MAX_RESULTS,
+} from '../../src/view/page/search.js';
 
 function entry(overrides) {
   return {
@@ -107,5 +113,61 @@ describe('highlightMatch', () => {
       match: '',
       after: '',
     });
+  });
+});
+
+describe('initSearch empty state', () => {
+  function setup() {
+    document.body.innerHTML = `
+      <div class="config-search">
+        <input id="test-search-input" />
+        <ul id="test-search-list" class="hidden"></ul>
+        <div id="test-search-status" role="status"></div>
+      </div>`;
+    const navigated = [];
+    initSearch({
+      inputId: 'test-search-input',
+      listId: 'test-search-list',
+      statusId: 'test-search-status',
+      index: [entry({})],
+      onNavigate: (tab, section) => navigated.push({ tab, section }),
+    });
+    return navigated;
+  }
+
+  function type(text) {
+    const input = document.getElementById('test-search-input');
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    return input;
+  }
+
+  it('announces no-results in the live region and keeps the listbox hidden', () => {
+    setup();
+    const input = type('zzz-tidak-ada');
+    expect(document.getElementById('test-search-status').textContent).toContain('Tidak ditemukan');
+    expect(document.getElementById('test-search-list').classList.contains('hidden')).toBe(true);
+    expect(input.getAttribute('aria-expanded')).toBe('false');
+    expect(
+      document.getElementById('test-search-list').querySelectorAll('[role="option"]'),
+    ).toHaveLength(0);
+  });
+
+  it('clears the live region and opens the listbox when results exist', () => {
+    setup();
+    type('zzz-tidak-ada');
+    const input = type('radio');
+    expect(document.getElementById('test-search-status').textContent).toBe('');
+    expect(document.getElementById('test-search-list').classList.contains('hidden')).toBe(false);
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('navigates on Enter', () => {
+    const navigated = setup();
+    type('radio');
+    document
+      .getElementById('test-search-input')
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(navigated).toEqual([{ tab: 'skrining', section: 'skrining-answers' }]);
   });
 });

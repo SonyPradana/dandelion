@@ -132,6 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initSearch({
     inputId: 'config-search-input',
     listId: 'config-search-list',
+    statusId: 'config-search-status',
     index: SEARCH_INDEX,
     onNavigate: (tab, section) => {
       showTab(tab);
