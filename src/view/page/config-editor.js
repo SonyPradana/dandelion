@@ -102,7 +102,7 @@ function handleReset() {
 saveBtn.addEventListener('click', handleSave);
 resetBtn.addEventListener('click', handleReset);
 closeBtn.addEventListener('click', () => {
-  window.location.href = './index.html#lainnya';
+  window.location.href = './index.html?tab=lainnya';
 });
 
 editor.addEventListener('input', () => {

@@ -28,6 +28,7 @@ import {
 } from '../../quota/quota-manager.js';
 import { parseConfig, validateConfig } from '../../utils/configValidator.js';
 import { migrateConfig } from '../../configuration.js';
+import { parseRoute, buildSearch } from './router.js';
 
 let activePopup = null;
 
@@ -72,25 +73,59 @@ document.addEventListener('DOMContentLoaded', async () => {
     activePopup = null;
   }
 
-  // Tab switching
+  // Tab switching with deep-link URL sync (?tab=<tab>&section=<section>).
+  // Section is optional: it is only set by explicit navigation (direct link,
+  // Back/Forward, future search results) — never auto-synced on scroll.
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');
+  let currentTab = 'profile';
+  let highlightTimer = null;
+
+  function showTab(tab) {
+    currentTab = tab;
+    tabBtns.forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+    tabPanes.forEach((pane) => {
+      pane.classList.toggle('active', pane.id === `tab-${tab}`);
+    });
+    if (tab === 'produktifitas') renderProduktifitas();
+    if (tab === 'quota') renderLicense();
+  }
+
+  function showSection(section, highlight) {
+    if (!section) return false;
+    const candidates = document.querySelectorAll(`#tab-${currentTab} [data-section]`);
+    const el = [...candidates].find((node) => node.dataset.section === section);
+    if (!el) return false;
+    el.scrollIntoView({ block: 'start' });
+    if (highlight) {
+      el.classList.add('section-highlight');
+      if (highlightTimer) clearTimeout(highlightTimer);
+      highlightTimer = setTimeout(() => el.classList.remove('section-highlight'), 1600);
+    }
+    return true;
+  }
+
   tabBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
-      tabBtns.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      const tabId = btn.dataset.tab;
-      tabPanes.forEach((pane) => {
-        pane.classList.toggle('active', pane.id === `tab-${tabId}`);
-      });
+      showTab(btn.dataset.tab);
+      history.pushState(null, '', buildSearch(btn.dataset.tab));
     });
   });
 
-  const hash = window.location.hash.replace('#', '');
-  if (hash) {
-    const targetBtn = document.querySelector(`.tab-btn[data-tab="${hash}"]`);
-    if (targetBtn) targetBtn.click();
-  }
+  window.addEventListener('popstate', () => {
+    const route = parseRoute(window.location.search);
+    showTab(route.tab);
+    showSection(route.section, true);
+  });
+
+  const initialRoute = parseRoute(window.location.search);
+  showTab(initialRoute.tab);
+  const initialSectionOk = showSection(initialRoute.section, true);
+  history.replaceState(
+    null,
+    '',
+    buildSearch(initialRoute.tab, initialSectionOk ? initialRoute.section : null),
+  );
 
   let loadedConfig = null;
   let profileManager = null;
@@ -662,17 +697,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     container.appendChild(chartSection);
   }
 
-  const produktifitasTab = document.querySelector('.tab-btn[data-tab="produktifitas"]');
-  if (produktifitasTab) {
-    produktifitasTab.addEventListener('click', () => {
-      setTimeout(renderProduktifitas, 50);
-    });
-  }
-
-  if (document.getElementById('tab-produktifitas')?.classList.contains('active')) {
-    renderProduktifitas();
-  }
-
   document.getElementById('refresh-prod')?.addEventListener('click', renderProduktifitas);
 
   // --- License Tab Logic ---
@@ -839,17 +863,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       msg.textContent = 'Token dihapus, kembali ke Free Tier.';
       setTimeout(renderLicense, 1000);
     });
-  }
-
-  const quotaTab = document.querySelector('.tab-btn[data-tab="quota"]');
-  if (quotaTab) {
-    quotaTab.addEventListener('click', () => {
-      setTimeout(renderLicense, 50);
-    });
-  }
-
-  if (document.getElementById('tab-quota')?.classList.contains('active')) {
-    renderLicense();
   }
 
   const persetujuanContent = document.getElementById('persetujuan-content');

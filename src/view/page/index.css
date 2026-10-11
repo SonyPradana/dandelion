@@ -172,6 +172,17 @@ body {
   margin-bottom: 0;
 }
 
+/* ── Deep-link sections ── */
+[data-section] {
+  scroll-margin-top: 16px;
+}
+
+.section-highlight {
+  outline: 2px solid #4f46e5;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
 .pane-title {
   font-size: 0.8rem;
   font-weight: 700;
