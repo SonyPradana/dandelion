@@ -20,6 +20,14 @@ Pengaturan untuk fitur Registration Form: alur pendaftaran otomatis dengan retry
 
 <!-- config-section:register-form-flash -->
 
-- **`registerForm.defaultPinneds`** — template isi awal panel Flash Data saat panel Register Form dibuka (objek JSON: nama kolom → nilai). Default `{}` (kosong). Contoh: `{"key": ""}`.
+- **`registerForm.defaultPinneds`** — template isi awal panel Flash Data saat panel Register Form dibuka (objek JSON: nama kolom → nilai). Default `{}` (kosong).
+
+  ```json
+  {
+    "abx123": "Contoh",
+    "merokok": "Ya",
+    "sesi": "Pagi"
+  }
+  ```
 
 > **Catatan data**: template ini berisi data yang Anda isi sendiri. Isi hanya data yang Anda ketahui benar, jangan simpan data orang lain, dan jangan bagikan berkas konfigurasi yang sudah terisi.

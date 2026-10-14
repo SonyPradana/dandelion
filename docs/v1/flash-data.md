@@ -9,6 +9,17 @@ Panel data kilat: menyimpan data sementara di halaman kerja agar bisa dipakai ul
 1. Aktifkan **Tampilkan Panel Flash Data** di [Config → Mode Zen](/doc/v1/config-zen-mode) (`flashData.enabled`).
 2. Buka halaman kerja (formulir skrining atau form pendaftaran) — panel Flash Data muncul di halaman.
 3. Isi kolom data yang diperlukan, atau pakai template awal (`defaultPinneds`) yang sudah disiapkan di konfigurasi — tersedia template terpisah untuk Mode Zen dan Register Form.
+
+   Nama kolom mengikuti kolom yang ada di formulir Anda — berikut contoh isi panel (semua nilai bersifat contoh):
+
+   ```json
+   {
+     "merokok": "Ya",
+     "abx123": "Tidak",
+     "sesi": "Pagi"
+   }
+   ```
+
 4. Saat pengisian berjalan, **Skrining Form** dan **Registration Form** memakai data dari panel ini secara otomatis.
 
 ## Yang Perlu Diketahui

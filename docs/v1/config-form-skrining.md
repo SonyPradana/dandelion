@@ -40,4 +40,11 @@ Pengaturan untuk fitur auto-fill formulir skrining. Halaman yang mau diisi diten
 
 <!-- config-section:form-skrining-pinned-values -->
 
-- **`formSkrining.pinneds`** — jawaban tetap per pertanyaan (objek JSON: pengenal pertanyaan → jawaban). Efek: kolom ini diisi otomatis walau tidak ada kata kunci yang cocok — berguna untuk jawaban yang selalu sama. Default `{}` (kosong). Contoh: `{"pertanyaan1": "jawaban"}`.
+- **`formSkrining.pinneds`** — jawaban tetap per pertanyaan (objek JSON: pengenal pertanyaan → jawaban). Efek: kolom ini diisi otomatis walau tidak ada kata kunci yang cocok — berguna untuk jawaban yang selalu sama. Default `{}` (kosong).
+
+  ```json
+  {
+    "merokok": "Ya",
+    "abx123": "Tidak"
+  }
+  ```
