@@ -1,6 +1,6 @@
 # Uninstalasi
 
-Penghapusan ekstensi berbeda sedikit antar peramban. Token kuota yang kamu kelola di server tidak terpengaruh.
+Penghapusan ekstensi berbeda sedikit antar browser. Token kuota yang kamu kelola di server tidak terpengaruh.
 
 ## Desktop
 
@@ -41,5 +41,5 @@ Penghapusan ekstensi berbeda sedikit antar peramban. Token kuota yang kamu kelol
 
 ## Catatan
 
-- Uninstalasi hanya mencabut ekstensi dari peramban; token kuota tetap aktif sampai masa berlakunya habis.
-- Jika hanya ingin menonaktifkan sementara, gunakan opsi _disable_ pada halaman ekstensi peramban masing-masing.
+- Uninstalasi hanya mencabut ekstensi dari browser; token kuota tetap aktif sampai masa berlakunya habis.
+- Jika hanya ingin menonaktifkan sementara, gunakan opsi _disable_ pada halaman ekstensi browser masing-masing.

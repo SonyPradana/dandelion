@@ -1,6 +1,6 @@
 # Instalasi
 
-Dandelion adalah ekstensi peramban. Unduh dulu berkas terbaru dari [halaman utama](/) sesuai perambanmu, lalu ikuti langkah di bawah.
+Dandelion adalah ekstensi browser. Unduh dulu berkas terbaru dari [halaman utama](/) sesuai browser-mu, lalu ikuti langkah di bawah.
 
 > Selalu ambil berkas dari halaman utama — jangan dari sumber lain.
 

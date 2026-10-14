@@ -37,7 +37,7 @@ Tampil badge **`PRO`** beserta grid informasi dari token:
 
 ## Device ID
 
-Setiap perangkat memiliki **Device ID** unik — 8 karakter yang dibuat otomatis saat pertama kali ekstensi dibuka dan disimpan di peramban.
+Setiap perangkat memiliki **Device ID** unik — 8 karakter yang dibuat otomatis saat pertama kali ekstensi dibuka dan disimpan di browser.
 
 - Tampil di tab ini: label `Device ID` + tombol **Salin** (berubah jadi `Tersalin!` saat berhasil disalin), dengan petunjuk `Gunakan ID ini untuk mendapatkan token`.
 - Token **terikat ke Device ID**: saat memasang token, ekstensi menolak token yang dibuat untuk device lain dengan pesan `Token tidak terikat dengan device ini`. Jadi siapkan Device ID ini sebelum meminta token (lihat [Generator](/doc/v1/generator)).
