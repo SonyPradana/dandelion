@@ -582,7 +582,9 @@ async function handleRequest(req: Request): Promise<Response> {
     const docDir = resolve(join(PUBLIC_DIR, 'doc', version));
     const docFile = resolve(docDir, slug ? `${slug}.html` : 'index.html');
     if (!docFile.startsWith(docDir + sep) || !existsSync(docFile)) return notFound();
-    return new Response(Bun.file(docFile));
+    return new Response(Bun.file(docFile), {
+      headers: { 'cache-control': 'no-cache' },
+    });
   }
 
   if (pathname === '/doc' || pathname === '/doc/') {
