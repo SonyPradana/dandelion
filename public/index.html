@@ -18,13 +18,13 @@
         background: #0a0a0f;
         color: #e4e4e7;
         min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        padding: 3rem 1rem;
+        padding: 0 0 3rem;
       }
       .wrapper {
         max-width: 640px;
         width: 100%;
+        margin: 3rem auto 0;
+        padding: 0 1rem;
       }
       header {
         margin-bottom: 2.5rem;
@@ -36,7 +36,7 @@
         letter-spacing: -0.02em;
       }
       .tagline {
-        color: #71717a;
+        color: #a1a1aa;
         margin-top: 0.25rem;
         font-size: 0.9rem;
       }
@@ -45,7 +45,7 @@
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: #71717a;
+        color: #a1a1aa;
         margin-bottom: 1rem;
       }
       .downloads {
@@ -68,7 +68,7 @@
       }
       .card .version {
         font-size: 0.85rem;
-        color: #71717a;
+        color: #a1a1aa;
         margin-bottom: 1rem;
       }
       .btn {
@@ -101,8 +101,8 @@
         border: 1px solid #2a2a3a;
       }
       .btn-outline:hover {
-        border-color: #6366f1;
-        color: #6366f1;
+        border-color: #818cf8;
+        color: #818cf8;
       }
       .card-solo {
         background: #14141f;
@@ -120,7 +120,7 @@
       }
       .card-solo p {
         font-size: 0.85rem;
-        color: #71717a;
+        color: #a1a1aa;
         margin-top: 0.15rem;
       }
       .endpoint-list {
@@ -143,16 +143,16 @@
       }
       .entry-path {
         font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
-        color: #6366f1;
+        color: #818cf8;
         font-size: 0.82rem;
         white-space: nowrap;
         min-width: 200px;
       }
       .entry-desc {
-        color: #71717a;
+        color: #a1a1aa;
       }
       a {
-        color: #6366f1;
+        color: #818cf8;
         text-decoration: none;
       }
       a:hover {
@@ -161,7 +161,7 @@
       .status {
         margin-bottom: 2.5rem;
         text-align: center;
-        color: #71717a;
+        color: #a1a1aa;
         font-size: 0.85rem;
       }
       .nightly-desc {
@@ -171,7 +171,7 @@
       }
       .changelog-empty {
         text-align: center;
-        color: #71717a;
+        color: #a1a1aa;
         font-size: 0.85rem;
         padding: 1rem;
       }
@@ -198,14 +198,14 @@
       .changelog-version {
         font-size: 0.8rem;
         font-weight: 600;
-        color: #6366f1;
+        color: #a5b4fc;
         background: #1e1b4b;
         padding: 0.15rem 0.5rem;
         border-radius: 4px;
       }
       .changelog-date {
         font-size: 0.8rem;
-        color: #71717a;
+        color: #a1a1aa;
         margin-left: auto;
       }
       .changelog-entry ul {
@@ -224,8 +224,46 @@
         content: '—';
         position: absolute;
         left: 0;
-        color: #6366f1;
+        color: #818cf8;
       }
+      /* ── topbar ── */
+      .topbar {
+        border-bottom: 1px solid #2a2a3a;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(8px);
+      }
+      .topbar-inner {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 0.7rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .topbar-brand {
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #e4e4e7;
+        padding: 0.3rem 0;
+      }
+      .topbar-brand:hover {
+        color: #818cf8;
+      }
+      .topbar-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+      .topbar-downloads {
+        font-size: 0.8rem;
+        color: #a1a1aa;
+        white-space: nowrap;
+      }
+
       @media (max-width: 500px) {
         .downloads {
           flex-direction: column;
@@ -241,10 +279,19 @@
     </style>
   </head>
   <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="topbar-downloads" id="total-downloads" hidden></span>
+          <a class="btn btn-outline" href="/doc/v1/">Dokumentasi</a>
+        </div>
+      </div>
+    </header>
     <div class="wrapper">
       <header>
         <h1>Dandelion</h1>
-        <p class="tagline">Clean UX you might like</p>
+        <p class="tagline">Make human decide, let megchine do the work.</p>
       </header>
 
       <section id="downloads-section">
@@ -310,12 +357,20 @@
             ><span class="entry-desc">Alias for /manifest.json</span>
           </div>
           <div class="entry">
+            <span class="entry-path">/api/download-stats</span
+            ><span class="entry-desc">Unique visitor counts per browser</span>
+          </div>
+          <div class="entry">
             <span class="entry-path">/artifacts/&lt;file&gt;</span
             ><span class="entry-desc">Download .zip or .xpi</span>
           </div>
           <div class="entry">
             <span class="entry-path">/health</span
             ><span class="entry-desc">Health check (JSON)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/doc/v1/&lt;page&gt;</span
+            ><span class="entry-desc">Documentation</span>
           </div>
           <div class="entry">
             <span class="entry-path">/&lt;public file&gt;</span
@@ -383,6 +438,17 @@
           document.getElementById('chrome-nightly-version').textContent = 'Not available';
           status.textContent = 'No artifacts found. Run pnpm release to build.';
         }
+
+        try {
+          const statsRes = await fetch('/api/download-stats');
+          if (!statsRes.ok) throw new Error('Not found');
+          const { downloads } = await statsRes.json();
+          const total = Object.values(downloads ?? {}).reduce((sum, count) => sum + count, 0);
+          if (total === 0) throw new Error('No downloads');
+          const el = document.getElementById('total-downloads');
+          el.textContent = `${total.toLocaleString('id-ID')} terinstall`;
+          el.hidden = false;
+        } catch {}
 
         try {
           const changelogRes = await fetch('/changelog.json');

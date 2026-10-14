@@ -13,14 +13,14 @@ body {
   color: #e1e4e8;
   line-height: 1.6;
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  padding: 2rem 1rem;
+  padding: 0 0 2rem;
 }
 
 .container {
   max-width: 640px;
   width: 100%;
+  margin: 3rem auto 0;
+  padding: 0 1rem;
 }
 
 header {

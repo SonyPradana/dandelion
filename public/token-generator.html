@@ -6,22 +6,86 @@
     <title>Dandelion — Token Generator</title>
     <link rel="stylesheet" href="token-generator.css" />
     <style>
-      .back-link {
-        display: inline-block;
-        margin-bottom: 0.5rem;
-        color: #6366f1;
-        text-decoration: none;
-        font-size: 0.85rem;
+      /* ── topbar ── */
+      .topbar {
+        border-bottom: 1px solid #2a2a3a;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: rgba(10, 10, 15, 0.85);
+        backdrop-filter: blur(8px);
       }
-      .back-link:hover {
-        text-decoration: underline;
+      .topbar-inner {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 0.7rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .topbar-brand {
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #e4e4e7;
+        text-decoration: none;
+        padding: 0.3rem 0;
+      }
+      .topbar-brand:hover {
+        color: #818cf8;
+      }
+      .topbar-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+      }
+      .topbar-downloads {
+        font-size: 0.8rem;
+        color: #a1a1aa;
+        white-space: nowrap;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.55rem 1.2rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+      }
+      .btn-primary {
+        background: #6366f1;
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #5558e6;
+      }
+      .btn-outline {
+        background: transparent;
+        color: #e4e4e7;
+        border: 1px solid #2a2a3a;
+      }
+      .btn-outline:hover {
+        border-color: #818cf8;
+        color: #818cf8;
       }
     </style>
   </head>
   <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="topbar-downloads" id="total-downloads" hidden></span>
+          <a class="btn btn-outline" href="/doc/v1/">Dokumentasi</a>
+        </div>
+      </div>
+    </header>
     <div class="container">
       <header>
-        <a href="/" class="back-link">← Home</a>
         <h1>Dandelion</h1>
         <p class="subtitle">Quota Token Generator</p>
       </header>
@@ -115,5 +179,20 @@
     </div>
 
     <script type="module" src="token-generator.js"></script>
+
+    <script>
+      (async () => {
+        try {
+          const res = await fetch('/api/download-stats');
+          if (!res.ok) throw new Error('Not found');
+          const { downloads } = await res.json();
+          const total = Object.values(downloads ?? {}).reduce((sum, count) => sum + count, 0);
+          if (total === 0) throw new Error('No downloads');
+          const el = document.getElementById('total-downloads');
+          el.textContent = `${total.toLocaleString('id-ID')} terinstall`;
+          el.hidden = false;
+        } catch {}
+      })();
+    </script>
   </body>
 </html>
