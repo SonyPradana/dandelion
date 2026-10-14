@@ -1,7 +1,8 @@
 import { readdirSync, existsSync, readFileSync, statSync, watch, mkdirSync } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, resolve, sep } from 'path';
 import { Database } from 'bun:sqlite';
 import { verifyLicense } from './src/quota/verify.js';
+import { listDocVersions } from './scripts/build-docs.js';
 
 // ── Routes ──
 //   /                     → Landing page (index.html)
@@ -9,10 +10,13 @@ import { verifyLicense } from './src/quota/verify.js';
 //   /update.json          → Auto-update manifest (Firefox addon update)
 //   /manifest.json        → Version listing of all artifacts
 //   /api/versions         → Alias for /manifest.json
+//   /api/download-stats   → Unique download visitor counts per browser (JSON)
 //   /artifacts/<file>     → Artifact download (.zip, .xpi)
 //   /health               → Health check (GET & HEAD)
 //   /api/share            → Create a share link (POST)
 //   /share/<id>           → View a shared token (GET)
+//   /doc                  → Redirect to latest documentation version
+//   /doc/v1/<slug>        → Documentation page (built by scripts/build-docs.ts)
 //   /<any public file>    → Static files served from public/
 
 // --- types ---
@@ -39,6 +43,7 @@ const TLS_KEY = process.env.TLS_KEY || join(ROOT, 'keys', 'localhost-key.pem');
 const hasTls = existsSync(TLS_CERT) && existsSync(TLS_KEY);
 const PROTOCOL = hasTls ? 'https' : 'http';
 const HOST = process.env.HOST || 'localhost';
+const LATEST_DOC_VERSION = listDocVersions().at(-1) ?? 'v1';
 
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 let BASE_URL = '';
@@ -402,6 +407,21 @@ async function handleRequest(req: Request): Promise<Response> {
     });
   }
 
+  // ── download stats (unique visitors per browser) ─────────────────────
+  if (pathname === '/api/download-stats') {
+    const rows = db
+      .query('SELECT browser, COUNT(*) AS unique_visitors FROM download_stats GROUP BY browser')
+      .all() as { browser: string; unique_visitors: number }[];
+    const downloads: Record<string, number> = {};
+    for (const row of rows) downloads[row.browser] = row.unique_visitors;
+    return new Response(JSON.stringify({ downloads }, null, 2), {
+      headers: {
+        'content-type': 'application/json',
+        'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+      },
+    });
+  }
+
   // ── serve artifact files ────────────────────────────────────────────
   if (pathname.startsWith('/artifacts/')) {
     const raw = pathname.slice('/artifacts/'.length);
@@ -550,6 +570,23 @@ async function handleRequest(req: Request): Promise<Response> {
     return new Response(renderSharePage(counted), {
       headers: { 'content-type': 'text/html' },
     });
+  }
+
+  // ── documentation ──────────────────────────────────────────────────
+  //   /doc              → redirect to latest doc version
+  //   /doc/v1           → first page (index.html)
+  //   /doc/v1/<slug>    → generated static page
+  const docMatch = pathname.match(/^\/doc\/(v\d+)(?:\/([a-z0-9-]+))?\/?$/);
+  if (docMatch) {
+    const [, version, slug] = docMatch;
+    const docDir = resolve(join(PUBLIC_DIR, 'doc', version));
+    const docFile = resolve(docDir, slug ? `${slug}.html` : 'index.html');
+    if (!docFile.startsWith(docDir + sep) || !existsSync(docFile)) return notFound();
+    return new Response(Bun.file(docFile));
+  }
+
+  if (pathname === '/doc' || pathname === '/doc/') {
+    return Response.redirect(`/doc/${LATEST_DOC_VERSION}/`, 302);
   }
 
   const staticPath = pathname === '/' ? '/index.html' : pathname;
