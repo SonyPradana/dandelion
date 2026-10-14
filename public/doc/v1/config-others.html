@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lainnya — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub is-active" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="lainnya">Lainnya</h1>
+<p>Pengaturan umum: notifikasi, posisi panel, dan ekspor/impor konfigurasi.</p>
+<h2 id="notifikasi">Notifikasi</h2>
+<ul><li><strong>Bisukan Notifikasi Info</strong> — Bisukan notifikasi info</li></ul>
+<ul>
+<li><strong><code>silenceInfoNotification</code></strong> — mematikan notifikasi tingkat info (misalnya pemberitahuan &quot;Selesai&quot;). Efek: <code>true</code> = notifikasi info tidak muncul dan pekerjaan lebih tenang; peringatan penting tetap tampil. Default <code>false</code> (boolean). Contoh: <code>true</code>.</li>
+</ul>
+<h2 id="posisi-panel">Posisi Panel</h2>
+<ul><li><strong>Posisi Panel</strong> — Posisi panel di layar</li></ul>
+<ul>
+<li><strong><code>panelPosition</code></strong> — sudut layar tempat panel Dandelion mengambang. Efek: panel langsung dipindah ke posisi baru tanpa restart. Default <code>top-right</code>; pilihan: <code>top-left</code>, <code>top-right</code>, <code>bottom-left</code>, <code>bottom-right</code>. Contoh: <code>bottom-left</code>.</li>
+</ul>
+<h2 id="ekspor-dan-impor-konfigurasi">Ekspor dan Impor Konfigurasi</h2>
+<ul><li><strong>Ekspor &amp; Impor Konfigurasi</strong> — Ekspor, impor, dan edit konfigurasi JSON</li></ul>
+<p>Konfigurasi berupa <strong>berkas JSON biasa</strong> — tidak terikat pada layanan mana pun, jadi bisa dipindahkan antar perangkat atau browser kapan saja. Fitur ini sering dipakai untuk <strong>pindah device</strong> dan <strong>fresh install</strong>.</p>
+<p>Tersedia di dua tempat, caranya sama:</p>
+<ul>
+<li>Halaman pengaturan lengkap → tab <strong>Lainnya</strong> → bagian <strong>Ekspor &amp; Impor Konfigurasi</strong> (<code>📥 Ekspor Konfigurasi</code> / <code>📤 Impor Konfigurasi</code>)</li>
+<li><strong>Popup ekstensi</strong> → tab <strong>Konfigurasi</strong> → tautan <code>Ekspor</code> / <code>Impor</code></li>
+</ul>
+<h3 id="ekspor-backup-pindah-device">Ekspor (backup / pindah device)</h3>
+<ol>
+<li>Buka salah satu tempat di atas, lalu klik <strong>Ekspor</strong>.</li>
+<li>Peramban mengunduh berkas bernama <strong><code>dandelion-config.json</code></strong> — berisi semua profil beserta seluruh pengaturannya, plus posisi panel dan pilihan notifikasi.</li>
+<li>Simpan berkas itu di tempat aman (flashdisk, folder pribadi, dsb).</li>
+</ol>
+<blockquote>
+<p><strong>Yang TIDAK ikut ter-ekspor</strong>: token kuota, statistik produktivitas, dan identitas perangkat. Jadi di perangkat baru, pasang ulang token lewat <a href="/doc/v1/penerapan">Penerapan</a> setelah impor.</p>
+</blockquote>
+<h3 id="impor-fresh-install-perangkat-baru">Impor (fresh install / perangkat baru)</h3>
+<ol>
+<li>
+<p>Pasang ekstensi di perangkat baru (lihat <a href="/doc/v1/installation">Instalasi</a>). Saat pertama kali, pengaturan masih <strong>default kosong</strong> (Profil 1 &amp; Profil 2).</p>
+</li>
+<li>
+<p>Buka tempat Ekspor/Impor di atas, lalu klik <strong>Impor</strong>.</p>
+</li>
+<li>
+<p>Pilih berkas <code>dandelion-config.json</code> hasil ekspor (pilih file hanya menerima <code>.json</code>).</p>
+</li>
+<li>
+<p>Muncul konfirmasi:</p>
+<pre><code>Impor 2 profil (aktif: Profil Utama)?
+Konfigurasi saat ini akan ditimpa. Lanjutkan?
+</code></pre>
+</li>
+<li>
+<p>Klik <strong>OK</strong> — semua pengaturan langsung terganti, tampilan menyegarkan diri tanpa perlu reload, dan tombol menampilkan <strong>&quot;Diimpor!&quot;</strong> sebentar sebagai tanda sukses.</p>
+</li>
+<li>
+<p>Pasang ulang token (bila dipakai), lalu periksa kembali pengaturan per profil sebelum dipakai kerja.</p>
+</li>
+</ol>
+<h3 id="yang-perlu-diingat">Yang perlu diingat</h3>
+<ul>
+<li>Impor <strong>menimpa seluruh</strong> konfigurasi yang ada (bukan digabung). Batal = tidak ada perubahan.</li>
+<li>Field yang kurang pada berkas diisi <strong>otomatis dengan nilai default</strong> — berkas ekspor dari versi mana pun aman.</li>
+<li>Kalau gagal, muncul peringatan berisi penyebab pertama, contoh:
+<ul>
+<li><code>JSON tidak valid: …</code> — berkas bukan JSON utuh (terpotong/korup)</li>
+<li><code>Key &quot;…&quot; tidak didukung.</code> — berkas bukan ekspor Dandelion</li>
+<li><code>&quot;panelPosition&quot; tidak valid. Gunakan salah satu: top-left, top-right, bottom-left, bottom-right.</code></li>
+</ul>
+</li>
+<li>Ada juga tombol <strong>📝 Edit Konfigurasi (JSON)</strong> pada section yang sama untuk memeriksa atau mengubah isi konfigurasi langsung.</li>
+</ul>
+<h3 id="keamanan-berkas">Keamanan berkas</h3>
+<ul>
+<li><strong>Jangan bagikan</strong> berkas konfigurasi yang sudah terisi ke pihak yang tidak berwenang — bisa berisi pengaturan internal Anda.</li>
+<li>Impor hanya dari berkas yang Anda buat sendiri atau yang benar-benar Anda percaya.</li>
+<li>Berkas ekspor <strong>tidak berisi token</strong> — aman disimpan sebagai backup pengaturan, tetapi tetap jaga privasinya.</li>
+</ul>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/config-productivity">&larr; Produktivitas</a>
+    <a class="btn btn-outline" href="/doc/v1/config-quota">Batas Pemakaian &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#notifikasi">Notifikasi</a></li>
+    <li class="toc-h2"><a href="#posisi-panel">Posisi Panel</a></li>
+    <li class="toc-h2"><a href="#ekspor-dan-impor-konfigurasi">Ekspor dan Impor Konfigurasi</a></li>
+    <li class="toc-h3"><a href="#ekspor-backup-pindah-device">Ekspor (backup / pindah device)</a></li>
+    <li class="toc-h3"><a href="#impor-fresh-install-perangkat-baru">Impor (fresh install / perangkat baru)</a></li>
+    <li class="toc-h3"><a href="#yang-perlu-diingat">Yang perlu diingat</a></li>
+    <li class="toc-h3"><a href="#keamanan-berkas">Keamanan berkas</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

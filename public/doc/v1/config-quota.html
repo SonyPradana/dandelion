@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Batas Pemakaian — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub is-active" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="batas-pemakaian">Batas Pemakaian</h1>
+<p>Tab status kuota Dandelion di perangkat ini: token yang terpasang, masa berlaku, dan pilihan untuk memasang atau menghapus token. Semua status dibaca <strong>lokal</strong> — verifikasi token dilakukan di perangkat tanpa menghubungi server mana pun.</p>
+<h2 id="status-pemakaian">Status Pemakaian</h2>
+<ul><li><strong>Token &amp; Sisa Hari Ini</strong> — Aktifkan token dan lihat sisa</li></ul>
+<h3 id="saat-token-aktif-pro-tier">Saat token aktif (Pro Tier)</h3>
+<p>Tampil badge <strong><code>PRO</code></strong> beserta grid informasi dari token:</p>
+<table>
+<thead>
+<tr><th>Field</th><th>Arti</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Total Limit</code></td><td>Total poin yang boleh dipakai seumur token; <code>0</code> berarti tanpa batas</td></tr>
+<tr><td><code>Grace Daily</code></td><td>Batas poin per hari yang dipakai sebagai pengaman</td></tr>
+<tr><td><code>Berlaku Sampai</code></td><td>Tanggal kedaluwarsa token</td></tr>
+<tr><td><code>Sisa Hari Ini</code></td><td>Selalu tampil <code>∞</code> untuk Pro — sisa harian bukan batas bagi pengguna Pro</td></tr>
+<tr><td><code>Fitur</code></td><td>Daftar fitur yang diizinkan token (mis. <code>skrining</code>, <code>skriningform</code>, <code>zen-mode</code>)</td></tr>
+<tr><td><code>Versi Diizinkan</code></td><td>Versi ekstensi yang cocok dengan token (<code>*</code>, pola <code>x.*</code>, atau versi tepat)</td></tr>
+</tbody>
+</table>
+<ul>
+<li>Fitur berjalan sesuai daftar <code>Fitur</code> token, dan hanya pada versi yang masuk <code>Versi Diizinkan</code> — di luar itu ekstensi jatuh ke Free Tier.</li>
+<li>Pemakaian menuju <code>Total Limit</code> terlihat di tab <strong>Produktivitas</strong> (bar <code>Total Limit (Pro Tier)</code> beserta periode token).</li>
+</ul>
+<h3 id="saat-token-kedaluwarsa">Saat token kedaluwarsa</h3>
+<ul>
+<li>Token dibaca ulang secara otomatis saat kedaluwarsa (dicek saat ekstensi dimuat); status <strong>langsung jatuh ke Free Tier</strong> — badge <code>FREE</code>, grid informasi hilang, dan tampilan tab menjadi <strong>persis sama dengan tanpa token</strong>. Tab ini tidak menampilkan label &quot;kedaluwarsa&quot;.</li>
+<li>Sisa masa berlaku masih bisa dipantau lewat <strong>popup ekstensi</strong> → tab <strong>Produktifitas</strong>: <code>Berakhir dalam N hari</code>, atau <code>Kedaluwarsa</code> bila sudah lewat.</li>
+<li>Fitur <strong>tidak berhenti total</strong> — ekstensi kembali memakai aturan Free Tier (semua fitur aktif, 50 poin/hari).</li>
+<li>Status bisa tertunda hingga <strong>8 jam</strong> oleh cache lisensi lokal — token yang baru saja kedaluwarsa mungkin masih ditampilkan sebagai Pro sampai cache habis.</li>
+</ul>
+<h3 id="free-tier-tanpa-token">Free Tier (tanpa token)</h3>
+<ul>
+<li>Badge <code>FREE</code> + keterangan <code>Free Tier (50 poin/hari)</code>.</li>
+<li>Semua fitur tetap aktif; batasnya 50 poin per hari (lihat <a href="/doc/v1/penerapan">Penerapan</a> untuk bobot poin tiap aksi).</li>
+<li>Sisa poin harian <strong>tidak ditampilkan di tab ini</strong> — angka harian yang bisa dicek ada di tab <strong>Produktivitas</strong> (kolom Hari Ini).</li>
+</ul>
+<h2 id="device-id">Device ID</h2>
+<p>Setiap perangkat memiliki <strong>Device ID</strong> unik — 8 karakter yang dibuat otomatis saat pertama kali ekstensi dibuka dan disimpan di peramban.</p>
+<ul>
+<li>Tampil di tab ini: label <code>Device ID</code> + tombol <strong>Salin</strong> (berubah jadi <code>Tersalin!</code> saat berhasil disalin), dengan petunjuk <code>Gunakan ID ini untuk mendapatkan token</code>.</li>
+<li>Token <strong>terikat ke Device ID</strong>: saat memasang token, ekstensi menolak token yang dibuat untuk device lain dengan pesan <code>Token tidak terikat dengan device ini</code>. Jadi siapkan Device ID ini sebelum meminta token (lihat <a href="/doc/v1/generator">Generator</a>).</li>
+<li>ID hanya dibuat sekali dan <strong>tidak bisa direset</strong> lewat pengaturan. Nilai berubah hanya bila data ekstensi terhapus (mis. instal ulang ekstensi atau pembersihan data ekstensi) — setelah itu token lama tidak bisa dipasang lagi; minta token baru untuk ID yang baru.</li>
+<li>Device ID hanya tampil di halaman pengaturan lengkap ini — tidak ada di popup.</li>
+</ul>
+<h2 id="menambahkan-memperbarui-dan-menghapus-token">Menambahkan, Memperbarui, dan Menghapus Token</h2>
+<h3 id="lewat-halaman-pengaturan-lengkap-tab-batas-pemakaian">Lewat halaman pengaturan lengkap (tab Batas Pemakaian)</h3>
+<p>Bagian <strong>Aktifkan Token</strong> berisi kotak teks dan dua tombol:</p>
+<ol>
+<li><strong>Memasang token</strong>: tempel token (JWT) ke kotak teks — cukup <strong>baris pertama</strong> yang dipakai — lalu klik <strong>Aktifkan</strong>.</li>
+<li><strong>Memperbarui token</strong>: cara yang sama — tempel token baru (mis. setelah token lama habis masa berlakunya) lalu klik <strong>Aktifkan</strong> lagi. Token lama langsung <strong>ditimpa</strong>, tanpa konfirmasi tambahan.</li>
+<li><strong>Menghapus token</strong>: klik <strong>Hapus Token</strong> — pesan <code>Token dihapus, kembali ke Free Tier.</code> tampil dan status kembali <code>FREE</code>. Tombol ini tidak aktif bila sedang Free Tier.</li>
+</ol>
+<p>Pesan yang mungkin muncul setelah klik Aktifkan:</p>
+<table>
+<thead>
+<tr><th>Pesan</th><th>Penyebab</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Masukkan token terlebih dahulu.</code></td><td>Kotak teks kosong</td></tr>
+<tr><td><code>Token berhasil diaktifkan!</code></td><td>Token lolos verifikasi dan tersimpan</td></tr>
+<tr><td><code>Gagal: Token tidak valid atau sudah kadaluarsa.</code></td><td>Token rusak, signature tidak cocok, atau sudah lewat masa berlaku</td></tr>
+<tr><td><code>Gagal: Token tidak terikat dengan device ini.</code></td><td>Token dibuat untuk Device ID perangkat lain</td></tr>
+</tbody>
+</table>
+<h3 id="lewat-halaman-share">Lewat halaman share</h3>
+<p>Bila ada halaman yang membagikan token (tombol <code>🚀 Terapkan</code>), klik tombolnya — muncul konfirmasi:</p>
+<pre><code>Yakin ingin menerapkan token ini? Token aktif saat ini akan diganti.
+</code></pre>
+<p>Konfirmasi <strong>OK</strong> langsung menimpa token yang sedang terpasang.</p>
+<h3 id="yang-perlu-diingat">Yang perlu diingat</h3>
+<ul>
+<li>Verifikasi token <strong>offline</strong> (tanda tangan digital dan masa berlaku dicek di perangkat) — pemasangan token tidak mengirim apa pun ke server.</li>
+<li>Token <strong>tidak ikut ter-ekspor</strong> bersama konfigurasi (<a href="/doc/v1/config-others">Ekspor &amp; Impor</a>) — setelah pindah perangkat, pasang ulang token dengan Device ID perangkat baru.</li>
+<li>Belum punya token? Siapkan Device ID di atas, lalu buat token di <a href="/doc/v1/generator">Generator</a>; cara pemasangan lain ada di <a href="/doc/v1/penerapan">Penerapan</a>.</li>
+</ul>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/config-others">&larr; Lainnya</a>
+    <a class="btn btn-outline" href="/doc/v1/agreement">Persetujuan Penggunaan &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#status-pemakaian">Status Pemakaian</a></li>
+    <li class="toc-h3"><a href="#saat-token-aktif-pro-tier">Saat token aktif (Pro Tier)</a></li>
+    <li class="toc-h3"><a href="#saat-token-kedaluwarsa">Saat token kedaluwarsa</a></li>
+    <li class="toc-h3"><a href="#free-tier-tanpa-token">Free Tier (tanpa token)</a></li>
+    <li class="toc-h2"><a href="#device-id">Device ID</a></li>
+    <li class="toc-h2"><a href="#menambahkan-memperbarui-dan-menghapus-token">Menambahkan, Memperbarui, dan Menghapus Token</a></li>
+    <li class="toc-h3"><a href="#lewat-halaman-pengaturan-lengkap-tab-batas-pemakaian">Lewat halaman pengaturan lengkap (tab Batas Pemakaian)</a></li>
+    <li class="toc-h3"><a href="#lewat-halaman-share">Lewat halaman share</a></li>
+    <li class="toc-h3"><a href="#yang-perlu-diingat">Yang perlu diingat</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

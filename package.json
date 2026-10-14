@@ -18,6 +18,8 @@
     "clean": "node scripts/remove-static.js dist",
     "clean:chrome": "node scripts/remove-static.js dist/chrome",
     "clean:firefox": "node scripts/remove-static.js dist/firefox",
+    "build:docs": "bun scripts/build-docs.ts",
+    "docs:images": "bun scripts/gen-doc-image.ts",
     "build:chrome": "pnpm clean:chrome && cross-env TARGET=chrome OUTPUT_DIR=dist/chrome rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-chrome-manifest.js",
     "build:firefox": "pnpm clean:firefox && cross-env TARGET=firefox OUTPUT_DIR=dist/firefox rolldown -c && node scripts/copy-static.js dist/firefox && node scripts/build-firefox-manifest.js",
     "build": "pnpm build:chrome && pnpm build:firefox",

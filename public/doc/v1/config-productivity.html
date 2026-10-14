@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Produktivitas — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub is-active" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="produktivitas">Produktivitas</h1>
+<p>Tab statistik kerja Anda di halaman pengaturan lengkap. Semua angka dihitung <strong>lokal di perangkat ini</strong> — tidak dikirim ke mana pun. Segarkan tampilan kapan saja lewat tombol <strong>↻</strong> di judul tab.</p>
+<h2 id="statistik">Statistik</h2>
+<ul><li><strong>Ringkasan Produktivitas</strong> — Data hari ini, ringkasan, dan grafik</li></ul>
+<h2 id="kolom-quot-hari-ini-quot">Kolom &quot;Hari Ini&quot;</h2>
+<p>Enam baris kategori; masing-masing menampilkan poin hari ini, <strong>selisih dibanding kemarin</strong> <code>(±n)</code>, dan total sepanjang masa:</p>
+<table>
+<thead>
+<tr><th>Baris</th><th>Kategori</th></tr>
+</thead>
+<tbody>
+<tr><td>📻 Radio</td><td>jawaban radio (Skrining &amp; Skrining Form)</td></tr>
+<tr><td>📝 Teks</td><td>isian teks bebas</td></tr>
+<tr><td>📋 Dropdown</td><td>pilihan dropdown</td></tr>
+<tr><td>❌ Tidak Periksa</td><td>baris lewati yang diproses Zero Mode</td></tr>
+<tr><td>🧘 Zen</td><td>baris yang diproses Zen Mode</td></tr>
+<tr><td>📝 Register</td><td>section pendaftaran yang selesai</td></tr>
+</tbody>
+</table>
+<p>Baris <strong>Total</strong> menggabungkan semuanya. Bila belum ada aktivitas hari ini, tampil keterangan <code>Belum ada data hari ini.</code></p>
+<h2 id="kolom-quot-ringkasan-quot">Kolom &quot;Ringkasan&quot;</h2>
+<ul>
+<li>🏆 <strong>Grand Total</strong> — total poin sepanjang waktu</li>
+<li>📆 <strong>Hari Aktif</strong> — jumlah hari yang punya catatan</li>
+<li>⚡ <strong>Rata-rata/hari</strong> — grand total dibagi hari aktif</li>
+<li><strong>Progress bar</strong> — <code>Progress Minggu Ini (target 30.000 poin)</code>: poin dari Senin sampai hari ini dibanding target <strong>30.000 poin per minggu</strong>. Target ini tetap, tidak bisa diubah lewat pengaturan, dan tidak ada penanda &quot;tercapai&quot; — bar berhenti di penuh bila lewat target.</li>
+<li><strong>Pro Tier</strong> (token terpasang): bar <strong>Total Limit</strong> menampilkan pemakaian sejak token dibuat (<code>x / limit poin</code>) beserta periode token yang berlaku.</li>
+<li><strong>Free Tier</strong>: keterangan <code>50 poin/hari · tanpa total limit</code>. <strong>Sisa poin harian tidak tampil di tab ini</strong> — cek di tab <strong>Batas Pemakaian</strong> (<a href="/doc/v1/config-quota">Config → Kuota</a>).</li>
+</ul>
+<h2 id="grafik-produktivitas">Grafik Produktivitas</h2>
+<ul>
+<li>Batang vertikal per hari; judul menyesuaikan rentang data: <strong>Grafik Produktivitas 7H / 14H / 30H Terakhir</strong> — 7 hari sebagai dasar, 14H bila riwayat sudah ≥14 hari, 30H bila ≥30 hari.</li>
+<li>Tinggi tiap batang relatif terhadap <strong>hari tersibuk</strong> dalam rentang, bukan terhadap target.</li>
+<li>Label bawah menampilkan tanggal (<code>MM-DD</code>). Grafik tidak menyediakan tooltip atau angka per bar — angka harian yang tepat ada di kolom &quot;Hari Ini&quot;.</li>
+<li>Tanpa data sama sekali, batang tetap tampil setinggi minimum tanpa label tanggal.</li>
+</ul>
+<h2 id="yang-perlu-diingat">Yang perlu diingat</h2>
+<ul>
+<li><strong>Tidak ada</strong> tombol reset statistik atau ekspor di tab ini — angka menumpuk mengikuti aktivitas harian.</li>
+<li>Bobot poin tiap aksi tercantum di <a href="/doc/v1/penerapan">Penerapan</a>.</li>
+<li>Tab ini tanpa pengaturan tersendiri — angka mengikuti aktivitas fitur dari grup <a href="/doc/v1/skrining">Handler</a>.</li>
+<li>Statistik <strong>lokal per perangkat</strong> dan <strong>tidak ikut ter-ekspor</strong> bersama konfigurasi (<a href="/doc/v1/config-others">Ekspor &amp; Impor</a>).</li>
+</ul>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/config-zen-mode">&larr; Mode Zen</a>
+    <a class="btn btn-outline" href="/doc/v1/config-others">Lainnya &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#statistik">Statistik</a></li>
+    <li class="toc-h2"><a href="#kolom-quot-hari-ini-quot">Kolom &amp;quot;Hari Ini&amp;quot;</a></li>
+    <li class="toc-h2"><a href="#kolom-quot-ringkasan-quot">Kolom &amp;quot;Ringkasan&amp;quot;</a></li>
+    <li class="toc-h2"><a href="#grafik-produktivitas">Grafik Produktivitas</a></li>
+    <li class="toc-h2"><a href="#yang-perlu-diingat">Yang perlu diingat</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

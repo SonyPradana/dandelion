@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Flash Data — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link is-active" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="flash-data">Flash Data</h1>
+<p>Panel data kilat: menyimpan data sementara di halaman kerja agar bisa dipakai ulang oleh fitur lain, tanpa mengetik ulang.</p>
+<p><img src="/doc/v1/assets/flash-data-panel.webp" alt="Tangkap layar panel Flash Data di halaman kerja" width="960" height="540" loading="lazy" decoding="async" /></p>
+<h2 id="cara-pakai">Cara Pakai</h2>
+<ol>
+<li>Aktifkan <strong>Tampilkan Panel Flash Data</strong> di <a href="/doc/v1/config-zen-mode">Config → Mode Zen</a> (<code>flashData.enabled</code>).</li>
+<li>Buka halaman kerja (formulir skrining atau form pendaftaran) — panel Flash Data muncul di halaman.</li>
+<li>Isi kolom data yang diperlukan, atau pakai template awal (<code>defaultPinneds</code>) yang sudah disiapkan di konfigurasi — tersedia template terpisah untuk Mode Zen dan Register Form.</li>
+<li>Saat pengisian berjalan, <strong>Skrining Form</strong> dan <strong>Registration Form</strong> memakai data dari panel ini secara otomatis.</li>
+</ol>
+<h2 id="yang-perlu-diketahui">Yang Perlu Diketahui</h2>
+<ul>
+<li>Data <strong>kedaluwarsa otomatis</strong> setelah <code>flashData.maxAge</code> (default 10 menit) — lewat batas itu, data dibuang.</li>
+<li>Saat fitur dimatikan, panel tidak muncul dan data tidak disimpan.</li>
+<li>Data bersifat sementara di perangkat Anda; tanpa data di panel, fitur lain tetap berjalan — hanya kolom yang mengandalkan data ini yang tidak terisi otomatis.</li>
+<li>Isi template hanya dengan data yang Anda ketahui benar, dan jangan bagikan berkas konfigurasi yang sudah terisi.</li>
+</ul>
+<blockquote>
+<p>Pengaturan: <a href="/doc/v1/config-zen-mode">Config → Mode Zen</a> (tampilan panel &amp; umur data) dan <a href="/doc/v1/config-register-form">Config → Register Form</a> (template Register Form)</p>
+</blockquote>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/zen-zero-mode">&larr; Zen &amp; Zero Mode</a>
+    <a class="btn btn-outline" href="/doc/v1/config-basics">Dasar &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#cara-pakai">Cara Pakai</a></li>
+    <li class="toc-h2"><a href="#yang-perlu-diketahui">Yang Perlu Diketahui</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

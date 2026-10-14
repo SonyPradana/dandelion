@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skrining Form — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link is-active" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="skrining-form">Skrining Form</h1>
+<p>Fitur untuk mengisi formulir skrining: pilihan radio, dropdown, isian teks, dan pertanyaan sematan — dikenali lewat kata kunci yang Anda tentukan sendiri.</p>
+<p><img src="/doc/v1/assets/skrining-form-auto-fill.webp" alt="Tangkap layar formulir skrining dengan tombol auto-fill dan tombol kirim Dandelion" width="960" height="540" loading="lazy" decoding="async" /></p>
+<h2 id="cara-pakai">Cara Pakai</h2>
+<ol>
+<li>Siapkan konfigurasi di <a href="/doc/v1/config-form-skrining">Config → Form Skrining</a>: pola alamat, kata kunci jawaban, dan jawaban tetap per pertanyaan.</li>
+<li>Buka formulir skrining — tombol <strong>🙈</strong> muncul di halaman.</li>
+<li>Klik tombol itu: hitung mundur <strong>Zen Mode Asist</strong> berjalan sebentar (bisa dibatalkan kapan saja), lalu pengisian dimulai.</li>
+<li>Tunggu sampai selesai. Bila <code>scrollToButton</code> aktif (default), halaman bergulir ke bawah supaya tinggal diperiksa.</li>
+<li>Setelah formulir terisi, tombol <strong>✉️ kirim</strong> muncul — klik bila isian sudah benar.</li>
+</ol>
+<h2 id="yang-perlu-diketahui">Yang Perlu Diketahui</h2>
+<ul>
+<li>Jawaban dicari dari teks pertanyaan: kata kunci radio (<code>radioButtonKeywords</code>) dan dropdown (<code>dropdownKeywords</code>), plus jawaban tetap per pertanyaan (<code>pinneds</code>) yang diisi walau tidak ada kata kunci yang cocok.</li>
+<li>Dengan <strong>hormati isian</strong> aktif, kolom yang sudah Anda isi tidak ditimpa.</li>
+<li>Dengan <strong>isi ulang (ensureFill)</strong> aktif, pengisian dijalankan kedua kalinya untuk menangkap pertanyaan yang terlewat.</li>
+<li>Berlaku <strong>1 poin</strong> per isian radio/teks/dropdown yang terisi — daftar bobot di <a href="/doc/v1/penerapan">Penerapan</a>.</li>
+<li>Kendali tetap di petugas: semua isian bisa diperiksa dan diubah, dan hitung mundur bisa dibatalkan.</li>
+</ul>
+<blockquote>
+<p>Pengaturan lengkap: <a href="/doc/v1/config-form-skrining">Config → Form Skrining</a></p>
+</blockquote>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/skrining">&larr; Skrining</a>
+    <a class="btn btn-outline" href="/doc/v1/registration-form">Registration Form &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#cara-pakai">Cara Pakai</a></li>
+    <li class="toc-h2"><a href="#yang-perlu-diketahui">Yang Perlu Diketahui</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Profil — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub is-active" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="profil">Profil</h1>
+<p>Profil menyimpan satu set pengaturan utuh. Ekstensi menyediakan dua profil bawaan dan memakai <strong>profil aktif</strong> untuk semua fitur.</p>
+<h2 id="daftar-profil">Daftar profil</h2>
+<ul><li><strong>Daftar Profil</strong> — Daftar profil dan profil aktif</li></ul>
+<ul>
+<li><strong><code>activeProfile</code></strong> — menentukan profil mana yang dipakai semua fitur saat ini; semua URL, kata kunci, dan jawaban dibaca dari profil ini. Default <code>profile1</code>; pilih lain lewat Profile Manager. Contoh: <code>profile2</code>.</li>
+<li><strong><code>profiles.&lt;id&gt;.name</code></strong> — nama tampilan profil di daftar; hanya label, tidak memengaruhi perilaku fitur. Default <code>Profile 1</code>. Contoh: <code>Profil Utama</code>.</li>
+</ul>
+<p>Semua konfigurasi lain (URL, kata kunci, jawaban) tersimpan <strong>di dalam</strong> profil, bukan global — jadi beda profil bisa beda pengaturan unit kerja.</p>
+<h2 id="mengelola-profil">Mengelola Profil</h2>
+<p>Profil dikelola lewat <strong>Profile Manager</strong> — di halaman pengaturan lengkap (tab <strong>Profil</strong>) dan di popup ekstensi (tab <strong>Profile</strong>). Setiap aksi langsung tersimpan, tanpa tombol Simpan terpisah.</p>
+<table>
+<thead>
+<tr><th>Aksi</th><th>Cara</th></tr>
+</thead>
+<tbody>
+<tr><td>Pilih aktif</td><td>klik kartu profil (penanda ●)</td></tr>
+<tr><td>Ganti nama</td><td>tombol ✏️ → ketik nama baru → Enter atau klik di luar (maks 30 karakter)</td></tr>
+<tr><td>Duplikat</td><td>tombol 📋 — menyalin <strong>seluruh</strong> pengaturan profil lain; hasil diberi akhiran <code>(copy)</code></td></tr>
+<tr><td>Hapus</td><td>tombol 🗑️ → konfirmasi <code>Hapus profile &quot;…&quot;?</code></td></tr>
+<tr><td>Tambah profil</td><td>baris <strong>+</strong> di bawah daftar (muncul bila jumlah profil kurang dari 5); nama diisi lalu Enter atau klik <strong>+</strong></td></tr>
+</tbody>
+</table>
+<h3 id="aturan-yang-perlu-diketahui">Aturan yang perlu diketahui</h3>
+<ul>
+<li>Jumlah profil: <strong>maksimum 5, minimum 1</strong> — profil terakhir tidak bisa dihapus.</li>
+<li>Profil aktif <strong>bisa</strong> dihapus; setelah itu profil aktif pindah ke profil pertama yang tersisa. Bila ada perubahan belum disimpan, pindah profil memunculkan konfirmasi dulu.</li>
+<li>Profil baru dan hasil duplikat <strong>tidak otomatis aktif</strong> — klik kartunya dulu untuk memakainya.</li>
+<li>Nama profil <strong>boleh sama</strong> antar profil; hanya hasil duplikat yang otomatis diberi akhiran <code>(copy)</code>, <code>(copy 2)</code>, dan seterusnya bila bentrok.</li>
+<li>Profil baru berisi pengaturan <strong>kosong</strong> (semua pola URL dan jawaban pada nilai default) — isi dari nol, atau duplikat profil yang sudah jadi lalu sesuaikan.</li>
+</ul>
+<h3 id="yang-perlu-diingat">Yang perlu diingat</h3>
+<ul>
+<li>Profil bawaan <code>Profile 1</code> dan <code>Profile 2</code> akan <strong>muncul kembali (kosong)</strong> bila dihapus, karena nilai default selalu disertakan saat konfigurasi dibaca ulang. Profil buatan Anda sendiri benar-benar hilang setelah dihapus.</li>
+<li>Berkas ekspor konfigurasi memuat <strong>semua profil</strong> sekaligus — untuk backup atau pindah perangkat, lihat <a href="/doc/v1/config-others">Lainnya → Ekspor dan Impor</a>.</li>
+</ul>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/config-basics">&larr; Dasar</a>
+    <a class="btn btn-outline" href="/doc/v1/config-form-skrining">Form Skrining &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#daftar-profil">Daftar profil</a></li>
+    <li class="toc-h2"><a href="#mengelola-profil">Mengelola Profil</a></li>
+    <li class="toc-h3"><a href="#aturan-yang-perlu-diketahui">Aturan yang perlu diketahui</a></li>
+    <li class="toc-h3"><a href="#yang-perlu-diingat">Yang perlu diingat</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

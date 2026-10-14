@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dasar — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link is-active" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="dasar">Dasar</h1>
+<p>Pengaturan Dandelion tersimpan sebagai JSON lokal di browser Anda — tidak dikirim ke mana pun, dan bisa diekspor atau diimpor sebagai berkas biasa (lihat <a href="/doc/v1/config-others">Lainnya</a>).</p>
+<p>Ada dua tempat untuk mengubah pengaturan:</p>
+<ul>
+<li><strong>Popup ekstensi</strong> — pengaturan cepat: profil aktif, URL form skrining, nilai tersemat, URL pemeriksaan, dan register form.</li>
+<li><strong>Halaman pengaturan lengkap</strong> — semua pengaturan per tab, termasuk kata kunci, daftar kecuali, dan pengaturan mode lanjutan.</li>
+</ul>
+<p>Setiap pengaturan mengikuti <strong>profil aktif</strong> — profil adalah unit konfigurasi utuh, sehingga Anda bisa punya beberapa set pengaturan terpisah.</p>
+<h2 id="konfigurasi-lanjutan">Konfigurasi Lanjutan</h2>
+<table>
+<thead>
+<tr><th>Halaman</th><th>Isi pengaturan</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="/doc/v1/config-profile">Profil</a></td><td>Daftar profil dan profil aktif</td></tr>
+<tr><td><a href="/doc/v1/config-form-skrining">Form Skrining</a></td><td>Pola URL, opsi pengisian, kata kunci, dan nilai tersemat</td></tr>
+<tr><td><a href="/doc/v1/config-skrining">Skrining</a></td><td>Pola URL, jawaban radio, dan pengecualian</td></tr>
+<tr><td><a href="/doc/v1/config-register-form">Register Form</a></td><td>Pola URL, retry, countdown, dan template flash data</td></tr>
+<tr><td><a href="/doc/v1/config-not-checked">Tidak Periksa</a></td><td>Pola URL pemeriksaan dan daftar baris lewati</td></tr>
+<tr><td><a href="/doc/v1/config-zen-mode">Mode Zen</a></td><td>Asisten Zen/Zero, waktu tunggu, dan panel flash data</td></tr>
+<tr><td><a href="/doc/v1/config-productivity">Produktivitas</a></td><td>Statistik kerja dan target</td></tr>
+<tr><td><a href="/doc/v1/config-others">Lainnya</a></td><td>Notifikasi, posisi panel, ekspor/impor</td></tr>
+<tr><td><a href="/doc/v1/config-quota">Batas Pemakaian</a></td><td>Kuota harian dan status token</td></tr>
+</tbody>
+</table>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/flash-data">&larr; Flash Data</a>
+    <a class="btn btn-outline" href="/doc/v1/config-profile">Profil &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#konfigurasi-lanjutan">Konfigurasi Lanjutan</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

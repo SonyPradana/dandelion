@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Form Skrining — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub is-active" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="form-skrining">Form Skrining</h1>
+<p>Pengaturan untuk fitur auto-fill formulir skrining. Halaman yang mau diisi ditentukan oleh pola URL, lalu jawaban dipilih berdasarkan kata kunci.</p>
+<blockquote>
+<p>Pencocokan URL memakai <strong>substring</strong> — cukup isi bagian khas dari alamat, bukan harus alamat penuh.</p>
+</blockquote>
+<h2 id="url-form-skrining">URL Form Skrining</h2>
+<ul><li><strong>URL</strong> — Pola URL form skrining</li></ul>
+<ul>
+<li><strong><code>formSkrining.url</code></strong> — pola alamat halaman formulir yang mau diisi. Efek: auto-fill hanya aktif di halaman yang alamatnya mengandung pola ini; kosong = fitur tidak pernah aktif otomatis. Contoh: <code>https://contoh.example.go.id/form-skrining</code>.</li>
+</ul>
+<h2 id="opsi-pengisian">Opsi Pengisian</h2>
+<ul><li><strong>Opsi Pengisian</strong> — Scroll ke tombol, hormati input, pastikan terisi</li></ul>
+<ul>
+<li><strong><code>formSkrining.scrollToButton</code></strong> — setelah pengisian selesai, halaman digulir otomatis ke tombol navigasi bawah supaya tinggal periksa lalu kirim. Default <code>true</code> (boolean); <code>false</code> = tetap di posisi semula.</li>
+<li><strong><code>formSkrining.respectInput</code></strong> — pertanyaan yang sudah terisi (oleh Anda atau sisa isi sebelumnya) tidak ditimpa ulang. Default <code>false</code>: semua kolom yang cocok diisi kembali.</li>
+<li><strong><code>formSkrining.ensureFill</code></strong> — setelah pass pertama, Dandelion mengulang sekali untuk menangkap pertanyaan yang terlewat (misalnya dropdown yang belum sempat termunculkan). Default <code>false</code>; aktifkan bila masih ada kolom kosong setelah auto-fill.</li>
+</ul>
+<h2 id="kata-kunci-tombol-radio">Kata Kunci Tombol Radio</h2>
+<ul><li><strong>Kata Kunci Tombol Radio</strong> — Kata kunci jawaban tombol radio</li></ul>
+<ul>
+<li><strong><code>formSkrining.radioButtonKeywords</code></strong> — daftar teks jawaban radio yang dicari, dipisah <code>;</code>. Efek: tiap pertanyaan radio dijawab dengan opsi yang teksnya mengandung salah satu kata kunci — isi sesuai urutan prioritas. Default <code>''</code> (kosong). Contoh: <code>ya;tidak</code>.</li>
+</ul>
+<h2 id="kata-kunci-dropdown">Kata Kunci Dropdown</h2>
+<ul><li><strong>Kata Kunci Dropdown</strong> — Kata kunci jawaban dropdown</li></ul>
+<ul>
+<li><strong><code>formSkrining.dropdownKeywords</code></strong> — daftar teks pilihan dropdown yang dicari, dipisah <code>;</code>. Efek: dropdown dibuka lalu opsi yang teksnya cocok dipilih. Default <code>''</code> (kosong). Contoh: <code>pilih-satu</code>.</li>
+</ul>
+<h2 id="data-dikecualikan">Data Dikecualikan</h2>
+<ul><li><strong>Data Dikecualikan</strong> — Data yang dikecualikan atau survei dilewati</li></ul>
+<ul>
+<li><strong><code>formSkrining.excludes</code></strong> — daftar pertanyaan yang dilewati, dipisah <code>;</code>. Efek: pertanyaan dalam daftar tidak pernah diisi otomatis — biarkan Anda mengisinya sendiri. Default <code>''</code> (kosong). Contoh: <code>pertanyaan1;pertanyaan2</code>.</li>
+</ul>
+<h2 id="nilai-tersemat">Nilai Tersemat</h2>
+<ul><li><strong>Nilai Tersemat</strong> — Nilai tersemat form skrining</li></ul>
+<ul>
+<li><strong><code>formSkrining.pinneds</code></strong> — jawaban tetap per pertanyaan (objek JSON: pengenal pertanyaan → jawaban). Efek: kolom ini diisi otomatis walau tidak ada kata kunci yang cocok — berguna untuk jawaban yang selalu sama. Default <code>{}</code> (kosong). Contoh: <code>{&quot;pertanyaan1&quot;: &quot;jawaban&quot;}</code>.</li>
+</ul>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/config-profile">&larr; Profil</a>
+    <a class="btn btn-outline" href="/doc/v1/config-skrining">Skrining &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#url-form-skrining">URL Form Skrining</a></li>
+    <li class="toc-h2"><a href="#opsi-pengisian">Opsi Pengisian</a></li>
+    <li class="toc-h2"><a href="#kata-kunci-tombol-radio">Kata Kunci Tombol Radio</a></li>
+    <li class="toc-h2"><a href="#kata-kunci-dropdown">Kata Kunci Dropdown</a></li>
+    <li class="toc-h2"><a href="#data-dikecualikan">Data Dikecualikan</a></li>
+    <li class="toc-h2"><a href="#nilai-tersemat">Nilai Tersemat</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

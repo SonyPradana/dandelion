@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Registration Form — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link is-active" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="registration-form">Registration Form</h1>
+<p>Fitur untuk mempercepat pengisian formulir pendaftaran peserta — dari data dasar sampai konfirmasi kehadiran dalam satu alur berurutan.</p>
+<p><img src="/doc/v1/assets/register-form-flow.webp" alt="Tangkap layar form pendaftaran dengan tombol Mulai dan status alur Dandelion" width="960" height="540" loading="lazy" decoding="async" /></p>
+<h2 id="cara-pakai">Cara Pakai</h2>
+<ol>
+<li>Siapkan konfigurasi di <a href="/doc/v1/config-register-form">Config → Register Form</a>: pola alamat form, percobaan ulang (retry), hitung mundur, dan template data.</li>
+<li>Buka form pendaftaran — tombol <strong>Mulai</strong> muncul di halaman.</li>
+<li>Setelah diklik, hitung mundur berjalan (bisa dibatalkan), lalu alur berjalan bertahap dengan status di panel:
+<ul>
+<li><strong><code>Mulai 1/4</code></strong> — data peserta (memakai panel <a href="/doc/v1/flash-data">Flash Data</a> bila aktif, plus pemeriksaan data)</li>
+<li><strong><code>Mulai 2/4</code></strong> dan <strong><code>Mulai 3/4</code></strong> — pengisian section formulir</li>
+<li><strong><code>Mulai 4/4</code></strong> — konfirmasi kehadiran, diakhiri status selesai beserta kode tiket</li>
+</ul>
+</li>
+<li>Periksa tiap tahap; isian yang tampil tetap bisa diperiksa dan diperbaiki.</li>
+</ol>
+<h2 id="yang-perlu-diketahui">Yang Perlu Diketahui</h2>
+<ul>
+<li><strong>Lanjut dari langkah terakhir</strong>: bila alur terhenti (mis. percobaan ulang habis atau halaman dimuat ulang), tombol Mulai menawarkan melanjutkan dari langkah terakhir, bukan dari awal.</li>
+<li>Percobaan ulang mengikuti <code>retryMax</code> dan <code>retryDelay</code> — habis percobaan, langkah dihentikan dengan aman dan bisa dilanjutkan.</li>
+<li>Mengikuti aturan usia: untuk peserta yang memerlukan, data wali ikut diisi dalam alurnya.</li>
+<li>Berlaku <strong>25 poin</strong> per section yang selesai — daftar bobot di <a href="/doc/v1/penerapan">Penerapan</a>.</li>
+<li>Dandelion hanya mengisi data — petugas tetap memeriksa kebenarannya sebelum konfirmasi akhir.</li>
+</ul>
+<blockquote>
+<p>Pengaturan lengkap: <a href="/doc/v1/config-register-form">Config → Register Form</a></p>
+</blockquote>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/skrining-form">&larr; Skrining Form</a>
+    <a class="btn btn-outline" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#cara-pakai">Cara Pakai</a></li>
+    <li class="toc-h2"><a href="#yang-perlu-diketahui">Yang Perlu Diketahui</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

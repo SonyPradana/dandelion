@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tidak Periksa — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub is-active" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="tidak-periksa">Tidak Periksa</h1>
+<p>Pengaturan untuk halaman daftar &quot;Tidak Periksa&quot; — tempat fitur Zen &amp; Zero Mode bekerja.</p>
+<h2 id="url-pemeriksaan">URL Pemeriksaan</h2>
+<ul><li><strong>URL</strong> — Pola URL pemeriksaan</li></ul>
+<ul>
+<li><strong><code>notChecked.url</code></strong> — pola alamat halaman daftar pemeriksaan. Efek: panel kontrol beserta tombol Zen &amp; Zero dipasang hanya di halaman yang alamatnya mengandung pola ini (dicocokkan sebagai bagian alamat). Default <code>''</code> (kosong). Contoh: <code>https://contoh.example.go.id/pemeriksaan</code>.</li>
+</ul>
+<h2 id="daftar-master-quot-tidak-periksa-quot">Daftar Master &quot;Tidak Periksa&quot;</h2>
+<ul><li><strong>Daftar Master 'Tidak Periksa'</strong> — Daftar ID baris tidak periksa</li></ul>
+<ul>
+<li><strong><code>notChecked.notCheckedList</code></strong> — daftar ID baris yang masuk kategori &quot;lewati&quot;, dipisah <code>;</code>. Efeknya <strong>berbeda antar mode</strong>: <a href="/doc/v1/zen-zero-mode">Zero Mode</a> <strong>menghitung</strong> baris ini sebagai pekerjaan selesai, sedangkan Zen Mode <strong>melewati</strong> baris ini tanpa diproses. Default <code>''</code> (kosong). Contoh: <code>baris1;baris2</code>.</li>
+</ul>
+
+        </article>
+<nav class="page-nav">
+    <a class="btn btn-outline" href="/doc/v1/config-register-form">&larr; Register Form</a>
+    <a class="btn btn-outline" href="/doc/v1/config-zen-mode">Mode Zen &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#url-pemeriksaan">URL Pemeriksaan</a></li>
+    <li class="toc-h2"><a href="#daftar-master-quot-tidak-periksa-quot">Daftar Master &amp;quot;Tidak Periksa&amp;quot;</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>

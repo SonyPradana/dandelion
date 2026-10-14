@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Instalasi — Dokumentasi Dandelion</title>
+    <link rel="stylesheet" href="/doc/doc.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="topbar-brand" href="/">Dandelion</a>
+        <div class="topbar-meta">
+          <span class="badge">v1</span>
+          <label for="nav-toggle" class="nav-toggle-label">Menu</label>
+        </div>
+      </div>
+    </header>
+    <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label="Menu navigasi" />
+    <div class="layout">
+      <aside class="sidebar">
+        <nav class="nav">
+      <p class="nav-label">Dasar</p>
+      <a class="nav-link is-active" href="/doc/v1/installation">Instalasi</a>
+      <a class="nav-link" href="/doc/v1/uninstall">Uninstalasi</a>
+      <a class="nav-link" href="/doc/v1/update">Pembaruan</a>
+      <p class="nav-label">Token Kuota</p>
+      <a class="nav-link" href="/doc/v1/generator">Generator</a>
+      <a class="nav-link" href="/doc/v1/penerapan">Penerapan</a>
+      <p class="nav-label">Handler</p>
+      <a class="nav-link" href="/doc/v1/skrining">Skrining</a>
+      <a class="nav-link" href="/doc/v1/skrining-form">Skrining Form</a>
+      <a class="nav-link" href="/doc/v1/registration-form">Registration Form</a>
+      <a class="nav-link" href="/doc/v1/zen-zero-mode">Zen &amp; Zero Mode</a>
+      <a class="nav-link" href="/doc/v1/flash-data">Flash Data</a>
+      <p class="nav-label">Config</p>
+      <a class="nav-link" href="/doc/v1/config-basics">Dasar</a>
+      <p class="nav-sublabel">Lanjutan</p>
+      <a class="nav-link is-sub" href="/doc/v1/config-profile">Profil</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-form-skrining">Form Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-skrining">Skrining</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-register-form">Register Form</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-not-checked">Tidak Periksa</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-zen-mode">Mode Zen</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-productivity">Produktivitas</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-others">Lainnya</a>
+      <a class="nav-link is-sub" href="/doc/v1/config-quota">Batas Pemakaian</a>
+      <p class="nav-label">Persetujuan</p>
+      <a class="nav-link" href="/doc/v1/agreement">Persetujuan Penggunaan</a>
+        </nav>
+      </aside>
+      <main class="content">
+        <article class="prose">
+<h1 id="instalasi">Instalasi</h1>
+<p>Dandelion adalah ekstensi peramban. Unduh dulu berkas terbaru dari <a href="/">halaman utama</a> sesuai perambanmu, lalu ikuti langkah di bawah.</p>
+<blockquote>
+<p>Selalu ambil berkas dari halaman utama — jangan dari sumber lain.</p>
+</blockquote>
+<h2 id="desktop">Desktop</h2>
+<h3 id="brave">Brave</h3>
+<ol>
+<li>Unduh paket Dandelion terbaru dari <a href="/">halaman utama</a> (berkas <code>.zip</code>).</li>
+<li>Buka <code>brave://extensions</code> di bilah alamat.</li>
+<li>Aktifkan <strong>Mode pengembang</strong> (Developer mode) di pojok kanan atas.</li>
+<li><strong>Tarik berkas <code>.zip</code></strong> dari folder unduhan dan <strong>lepas di halaman ekstensi</strong> — Dandelion langsung terpasang.</li>
+<li>Klik ikon puzzle di toolbar, lalu pin <strong>Dandelion</strong> agar mudah diakses.</li>
+</ol>
+<p><img src="/doc/v1/assets/brave-drag-drop.webp" alt="Menyeret berkas .zip Dandelion ke halaman ekstensi Brave" width="960" height="540" loading="lazy" decoding="async" /></p>
+<h3 id="chrome">Chrome</h3>
+<ol>
+<li>Unduh paket Dandelion terbaru dari <a href="/">halaman utama</a> (berkas <code>.zip</code>).</li>
+<li>Buka <code>chrome://extensions</code> di bilah alamat.</li>
+<li>Aktifkan <strong>Developer mode</strong> di pojok kanan atas.</li>
+<li><strong>Tarik berkas <code>.zip</code></strong> dari folder unduhan dan <strong>lepas di halaman ekstensi</strong>.</li>
+<li>Pin ikon Dandelion melalui menu ekstensi (puzzle) di toolbar.</li>
+</ol>
+<p><img src="/doc/v1/assets/chrome-drag-drop.webp" alt="Menyeret berkas .zip Dandelion ke halaman ekstensi Chrome" width="960" height="540" loading="lazy" decoding="async" /></p>
+<h3 id="firefox">Firefox</h3>
+<ol>
+<li>Unduh berkas <code>.xpi</code> Dandelion terbaru dari <a href="/">halaman utama</a>.</li>
+<li>Buka menu Firefox → <strong>Add-ons and themes</strong> (<code>about:addons</code>).</li>
+<li>Klik ikon roda gerigi → <strong>Install Add-on From File…</strong>, lalu pilih berkas <code>.xpi</code> yang sudah diunduh.</li>
+<li>Konfirmasi pemasangan pada dialog yang muncul.</li>
+<li>Firefox akan memperbarui ekstensi ini secara otomatis — lihat halaman <a href="/doc/v1/update">Pembaruan</a>.</li>
+</ol>
+<p><img src="/doc/v1/assets/firefox-install-from-file.webp" alt="Menu Install Add-on From File pada Add-ons Manager Firefox" width="960" height="540" loading="lazy" decoding="async" /></p>
+<h3 id="edge">Edge</h3>
+<ol>
+<li>Unduh paket Dandelion terbaru dari <a href="/">halaman utama</a> (berkas <code>.zip</code>).</li>
+<li>Buka <code>edge://extensions</code> di bilah alamat.</li>
+<li>Aktifkan <strong>Developer mode</strong> di pojok kiri bawah.</li>
+<li><strong>Tarik berkas <code>.zip</code></strong> dari folder unduhan dan <strong>lepas di halaman ekstensi</strong>.</li>
+<li>Pin Dandelion dari menu ekstensi di toolbar.</li>
+</ol>
+<p><img src="/doc/v1/assets/edge-drag-drop.webp" alt="Menyeret berkas .zip Dandelion ke halaman ekstensi Edge" width="960" height="540" loading="lazy" decoding="async" /></p>
+<h2 id="mobile">Mobile</h2>
+<h3 id="firefox-android">Firefox (Android)</h3>
+<ol>
+<li>Unduh berkas <code>.xpi</code> Dandelion terbaru dari <a href="/">halaman utama</a> menggunakan Firefox di Android.</li>
+<li>Buka <strong>Pengaturan</strong> Firefox → <strong>Tentang Firefox</strong>.</li>
+<li><strong>Ketuk logo Firefox 5 kali</strong> — menu pengaturan tambahan akan muncul.</li>
+<li>Buka <strong>Pengaturan</strong> → <strong>Install Extension from File</strong>.</li>
+<li>Pilih berkas <code>.xpi</code> yang sudah diunduh, lalu konfirmasi dengan <strong>Add</strong>.</li>
+</ol>
+<p><img src="/doc/v1/assets/firefox-android-debug-menu.webp" alt="Menu Tentang Firefox dengan logo Firefox di Firefox Android" width="960" height="540" loading="lazy" decoding="async" /></p>
+<p><img src="/doc/v1/assets/firefox-android-install-from-file.webp" alt="Pilihan Install Extension from File pada pengaturan Firefox Android" width="960" height="540" loading="lazy" decoding="async" /></p>
+<blockquote>
+<p>Hanya berkas <code>.xpi</code> bertanda tangan yang dapat dipasang dari berkas — berkas dari halaman ini sudah ditandatangani. Membutuhkan Android 10 atau lebih baru.</p>
+</blockquote>
+<h2 id="setelah-pemasangan">Setelah pemasangan</h2>
+<ul>
+<li>Token kuota dibuat dan dikelola melalui <a href="/token-generator.html">Token Generator</a>.</li>
+<li>Masukkan token tersebut pada panel pengaturan Dandelion untuk mulai menggunakan ekstensi.</li>
+</ul>
+
+        </article>
+<nav class="page-nav">
+    <span class="btn btn-outline is-disabled" aria-disabled="true">&larr; Instalasi</span>
+    <a class="btn btn-outline" href="/doc/v1/uninstall">Uninstalasi &rarr;</a>
+  </nav>
+      </main>
+      <aside class="toc">
+    <p class="toc-title">Di halaman ini</p>
+    <ul>
+    <li class="toc-h2"><a href="#desktop">Desktop</a></li>
+    <li class="toc-h3"><a href="#brave">Brave</a></li>
+    <li class="toc-h3"><a href="#chrome">Chrome</a></li>
+    <li class="toc-h3"><a href="#firefox">Firefox</a></li>
+    <li class="toc-h3"><a href="#edge">Edge</a></li>
+    <li class="toc-h2"><a href="#mobile">Mobile</a></li>
+    <li class="toc-h3"><a href="#firefox-android">Firefox (Android)</a></li>
+    <li class="toc-h2"><a href="#setelah-pemasangan">Setelah pemasangan</a></li>
+    </ul>
+  </aside>
+    </div>
+  </body>
+</html>
