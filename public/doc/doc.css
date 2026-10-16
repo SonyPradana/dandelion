@@ -80,6 +80,29 @@ a:hover {
   gap: 0.85rem;
 }
 
+/* Tinggi dijaga ≤ 1.7rem agar konten header tidak melebihi --topbar-h. */
+.copy-md {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid #2a2a3a;
+  border-radius: 6px;
+  color: #a1a1aa;
+  transition: 0.15s;
+}
+.copy-md:hover {
+  color: #818cf8;
+  border-color: #818cf8;
+  text-decoration: none;
+}
+.copy-md.is-copied {
+  color: #a5b4fc;
+  background: #1e1b4b;
+  border-color: #6366f1;
+}
+
 /* ── layout 3 kolom ── */
 
 .layout {

@@ -10,9 +10,12 @@ import {
   injectConfig,
   injectImageMeta,
   renderNav,
+  renderPage,
+  renderCopyMdScriptTag,
   renderPrefetchScriptTag,
   renderSpeculationRules,
   slugify,
+  stripBuildMarkers,
 } from '../../scripts/build-docs.js';
 
 const parseSpeculationRules = (html) =>
@@ -72,6 +75,23 @@ describe('build-docs', () => {
 
     it('escapes raw tags but keeps inline code spans on the same line', () => {
       expect(hardenMarkdown('pakai `<div>` bukan <div>')).toBe('pakai `<div>` bukan &lt;div&gt;');
+    });
+  });
+
+  describe('stripBuildMarkers', () => {
+    it('removes build placeholder comment lines', () => {
+      const md =
+        '# Judul\n\n<!-- agreement -->\n\nIsi\n\n<!-- config-section:not-checked-list -->\n\nAkhir\n';
+      const out = stripBuildMarkers(md);
+      expect(out).not.toContain('<!--');
+      expect(out).toContain('# Judul');
+      expect(out).toContain('Isi');
+      expect(out).toContain('Akhir');
+    });
+
+    it('keeps unrelated comments and inline prose untouched', () => {
+      const md = 'awal <!-- catatan biasa --> akhir\n';
+      expect(stripBuildMarkers(md)).toBe(md);
     });
   });
 
@@ -262,6 +282,48 @@ describe('build-docs', () => {
       const tag = renderPrefetchScriptTag();
       expect(tag).toContain('src="/doc/prefetch.js"');
       expect(tag).toContain('defer');
+    });
+  });
+
+  describe('renderCopyMdScriptTag', () => {
+    it('loads the copy-as-Markdown script deferred', () => {
+      const tag = renderCopyMdScriptTag();
+      expect(tag).toContain('src="/doc/copy-md.js"');
+      expect(tag).toContain('defer');
+    });
+  });
+
+  describe('renderPage', () => {
+    it('wires the speculation rules, prefetch fallback, nav, and content', () => {
+      const pages = [
+        { slug: 'a', title: 'A', section: 'Dasar' },
+        { slug: 'b', title: 'B', section: 'Dasar' },
+      ];
+      const html = renderPage({
+        version: 'v1',
+        pages,
+        index: 0,
+        content: '<p>hi</p>',
+        headings: [],
+      });
+      expect(html).toContain('<script type="speculationrules">');
+      expect(html).toContain('src="/doc/prefetch.js"');
+      expect(html).toContain('src="/doc/copy-md.js"');
+      expect(html).toContain('href="/doc/v1/b"');
+      expect(html).toContain('class="page-nav"');
+      expect(html).toContain('<p>hi</p>');
+    });
+
+    it('renders the copy-as-Markdown button before the version badge', () => {
+      const pages = [{ slug: 'a', title: 'A' }];
+      const html = renderPage({ version: 'v1', pages, index: 0, content: '', headings: [] });
+      const buttonPos = html.indexOf('data-copy-md');
+      const badgePos = html.indexOf('<span class="badge">');
+      expect(buttonPos).toBeGreaterThanOrEqual(0);
+      expect(badgePos).toBeGreaterThan(buttonPos);
+      expect(html).toContain('href="/doc/v1/a.md"');
+      expect(html).toContain('title="Salin sebagai Markdown"');
+      expect(html).toContain('aria-label="Salin sebagai Markdown"');
     });
   });
 });

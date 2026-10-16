@@ -7,6 +7,10 @@
 //   manifest.json        ordered page list → sidebar nav + prev/next links
 //   <slug>.md            page source (rules: no raw HTML, see hardenMarkdown)
 //   (images live directly in public/doc/<version>/assets/)
+//
+// Each page also gets a stripped Markdown copy next to its HTML output
+// (public/doc/<version>/<slug>.md) — the copy-as-Markdown source served by
+// serve.ts.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
@@ -18,6 +22,8 @@ import { SEARCH_INDEX } from '../src/view/page/search-index.js';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const DOCS_DIR = join(ROOT, 'docs');
 const PUBLIC_DOC_DIR = join(ROOT, 'public', 'doc');
+const PREFETCH_JS = join(PUBLIC_DOC_DIR, 'prefetch.js');
+const COPY_MD_JS = join(PUBLIC_DOC_DIR, 'copy-md.js');
 
 interface PageMeta {
   slug: string;
@@ -69,6 +75,13 @@ export function hardenMarkdown(md: string): string {
       );
     })
     .join('\n');
+}
+
+// Drops build-time placeholder comments (<!-- agreement -->, <!-- config-section:* -->)
+// from the Markdown copy served at /doc/<version>/<slug>.md: the HTML build
+// replaces them with rendered content, so they are only noise when copied.
+export function stripBuildMarkers(md: string): string {
+  return md.replace(/^[ \t]*<!--\s*(?:agreement|config-section:[\w-]+)\s*-->[ \t]*\n?/gm, '');
 }
 
 export function slugify(text: string): string {
@@ -179,7 +192,7 @@ export function annotateHeadings(html: string): { html: string; headings: Headin
 }
 
 // Groups nav entries by section, then by subsection (both first-appearance
-// order) so the left panel shows visual groups like "Config → Dasar/Lanjutan".
+// order) so the left panel shows visual groups like "Config → Popup/Konfigurasi Lanjutan".
 export function renderNav(version: string, pages: PageMeta[], currentSlug: string): string {
   const sections = new Map<string, PageMeta[]>();
   for (const page of pages) {
@@ -276,7 +289,11 @@ export function renderPrefetchScriptTag(): string {
   return '<script src="/doc/prefetch.js" defer></script>';
 }
 
-function renderPage(opts: {
+export function renderCopyMdScriptTag(): string {
+  return '<script src="/doc/copy-md.js" defer></script>';
+}
+
+export function renderPage(opts: {
   version: string;
   pages: PageMeta[];
   index: number;
@@ -299,6 +316,7 @@ function renderPage(opts: {
       <div class="topbar-inner">
         <a class="topbar-brand" href="/">Dandelion</a>
         <div class="topbar-meta">
+          <a class="copy-md" href="/doc/${version}/${page.slug}.md" data-copy-md title="Salin sebagai Markdown" aria-label="Salin sebagai Markdown"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg></a>
           <span class="badge">${version}</span>
           <label for="nav-toggle" class="nav-toggle-label">Menu</label>
         </div>
@@ -320,6 +338,7 @@ ${renderPageNav(version, pages, index)}
       ${renderToc(headings)}
     </div>
     ${renderPrefetchScriptTag()}
+    ${renderCopyMdScriptTag()}
   </body>
 </html>
 `;
@@ -378,9 +397,8 @@ function buildVersion(version: string): string[] {
   manifest.pages.forEach((page, index) => {
     const mdPath = join(srcDir, `${page.slug}.md`);
     if (!existsSync(mdPath)) throw new Error(`Missing source: ${mdPath}`);
-    const rendered = injectConfig(
-      injectAgreement(Bun.markdown.html(hardenMarkdown(readFileSync(mdPath, 'utf8')))),
-    );
+    const md = readFileSync(mdPath, 'utf8');
+    const rendered = injectConfig(injectAgreement(Bun.markdown.html(hardenMarkdown(md))));
     const { html, headings } = annotateHeadings(rendered);
     const html5 = renderPage({
       version,
@@ -390,6 +408,7 @@ function buildVersion(version: string): string[] {
       headings,
     });
     writeFileSync(join(outDir, `${page.slug}.html`), html5);
+    writeFileSync(join(outDir, `${page.slug}.md`), stripBuildMarkers(md));
     // The first page doubles as the version landing page (/doc/<version>/).
     if (index === 0) writeFileSync(join(outDir, 'index.html'), html5);
     slugs.push(page.slug);
@@ -408,6 +427,15 @@ export function listDocVersions(): string[] {
 function main(): void {
   const versions = listDocVersions();
   if (versions.length === 0) throw new Error('No doc versions found in docs/');
+  const sharedAssets: [string, string][] = [
+    [PREFETCH_JS, 'renderPrefetchScriptTag'],
+    [COPY_MD_JS, 'renderCopyMdScriptTag'],
+  ];
+  for (const [asset, renderer] of sharedAssets) {
+    if (!existsSync(asset)) {
+      throw new Error(`Missing shared doc asset (rendered by ${renderer}): ${asset}`);
+    }
+  }
 
   console.log('\n  Dandelion Docs');
   for (const version of versions) {
