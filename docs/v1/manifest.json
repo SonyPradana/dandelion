@@ -10,50 +10,60 @@
     { "slug": "registration-form", "title": "Registration Form", "section": "Handler" },
     { "slug": "zen-zero-mode", "title": "Zen & Zero Mode", "section": "Handler" },
     { "slug": "flash-data", "title": "Flash Data", "section": "Handler" },
-    { "slug": "config-basics", "title": "Dasar", "section": "Config" },
-    { "slug": "config-profile", "title": "Profil", "section": "Config", "subsection": "Lanjutan" },
+    { "slug": "config-basics", "title": "Popup", "section": "Config" },
+    {
+      "slug": "config-profile",
+      "title": "Profil",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
     {
       "slug": "config-form-skrining",
       "title": "Form Skrining",
       "section": "Config",
-      "subsection": "Lanjutan"
+      "subsection": "Konfigurasi Lanjutan"
     },
     {
       "slug": "config-skrining",
       "title": "Skrining",
       "section": "Config",
-      "subsection": "Lanjutan"
+      "subsection": "Konfigurasi Lanjutan"
     },
     {
       "slug": "config-register-form",
       "title": "Register Form",
       "section": "Config",
-      "subsection": "Lanjutan"
+      "subsection": "Konfigurasi Lanjutan"
     },
     {
       "slug": "config-not-checked",
       "title": "Tidak Periksa",
       "section": "Config",
-      "subsection": "Lanjutan"
+      "subsection": "Konfigurasi Lanjutan"
     },
     {
       "slug": "config-zen-mode",
       "title": "Mode Zen",
       "section": "Config",
-      "subsection": "Lanjutan"
+      "subsection": "Konfigurasi Lanjutan"
     },
     {
       "slug": "config-productivity",
       "title": "Produktivitas",
       "section": "Config",
-      "subsection": "Lanjutan"
+      "subsection": "Konfigurasi Lanjutan"
     },
-    { "slug": "config-others", "title": "Lainnya", "section": "Config", "subsection": "Lanjutan" },
+    {
+      "slug": "config-others",
+      "title": "Lainnya",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
     {
       "slug": "config-quota",
       "title": "Batas Pemakaian",
       "section": "Config",
-      "subsection": "Lanjutan"
+      "subsection": "Konfigurasi Lanjutan"
     },
     { "slug": "agreement", "title": "Persetujuan Penggunaan", "section": "Persetujuan" }
   ]
