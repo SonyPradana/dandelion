@@ -10,8 +10,13 @@ import {
   injectConfig,
   injectImageMeta,
   renderNav,
+  renderPrefetchScriptTag,
+  renderSpeculationRules,
   slugify,
 } from '../../scripts/build-docs.js';
+
+const parseSpeculationRules = (html) =>
+  JSON.parse(html.replace(/^<script type="speculationrules">/, '').replace(/<\/script>$/, ''));
 
 describe('build-docs', () => {
   describe('slugify', () => {
@@ -214,6 +219,49 @@ describe('build-docs', () => {
       expect(html).toContain('<p class="nav-sublabel">Lanjutan</p>');
       expect(html).toContain('nav-link" href="/doc/v1/config-basics"');
       expect(html).toContain('nav-link is-sub is-active" href="/doc/v1/config-profile"');
+    });
+  });
+
+  describe('renderSpeculationRules', () => {
+    const pages = [
+      { slug: 'installation', title: 'Instalasi' },
+      { slug: 'uninstall', title: 'Uninstalasi' },
+      { slug: 'update', title: 'Pembaruan' },
+    ];
+
+    it('prefetches next/prev at load and other doc links on hover', () => {
+      const html = renderSpeculationRules('v1', pages, 1);
+      const rules = parseSpeculationRules(html);
+      expect(rules.prefetch[0]).toEqual({ urls: ['/doc/v1/installation', '/doc/v1/update'] });
+      expect(rules.prefetch[1]).toEqual({
+        source: 'document',
+        where: {
+          and: [
+            { href_matches: '/doc/v1/*' },
+            { not: { selector_matches: '.nav-link.is-active' } },
+            { not: { selector_matches: '.toc a' } },
+          ],
+        },
+        eagerness: 'moderate',
+      });
+    });
+
+    it('warms only the next page on the first page', () => {
+      const rules = parseSpeculationRules(renderSpeculationRules('v1', pages, 0));
+      expect(rules.prefetch[0]).toEqual({ urls: ['/doc/v1/uninstall'] });
+    });
+
+    it('warms only the previous page on the last page', () => {
+      const rules = parseSpeculationRules(renderSpeculationRules('v1', pages, 2));
+      expect(rules.prefetch[0]).toEqual({ urls: ['/doc/v1/uninstall'] });
+    });
+  });
+
+  describe('renderPrefetchScriptTag', () => {
+    it('loads the fallback script deferred', () => {
+      const tag = renderPrefetchScriptTag();
+      expect(tag).toContain('src="/doc/prefetch.js"');
+      expect(tag).toContain('defer');
     });
   });
 });

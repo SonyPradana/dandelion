@@ -17,6 +17,8 @@ import { listDocVersions } from './scripts/build-docs.js';
 //   /share/<id>           → View a shared token (GET)
 //   /doc                  → Redirect to latest documentation version
 //   /doc/v1/<slug>        → Documentation page (built by scripts/build-docs.ts)
+//   /doc/doc.css          → Doc shared stylesheet (ETag + gzip)
+//   /doc/prefetch.js      → Doc hover-prefetch fallback (ETag + gzip)
 //   /<any public file>    → Static files served from public/
 
 // --- types ---
@@ -360,6 +362,65 @@ function notFound(): Response {
   return new Response('Not found', { status: 404 });
 }
 
+// --- doc file cache (ETag + native Bun gzip) ---
+//
+// Doc pages under public/doc/ are static and tiny. Keep raw + gzipped bytes
+// in memory (invalidated on mtime/size change) so hover-prefetch requests
+// revalidate as cheap 304s and every fresh body goes out compressed.
+
+interface DocEntry {
+  mtimeMs: number;
+  size: number;
+  raw: Buffer;
+  gz: Buffer;
+  etag: string;
+  gzEtag: string;
+}
+
+const docCache = new Map<string, DocEntry>();
+
+function docEntry(filePath: string): DocEntry {
+  const stat = statSync(filePath);
+  const cached = docCache.get(filePath);
+  if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) return cached;
+  const raw = readFileSync(filePath);
+  const gz = Bun.gzipSync(raw);
+  const entry: DocEntry = {
+    mtimeMs: stat.mtimeMs,
+    size: stat.size,
+    raw,
+    gz,
+    etag: `"${Bun.hash(raw).toString(36)}"`,
+    gzEtag: `"${Bun.hash(gz).toString(36)}"`,
+  };
+  docCache.set(filePath, entry);
+  return entry;
+}
+
+function docFileResponse(req: Request, filePath: string, contentType: string): Response {
+  const entry = docEntry(filePath);
+  const useGzip =
+    /\bgzip\b/.test(req.headers.get('accept-encoding') ?? '') &&
+    entry.gz.byteLength < entry.raw.byteLength;
+  const etag = useGzip ? entry.gzEtag : entry.etag;
+  const headers: Record<string, string> = {
+    'content-type': contentType,
+    etag,
+    'cache-control': 'no-cache',
+    vary: 'Accept-Encoding',
+  };
+  if (req.headers.get('if-none-match') === etag) {
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(useGzip ? entry.gz : entry.raw, {
+    headers: {
+      ...headers,
+      ...(useGzip ? { 'content-encoding': 'gzip' } : {}),
+      'content-length': String(useGzip ? entry.gz.byteLength : entry.raw.byteLength),
+    },
+  });
+}
+
 // --- server ---
 
 async function handleRequest(req: Request): Promise<Response> {
@@ -582,13 +643,21 @@ async function handleRequest(req: Request): Promise<Response> {
     const docDir = resolve(join(PUBLIC_DIR, 'doc', version));
     const docFile = resolve(docDir, slug ? `${slug}.html` : 'index.html');
     if (!docFile.startsWith(docDir + sep) || !existsSync(docFile)) return notFound();
-    return new Response(Bun.file(docFile), {
-      headers: { 'cache-control': 'no-cache' },
-    });
+    return docFileResponse(req, docFile, 'text/html; charset=utf-8');
   }
 
   if (pathname === '/doc' || pathname === '/doc/') {
     return Response.redirect(`/doc/${LATEST_DOC_VERSION}/`, 302);
+  }
+
+  // ── doc shared assets → same ETag + gzip pipeline as doc pages ──────
+  const docAsset = pathname.match(/^\/doc\/(doc\.css|prefetch\.js)$/);
+  if (docAsset) {
+    const assetFile = join(PUBLIC_DIR, 'doc', docAsset[1]);
+    if (!existsSync(assetFile)) return notFound();
+    const contentType =
+      docAsset[1] === 'doc.css' ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8';
+    return docFileResponse(req, assetFile, contentType);
   }
 
   const staticPath = pathname === '/' ? '/index.html' : pathname;

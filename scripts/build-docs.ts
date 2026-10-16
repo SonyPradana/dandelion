@@ -242,6 +242,40 @@ function renderPageNav(version: string, pages: PageMeta[], index: number): strin
   </nav>`;
 }
 
+// Native Speculation Rules (Chromium/WebKit with support):
+//   1. list rule     → next/prev pages are prefetched as soon as this page
+//                      loads (eagerness defaults to "immediate").
+//   2. document rule → every other same-version doc link is prefetched when
+//                      hovered ~200ms (desktop) or via viewport heuristics
+//                      (mobile). Active nav link and in-page TOC anchors are
+//                      excluded; browsers without support simply ignore the
+//                      block and /doc/prefetch.js covers them instead.
+export function renderSpeculationRules(version: string, pages: PageMeta[], index: number): string {
+  const rules: Record<string, unknown>[] = [];
+  const neighbors = [pages[index - 1], pages[index + 1]].filter(
+    (page): page is PageMeta => page !== undefined,
+  );
+  if (neighbors.length > 0) {
+    rules.push({ urls: neighbors.map((page) => `/doc/${version}/${page.slug}`) });
+  }
+  rules.push({
+    source: 'document',
+    where: {
+      and: [
+        { href_matches: `/doc/${version}/*` },
+        { not: { selector_matches: '.nav-link.is-active' } },
+        { not: { selector_matches: '.toc a' } },
+      ],
+    },
+    eagerness: 'moderate',
+  });
+  return `<script type="speculationrules">${JSON.stringify({ prefetch: rules })}</script>`;
+}
+
+export function renderPrefetchScriptTag(): string {
+  return '<script src="/doc/prefetch.js" defer></script>';
+}
+
 function renderPage(opts: {
   version: string;
   pages: PageMeta[];
@@ -258,6 +292,7 @@ function renderPage(opts: {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(page.title)} — Dokumentasi Dandelion</title>
     <link rel="stylesheet" href="/doc/doc.css" />
+    ${renderSpeculationRules(version, pages, index)}
   </head>
   <body>
     <header class="topbar">
@@ -284,6 +319,7 @@ ${renderPageNav(version, pages, index)}
       </main>
       ${renderToc(headings)}
     </div>
+    ${renderPrefetchScriptTag()}
   </body>
 </html>
 `;
