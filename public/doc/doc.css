@@ -8,6 +8,18 @@
   padding: 0;
 }
 
+:root {
+  /* geometri sticky — semua offset diturunkan dari sini agar tidak "melompat" */
+  --topbar-h: 3.25rem; /* tinggi total header, termasuk border 1px */
+  --layout-gutter: 1.75rem; /* padding atas .layout */
+  --layout-pad-bottom: 4rem; /* padding bawah .layout */
+  --sticky-top: calc(var(--topbar-h) + var(--layout-gutter));
+}
+
+html {
+  scroll-padding-top: var(--sticky-top);
+}
+
 body {
   font-family:
     system-ui,
@@ -44,6 +56,9 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* line-height dipaksa agar tinggi konten header deterministik di semua font */
+  line-height: 1.2;
+  min-height: calc(var(--topbar-h) - 1px);
 }
 
 .topbar-brand {
@@ -73,16 +88,16 @@ a:hover {
   gap: 2.5rem;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 1.75rem 1.5rem 4rem;
+  padding: var(--layout-gutter) 1.5rem var(--layout-pad-bottom);
 }
 
 .sidebar {
   position: sticky;
-  top: 4rem;
+  top: var(--sticky-top);
   align-self: start;
-  max-height: calc(100vh - 7rem);
+  max-height: calc(100vh - var(--sticky-top) - var(--layout-pad-bottom));
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   scrollbar-width: thin;
   scrollbar-color: #2a2a3a transparent;
   padding-right: 0.25rem;
@@ -105,6 +120,10 @@ a:hover {
   letter-spacing: 0.06em;
   color: #a1a1aa;
   margin: 1.5rem 0 0.5rem;
+}
+
+.nav-label:first-child {
+  margin-top: 0;
 }
 
 .nav {
@@ -264,7 +283,7 @@ a:hover {
 
 .toc {
   position: sticky;
-  top: 3rem;
+  top: var(--sticky-top);
   align-self: start;
 }
 
