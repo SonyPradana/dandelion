@@ -1,6 +1,6 @@
 # Uninstalasi
 
-Penghapusan ekstensi berbeda sedikit antar browser. Token kuota yang kamu kelola di server tidak terpengaruh.
+Penghapusan ekstensi berbeda sedikit antar browser. Token kuota dan **Device ID** yang tersimpan secara lokal ikut terhapus; token yang telah diterbitkan tidak dicabut dan tetap berlaku sampai kedaluwarsa.
 
 ## Desktop
 
@@ -41,5 +41,5 @@ Penghapusan ekstensi berbeda sedikit antar browser. Token kuota yang kamu kelola
 
 ## Catatan
 
-- Uninstalasi hanya mencabut ekstensi dari browser; token kuota tetap aktif sampai masa berlakunya habis.
+- Setelah instal ulang, ekstensi membuat **Device ID** acak baru. Jika ID baru berbeda, pemasangan token lama ditolak karena `license_id` tidak cocok — minta token baru untuk ID baru (lihat [Generator](/doc/v1/generator)).
 - Jika hanya ingin menonaktifkan sementara, gunakan opsi _disable_ pada halaman ekstensi browser masing-masing.

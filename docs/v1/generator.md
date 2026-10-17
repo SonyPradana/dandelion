@@ -1,6 +1,6 @@
 # Token Kuota
 
-Token kuota (berkas JWT) menentukan batas pemakaian Dandelion di perangkat: berapa poin yang bisa dipakai, fitur apa saja yang aktif, dan sampai kapa token berlaku. Tanpa token, ekstensi berjalan pada Free Tier — penjelasan dan cara memasang token ada di halaman [Penerapan](/doc/v1/penerapan).
+Token kuota (berkas JWT) menentukan batas pemakaian Dandelion di perangkat: berapa poin yang bisa dipakai, fitur apa saja yang aktif, dan sampai kapan token berlaku. Tanpa token, ekstensi berjalan pada Free Tier — penjelasan dan cara memasang token ada di halaman [Penerapan](/doc/v1/penerapan).
 
 ## Dengan generator
 
