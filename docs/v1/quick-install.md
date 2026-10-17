@@ -30,7 +30,15 @@ irm https://dandelion.web.id/install/brave.ps1 | iex
 
 ### Mencopot (Windows)
 
-Hapus subkey `ExtensionInstallForcelist` dan `ExtensionInstallSources` pada registry key berikut, lalu buka ulang browser:
+Ada dua cara. **Via script** (disarankan) — jalankan dari sesi PowerShell, ganti `chrome` dengan `edge` atau `brave`:
+
+```powershell
+irm https://dandelion.web.id/uninstall/chrome.ps1 | iex
+```
+
+Script hanya menghapus entri milik Dandelion; kebijakan lain di registry tidak diubah. Buka ulang browser setelah selesai.
+
+**Manual**: hapus subkey `ExtensionInstallForcelist` dan `ExtensionInstallSources` pada registry key berikut, lalu buka ulang browser:
 
 | Browser | Registry key                                  |
 | ------- | --------------------------------------------- |
@@ -69,7 +77,15 @@ curl -fsSL https://dandelion.web.id/install/brave.sh | sh
 
 ### Mencopot (macOS)
 
-Domain kebijakan: `com.google.Chrome`, `com.microsoft.Edge`, `com.brave.Browser`. Contoh untuk Chrome (sesuaikan domain untuk Edge/Brave):
+**Via script** (jalankan dari Terminal, ganti `chrome` dengan `edge` atau `brave`):
+
+```bash
+curl -fsSL https://dandelion.web.id/uninstall/chrome.sh | sh
+```
+
+Script menghapus seluruh key `ExtensionInstallForcelist` dan `ExtensionInstallSources` pada domain browser tersebut (termasuk entri kebijakan lain bila ada). Buka ulang browser setelah selesai.
+
+**Manual**: domain kebijakan `com.google.Chrome`, `com.microsoft.Edge`, `com.brave.Browser`. Contoh untuk Chrome (sesuaikan domain untuk Edge/Brave):
 
 ```bash
 sudo defaults delete "/Library/Preferences/com.google.Chrome" ExtensionInstallForcelist
@@ -99,6 +115,16 @@ curl -fsSL https://dandelion.web.id/install/brave.sh | sh
 ```
 
 ### Mencopot (Linux)
+
+**Via script** (ganti `chrome` dengan `edge` atau `brave`):
+
+```bash
+curl -fsSL https://dandelion.web.id/uninstall/chrome.sh | sh
+```
+
+Script menghapus berkas kebijakan `dandelion.json` milik Dandelion. Buka ulang browser setelah selesai.
+
+**Manual**: berkas kebijakan per browser:
 
 | Browser | Lokasi berkas kebijakan                           |
 | ------- | ------------------------------------------------- |

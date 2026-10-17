@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   renderChromeUpdateXml,
   renderPowerShellInstaller,
+  renderPowerShellUninstaller,
   renderShellInstaller,
+  renderShellUninstaller,
 } from '../../scripts/install-response.js';
 
 const ID = 'bppmaeamamkihhpackebpafedaaeanle';
@@ -78,5 +80,48 @@ describe('renderShellInstaller', () => {
     expect(script).toContain('https://dandelion.web.id/updates/chrome.xml');
     expect(script).toContain('https://dandelion.web.id/*');
     expect(script).toContain('dandelion.json');
+  });
+});
+
+describe('renderPowerShellUninstaller', () => {
+  it('targets the registry policy path of each browser', () => {
+    expect(renderPowerShellUninstaller('chrome', LINKS)).toContain(
+      String.raw`HKLM:\SOFTWARE\Policies\Google\Chrome`,
+    );
+    expect(renderPowerShellUninstaller('edge', LINKS)).toContain(
+      String.raw`HKLM:\SOFTWARE\Policies\Microsoft\Edge`,
+    );
+    expect(renderPowerShellUninstaller('brave', LINKS)).toContain(
+      String.raw`HKLM:\SOFTWARE\Policies\BraveSoftware\Brave`,
+    );
+  });
+
+  it('removes only entries belonging to Dandelion and self-elevates via UAC', () => {
+    const script = renderPowerShellUninstaller('chrome', LINKS);
+    expect(script).toContain('https://dandelion.web.id/uninstall/chrome.ps1');
+    expect(script).toContain('-Verb RunAs');
+    expect(script).toContain(`"$ExtensionId;*"`);
+    expect(script).toContain('Remove-ItemProperty');
+    expect(script).toContain('ExtensionInstallForcelist');
+    expect(script).toContain('ExtensionInstallSources');
+  });
+});
+
+describe('renderShellUninstaller', () => {
+  it('removes the policy domain on macOS and policy file on Linux per browser', () => {
+    const chrome = renderShellUninstaller('chrome', LINKS);
+    expect(chrome).toContain('com.google.Chrome');
+    expect(chrome).toContain('/etc/opt/chrome/policies/managed');
+    expect(chrome).toContain('defaults delete');
+
+    const edge = renderShellUninstaller('edge', LINKS);
+    expect(edge).toContain('com.microsoft.Edge');
+    expect(edge).toContain('/etc/opt/edge/policies/managed');
+
+    const brave = renderShellUninstaller('brave', LINKS);
+    expect(brave).toContain('com.brave.Browser');
+    expect(brave).toContain('/etc/brave/policies/managed');
+
+    expect(chrome).toContain('rm -f "$DIR/dandelion.json"');
   });
 });
