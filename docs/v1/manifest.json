@@ -1,6 +1,7 @@
 {
   "pages": [
     { "slug": "installation", "title": "Instalasi", "section": "Dasar" },
+    { "slug": "quick-install", "title": "Instalasi Cepat", "section": "Dasar" },
     { "slug": "uninstall", "title": "Uninstalasi", "section": "Dasar" },
     { "slug": "update", "title": "Pembaruan", "section": "Dasar" },
     { "slug": "generator", "title": "Generator", "section": "Token Kuota" },
