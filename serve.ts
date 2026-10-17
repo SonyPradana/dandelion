@@ -4,15 +4,25 @@ import { Database } from 'bun:sqlite';
 import { verifyLicense } from './src/quota/verify.js';
 import { listDocVersions } from './scripts/build-docs.js';
 import { chooseDocVariant, docHeaders, readDocEntry } from './scripts/doc-response.js';
+import {
+  renderChromeUpdateXml,
+  renderPowerShellInstaller,
+  renderShellInstaller,
+  type InstallBrowser,
+} from './scripts/install-response.js';
 
 // ── Routes ──
 //   /                     → Landing page (index.html)
 //   /token-generator.html → Token generator page
 //   /update.json          → Auto-update manifest (Firefox addon update)
+//   /updates/chrome.xml   → Auto-update manifest (Chrome, Edge, Brave CRX)
+//   /install/<b>.ps1      → Enterprise policy installer (Windows)
+//   /install/<b>.sh       → Enterprise policy installer (macOS + Linux)
+//   /install/firefox      → Signed .xpi inline (Firefox install prompt)
 //   /manifest.json        → Version listing of all artifacts
 //   /api/versions         → Alias for /manifest.json
 //   /api/download-stats   → Unique download visitor counts per browser (JSON)
-//   /artifacts/<file>     → Artifact download (.zip, .xpi)
+//   /artifacts/<file>     → Artifact download (.zip, .xpi, .crx)
 //   /health               → Health check (GET & HEAD)
 //   /api/share            → Create a share link (POST)
 //   /share/<id>           → View a shared token (GET)
@@ -53,12 +63,13 @@ const LATEST_DOC_VERSION = listDocVersions().at(-1) ?? 'v1';
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 let BASE_URL = '';
 
-const STABLE_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi)$/;
+const STABLE_RE = /^dandelion-(chrome|firefox)-v(\d+\.\d+\.\d+)(?:-signed)?\.(zip|xpi|crx)$/;
 const NIGHTLY_RE = /^dandelion-(chrome|firefox)-nightly-(\d{8})\.(zip|xpi)$/;
 
 const CONTENT_TYPES: Record<string, string> = {
   '.zip': 'application/zip',
   '.xpi': 'application/x-xpinstall',
+  '.crx': 'application/x-chrome-extension',
 };
 
 const ALLOWED_STATIC_EXT = new Set([
@@ -354,6 +365,24 @@ function findArtifact(fileName: string): Artifact | undefined {
   return getArtifacts().find((a) => a.fileName === fileName);
 }
 
+function recordDownload(req: Request, fileName: string): void {
+  const stableMatch = fileName.match(STABLE_RE);
+  const nightlyMatch = fileName.match(NIGHTLY_RE);
+  const dlMatch = stableMatch || nightlyMatch;
+  if (!dlMatch) return;
+
+  const ip =
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    req.headers.get('cf-connecting-ip') ||
+    'unknown';
+  const browser = dlMatch[1];
+  const version = stableMatch ? stableMatch[2] : `nightly-${nightlyMatch![2]}`;
+  db.run(
+    `INSERT OR IGNORE INTO download_stats (file_name, version, browser, visitor_hash, downloaded_at) VALUES (?, ?, ?, ?, ?)`,
+    [fileName, version, browser, hashIP(ip), Date.now()],
+  );
+}
+
 // --- pre-computed IDs ---
 
 const CHROME_ID = chromeExtensionId();
@@ -431,6 +460,69 @@ async function handleRequest(req: Request): Promise<Response> {
     });
   }
 
+  // ── enterprise install (Chromium family + Firefox direct install) ───
+  if (pathname === '/updates/chrome.xml') {
+    const latestCrx = getArtifacts().find(
+      (a) =>
+        a.browser === 'chrome' && a.fileName.endsWith('.crx') && !a.version.startsWith('nightly-'),
+    );
+    if (!CHROME_ID || !latestCrx) return notFound();
+    const body = renderChromeUpdateXml({
+      id: CHROME_ID,
+      version: latestCrx.version,
+      crxUrl: latestCrx.url,
+    });
+    return new Response(body, {
+      headers: {
+        'content-type': 'application/xml; charset=utf-8',
+        'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+      },
+    });
+  }
+
+  const installScript = pathname.match(/^\/install\/(chrome|edge|brave)\.(ps1|sh)$/);
+  if (installScript) {
+    if (!CHROME_ID) return notFound();
+    const browser = installScript[1] as InstallBrowser;
+    const ext = installScript[2];
+    const base = PUBLIC_URL || BASE_URL;
+    const links = {
+      id: CHROME_ID,
+      updateUrl: `${base}/updates/chrome.xml`,
+      origin: base,
+      installUrl: `${base}/install/${browser}.${ext}`,
+    };
+    const body =
+      ext === 'ps1'
+        ? renderPowerShellInstaller(browser, links)
+        : renderShellInstaller(browser, links);
+    return new Response(body, {
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+      },
+    });
+  }
+
+  if (pathname === '/install/firefox') {
+    const latestXpi = getArtifacts().find(
+      (a) => a.browser === 'firefox' && !a.version.startsWith('nightly-'),
+    );
+    if (!latestXpi) return notFound();
+    recordDownload(req, latestXpi.fileName);
+    // Inline + install content type: navigating here in Firefox opens the
+    // add-on install prompt instead of saving the file.
+    return new Response(Bun.file(join(ARTIFACTS_DIR, latestXpi.fileName)), {
+      headers: {
+        'content-type': 'application/x-xpinstall',
+        'content-disposition': `inline; filename="${latestXpi.fileName}"`,
+        'content-length': String(latestXpi.size),
+        'cache-control': 'public, max-age=300, stale-while-revalidate=60',
+        etag: `"${latestXpi.hash.replace('sha256:', '')}"`,
+      },
+    });
+  }
+
   // ── download stats (unique visitors per browser) ─────────────────────
   if (pathname === '/api/download-stats') {
     const rows = db
@@ -460,21 +552,7 @@ async function handleRequest(req: Request): Promise<Response> {
     if (!existsSync(filePath)) return notFound();
 
     // ── record unique visitor ──
-    const stableMatch = fileName.match(STABLE_RE);
-    const nightlyMatch = fileName.match(NIGHTLY_RE);
-    const dlMatch = stableMatch || nightlyMatch;
-    if (dlMatch) {
-      const ip =
-        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-        req.headers.get('cf-connecting-ip') ||
-        'unknown';
-      const browser = dlMatch[1];
-      const version = stableMatch ? stableMatch[2] : `nightly-${nightlyMatch![2]}`;
-      db.run(
-        `INSERT OR IGNORE INTO download_stats (file_name, version, browser, visitor_hash, downloaded_at) VALUES (?, ?, ?, ?, ?)`,
-        [fileName, version, browser, hashIP(ip), Date.now()],
-      );
-    }
+    recordDownload(req, fileName);
 
     // ── ETag ──
     const artifact = findArtifact(fileName);
