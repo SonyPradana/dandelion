@@ -312,11 +312,6 @@
         line-height: 1.5;
         margin-bottom: 1rem;
       }
-      .install-firefox-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-shrink: 0;
-      }
       .install-copy-done {
         color: #4ade80 !important;
         border-color: #4ade80 !important;
@@ -389,19 +384,16 @@
         </div>
         <p class="install-note">
           Butuh hak admin (UAC/sudo); di Windows jalankan dari sesi PowerShell. Ekstensi dipasang
-          sebagai kebijakan browser dan diperbarui otomatis — cara mencopot ada di
-          <a href="/doc/v1/quick-install">dokumentasi</a>. Lebih suka tanpa script? Unduh manual di
-          <a href="#downloads-section">Download Latest</a>.
+          sebagai kebijakan browser dan diperbarui otomatis — mencopot juga bisa lewat script
+          uninstaller di <a href="/doc/v1/quick-install">dokumentasi</a>. Lebih suka tanpa script?
+          Unduh manual di <a href="#downloads-section">Download Latest</a>.
         </p>
         <div class="card-solo" id="firefox-install-card">
           <div>
             <h3>Firefox</h3>
             <p>Tanpa script — klik Install, lalu setujui dialog pemasangan dari Firefox.</p>
           </div>
-          <div class="install-firefox-actions">
-            <button class="btn btn-outline" id="firefox-copy">Salin link</button>
-            <a class="btn btn-primary" href="/install/firefox">Install</a>
-          </div>
+          <a class="btn btn-primary" href="/install/firefox">Install</a>
         </div>
       </section>
 
@@ -485,6 +477,14 @@
             ><span class="entry-desc">Enterprise installer (macOS &amp; Linux)</span>
           </div>
           <div class="entry">
+            <span class="entry-path">/uninstall/&lt;browser&gt;.ps1</span
+            ><span class="entry-desc">Enterprise uninstaller (Windows)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/uninstall/&lt;browser&gt;.sh</span
+            ><span class="entry-desc">Enterprise uninstaller (macOS &amp; Linux)</span>
+          </div>
+          <div class="entry">
             <span class="entry-path">/install/firefox</span
             ><span class="entry-desc">Signed .xpi served inline (install prompt)</span>
           </div>
@@ -558,19 +558,6 @@
             setTimeout(() => {
               copyBtn.textContent = 'Copy';
               copyBtn.classList.remove('install-copy-done');
-            }, 1500);
-          } catch {}
-        });
-
-        const firefoxCopy = document.getElementById('firefox-copy');
-        firefoxCopy.addEventListener('click', async () => {
-          try {
-            await navigator.clipboard.writeText(`${origin}/install/firefox`);
-            firefoxCopy.textContent = 'Tersalin!';
-            firefoxCopy.classList.add('install-copy-done');
-            setTimeout(() => {
-              firefoxCopy.textContent = 'Salin link';
-              firefoxCopy.classList.remove('install-copy-done');
             }, 1500);
           } catch {}
         });
