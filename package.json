@@ -1,7 +1,7 @@
 {
   "name": "dandelion",
   "version": "1.8.0",
-  "description": "Clean ux you might like",
+  "description": "Make human decide, let machine do the work.",
   "keywords": [
     "extention"
   ],
@@ -18,6 +18,8 @@
     "clean": "node scripts/remove-static.js dist",
     "clean:chrome": "node scripts/remove-static.js dist/chrome",
     "clean:firefox": "node scripts/remove-static.js dist/firefox",
+    "build:docs": "bun scripts/build-docs.ts",
+    "start": "bun run build:docs && bun serve.ts",
     "build:chrome": "pnpm clean:chrome && cross-env TARGET=chrome OUTPUT_DIR=dist/chrome rolldown -c && node scripts/copy-static.js dist/chrome && node scripts/build-chrome-manifest.js",
     "build:firefox": "pnpm clean:firefox && cross-env TARGET=firefox OUTPUT_DIR=dist/firefox rolldown -c && node scripts/copy-static.js dist/firefox && node scripts/build-firefox-manifest.js",
     "build": "pnpm build:chrome && pnpm build:firefox",

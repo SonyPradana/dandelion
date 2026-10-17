@@ -1,0 +1,70 @@
+{
+  "pages": [
+    { "slug": "installation", "title": "Instalasi", "section": "Dasar" },
+    { "slug": "uninstall", "title": "Uninstalasi", "section": "Dasar" },
+    { "slug": "update", "title": "Pembaruan", "section": "Dasar" },
+    { "slug": "generator", "title": "Generator", "section": "Token Kuota" },
+    { "slug": "penerapan", "title": "Penerapan", "section": "Token Kuota" },
+    { "slug": "skrining", "title": "Skrining", "section": "Handler" },
+    { "slug": "skrining-form", "title": "Skrining Form", "section": "Handler" },
+    { "slug": "registration-form", "title": "Registration Form", "section": "Handler" },
+    { "slug": "zen-zero-mode", "title": "Zen & Zero Mode", "section": "Handler" },
+    { "slug": "flash-data", "title": "Flash Data", "section": "Handler" },
+    { "slug": "config-basics", "title": "Popup", "section": "Config" },
+    {
+      "slug": "config-profile",
+      "title": "Profil",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-form-skrining",
+      "title": "Form Skrining",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-skrining",
+      "title": "Skrining",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-register-form",
+      "title": "Register Form",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-not-checked",
+      "title": "Tidak Periksa",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-zen-mode",
+      "title": "Mode Zen",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-productivity",
+      "title": "Produktivitas",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-others",
+      "title": "Lainnya",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    {
+      "slug": "config-quota",
+      "title": "Batas Pemakaian",
+      "section": "Config",
+      "subsection": "Konfigurasi Lanjutan"
+    },
+    { "slug": "agreement", "title": "Persetujuan Penggunaan", "section": "Persetujuan" }
+  ]
+}

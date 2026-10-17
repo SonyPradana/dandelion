@@ -4,7 +4,7 @@
 
 - [pnpm](https://pnpm.io/) 11+
 - Node.js 22+
-- [Bun](https://bun.sh/) (for `bun run serve.ts`)
+- [Bun](https://bun.sh/) (for `bun run start`)
 - Firefox (for `web-ext lint` and `web-ext sign`)
 
 ## Quick Start
@@ -133,7 +133,7 @@ cp .env.example .env   # ensure HOST, PORT are configured
 ### Run
 
 ```bash
-bun run serve.ts
+bun run start   # builds docs, then starts the server
 ```
 
 ### TLS Setup
@@ -177,16 +177,16 @@ See [Deployment](#deployment) below for recommended setups.
 Keep the server alive across reboots with [PM2](https://pm2.keymetrics.io/).  
 An `ecosystem.config.cjs` is provided with production-ready defaults:
 
-| Config                  | Value     | Description                          |
-| ----------------------- | --------- | ------------------------------------ |
-| `interpreter`           | `bun`     | Runtime                              |
-| `max_memory_restart`    | `500M`    | Auto-restart if memory exceeds 500MB |
-| `autorestart`           | `true`    | Restart on crash                     |
-| `restart_delay`         | `5000ms`  | Wait 5s before restarting            |
-| `max_restarts`          | `10`      | Limit consecutive restarts           |
-| `kill_timeout`          | `10000ms` | Graceful shutdown timeout            |
-| `listen_timeout`        | `3000ms`  | Wait for app to listen               |
-| `error_file`/`out_file` | `logs/`   | Rotated log files (gitignored)       |
+| Config                  | Value               | Description                          |
+| ----------------------- | ------------------- | ------------------------------------ |
+| `script` / `args`       | `bun` / `run start` | Runtime; builds docs before serving  |
+| `max_memory_restart`    | `500M`              | Auto-restart if memory exceeds 500MB |
+| `autorestart`           | `true`              | Restart on crash                     |
+| `restart_delay`         | `5000ms`            | Wait 5s before restarting            |
+| `max_restarts`          | `10`                | Limit consecutive restarts           |
+| `kill_timeout`          | `10000ms`           | Graceful shutdown timeout            |
+| `listen_timeout`        | `3000ms`            | Wait for app to listen               |
+| `error_file`/`out_file` | `logs/`             | Rotated log files (gitignored)       |
 
 ```bash
 npm install -g pm2

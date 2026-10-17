@@ -28,3 +28,7 @@ lerna-debug.log*
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Generated documentation HTML and Markdown copies (build with: pnpm build:docs)
+/public/doc/**/*.html
+/public/doc/**/*.md

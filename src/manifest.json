@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Dandelion - Clean ux you might like",
-  "description": "with full awareness to say no 🙏.",
+  "description": "Make human decide, let machine do the work.",
   "permissions": ["storage"],
   "host_permissions": [],
   "content_scripts": [
