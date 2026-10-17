@@ -180,7 +180,7 @@ export function annotateHeadings(html: string): { html: string; headings: Headin
   const headings: Heading[] = [];
   const out = html.replace(/<h([1-6])>(.*?)<\/h\1>/g, (_match, rawLevel: string, inner: string) => {
     const level = Number(rawLevel);
-    const text = inner.replace(/<[^>]+>/g, '');
+    const text = inner.replace(/<[^>]+>|[<>]/g, '');
     let id = slugify(text) || 'section';
     const seen = used.get(id) ?? 0;
     used.set(id, seen + 1);

@@ -54,6 +54,13 @@ describe('build-docs', () => {
         { level: 3, id: 'brave-1', text: 'Brave' },
       ]);
     });
+
+    it('strips inline tags and stray angle brackets from toc text', () => {
+      const { headings } = annotateHeadings('<h2>Pakai <code>pnpm</code> dan <script</h2>');
+      expect(headings).toEqual([
+        { level: 2, id: 'pakai-pnpm-dan-script', text: 'Pakai pnpm dan script' },
+      ]);
+    });
   });
 
   describe('hardenMarkdown', () => {
