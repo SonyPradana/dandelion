@@ -16,6 +16,7 @@ import {
   renderSpeculationRules,
   slugify,
   stripBuildMarkers,
+  stripTags,
 } from '../../scripts/build-docs.js';
 
 const parseSpeculationRules = (html) =>
@@ -55,11 +56,21 @@ describe('build-docs', () => {
       ]);
     });
 
-    it('strips inline tags and stray angle brackets from toc text', () => {
+    it('strips inline tags and dangling angle brackets from toc text', () => {
       const { headings } = annotateHeadings('<h2>Pakai <code>pnpm</code> dan <script</h2>');
-      expect(headings).toEqual([
-        { level: 2, id: 'pakai-pnpm-dan-script', text: 'Pakai pnpm dan script' },
-      ]);
+      expect(headings).toEqual([{ level: 2, id: 'pakai-pnpm-dan', text: 'Pakai pnpm dan' }]);
+    });
+  });
+
+  describe('stripTags', () => {
+    it('removes tag markup and a dangling unclosed tag', () => {
+      expect(stripTags('Pakai <code>pnpm</code> dan <script')).toBe('Pakai pnpm dan ');
+      expect(stripTags('<strong>A</strong> &amp; <em>B</em>')).toBe('A &amp; B');
+    });
+
+    it('keeps lone angle brackets used as prose', () => {
+      expect(stripTags('1 < 2 dan 3 > 2')).toBe('1 < 2 dan 3 > 2');
+      expect(stripTags('x <= y')).toBe('x <= y');
     });
   });
 

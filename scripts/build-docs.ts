@@ -174,13 +174,33 @@ export function injectImageMeta(
   });
 }
 
+// Extracts plain text from a rendered heading fragment: skips <tag …> segments
+// (a tag starts with "<" followed by a letter or "/", the shapes Bun.markdown
+// emits) and keeps everything else, including lone "<"/">" used as prose.
+// Written as a scan instead of a tag-stripping regex so the result is
+// sanitized by construction — see CodeQL js/incomplete-multi-character-sanitization.
+export function stripTags(html: string): string {
+  let text = '';
+  for (let i = 0; i < html.length; i += 1) {
+    const ch = html[i];
+    if (ch === '<' && /[a-zA-Z/]/.test(html[i + 1] ?? '')) {
+      const end = html.indexOf('>', i);
+      if (end === -1) break;
+      i = end;
+      continue;
+    }
+    text += ch;
+  }
+  return text;
+}
+
 // Injects ids into every heading and collects h2/h3 as table-of-contents entries.
 export function annotateHeadings(html: string): { html: string; headings: Heading[] } {
   const used = new Map<string, number>();
   const headings: Heading[] = [];
   const out = html.replace(/<h([1-6])>(.*?)<\/h\1>/g, (_match, rawLevel: string, inner: string) => {
     const level = Number(rawLevel);
-    const text = inner.replace(/<[^>]+>|[<>]/g, '');
+    const text = stripTags(inner).trim();
     let id = slugify(text) || 'section';
     const seen = used.get(id) ?? 0;
     used.set(id, seen + 1);
