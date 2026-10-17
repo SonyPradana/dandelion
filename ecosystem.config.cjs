@@ -2,8 +2,10 @@ module.exports = {
   apps: [
     {
       name: 'dandelion',
-      script: 'serve.ts',
-      interpreter: 'bun',
+      script: 'bun',
+      args: 'run start',
+      interpreter: 'none',
+      cwd: __dirname,
       instances: 1,
       exec_mode: 'fork',
       max_memory_restart: '500M',
