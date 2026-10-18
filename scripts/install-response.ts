@@ -1,7 +1,7 @@
 // Renders the enterprise install artifacts served by serve.ts:
 //   /updates/chrome.xml        → gupdate manifest (Chrome, Edge, Brave)
 //   /install/<browser>.ps1     → Windows policy script (self-elevating)
-//   /install/<browser>.sh      → macOS + Linux policy script (auto sudo)
+//   /install/<browser>.sh      → Linux policy script (auto sudo)
 //
 // Force-installing via policy keeps the extension updated through the same
 // gupdate XML, so every artifact embeds the crx id + update URL.
@@ -20,12 +20,6 @@ const WINDOWS_POLICY_PATHS: Record<InstallBrowser, string> = {
   chrome: 'HKLM:\\SOFTWARE\\Policies\\Google\\Chrome',
   edge: 'HKLM:\\SOFTWARE\\Policies\\Microsoft\\Edge',
   brave: 'HKLM:\\SOFTWARE\\Policies\\BraveSoftware\\Brave',
-};
-
-const MACOS_DOMAINS: Record<InstallBrowser, string> = {
-  chrome: 'com.google.Chrome',
-  edge: 'com.microsoft.Edge',
-  brave: 'com.brave.Browser',
 };
 
 const LINUX_POLICY_DIRS: Record<InstallBrowser, string> = {
@@ -74,7 +68,7 @@ export function renderPowerShellInstaller(browser: InstallBrowser, links: Instal
   return `# Dandelion — pemasangan ${label} via kebijakan enterprise (Windows)
 # Jalankan di PowerShell: irm ${links.installUrl} | iex
 # Catatan: force-install ekstensi di luar Web Store hanya berlaku pada perangkat
-# yang dikelola (domain AD/Entra ID, MDM, atau Chrome Enterprise Core).
+# yang dikelola (domain AD/Entra ID atau Chrome Enterprise Core).
 $ErrorActionPreference = 'Stop'
 
 $InstallUrl = '${links.installUrl}'
@@ -124,10 +118,9 @@ Write-Host "Untuk mencopot: hapus entri Dandelion di $PolicyPath, lalu buka ulan
 
 export function renderShellInstaller(browser: InstallBrowser, links: InstallLinks): string {
   const label = BROWSER_LABELS[browser];
-  const macDomain = MACOS_DOMAINS[browser];
   const linuxDir = LINUX_POLICY_DIRS[browser];
   return `#!/bin/sh
-# Dandelion — pemasangan ${label} via kebijakan enterprise (macOS & Linux)
+# Dandelion — pemasangan ${label} via kebijakan enterprise (Linux)
 # Jalankan: curl -fsSL ${links.installUrl} | sh
 set -eu
 
@@ -139,32 +132,16 @@ run_root() {
   if [ "$(id -u)" -eq 0 ]; then "$@"; else sudo "$@"; fi
 }
 
-case "$(uname -s)" in
-  Darwin)
-    DOMAIN='${macDomain}'
-    PREFS="/Library/Preferences/$DOMAIN"
-    if ! run_root defaults read "$PREFS" ExtensionInstallForcelist 2>/dev/null | grep -qF "$EXTENSION_ID;$UPDATE_XML_URL"; then
-      run_root defaults write "$PREFS" ExtensionInstallForcelist -array-add "$EXTENSION_ID;$UPDATE_XML_URL"
-    fi
-    if ! run_root defaults read "$PREFS" ExtensionInstallSources 2>/dev/null | grep -qF "$SOURCES"; then
-      run_root defaults write "$PREFS" ExtensionInstallSources -array-add "$SOURCES"
-    fi
-    echo 'Selesai! Dandelion terpasang saat ${label} dibuka ulang.'
-    echo 'Catatan: force-install ekstensi di luar Web Store hanya berlaku pada perangkat macOS yang dikelola (MDM/MCX atau Chrome Enterprise Core).'
-    echo "Untuk mencopot: sudo defaults delete \\"/Library/Preferences/$DOMAIN\\" ExtensionInstallForcelist && sudo defaults delete \\"/Library/Preferences/$DOMAIN\\" ExtensionInstallSources"
-    ;;
-  Linux)
-    DIR='${linuxDir}'
-    run_root mkdir -p "$DIR"
-    printf '{"ExtensionInstallForcelist":["%s"],"ExtensionInstallSources":["%s"]}\\n' "$EXTENSION_ID;$UPDATE_XML_URL" "$SOURCES" | run_root tee "$DIR/dandelion.json" >/dev/null
-    echo 'Selesai! Dandelion terpasang saat ${label} dibuka ulang.'
-    echo "Untuk mencopot: sudo rm $DIR/dandelion.json"
-    ;;
-  *)
-    echo "OS tidak didukung: $(uname -s). Gunakan Windows, macOS, atau Linux." >&2
-    exit 1
-    ;;
-esac
+if [ "$(uname -s)" != 'Linux' ]; then
+  echo "OS tidak didukung: $(uname -s). Gunakan Windows atau Linux." >&2
+  exit 1
+fi
+
+DIR='${linuxDir}'
+run_root mkdir -p "$DIR"
+printf '{"ExtensionInstallForcelist":["%s"],"ExtensionInstallSources":["%s"]}\\n' "$EXTENSION_ID;$UPDATE_XML_URL" "$SOURCES" | run_root tee "$DIR/dandelion.json" >/dev/null
+echo 'Selesai! Dandelion terpasang saat ${label} dibuka ulang.'
+echo "Untuk mencopot: sudo rm $DIR/dandelion.json"
 `;
 }
 
@@ -211,10 +188,9 @@ Write-Host "Entri kebijakan lain di $PolicyPath tidak diubah."
 
 export function renderShellUninstaller(browser: InstallBrowser, links: InstallLinks): string {
   const label = BROWSER_LABELS[browser];
-  const macDomain = MACOS_DOMAINS[browser];
   const linuxDir = LINUX_POLICY_DIRS[browser];
   return `#!/bin/sh
-# Dandelion — pencopotan ${label} via kebijakan enterprise (macOS & Linux)
+# Dandelion — pencopotan ${label} via kebijakan enterprise (Linux)
 # Jalankan: curl -fsSL ${links.origin}/uninstall/${browser}.sh | sh
 set -eu
 
@@ -222,22 +198,13 @@ run_root() {
   if [ "$(id -u)" -eq 0 ]; then "$@"; else sudo "$@"; fi
 }
 
-case "$(uname -s)" in
-  Darwin)
-    DOMAIN='${macDomain}'
-    run_root defaults delete "/Library/Preferences/$DOMAIN" ExtensionInstallForcelist 2>/dev/null || true
-    run_root defaults delete "/Library/Preferences/$DOMAIN" ExtensionInstallSources 2>/dev/null || true
-    echo 'Selesai! Buka ulang ${label} untuk menerapkan perubahan.'
-    ;;
-  Linux)
-    DIR='${linuxDir}'
-    run_root rm -f "$DIR/dandelion.json"
-    echo 'Selesai! Buka ulang ${label} untuk menerapkan perubahan.'
-    ;;
-  *)
-    echo "OS tidak didukung: $(uname -s). Gunakan Windows, macOS, atau Linux." >&2
-    exit 1
-    ;;
-esac
+if [ "$(uname -s)" != 'Linux' ]; then
+  echo "OS tidak didukung: $(uname -s). Gunakan Windows atau Linux." >&2
+  exit 1
+fi
+
+DIR='${linuxDir}'
+run_root rm -f "$DIR/dandelion.json"
+echo 'Selesai! Buka ulang ${label} untuk menerapkan perubahan.'
 `;
 }

@@ -2,9 +2,9 @@
 
 Jalur ini memasang Dandelion lewat **kebijakan browser** (enterprise) — tanpa drag-and-drop, dan pembaruan berjalan otomatis. Kebijakan mengunci ekstensi: pengguna tidak bisa menonaktifkan atau menghapusnya dari halaman ekstensi sampai kebijakannya dicabut.
 
-> Membutuhkan hak administrator: UAC di Windows, `sudo` di macOS/Linux. Untuk pemasangan manual tanpa script, lihat halaman [Instalasi](/doc/v1/installation).
+> Membutuhkan hak administrator: UAC di Windows, `sudo` di Linux. Untuk pemasangan manual tanpa script, lihat halaman [Instalasi](/doc/v1/installation).
 
-> **Prasyarat perangkat terkelola.** Chrome/Edge/Brave hanya memasang paksa ekstensi dari luar Web Store pada perangkat yang dikelola: Windows — domain AD/Entra ID atau terdaftar Chrome Enterprise Core; macOS — MDM/MCX atau Chrome Enterprise Core. Menulis nilai kebijakan lewat script (registry/`defaults`) tidak dengan sendirinya membuat perangkat menjadi "managed". Untuk perangkat tanpa manajemen, gunakan [pemasangan manual](/doc/v1/installation).
+> **Prasyarat perangkat terkelola (Windows).** Chrome/Edge/Brave hanya memasang paksa ekstensi dari luar Web Store pada perangkat Windows yang dikelola: domain AD/Entra ID atau terdaftar Chrome Enterprise Core. Menulis nilai kebijakan lewat script registry tidak dengan sendirinya membuat perangkat menjadi "managed". Untuk perangkat tanpa manajemen, gunakan [pemasangan manual](/doc/v1/installation).
 
 Browser Chromium yang didukung: **Chrome**, **Edge**, dan **Brave**. Firefox punya jalur tersendiri di bawah.
 
@@ -53,45 +53,6 @@ Contoh untuk Chrome (sesuaikan key untuk Edge/Brave):
 ```powershell
 Remove-Item -Recurse -Force "HKLM:\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist"
 Remove-Item -Recurse -Force "HKLM:\SOFTWARE\Policies\Google\Chrome\ExtensionInstallSources"
-```
-
-## macOS
-
-Script yang sama mendeteksi macOS otomatis dan menulis kebijakan ke `/Library/Preferences` (menggunakan `sudo`).
-
-### Chrome
-
-```bash
-curl -fsSL https://dandelion.web.id/install/chrome.sh | sh
-```
-
-### Edge
-
-```bash
-curl -fsSL https://dandelion.web.id/install/edge.sh | sh
-```
-
-### Brave
-
-```bash
-curl -fsSL https://dandelion.web.id/install/brave.sh | sh
-```
-
-### Mencopot (macOS)
-
-**Via script** (jalankan dari Terminal, ganti `chrome` dengan `edge` atau `brave`):
-
-```bash
-curl -fsSL https://dandelion.web.id/uninstall/chrome.sh | sh
-```
-
-Script menghapus seluruh key `ExtensionInstallForcelist` dan `ExtensionInstallSources` pada domain browser tersebut (termasuk entri kebijakan lain bila ada). Buka ulang browser setelah selesai.
-
-**Manual**: domain kebijakan `com.google.Chrome`, `com.microsoft.Edge`, `com.brave.Browser`. Contoh untuk Chrome (sesuaikan domain untuk Edge/Brave):
-
-```bash
-sudo defaults delete "/Library/Preferences/com.google.Chrome" ExtensionInstallForcelist
-sudo defaults delete "/Library/Preferences/com.google.Chrome" ExtensionInstallSources
 ```
 
 ## Linux

@@ -19,9 +19,9 @@ import {
 //   /update.json          → Auto-update manifest (Firefox addon update)
 //   /updates/chrome.xml   → Auto-update manifest (Chrome, Edge, Brave CRX)
 //   /install/<b>.ps1      → Enterprise policy installer (Windows)
-//   /install/<b>.sh       → Enterprise policy installer (macOS + Linux)
+//   /install/<b>.sh       → Enterprise policy installer (Linux)
 //   /uninstall/<b>.ps1    → Enterprise policy uninstaller (Windows)
-//   /uninstall/<b>.sh     → Enterprise policy uninstaller (macOS + Linux)
+//   /uninstall/<b>.sh     → Enterprise policy uninstaller (Linux)
 //   /install/firefox      → Signed .xpi inline (Firefox install prompt)
 //   /manifest.json        → Version listing of all artifacts
 //   /api/versions         → Alias for /manifest.json

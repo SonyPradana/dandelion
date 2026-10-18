@@ -85,17 +85,14 @@ describe('renderPowerShellInstaller', () => {
 });
 
 describe('renderShellInstaller', () => {
-  it('uses the macOS policy domain and Linux policy dir per browser', () => {
+  it('uses the Linux policy dir per browser', () => {
     const chrome = renderShellInstaller('chrome', LINKS);
-    expect(chrome).toContain('com.google.Chrome');
     expect(chrome).toContain('/etc/opt/chrome/policies/managed');
 
     const edge = renderShellInstaller('edge', LINKS);
-    expect(edge).toContain('com.microsoft.Edge');
     expect(edge).toContain('/etc/opt/edge/policies/managed');
 
     const brave = renderShellInstaller('brave', LINKS);
-    expect(brave).toContain('com.brave.Browser');
     expect(brave).toContain('/etc/brave/policies/managed');
   });
 
@@ -108,11 +105,11 @@ describe('renderShellInstaller', () => {
     expect(script).toContain('dandelion.json');
   });
 
-  it('appends macOS policy values only when absent', () => {
+  it('rejects non-Linux platforms', () => {
     const script = renderShellInstaller('chrome', LINKS);
-    expect(script).toContain('-array-add');
-    expect(script).not.toContain('ExtensionInstallForcelist -array ');
-    expect(script).toContain('grep -qF');
+    expect(script).toContain('Gunakan Windows atau Linux.');
+    expect(script).not.toContain('Darwin');
+    expect(script).not.toContain('defaults write');
   });
 });
 
@@ -141,20 +138,17 @@ describe('renderPowerShellUninstaller', () => {
 });
 
 describe('renderShellUninstaller', () => {
-  it('removes the policy domain on macOS and policy file on Linux per browser', () => {
+  it('removes the Linux policy file per browser', () => {
     const chrome = renderShellUninstaller('chrome', LINKS);
-    expect(chrome).toContain('com.google.Chrome');
     expect(chrome).toContain('/etc/opt/chrome/policies/managed');
-    expect(chrome).toContain('defaults delete');
 
     const edge = renderShellUninstaller('edge', LINKS);
-    expect(edge).toContain('com.microsoft.Edge');
     expect(edge).toContain('/etc/opt/edge/policies/managed');
 
     const brave = renderShellUninstaller('brave', LINKS);
-    expect(brave).toContain('com.brave.Browser');
     expect(brave).toContain('/etc/brave/policies/managed');
 
     expect(chrome).toContain('rm -f "$DIR/dandelion.json"');
+    expect(chrome).not.toContain('defaults delete');
   });
 });
