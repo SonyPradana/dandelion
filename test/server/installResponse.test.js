@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  escapeXml,
   renderChromeUpdateXml,
   renderPowerShellInstaller,
   renderPowerShellUninstaller,
@@ -14,6 +15,13 @@ const LINKS = {
   origin: 'https://dandelion.web.id',
   installUrl: 'https://dandelion.web.id/install/chrome.ps1',
 };
+
+describe('escapeXml', () => {
+  it('escapes every XML entity character once', () => {
+    expect(escapeXml(`&<>'"`)).toBe('&amp;&lt;&gt;&apos;&quot;');
+    expect(escapeXml('1.8.0')).toBe('1.8.0');
+  });
+});
 
 describe('renderChromeUpdateXml', () => {
   it('emits a gupdate manifest with appid, codebase, and version', () => {

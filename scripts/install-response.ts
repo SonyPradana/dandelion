@@ -47,18 +47,22 @@ export interface InstallLinks {
   installUrl: string;
 }
 
+// Escapes XML entity characters. Applied to every value interpolated into
+// generated XML so artifact metadata can never break out of an attribute.
+export function escapeXml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll("'", '&apos;')
+    .replaceAll('"', '&quot;');
+}
+
 export function renderChromeUpdateXml({ id, version, crxUrl }: UpdateXmlInput): string {
-  const esc = (value: string) =>
-    value
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;')
-      .replaceAll("'", '&apos;')
-      .replaceAll('"', '&quot;');
   return `<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
-  <app appid='${esc(id)}'>
-    <updatecheck codebase='${esc(crxUrl)}' version='${esc(version)}' />
+  <app appid='${escapeXml(id)}'>
+    <updatecheck codebase='${escapeXml(crxUrl)}' version='${escapeXml(version)}' />
   </app>
 </gupdate>
 `;
