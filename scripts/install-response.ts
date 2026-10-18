@@ -48,10 +48,17 @@ export interface InstallLinks {
 }
 
 export function renderChromeUpdateXml({ id, version, crxUrl }: UpdateXmlInput): string {
+  const esc = (value: string) =>
+    value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll("'", '&apos;')
+      .replaceAll('"', '&quot;');
   return `<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
-  <app appid='${id}'>
-    <updatecheck codebase='${crxUrl}' version='${version}' />
+  <app appid='${esc(id)}'>
+    <updatecheck codebase='${esc(crxUrl)}' version='${esc(version)}' />
   </app>
 </gupdate>
 `;
@@ -62,6 +69,8 @@ export function renderPowerShellInstaller(browser: InstallBrowser, links: Instal
   const policyPath = WINDOWS_POLICY_PATHS[browser];
   return `# Dandelion — pemasangan ${label} via kebijakan enterprise (Windows)
 # Jalankan di PowerShell: irm ${links.installUrl} | iex
+# Catatan: force-install ekstensi di luar Web Store hanya berlaku pada perangkat
+# yang dikelola (domain AD/Entra ID, MDM, atau Chrome Enterprise Core).
 $ErrorActionPreference = 'Stop'
 
 $InstallUrl = '${links.installUrl}'
@@ -80,18 +89,32 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
   exit
 }
 
+# Tulis satu entri list tanpa menimpa entri kebijakan lain: pakai ulang nama
+# entri yang sudah cocok, atau nama numerik berikutnya yang masih kosong.
+function Set-ListEntry($Path, $Value, $MatchPattern) {
+  if (-not (Test-Path $Path)) { New-Item -Path $Path -Force | Out-Null }
+  $props = @()
+  $item = Get-Item -Path $Path
+  if ($item.Property) { $props = @($item.Property) }
+  $name = $props | Where-Object {
+    (Get-ItemProperty -Path $Path -Name $_).$_ -like $MatchPattern
+  } | Select-Object -First 1
+  if (-not $name) {
+    $n = 1
+    while ($props -contains "$n") { $n++ }
+    $name = "$n"
+  }
+  New-ItemProperty -Path $Path -Name $name -Value $Value -PropertyType String -Force | Out-Null
+}
+
 Write-Host 'Mengonfigurasi kebijakan ${label}...' -ForegroundColor Cyan
 
-$SourcesPath = "$PolicyPath\\ExtensionInstallSources"
-if (-not (Test-Path $SourcesPath)) { New-Item -Path $SourcesPath -Force | Out-Null }
-New-ItemProperty -Path $SourcesPath -Name '1' -Value $Origin -PropertyType String -Force | Out-Null
-
-$ForcelistPath = "$PolicyPath\\ExtensionInstallForcelist"
-if (-not (Test-Path $ForcelistPath)) { New-Item -Path $ForcelistPath -Force | Out-Null }
-New-ItemProperty -Path $ForcelistPath -Name '1' -Value "$ExtensionId;$UpdateXmlUrl" -PropertyType String -Force | Out-Null
+Set-ListEntry "$PolicyPath\\ExtensionInstallSources" $Origin $Origin
+Set-ListEntry "$PolicyPath\\ExtensionInstallForcelist" "$ExtensionId;$UpdateXmlUrl" "$ExtensionId;*"
 
 Write-Host 'Selesai! Dandelion terpasang saat ${label} dibuka ulang.' -ForegroundColor Green
-Write-Host "Untuk mencopot: hapus ExtensionInstallForcelist dan ExtensionInstallSources di $PolicyPath, lalu buka ulang ${label}."
+Write-Host 'Catatan: pada perangkat yang tidak dikelola, browser hanya memasang ekstensi dari Web Store — gunakan pemasangan manual (lihat dokumentasi).' -ForegroundColor DarkYellow
+Write-Host "Untuk mencopot: hapus entri Dandelion di $PolicyPath, lalu buka ulang ${label}."
 `;
 }
 
@@ -115,9 +138,15 @@ run_root() {
 case "$(uname -s)" in
   Darwin)
     DOMAIN='${macDomain}'
-    run_root defaults write "/Library/Preferences/$DOMAIN" ExtensionInstallForcelist -array "$EXTENSION_ID;$UPDATE_XML_URL"
-    run_root defaults write "/Library/Preferences/$DOMAIN" ExtensionInstallSources -array "$SOURCES"
+    PREFS="/Library/Preferences/$DOMAIN"
+    if ! run_root defaults read "$PREFS" ExtensionInstallForcelist 2>/dev/null | grep -qF "$EXTENSION_ID;$UPDATE_XML_URL"; then
+      run_root defaults write "$PREFS" ExtensionInstallForcelist -array-add "$EXTENSION_ID;$UPDATE_XML_URL"
+    fi
+    if ! run_root defaults read "$PREFS" ExtensionInstallSources 2>/dev/null | grep -qF "$SOURCES"; then
+      run_root defaults write "$PREFS" ExtensionInstallSources -array-add "$SOURCES"
+    fi
     echo 'Selesai! Dandelion terpasang saat ${label} dibuka ulang.'
+    echo 'Catatan: force-install ekstensi di luar Web Store hanya berlaku pada perangkat macOS yang dikelola (MDM/MCX atau Chrome Enterprise Core).'
     echo "Untuk mencopot: sudo defaults delete \\"/Library/Preferences/$DOMAIN\\" ExtensionInstallForcelist && sudo defaults delete \\"/Library/Preferences/$DOMAIN\\" ExtensionInstallSources"
     ;;
   Linux)

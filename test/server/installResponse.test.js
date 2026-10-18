@@ -29,6 +29,17 @@ describe('renderChromeUpdateXml', () => {
     );
     expect(xml).toContain(`version='1.8.0'`);
   });
+
+  it('escapes XML special characters in attribute values', () => {
+    const xml = renderChromeUpdateXml({
+      id: 'abc&<>',
+      version: `1.0.0'`,
+      crxUrl: `https://x.test/a'b&c`,
+    });
+    expect(xml).toContain(`appid='abc&amp;&lt;&gt;'`);
+    expect(xml).toContain(`codebase='https://x.test/a&apos;b&amp;c'`);
+    expect(xml).toContain(`version='1.0.0&apos;'`);
+  });
 });
 
 describe('renderPowerShellInstaller', () => {
@@ -56,6 +67,13 @@ describe('renderPowerShellInstaller', () => {
     expect(script).toContain('ExtensionInstallForcelist');
     expect(script).toContain('ExtensionInstallSources');
   });
+
+  it('preserves other policy entries instead of overwriting value name 1', () => {
+    const script = renderPowerShellInstaller('chrome', LINKS);
+    expect(script).toContain('function Set-ListEntry');
+    expect(script).toContain('while ($props -contains "$n")');
+    expect(script).not.toContain("-Name '1'");
+  });
 });
 
 describe('renderShellInstaller', () => {
@@ -80,6 +98,13 @@ describe('renderShellInstaller', () => {
     expect(script).toContain('https://dandelion.web.id/updates/chrome.xml');
     expect(script).toContain('https://dandelion.web.id/*');
     expect(script).toContain('dandelion.json');
+  });
+
+  it('appends macOS policy values only when absent', () => {
+    const script = renderShellInstaller('chrome', LINKS);
+    expect(script).toContain('-array-add');
+    expect(script).not.toContain('ExtensionInstallForcelist -array ');
+    expect(script).toContain('grep -qF');
   });
 });
 

@@ -4,6 +4,8 @@ Jalur ini memasang Dandelion lewat **kebijakan browser** (enterprise) — tanpa 
 
 > Membutuhkan hak administrator: UAC di Windows, `sudo` di macOS/Linux. Untuk pemasangan manual tanpa script, lihat halaman [Instalasi](/doc/v1/installation).
 
+> **Prasyarat perangkat terkelola.** Chrome/Edge/Brave hanya memasang paksa ekstensi dari luar Web Store pada perangkat yang dikelola: Windows — domain AD/Entra ID atau terdaftar Chrome Enterprise Core; macOS — MDM/MCX atau Chrome Enterprise Core. Menulis nilai kebijakan lewat script (registry/`defaults`) tidak dengan sendirinya membuat perangkat menjadi "managed". Untuk perangkat tanpa manajemen, gunakan [pemasangan manual](/doc/v1/installation).
+
 Browser Chromium yang didukung: **Chrome**, **Edge**, dan **Brave**. Firefox punya jalur tersendiri di bawah.
 
 ## Windows

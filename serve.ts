@@ -466,6 +466,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
   // ── enterprise install (Chromium family + Firefox direct install) ───
   if (pathname === '/updates/chrome.xml') {
+    if (!PUBLIC_URL) return notFound();
     const latestCrx = getArtifacts().find(
       (a) =>
         a.browser === 'chrome' && a.fileName.endsWith('.crx') && !a.version.startsWith('nightly-'),
@@ -486,7 +487,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
   const installScript = pathname.match(/^\/install\/(chrome|edge|brave)\.(ps1|sh)$/);
   if (installScript) {
-    if (!CHROME_ID) return notFound();
+    if (!PUBLIC_URL || !CHROME_ID) return notFound();
     const browser = installScript[1] as InstallBrowser;
     const ext = installScript[2];
     const base = PUBLIC_URL || BASE_URL;
@@ -510,7 +511,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
   const uninstallScript = pathname.match(/^\/uninstall\/(chrome|edge|brave)\.(ps1|sh)$/);
   if (uninstallScript) {
-    if (!CHROME_ID) return notFound();
+    if (!PUBLIC_URL || !CHROME_ID) return notFound();
     const browser = uninstallScript[1] as InstallBrowser;
     const ext = uninstallScript[2];
     const base = PUBLIC_URL || BASE_URL;
