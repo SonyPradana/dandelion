@@ -264,6 +264,59 @@
         white-space: nowrap;
       }
 
+      .install-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .install-tab {
+        background: transparent;
+        color: #a1a1aa;
+        border: 1px solid #2a2a3a;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .install-tab:hover {
+        color: #818cf8;
+        border-color: #818cf8;
+      }
+      .install-tab.active {
+        background: #1e1b4b;
+        color: #a5b4fc;
+        border-color: #4f46e5;
+      }
+      .install-code {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        background: #14141f;
+        border: 1px solid #2a2a3a;
+        border-radius: 12px;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.5rem;
+      }
+      .install-code code {
+        font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+        font-size: 0.78rem;
+        color: #c7d2fe;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .install-note {
+        font-size: 0.75rem;
+        color: #a1a1aa;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+      }
+      .install-copy-done {
+        color: #4ade80 !important;
+        border-color: #4ade80 !important;
+      }
+
       @media (max-width: 500px) {
         .downloads {
           flex-direction: column;
@@ -293,6 +346,56 @@
         <h1>Dandelion</h1>
         <p class="tagline">Make human decide, let machine do the work.</p>
       </header>
+
+      <section id="quick-install-section">
+        <p class="section-title">Quick Install</p>
+        <div class="install-tabs" role="tablist" aria-label="Browser">
+          <button
+            class="install-tab active"
+            id="tab-chrome"
+            role="tab"
+            aria-selected="true"
+            data-browser="chrome"
+          >
+            Chrome
+          </button>
+          <button
+            class="install-tab"
+            id="tab-edge"
+            role="tab"
+            aria-selected="false"
+            data-browser="edge"
+          >
+            Edge
+          </button>
+          <button
+            class="install-tab"
+            id="tab-brave"
+            role="tab"
+            aria-selected="false"
+            data-browser="brave"
+          >
+            Brave
+          </button>
+        </div>
+        <div class="install-code">
+          <code id="install-command"></code>
+          <button class="btn btn-outline" id="install-copy">Copy</button>
+        </div>
+        <p class="install-note">
+          Butuh hak admin (UAC/sudo); di Windows jalankan dari sesi PowerShell. Ekstensi dipasang
+          sebagai kebijakan browser dan diperbarui otomatis — mencopot juga bisa lewat script
+          uninstaller di <a href="/doc/v1/quick-install">dokumentasi</a>. Lebih suka tanpa script?
+          Unduh manual di <a href="#downloads-section">Download Latest</a>.
+        </p>
+        <div class="card-solo" id="firefox-install-card">
+          <div>
+            <h3>Firefox</h3>
+            <p>Tanpa script — klik Install, lalu setujui dialog pemasangan dari Firefox.</p>
+          </div>
+          <a class="btn btn-primary" href="/install/firefox">Install</a>
+        </div>
+      </section>
 
       <section id="downloads-section">
         <p class="section-title">Download Latest</p>
@@ -334,6 +437,19 @@
         </div>
       </section>
 
+      <div class="card-solo">
+        <div>
+          <h3>Token Generator</h3>
+          <p>Generate and manage quota tokens</p>
+        </div>
+        <a class="btn btn-outline" href="/token-generator.html">Open</a>
+      </div>
+
+      <section id="changelog-section" style="margin-bottom: 2.5rem">
+        <p class="section-title">Latest Updates</p>
+        <div id="changelog"></div>
+      </section>
+
       <section id="endpoints-section">
         <p class="section-title">Server Endpoints</p>
         <div class="endpoint-list">
@@ -349,6 +465,30 @@
             ><span class="entry-desc">Firefox addon auto-update manifest</span>
           </div>
           <div class="entry">
+            <span class="entry-path">/updates/chrome.xml</span
+            ><span class="entry-desc">CRX auto-update manifest (Chrome, Edge, Brave)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/install/&lt;browser&gt;.ps1</span
+            ><span class="entry-desc">Enterprise installer (Windows)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/install/&lt;browser&gt;.sh</span
+            ><span class="entry-desc">Enterprise installer (macOS &amp; Linux)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/uninstall/&lt;browser&gt;.ps1</span
+            ><span class="entry-desc">Enterprise uninstaller (Windows)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/uninstall/&lt;browser&gt;.sh</span
+            ><span class="entry-desc">Enterprise uninstaller (macOS &amp; Linux)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/install/firefox</span
+            ><span class="entry-desc">Signed .xpi served inline (install prompt)</span>
+          </div>
+          <div class="entry">
             <span class="entry-path">/manifest.json</span
             ><span class="entry-desc">Version listing of all artifacts</span>
           </div>
@@ -362,7 +502,7 @@
           </div>
           <div class="entry">
             <span class="entry-path">/artifacts/&lt;file&gt;</span
-            ><span class="entry-desc">Download .zip or .xpi</span>
+            ><span class="entry-desc">Download .zip, .xpi, or .crx</span>
           </div>
           <div class="entry">
             <span class="entry-path">/health</span
@@ -379,22 +519,57 @@
         </div>
       </section>
 
-      <div class="card-solo">
-        <div>
-          <h3>Token Generator</h3>
-          <p>Generate and manage quota tokens</p>
-        </div>
-        <a class="btn btn-outline" href="/token-generator.html">Open</a>
-      </div>
-
-      <section id="changelog-section" style="margin-bottom: 2.5rem">
-        <p class="section-title">Latest Updates</p>
-        <div id="changelog"></div>
-      </section>
-
       <p class="status" id="status"></p>
     </div>
 
+    <script>
+      (() => {
+        const ua = navigator.userAgent;
+        const platform = navigator.userAgentData?.platform || navigator.platform || ua;
+        const origin = location.origin;
+        const isWindows = /win/i.test(platform);
+        const tabs = Array.from(document.querySelectorAll('.install-tab'));
+        const cmdEl = document.getElementById('install-command');
+
+        const commandFor = (browser) =>
+          isWindows
+            ? `irm ${origin}/install/${browser}.ps1 | iex`
+            : `curl -fsSL ${origin}/install/${browser}.sh | sh`;
+
+        function select(browser) {
+          for (const tab of tabs) {
+            const active = tab.dataset.browser === browser;
+            tab.classList.toggle('active', active);
+            tab.setAttribute('aria-selected', String(active));
+          }
+          cmdEl.textContent = commandFor(browser);
+        }
+
+        for (const tab of tabs) {
+          tab.addEventListener('click', () => select(tab.dataset.browser));
+        }
+
+        const copyBtn = document.getElementById('install-copy');
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(cmdEl.textContent);
+            copyBtn.textContent = 'Tersalin!';
+            copyBtn.classList.add('install-copy-done');
+            setTimeout(() => {
+              copyBtn.textContent = 'Copy';
+              copyBtn.classList.remove('install-copy-done');
+            }, 1500);
+          } catch {}
+        });
+
+        (async () => {
+          let detected = 'chrome';
+          if (/Edg\//.test(ua)) detected = 'edge';
+          else if (navigator.brave && (await navigator.brave.isBrave?.())) detected = 'brave';
+          select(detected);
+        })();
+      })();
+    </script>
     <script>
       (async () => {
         const status = document.getElementById('status');
