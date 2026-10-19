@@ -1,59 +1,14 @@
 # Instalasi Cepat
 
-Jalur ini memasang Dandelion lewat **kebijakan browser** (enterprise) — tanpa drag-and-drop, dan pembaruan berjalan otomatis. Kebijakan mengunci ekstensi: pengguna tidak bisa menonaktifkan atau menghapusnya dari halaman ekstensi sampai kebijakannya dicabut.
+Jalur ini memasang Dandelion lewat **kebijakan browser** di Linux — tanpa drag-and-drop, dan pembaruan berjalan otomatis. Kebijakan mengunci ekstensi: pengguna tidak bisa menonaktifkan atau menghapusnya dari halaman ekstensi sampai kebijakannya dicabut.
 
-> Membutuhkan hak administrator: UAC di Windows, `sudo` di Linux. Untuk pemasangan manual tanpa script, lihat halaman [Instalasi](/doc/v1/installation).
+> Membutuhkan `sudo`. Untuk pemasangan manual tanpa script, lihat halaman [Instalasi](/doc/v1/installation).
 
-> **Prasyarat perangkat terkelola (Windows).** Chrome/Edge/Brave hanya memasang paksa ekstensi dari luar Web Store pada perangkat Windows yang dikelola: domain AD/Entra ID atau terdaftar Chrome Enterprise Core. Menulis nilai kebijakan lewat script registry tidak dengan sendirinya membuat perangkat menjadi "managed". Untuk perangkat tanpa manajemen, gunakan [pemasangan manual](/doc/v1/installation).
-
-Browser Chromium yang didukung: **Chrome**, **Edge**, dan **Brave**. Firefox punya jalur tersendiri di bawah.
+Browser Chromium yang didukung di Linux: **Chrome**, **Edge**, dan **Brave**. Firefox punya jalur tersendiri di bawah.
 
 ## Windows
 
-Script PowerShell meminta elevasi admin sendiri (UAC), lalu menulis `ExtensionInstallSources` dan `ExtensionInstallForcelist` ke registry. Jalankan perintah berikut dari sesi PowerShell.
-
-### Chrome
-
-```powershell
-& ([scriptblock]::Create((irm https://dandelion.web.id/install/chrome.ps1)))
-```
-
-### Edge
-
-```powershell
-& ([scriptblock]::Create((irm https://dandelion.web.id/install/edge.ps1)))
-```
-
-### Brave
-
-```powershell
-& ([scriptblock]::Create((irm https://dandelion.web.id/install/brave.ps1)))
-```
-
-### Mencopot (Windows)
-
-Ada dua cara. **Via script** (disarankan) — jalankan dari sesi PowerShell, ganti `chrome` dengan `edge` atau `brave`:
-
-```powershell
-& ([scriptblock]::Create((irm https://dandelion.web.id/uninstall/chrome.ps1)))
-```
-
-Script hanya menghapus entri milik Dandelion; kebijakan lain di registry tidak diubah. Buka ulang browser setelah selesai.
-
-**Manual**: hapus subkey `ExtensionInstallForcelist` dan `ExtensionInstallSources` pada registry key berikut, lalu buka ulang browser:
-
-| Browser | Registry key                                  |
-| ------- | --------------------------------------------- |
-| Chrome  | `HKLM:\SOFTWARE\Policies\Google\Chrome`       |
-| Edge    | `HKLM:\SOFTWARE\Policies\Microsoft\Edge`      |
-| Brave   | `HKLM:\SOFTWARE\Policies\BraveSoftware\Brave` |
-
-Contoh untuk Chrome (sesuaikan key untuk Edge/Brave):
-
-```powershell
-Remove-Item -Recurse -Force "HKLM:\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist"
-Remove-Item -Recurse -Force "HKLM:\SOFTWARE\Policies\Google\Chrome\ExtensionInstallSources"
-```
+Belum didukung untuk jalur otomatis. Chrome/Edge/Brave hanya memasang paksa ekstensi dari luar Web Store pada perangkat Windows yang dikelola organisasi (domain AD/Entra ID atau terdaftar Chrome Enterprise Core) — di luar itu browser memblokir pemasangannya. Gunakan [pemasangan manual](/doc/v1/installation).
 
 ## Linux
 

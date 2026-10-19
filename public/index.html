@@ -383,12 +383,10 @@
           <button class="btn btn-outline" id="install-copy">Copy</button>
         </div>
         <p class="install-note">
-          Butuh hak admin (UAC/sudo); di Windows jalankan dari sesi PowerShell. Force-install di
-          luar Web Store di Windows hanya berlaku di perangkat yang dikelola; perangkat lain pakai
-          unduh manual. Ekstensi dipasang sebagai kebijakan browser dan diperbarui otomatis —
-          mencopot juga bisa lewat script uninstaller di
-          <a href="/doc/v1/quick-install">dokumentasi</a>. Lebih suka tanpa script? Unduh manual di
-          <a href="#downloads-section">Download Latest</a>.
+          Membutuhkan <code>sudo</code> (Linux). Windows belum didukung untuk jalur otomatis —
+          gunakan unduh manual di <a href="#downloads-section">Download Latest</a>. Ekstensi
+          dipasang sebagai kebijakan browser dan diperbarui otomatis — mencopot juga bisa lewat
+          script uninstaller di <a href="/doc/v1/quick-install">dokumentasi</a>.
         </p>
         <div class="card-solo" id="firefox-install-card">
           <div>
@@ -471,16 +469,8 @@
             ><span class="entry-desc">CRX auto-update manifest (Chrome, Edge, Brave)</span>
           </div>
           <div class="entry">
-            <span class="entry-path">/install/&lt;browser&gt;.ps1</span
-            ><span class="entry-desc">Enterprise installer (Windows)</span>
-          </div>
-          <div class="entry">
             <span class="entry-path">/install/&lt;browser&gt;.sh</span
             ><span class="entry-desc">Enterprise installer (Linux)</span>
-          </div>
-          <div class="entry">
-            <span class="entry-path">/uninstall/&lt;browser&gt;.ps1</span
-            ><span class="entry-desc">Enterprise uninstaller (Windows)</span>
           </div>
           <div class="entry">
             <span class="entry-path">/uninstall/&lt;browser&gt;.sh</span
@@ -535,7 +525,7 @@
 
         const commandFor = (browser) =>
           isWindows
-            ? `& ([scriptblock]::Create((irm ${origin}/install/${browser}.ps1)))`
+            ? '# Windows: jalur otomatis belum didukung — unduh .zip dan pasang manual'
             : `curl -fsSL ${origin}/install/${browser}.sh | sh`;
 
         function select(browser) {
@@ -552,6 +542,7 @@
         }
 
         const copyBtn = document.getElementById('install-copy');
+        copyBtn.disabled = isWindows;
         copyBtn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText(cmdEl.textContent);

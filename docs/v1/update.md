@@ -1,6 +1,6 @@
 # Pembaruan
 
-Perilaku pembaruan tergantung browser. Firefox memperbarui ekstensi secara otomatis, sedangkan browser berbasis Chromium memerlukan langkah manual.
+Perilaku pembaruan tergantung cara pemasangan. Firefox dan pemasangan lewat kebijakan browser (Linux) diperbarui otomatis; pemasangan manual dari berkas tidak.
 
 ## Firefox
 
@@ -18,6 +18,8 @@ Browser Chromium memperlakukan ekstensi yang dipasang dari berkas sebagai versi 
 2. Buka halaman ekstensi browser (`chrome://extensions`, `brave://extensions`, atau `edge://extensions`).
 3. **Tarik berkas `.zip` baru** dari folder unduhan dan **lepas di halaman ekstensi**.
 4. Pastikan nomor versi pada kartu Dandelion sesuai dengan versi di [halaman utama](/).
+
+Jika dipasang lewat [kebijakan browser](/doc/v1/quick-install) di Linux, pembaruan berjalan otomatis dari server — sama seperti Firefox.
 
 ## Mobile
 

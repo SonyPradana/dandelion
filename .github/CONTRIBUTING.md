@@ -113,7 +113,7 @@ intend to publish the CRX. The signed `.crx` powers enterprise (policy)
 installs — the only path where Chrome ≥117 still allows off-store auto-update
 — via the update manifest served by `serve.ts`. Unmanaged installs use the
 `.zip` through `chrome://extensions` (developer mode) → Load unpacked from
-`dist/chrome/`. See `docs/v1/quick-install.md` for the install/uninstall
+`dist/chrome/`. See `docs/v1/quick-install.md` for the Linux install/uninstall
 one-liners.
 
 ### Firefox
