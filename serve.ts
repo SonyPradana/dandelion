@@ -365,6 +365,13 @@ function findArtifact(fileName: string): Artifact | undefined {
   return getArtifacts().find((a) => a.fileName === fileName);
 }
 
+function latestStableCrx(): Artifact | undefined {
+  return getArtifacts().find(
+    (a) =>
+      a.browser === 'chrome' && a.fileName.endsWith('.crx') && !a.version.startsWith('nightly-'),
+  );
+}
+
 function recordDownload(req: Request, fileName: string): void {
   const stableMatch = fileName.match(STABLE_RE);
   const nightlyMatch = fileName.match(NIGHTLY_RE);
@@ -463,10 +470,7 @@ async function handleRequest(req: Request): Promise<Response> {
   // ── enterprise install (Chromium family + Firefox direct install) ───
   if (pathname === '/updates/chrome.xml') {
     if (!PUBLIC_URL) return notFound();
-    const latestCrx = getArtifacts().find(
-      (a) =>
-        a.browser === 'chrome' && a.fileName.endsWith('.crx') && !a.version.startsWith('nightly-'),
-    );
+    const latestCrx = latestStableCrx();
     if (!CHROME_ID || !latestCrx) return notFound();
     const body = renderChromeUpdateXml({
       id: CHROME_ID,
@@ -483,7 +487,7 @@ async function handleRequest(req: Request): Promise<Response> {
 
   const installScript = pathname.match(/^\/install\/(chrome|edge|brave)\.sh$/);
   if (installScript) {
-    if (!PUBLIC_URL || !CHROME_ID) return notFound();
+    if (!PUBLIC_URL || !CHROME_ID || !latestStableCrx()) return notFound();
     const browser = installScript[1] as InstallBrowser;
     const base = PUBLIC_URL || BASE_URL;
     const links = {
