@@ -82,6 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const tabPanes = document.querySelectorAll('.tab-pane');
   const saveFooter = document.getElementById('save-footer');
   const saveConfigBtn = document.getElementById('save-config-btn');
+  const saveStatus = document.getElementById('save-status');
   const SAVE_TABS = new Set([
     'profile',
     'form-skrining',
@@ -98,6 +99,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   let saveLabelTimer = null;
   let saveState = 'idle';
 
+  /**
+   * Update the save button state and announce the result to screen readers.
+   * @param {'idle' | 'saved' | 'imported' | 'error'} state
+   * @param {string} [title] - error detail for the tooltip and live region
+   */
   function setSaveState(state, title = '') {
     saveState = state;
     clearTimeout(saveLabelTimer);
@@ -110,6 +116,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         : []),
       saveLabels[state],
     );
+    if (saveStatus) {
+      saveStatus.textContent = {
+        saved: 'Konfigurasi tersimpan.',
+        imported: 'Konfigurasi diimpor.',
+        error: `Gagal menyimpan: ${title}`,
+        idle: '',
+      }[state];
+    }
     if (state === 'saved' || state === 'imported') {
       saveLabelTimer = setTimeout(() => setSaveState('idle'), 2000);
     }
@@ -376,15 +390,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     silenceInfoNotificationCheckbox.checked = config.silenceInfoNotification ?? false;
   });
 
+  let saving = false;
   saveConfigBtn.addEventListener('click', async () => {
-    if (!loadedConfig) return;
+    if (!loadedConfig || saving) return;
     navigator.vibrate?.(8);
 
     const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
-    if (!loadedConfig.profiles[selectedProfile]) {
-      loadedConfig.profiles[selectedProfile] = {};
-    }
-    const profileSettings = loadedConfig.profiles[selectedProfile];
 
     /** @param {string} message */
     const failSave = (message) => setSaveState('error', message);
@@ -405,6 +416,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         return null;
       }
     };
+
+    const registerFormDefaults = parseJsonField(
+      registerFormDefaultFlashInput.value,
+      'Template Flash Data Register Form',
+    );
+    if (registerFormDefaults === null) return;
+
+    const zenModeDefaults = parseJsonField(
+      zenModeDefaultFlashInput.value,
+      'Template Flash Data Mode Zen',
+    );
+    if (zenModeDefaults === null) return;
+
+    if (!loadedConfig.profiles[selectedProfile]) {
+      loadedConfig.profiles[selectedProfile] = {};
+    }
+    const profileSettings = loadedConfig.profiles[selectedProfile];
 
     loadedConfig.activeProfile = selectedProfile;
 
@@ -432,12 +460,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
     profileSettings.registerForm.countdownDuration =
       parseInt(registerFormCountdownDurationInput.value) || 5000;
-
-    const registerFormDefaults = parseJsonField(
-      registerFormDefaultFlashInput.value,
-      'Template Flash Data Register Form',
-    );
-    if (registerFormDefaults === null) return;
     profileSettings.registerForm.defaultPinneds = registerFormDefaults;
 
     if (!profileSettings.zenMode) profileSettings.zenMode = {};
@@ -446,12 +468,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       30_000,
       Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000),
     );
-
-    const zenModeDefaults = parseJsonField(
-      zenModeDefaultFlashInput.value,
-      'Template Flash Data Mode Zen',
-    );
-    if (zenModeDefaults === null) return;
     profileSettings.zenMode.defaultPinneds = zenModeDefaults;
 
     if (!profileSettings.flashData) profileSettings.flashData = {};
@@ -468,12 +484,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadedConfig.panelPosition = activePosBtn.dataset.pos;
     }
 
+    saving = true;
     try {
       await store.setConfig(loadedConfig);
       formDirty = false;
       setSaveState('saved');
     } catch (error) {
       failSave(error.message);
+    } finally {
+      saving = false;
     }
   });
 
