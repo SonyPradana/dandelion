@@ -403,6 +403,10 @@ body {
   border-top: 1px solid #e5e7eb;
 }
 
+.app-footer[hidden] {
+  display: none;
+}
+
 .btn-primary {
   max-width: 320px;
   width: 100%;
@@ -411,6 +415,9 @@ body {
   border-radius: 8px;
   font-size: 15px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
   transition: all 0.2s;
   background: linear-gradient(135deg, #4f46e5, #7c3aed);

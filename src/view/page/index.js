@@ -80,6 +80,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Back/Forward, future search results) — never auto-synced on scroll.
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabPanes = document.querySelectorAll('.tab-pane');
+  const saveFooter = document.getElementById('save-footer');
+  const saveConfigBtn = document.getElementById('save-config-btn');
+  const SAVE_TABS = new Set([
+    'profile',
+    'form-skrining',
+    'skrining',
+    'register-form',
+    'not-checked',
+    'zen-mode',
+    'lainnya',
+  ]);
   let currentTab = 'profile';
   let highlightTimer = null;
 
@@ -89,6 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     tabPanes.forEach((pane) => {
       pane.classList.toggle('active', pane.id === `tab-${tab}`);
     });
+    if (saveFooter) saveFooter.hidden = !SAVE_TABS.has(tab);
     if (tab === 'produktifitas') renderProduktifitas();
     if (tab === 'quota') renderLicense();
   }
@@ -147,7 +159,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   let formActiveProfile = null;
 
   document.getElementById('config-body').addEventListener('input', (event) => {
-    if (event.isTrusted) formDirty = true;
+    if (!event.isTrusted) return;
+    formDirty = true;
+    if (saveConfigBtn && saveConfigBtn.textContent !== 'Simpan') {
+      saveConfigBtn.textContent = 'Simpan';
+      saveConfigBtn.title = '';
+    }
   });
 
   const radioButtonKeywordsList = new KeywordList(
@@ -341,9 +358,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     silenceInfoNotificationCheckbox.checked = config.silenceInfoNotification ?? false;
   });
 
-  const saveConfigBtn = document.getElementById('save-config-btn');
   if (saveConfigBtn) {
-    saveConfigBtn.addEventListener('click', () => {
+    saveConfigBtn.addEventListener('click', async () => {
       if (!loadedConfig) return;
 
       const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
@@ -351,6 +367,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadedConfig.profiles[selectedProfile] = {};
       }
       const profileSettings = loadedConfig.profiles[selectedProfile];
+
+      const failSave = (message) => {
+        saveConfigBtn.textContent = 'Gagal ✗';
+        saveConfigBtn.title = message;
+      };
 
       /** @param {string} text @param {string} label @returns {object|null} */
       const parseJsonField = (text, label) => {
@@ -361,16 +382,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
             return parsed;
           }
-          saveConfigBtn.textContent = `Gagal: ${label} harus objek JSON`;
-          setTimeout(() => {
-            saveConfigBtn.textContent = 'Simpan';
-          }, 2000);
+          failSave(`${label} harus berupa objek JSON`);
           return null;
         } catch (error) {
-          saveConfigBtn.textContent = `Gagal: ${label} — ${error.message}`;
-          setTimeout(() => {
-            saveConfigBtn.textContent = 'Simpan';
-          }, 2500);
+          failSave(`${label} — ${error.message}`);
           return null;
         }
       };
@@ -437,13 +452,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadedConfig.panelPosition = activePosBtn.dataset.pos;
       }
 
-      store.setConfig(loadedConfig);
-      formDirty = false;
-
-      saveConfigBtn.textContent = 'Tersimpan!';
-      setTimeout(() => {
-        saveConfigBtn.textContent = 'Simpan';
-      }, 1500);
+      try {
+        await store.setConfig(loadedConfig);
+        formDirty = false;
+        saveConfigBtn.textContent = 'Tersimpan ✓';
+        saveConfigBtn.title = '';
+      } catch (error) {
+        failSave(error.message);
+      }
     });
   }
 
@@ -932,10 +948,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     formDirty = false;
     await refreshUiFromStore();
 
-    saveConfigBtn.textContent = 'Diimpor!';
-    setTimeout(() => {
-      saveConfigBtn.textContent = 'Simpan';
-    }, 1500);
+    saveConfigBtn.textContent = 'Diimpor ✓';
+    saveConfigBtn.title = '';
   }
 
   importLink.addEventListener('click', (event) => {
@@ -973,10 +987,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         await applyImportedConfig(parsed.value);
       } catch (error) {
         alert(error.message);
-        saveConfigBtn.textContent = 'Import gagal!';
-        setTimeout(() => {
-          saveConfigBtn.textContent = 'Simpan';
-        }, 2000);
+        saveConfigBtn.textContent = 'Impor gagal ✗';
+        saveConfigBtn.title = error.message;
       }
     };
     reader.readAsText(file);
