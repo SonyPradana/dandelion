@@ -3,7 +3,7 @@ import { ZipArchive } from 'archiver';
 import { createHash, createPrivateKey, createPublicKey, sign as signWithKey } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
@@ -134,4 +134,6 @@ async function main() {
   console.log(`  ${outPath} (${size} KB)\n`);
 }
 
-if (import.meta.main) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main();
+}
