@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
-  const versionEl = document.querySelector('.app-header .version');
+  const versionEl = document.querySelector('.topbar .version');
   if (versionEl) {
     versionEl.textContent = `version ${browser.runtime.getManifest().version}`;
   }
