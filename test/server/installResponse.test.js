@@ -2,8 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   escapeXml,
   renderChromeUpdateXml,
-  renderPowerShellInstaller,
-  renderPowerShellUninstaller,
   renderShellInstaller,
   renderShellUninstaller,
 } from '../../scripts/install-response.js';
@@ -13,7 +11,7 @@ const LINKS = {
   id: ID,
   updateUrl: 'https://dandelion.web.id/updates/chrome.xml',
   origin: 'https://dandelion.web.id',
-  installUrl: 'https://dandelion.web.id/install/chrome.ps1',
+  installUrl: 'https://dandelion.web.id/install/chrome.sh',
 };
 
 describe('escapeXml', () => {
@@ -50,42 +48,6 @@ describe('renderChromeUpdateXml', () => {
   });
 });
 
-describe('renderPowerShellInstaller', () => {
-  it('targets the registry policy path of each browser', () => {
-    expect(renderPowerShellInstaller('chrome', LINKS)).toContain(
-      String.raw`HKLM:\SOFTWARE\Policies\Google\Chrome`,
-    );
-    expect(renderPowerShellInstaller('edge', LINKS)).toContain(
-      String.raw`HKLM:\SOFTWARE\Policies\Microsoft\Edge`,
-    );
-    expect(renderPowerShellInstaller('brave', LINKS)).toContain(
-      String.raw`HKLM:\SOFTWARE\Policies\BraveSoftware\Brave`,
-    );
-  });
-
-  it('embeds the extension id, update XML URL, and self-elevates via UAC', () => {
-    const script = renderPowerShellInstaller('edge', {
-      ...LINKS,
-      installUrl: 'https://dandelion.web.id/install/edge.ps1',
-    });
-    expect(script).toContain(ID);
-    expect(script).toContain('https://dandelion.web.id/updates/chrome.xml');
-    expect(script).toContain('https://dandelion.web.id/install/edge.ps1');
-    expect(script).toContain('-Verb RunAs');
-    expect(script).toContain('ExtensionInstallForcelist');
-    expect(script).toContain('ExtensionInstallSources');
-    expect(script).toContain('[scriptblock]::Create');
-    expect(script).not.toContain('| iex');
-  });
-
-  it('preserves other policy entries instead of overwriting value name 1', () => {
-    const script = renderPowerShellInstaller('chrome', LINKS);
-    expect(script).toContain('function Set-ListEntry');
-    expect(script).toContain('while ($props -contains "$n")');
-    expect(script).not.toContain("-Name '1'");
-  });
-});
-
 describe('renderShellInstaller', () => {
   it('uses the Linux policy dir per browser', () => {
     const chrome = renderShellInstaller('chrome', LINKS);
@@ -109,35 +71,10 @@ describe('renderShellInstaller', () => {
 
   it('rejects non-Linux platforms', () => {
     const script = renderShellInstaller('chrome', LINKS);
-    expect(script).toContain('Gunakan Windows atau Linux.');
+    expect(script).toContain('Hanya Linux yang didukung.');
+    expect(script).not.toContain('Windows atau Linux');
     expect(script).not.toContain('Darwin');
     expect(script).not.toContain('defaults write');
-  });
-});
-
-describe('renderPowerShellUninstaller', () => {
-  it('targets the registry policy path of each browser', () => {
-    expect(renderPowerShellUninstaller('chrome', LINKS)).toContain(
-      String.raw`HKLM:\SOFTWARE\Policies\Google\Chrome`,
-    );
-    expect(renderPowerShellUninstaller('edge', LINKS)).toContain(
-      String.raw`HKLM:\SOFTWARE\Policies\Microsoft\Edge`,
-    );
-    expect(renderPowerShellUninstaller('brave', LINKS)).toContain(
-      String.raw`HKLM:\SOFTWARE\Policies\BraveSoftware\Brave`,
-    );
-  });
-
-  it('removes only entries belonging to Dandelion and self-elevates via UAC', () => {
-    const script = renderPowerShellUninstaller('chrome', LINKS);
-    expect(script).toContain('https://dandelion.web.id/uninstall/chrome.ps1');
-    expect(script).toContain('-Verb RunAs');
-    expect(script).toContain(`"$ExtensionId;*"`);
-    expect(script).toContain('Remove-ItemProperty');
-    expect(script).toContain('ExtensionInstallForcelist');
-    expect(script).toContain('ExtensionInstallSources');
-    expect(script).toContain('[scriptblock]::Create');
-    expect(script).not.toContain('| iex');
   });
 });
 

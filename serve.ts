@@ -6,9 +6,7 @@ import { listDocVersions } from './scripts/build-docs.js';
 import { chooseDocVariant, docHeaders, readDocEntry } from './scripts/doc-response.js';
 import {
   renderChromeUpdateXml,
-  renderPowerShellInstaller,
   renderShellInstaller,
-  renderPowerShellUninstaller,
   renderShellUninstaller,
   type InstallBrowser,
 } from './scripts/install-response.js';
@@ -18,9 +16,7 @@ import {
 //   /token-generator.html → Token generator page
 //   /update.json          → Auto-update manifest (Firefox addon update)
 //   /updates/chrome.xml   → Auto-update manifest (Chrome, Edge, Brave CRX)
-//   /install/<b>.ps1      → Enterprise policy installer (Windows)
 //   /install/<b>.sh       → Enterprise policy installer (Linux)
-//   /uninstall/<b>.ps1    → Enterprise policy uninstaller (Windows)
 //   /uninstall/<b>.sh     → Enterprise policy uninstaller (Linux)
 //   /install/firefox      → Signed .xpi inline (Firefox install prompt)
 //   /manifest.json        → Version listing of all artifacts
@@ -485,22 +481,18 @@ async function handleRequest(req: Request): Promise<Response> {
     });
   }
 
-  const installScript = pathname.match(/^\/install\/(chrome|edge|brave)\.(ps1|sh)$/);
+  const installScript = pathname.match(/^\/install\/(chrome|edge|brave)\.sh$/);
   if (installScript) {
     if (!PUBLIC_URL || !CHROME_ID) return notFound();
     const browser = installScript[1] as InstallBrowser;
-    const ext = installScript[2];
     const base = PUBLIC_URL || BASE_URL;
     const links = {
       id: CHROME_ID,
       updateUrl: `${base}/updates/chrome.xml`,
       origin: base,
-      installUrl: `${base}/install/${browser}.${ext}`,
+      installUrl: `${base}/install/${browser}.sh`,
     };
-    const body =
-      ext === 'ps1'
-        ? renderPowerShellInstaller(browser, links)
-        : renderShellInstaller(browser, links);
+    const body = renderShellInstaller(browser, links);
     return new Response(body, {
       headers: {
         'content-type': 'text/plain; charset=utf-8',
@@ -509,22 +501,18 @@ async function handleRequest(req: Request): Promise<Response> {
     });
   }
 
-  const uninstallScript = pathname.match(/^\/uninstall\/(chrome|edge|brave)\.(ps1|sh)$/);
+  const uninstallScript = pathname.match(/^\/uninstall\/(chrome|edge|brave)\.sh$/);
   if (uninstallScript) {
     if (!PUBLIC_URL || !CHROME_ID) return notFound();
     const browser = uninstallScript[1] as InstallBrowser;
-    const ext = uninstallScript[2];
     const base = PUBLIC_URL || BASE_URL;
     const links = {
       id: CHROME_ID,
       updateUrl: `${base}/updates/chrome.xml`,
       origin: base,
-      installUrl: `${base}/install/${browser}.${ext}`,
+      installUrl: `${base}/install/${browser}.sh`,
     };
-    const body =
-      ext === 'ps1'
-        ? renderPowerShellUninstaller(browser, links)
-        : renderShellUninstaller(browser, links);
+    const body = renderShellUninstaller(browser, links);
     return new Response(body, {
       headers: {
         'content-type': 'text/plain; charset=utf-8',
