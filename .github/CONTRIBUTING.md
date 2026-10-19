@@ -112,9 +112,9 @@ Signing is a separate manual step so the private key is only used when you
 intend to publish the CRX. The signed `.crx` powers enterprise (policy)
 installs — the only path where Chrome ≥117 still allows off-store auto-update
 — via the update manifest served by `serve.ts`. Unmanaged installs use the
-`.zip` through `chrome://extensions` (developer mode) → Load unpacked from
-`dist/chrome/`. See `docs/v1/quick-install.md` for the Linux install/uninstall
-one-liners.
+`.zip`: extract it, then `chrome://extensions` (developer mode) → Load unpacked
+from the extracted directory. See `docs/v1/quick-install.md` for the Linux
+install/uninstall one-liners.
 
 ### Firefox
 
@@ -158,20 +158,24 @@ For production, see [Deployment](#deployment) below.
 
 ### Endpoints
 
-| Endpoint                | Description                        |
-| ----------------------- | ---------------------------------- |
-| `/`                     | Landing page (GET & HEAD)          |
-| `/health`               | Health check endpoint (GET & HEAD) |
-| `/token-generator.html` | Token generator UI page            |
-| `/update.json`          | Firefox addon auto-update manifest |
-| `/manifest.json`        | Artifact listing + latest version  |
-| `/api/versions`         | Alias for `/manifest.json`         |
-| `/artifacts/<file>`     | Download `.zip` or `.xpi`          |
-| `/<any public file>`    | Static files from `public/`        |
+| Endpoint                  | Description                                    |
+| ------------------------- | ---------------------------------------------- |
+| `/`                       | Landing page (GET & HEAD)                      |
+| `/health`                 | Health check endpoint (GET & HEAD)             |
+| `/token-generator.html`   | Token generator UI page                        |
+| `/update.json`            | Firefox addon auto-update manifest             |
+| `/updates/chrome.xml`     | CRX auto-update manifest (Chrome, Edge, Brave) |
+| `/install/<browser>.sh`   | Linux enterprise installer                     |
+| `/uninstall/<browser>.sh` | Linux enterprise uninstaller                   |
+| `/install/firefox`        | Signed `.xpi` served inline (install prompt)   |
+| `/manifest.json`          | Artifact listing + latest version              |
+| `/api/versions`           | Alias for `/manifest.json`                     |
+| `/artifacts/<file>`       | Download `.zip`, `.xpi`, or `.crx`             |
+| `/<any public file>`      | Static files from `public/`                    |
 
 ### Auto-Update Flow
 
-Firefox declares `gecko.update_url` in its manifest → Firefox polls `/update.json` → downloads new signed `.xpi` if available. Chrome does not support auto-update for self-hosted extensions since v117+.
+Firefox declares `gecko.update_url` in its manifest → Firefox polls `/update.json` → downloads new signed `.xpi` if available. Chromium policy installs auto-update through `/updates/chrome.xml` plus the installer's `ExtensionSettings` (`override_update_url`); extensions loaded manually from an extracted ZIP do not self-update.
 
 ### Production
 

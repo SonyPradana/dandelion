@@ -1,6 +1,6 @@
 # Pembaruan
 
-Perilaku pembaruan tergantung cara pemasangan. Firefox dan pemasangan lewat kebijakan browser (Linux) diperbarui otomatis; pemasangan manual dari berkas tidak.
+Perilaku pembaruan tergantung cara pemasangan. Firefox (termasuk `.xpi` yang dipasang manual) dan pemasangan lewat kebijakan browser di Linux diperbarui otomatis; pemasangan manual `.zip` Chromium tidak.
 
 ## Firefox
 
