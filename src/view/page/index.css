@@ -160,14 +160,16 @@ body {
 }
 
 .tab-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: 18px;
   height: 18px;
-  font-size: 0.95rem;
-  line-height: 1;
   flex-shrink: 0;
+}
+
+.pane-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #4f46e5;
 }
 
 .tab-label {

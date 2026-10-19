@@ -11,6 +11,20 @@
     <link rel="stylesheet" href="index.css" />
   </head>
   <body>
+    <!-- Ikon: Lucide (ISC) - https://lucide.dev -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none" aria-hidden="true">
+      <symbol id="icon-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></symbol>
+      <symbol id="icon-clipboard-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><path d="M12 11h4" /><path d="M12 16h4" /><path d="M8 11h.01" /><path d="M8 16h.01" /></symbol>
+      <symbol id="icon-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></symbol>
+      <symbol id="icon-notebook-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4" /><path d="M2 6h4" /><path d="M2 10h4" /><path d="M2 14h4" /><path d="M2 18h4" /><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z" /></symbol>
+      <symbol id="icon-list-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 12H3" /><path d="M16 6H3" /><path d="M16 18H3" /><path d="m19 10-4 4" /><path d="m15 10 4 4" /></symbol>
+      <symbol id="icon-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" /><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" /></symbol>
+      <symbol id="icon-chart-column" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></symbol>
+      <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></symbol>
+      <symbol id="icon-key-round" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /><circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
+      <symbol id="icon-shield-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /><path d="m9 12 2 2 4-4" /></symbol>
+    </svg>
+
     <div id="config-container">
       <header class="topbar">
         <div class="topbar-brand">
@@ -40,7 +54,7 @@
         <nav class="sidebar">
           <div class="tab-group">
             <button class="tab-btn active" data-tab="profile">
-              <span class="tab-icon">👤</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-user" /></svg>
               <span class="tab-label">Profil</span>
             </button>
           </div>
@@ -49,23 +63,23 @@
 
           <div class="tab-group">
             <button class="tab-btn" data-tab="form-skrining">
-              <span class="tab-icon">📋</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-clipboard-list" /></svg>
               <span class="tab-label">Form Skrining</span>
             </button>
             <button class="tab-btn" data-tab="skrining">
-              <span class="tab-icon">🔗</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-link" /></svg>
               <span class="tab-label">Skrining</span>
             </button>
             <button class="tab-btn" data-tab="register-form">
-              <span class="tab-icon">📝</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-notebook-pen" /></svg>
               <span class="tab-label">Register Form</span>
             </button>
             <button class="tab-btn" data-tab="not-checked">
-              <span class="tab-icon">✅</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-list-x" /></svg>
               <span class="tab-label">Tidak Periksa</span>
             </button>
             <button class="tab-btn" data-tab="zen-mode">
-              <span class="tab-icon">🧘</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-leaf" /></svg>
               <span class="tab-label">Mode Zen</span>
             </button>
           </div>
@@ -74,14 +88,14 @@
 
           <div class="tab-group">
             <button class="tab-btn" data-tab="produktifitas">
-              <span class="tab-icon">📊</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-chart-column" /></svg>
               <span class="tab-label">Produktivitas</span>
             </button>
           </div>
 
           <div class="tab-group">
             <button class="tab-btn" data-tab="lainnya">
-              <span class="tab-icon">⚙️</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-settings" /></svg>
               <span class="tab-label">Lainnya</span>
             </button>
           </div>
@@ -90,7 +104,7 @@
 
           <div class="tab-group">
             <button class="tab-btn" data-tab="quota">
-              <span class="tab-icon">🔑</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-key-round" /></svg>
               <span class="tab-label">Batas Pemakaian</span>
             </button>
           </div>
@@ -99,7 +113,7 @@
 
           <div class="tab-group">
             <button class="tab-btn" data-tab="persetujuan">
-              <span class="tab-icon">🛡️</span>
+              <svg class="tab-icon" aria-hidden="true"><use href="#icon-shield-check" /></svg>
               <span class="tab-label">Persetujuan</span>
             </button>
           </div>
@@ -108,12 +122,18 @@
         <div class="main">
           <div class="main-wrap">
             <section class="tab-pane active" id="tab-profile">
-            <div class="pane-header">👤 Profil</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-user" /></svg>
+              Profil
+            </div>
             <div class="pane-body" id="profile-manager-container" data-section="profile-main"></div>
           </section>
 
           <section class="tab-pane" id="tab-form-skrining">
-            <div class="pane-header">📋 Form Skrining</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-clipboard-list" /></svg>
+              Form Skrining
+            </div>
             <div class="pane-body">
               <div class="form-group" data-section="form-skrining-url">
                 <label for="form-skrining-url">URL</label>
@@ -204,7 +224,10 @@
           </section>
 
           <section class="tab-pane" id="tab-skrining">
-            <div class="pane-header">🔗 Skrining</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-link" /></svg>
+              Skrining
+            </div>
             <div class="pane-body">
               <div class="form-group" data-section="skrining-url">
                 <label for="skrining-url">URL Halaman Skrining</label>
@@ -239,7 +262,10 @@
           </section>
 
           <section class="tab-pane" id="tab-register-form">
-            <div class="pane-header">📝 Register Form</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-notebook-pen" /></svg>
+              Register Form
+            </div>
             <div class="pane-body">
               <div class="form-group" data-section="register-form-url">
                 <label for="register-form-url">URL Register Form</label>
@@ -297,7 +323,10 @@
           </section>
 
           <section class="tab-pane" id="tab-not-checked">
-            <div class="pane-header">✅ Tidak Periksa</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-list-x" /></svg>
+              Tidak Periksa
+            </div>
             <div class="pane-body">
               <div class="form-group" data-section="not-checked-url">
                 <label for="not-checked-url">URL</label>
@@ -331,7 +360,10 @@
           </section>
 
           <section class="tab-pane" id="tab-zen-mode">
-            <div class="pane-header">🧘 Mode Zen</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-leaf" /></svg>
+              Mode Zen
+            </div>
             <div class="pane-body">
               <div class="form-group" data-section="zen-mode-enabled">
                 <div class="checkbox-item">
@@ -378,6 +410,7 @@
 
           <section class="tab-pane" id="tab-produktifitas">
             <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-chart-column" /></svg>
               Produktivitas<button id="refresh-prod" class="pane-header-btn" title="Refresh">
                 ↻
               </button>
@@ -390,7 +423,10 @@
           </section>
 
           <section class="tab-pane" id="tab-lainnya">
-            <div class="pane-header">⚙️ Lainnya</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-settings" /></svg>
+              Lainnya
+            </div>
             <div class="pane-body">
               <div class="form-group" data-section="lainnya-notifikasi">
                 <div class="checkbox-item">
@@ -441,12 +477,18 @@
           </section>
 
           <section class="tab-pane" id="tab-quota">
-            <div class="pane-header">🔑 Batas Pemakaian</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-key-round" /></svg>
+              Batas Pemakaian
+            </div>
             <div class="pane-body" id="license-page-content" data-section="quota-main"></div>
           </section>
 
           <section class="tab-pane" id="tab-persetujuan">
-            <div class="pane-header">🛡️ Persetujuan</div>
+            <div class="pane-header">
+              <svg class="pane-icon" aria-hidden="true"><use href="#icon-shield-check" /></svg>
+              Persetujuan
+            </div>
             <div class="pane-body" id="persetujuan-content" data-section="persetujuan-main"></div>
           </section>
 
