@@ -325,7 +325,14 @@
             <h3>Firefox</h3>
             <p>Pasang langsung dari Firefox — klik Install, lalu setujui dialog pemasangan.</p>
           </div>
-          <a class="btn btn-primary" href="/install/firefox">Install</a>
+          <a
+            class="btn btn-primary"
+            id="firefox-install-link"
+            aria-label="Install Firefox extension"
+            href="/install/firefox"
+            disabled
+            >Install</a
+          >
         </div>
       </section>
 
@@ -439,9 +446,11 @@
 
           const firefoxEl = document.getElementById('firefox-link');
           const firefoxVer = document.getElementById('firefox-version');
+          const firefoxInstallEl = document.getElementById('firefox-install-link');
           if (latest.firefox) {
             firefoxEl.href = latest.firefox.url;
             firefoxEl.removeAttribute('disabled');
+            firefoxInstallEl.removeAttribute('disabled');
             firefoxVer.textContent = `v${latest.firefox.version}`;
           } else {
             firefoxVer.textContent = 'Not available';
