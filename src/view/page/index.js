@@ -378,6 +378,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   saveConfigBtn.addEventListener('click', async () => {
     if (!loadedConfig) return;
+    navigator.vibrate?.(8);
 
     const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
     if (!loadedConfig.profiles[selectedProfile]) {
