@@ -28,7 +28,7 @@ pnpm verify:firefox    # runs web-ext lint
 | `pnpm build:chrome`    | Build Chrome only → `dist/chrome/`     |
 | `pnpm build:firefox`   | Build Firefox only → `dist/firefox/`   |
 | `pnpm sign:firefox`    | Sign Firefox via AMO (requires `.env`) |
-| `pnpm release:chrome`  | Build + zip Chrome → `artifacts/`      |
+| `pnpm release:chrome`  | Build + package Chrome → `artifacts/`  |
 | `pnpm release:firefox` | Build + sign + copy XPI → `artifacts/` |
 | `pnpm release`         | Release both                           |
 | `pnpm verify:firefox`  | `web-ext lint` on `dist/firefox/`      |
@@ -77,9 +77,11 @@ The key lives in `keys/development.pem` (RSA private key). Generate it once:
 openssl rsa -pubout -in keys/development.pem | openssl base64 -A
 ```
 
-After the value is saved in `.env`, the PEM file is no longer needed — only
-`CHROME_EXTENSION_KEY` is read at build time and by the update server for
-extension ID derivation.
+After the value is saved in `.env`, the PEM file is no longer needed for
+regular builds — only `CHROME_EXTENSION_KEY` is read at build time and by the
+update server for extension ID derivation. Signing the CRX
+(`pnpm release:chrome`) is the exception: it reads the private key from
+`keys/development.pem` (override with `CRX_KEY_PATH`).
 
 **If the PEM and/or `CHROME_EXTENSION_KEY` are both lost**, generate a new key
 pair — the extension ID will change and existing installs become a separate
@@ -104,9 +106,9 @@ The JavaScript bundles are identical for both browsers — only the manifests di
 pnpm release:chrome
 ```
 
-Output: `artifacts/dandelion-chrome-v<version>.zip`
+Output: `artifacts/dandelion-chrome-v<version>.zip` and `artifacts/dandelion-chrome-v<version>.crx`
 
-Chrome auto-update is not supported for self-hosted extensions since v117+. Users install via `chrome://extensions` (developer mode) → Load unpacked from `dist/chrome/`. The `.zip` serves as a distribution archive for manual installation.
+The signed `.crx` powers enterprise (policy) installs — the only path where Chrome ≥117 still allows off-store auto-update — via the update manifest served by `serve.ts`. Unmanaged installs use the `.zip` through `chrome://extensions` (developer mode) → Load unpacked from `dist/chrome/`. See `docs/v1/quick-install.md` for the install/uninstall one-liners.
 
 ### Firefox
 
@@ -122,7 +124,7 @@ The extension must be registered on [AMO](https://addons.mozilla.org/) first.
 
 ## Server (`serve.ts`)
 
-The Bun server hosts the update manifest, artifact downloads (`.zip` / `.xpi`), and the token generator.
+The Bun server hosts the update manifest, artifact downloads (`.zip` / `.xpi` / `.crx`), and the token generator.
 
 ### Setup
 

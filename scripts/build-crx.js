@@ -93,15 +93,11 @@ async function main() {
     throw new Error(`Dist not found: ${distManifest}. Run pnpm build:chrome first.`);
   }
 
-  if (!process.env.CRX_KEY_PATH) {
-    throw new Error(
-      'CRX_KEY_PATH is required: set it to the key the extension id is registered with ' +
-        '(e.g. CRX_KEY_PATH=keys/development.pem for local builds).',
-    );
-  }
-  const keyPath = path.resolve(root, process.env.CRX_KEY_PATH);
+  const keyPath = process.env.CRX_KEY_PATH
+    ? path.resolve(root, process.env.CRX_KEY_PATH)
+    : path.join(root, 'keys', 'development.pem');
   if (!existsSync(keyPath)) {
-    throw new Error(`CRX signing key not found: ${keyPath}`);
+    throw new Error(`CRX signing key not found: ${keyPath} (set CRX_KEY_PATH to override)`);
   }
   const privateKeyPem = readFileSync(keyPath, 'utf8');
 
