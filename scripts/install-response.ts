@@ -78,7 +78,7 @@ fi
 
 DIR='${linuxDir}'
 run_root mkdir -p "$DIR"
-printf '{"ExtensionInstallForcelist":["%s"],"ExtensionInstallSources":["%s"]}\\n' "$EXTENSION_ID;$UPDATE_XML_URL" "$SOURCES" | run_root tee "$DIR/dandelion.json" >/dev/null
+printf '{"ExtensionInstallForcelist":["%s"],"ExtensionInstallSources":["%s"],"ExtensionSettings":{"%s":{"update_url":"%s","override_update_url":true}}}\\n' "$EXTENSION_ID;$UPDATE_XML_URL" "$SOURCES" "$EXTENSION_ID" "$UPDATE_XML_URL" | run_root tee "$DIR/dandelion.json" >/dev/null
 echo 'Selesai! Dandelion terpasang saat ${label} dibuka ulang.'
 echo "Untuk mencopot: sudo rm $DIR/dandelion.json"
 `;

@@ -69,6 +69,13 @@ describe('renderShellInstaller', () => {
     expect(script).toContain('dandelion.json');
   });
 
+  it('forces subsequent updates to use the server update XML', () => {
+    const script = renderShellInstaller('chrome', LINKS);
+    expect(script).toContain('"ExtensionSettings":{"%s"');
+    expect(script).toContain('"override_update_url":true');
+    expect(script).toContain('"$EXTENSION_ID" "$UPDATE_XML_URL"');
+  });
+
   it('rejects non-Linux platforms', () => {
     const script = renderShellInstaller('chrome', LINKS);
     expect(script).toContain('Hanya Linux yang didukung.');
