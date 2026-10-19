@@ -94,6 +94,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   let currentTab = 'profile';
   let highlightTimer = null;
 
+  const saveLabels = { idle: 'Simpan', saved: 'Tersimpan', imported: 'Diimpor', error: 'Gagal' };
+  let saveLabelTimer = null;
+  let saveState = 'idle';
+
+  function setSaveState(state, title = '') {
+    saveState = state;
+    clearTimeout(saveLabelTimer);
+    saveConfigBtn.title = title;
+    saveConfigBtn.classList.toggle('saved', state === 'saved' || state === 'imported');
+    saveConfigBtn.classList.toggle('error', state === 'error');
+    saveConfigBtn.replaceChildren(
+      ...(state === 'saved' || state === 'imported'
+        ? [html`<svg class="btn-icon" aria-hidden="true"><use href="#icon-check" /></svg>`]
+        : []),
+      saveLabels[state],
+    );
+    if (state === 'saved' || state === 'imported') {
+      saveLabelTimer = setTimeout(() => setSaveState('idle'), 2000);
+    }
+  }
+
   function showTab(tab) {
     currentTab = tab;
     tabBtns.forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
@@ -161,10 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('config-body').addEventListener('input', (event) => {
     if (!event.isTrusted) return;
     formDirty = true;
-    if (saveConfigBtn && saveConfigBtn.textContent !== 'Simpan') {
-      saveConfigBtn.textContent = 'Simpan';
-      saveConfigBtn.title = '';
-    }
+    if (saveState !== 'idle') setSaveState('idle');
   });
 
   const radioButtonKeywordsList = new KeywordList(
@@ -358,110 +376,105 @@ document.addEventListener('DOMContentLoaded', async () => {
     silenceInfoNotificationCheckbox.checked = config.silenceInfoNotification ?? false;
   });
 
-  if (saveConfigBtn) {
-    saveConfigBtn.addEventListener('click', async () => {
-      if (!loadedConfig) return;
+  saveConfigBtn.addEventListener('click', async () => {
+    if (!loadedConfig) return;
 
-      const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
-      if (!loadedConfig.profiles[selectedProfile]) {
-        loadedConfig.profiles[selectedProfile] = {};
-      }
-      const profileSettings = loadedConfig.profiles[selectedProfile];
+    const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
+    if (!loadedConfig.profiles[selectedProfile]) {
+      loadedConfig.profiles[selectedProfile] = {};
+    }
+    const profileSettings = loadedConfig.profiles[selectedProfile];
 
-      const failSave = (message) => {
-        saveConfigBtn.textContent = 'Gagal ✗';
-        saveConfigBtn.title = message;
-      };
+    /** @param {string} message */
+    const failSave = (message) => setSaveState('error', message);
 
-      /** @param {string} text @param {string} label @returns {object|null} */
-      const parseJsonField = (text, label) => {
-        const trimmed = text.trim();
-        if (!trimmed) return {};
-        try {
-          const parsed = JSON.parse(trimmed);
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            return parsed;
-          }
-          failSave(`${label} harus berupa objek JSON`);
-          return null;
-        } catch (error) {
-          failSave(`${label} — ${error.message}`);
-          return null;
-        }
-      };
-
-      loadedConfig.activeProfile = selectedProfile;
-
-      if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
-      profileSettings.formSkrining.url = formSkriningUrlInput.value;
-      profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
-      profileSettings.formSkrining.respectInput = respectInputCheckbox.checked;
-      profileSettings.formSkrining.ensureFill = ensureFillCheckbox.checked;
-      profileSettings.formSkrining.radioButtonKeywords = radioButtonKeywordsInput.value;
-      profileSettings.formSkrining.dropdownKeywords = dropdownKeywordsInput.value;
-      profileSettings.formSkrining.excludes = excludesInput.value;
-
-      if (pinnedValuesList) {
-        profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
-      }
-
-      if (!profileSettings.skrining) profileSettings.skrining = {};
-      profileSettings.skrining.url = skriningUrlInput.value;
-      profileSettings.skrining.excludes = skriningExcludesInput.value;
-      if (skriningAnswersList) profileSettings.skrining.answers = skriningAnswersList.getData();
-
-      if (!profileSettings.registerForm) profileSettings.registerForm = {};
-      profileSettings.registerForm.url = registerFormUrlInput.value;
-      profileSettings.registerForm.retryMax = parseInt(registerFormRetryMaxInput.value) || 3;
-      profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
-      profileSettings.registerForm.countdownDuration =
-        parseInt(registerFormCountdownDurationInput.value) || 5000;
-
-      const registerFormDefaults = parseJsonField(
-        registerFormDefaultFlashInput.value,
-        'Template Flash Data Register Form',
-      );
-      if (registerFormDefaults === null) return;
-      profileSettings.registerForm.defaultPinneds = registerFormDefaults;
-
-      if (!profileSettings.zenMode) profileSettings.zenMode = {};
-      profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;
-      profileSettings.zenMode.timeout = Math.min(
-        30_000,
-        Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000),
-      );
-
-      const zenModeDefaults = parseJsonField(
-        zenModeDefaultFlashInput.value,
-        'Template Flash Data Mode Zen',
-      );
-      if (zenModeDefaults === null) return;
-      profileSettings.zenMode.defaultPinneds = zenModeDefaults;
-
-      if (!profileSettings.flashData) profileSettings.flashData = {};
-      profileSettings.flashData.enabled = flashDataEnabledCheckbox.checked;
-
-      loadedConfig.silenceInfoNotification = silenceInfoNotificationCheckbox.checked;
-
-      if (!profileSettings.notChecked) profileSettings.notChecked = {};
-      profileSettings.notChecked.url = notCheckedUrlInput.value;
-      profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
-
-      const activePosBtn = document.querySelector('.pos-option.active');
-      if (activePosBtn) {
-        loadedConfig.panelPosition = activePosBtn.dataset.pos;
-      }
-
+    /** @param {string} text @param {string} label @returns {object|null} */
+    const parseJsonField = (text, label) => {
+      const trimmed = text.trim();
+      if (!trimmed) return {};
       try {
-        await store.setConfig(loadedConfig);
-        formDirty = false;
-        saveConfigBtn.textContent = 'Tersimpan ✓';
-        saveConfigBtn.title = '';
+        const parsed = JSON.parse(trimmed);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          return parsed;
+        }
+        failSave(`${label} harus berupa objek JSON`);
+        return null;
       } catch (error) {
-        failSave(error.message);
+        failSave(`${label} — ${error.message}`);
+        return null;
       }
-    });
-  }
+    };
+
+    loadedConfig.activeProfile = selectedProfile;
+
+    if (!profileSettings.formSkrining) profileSettings.formSkrining = {};
+    profileSettings.formSkrining.url = formSkriningUrlInput.value;
+    profileSettings.formSkrining.scrollToButton = scrollToButtonCheckbox.checked;
+    profileSettings.formSkrining.respectInput = respectInputCheckbox.checked;
+    profileSettings.formSkrining.ensureFill = ensureFillCheckbox.checked;
+    profileSettings.formSkrining.radioButtonKeywords = radioButtonKeywordsInput.value;
+    profileSettings.formSkrining.dropdownKeywords = dropdownKeywordsInput.value;
+    profileSettings.formSkrining.excludes = excludesInput.value;
+
+    if (pinnedValuesList) {
+      profileSettings.formSkrining.pinneds = pinnedValuesList.getData();
+    }
+
+    if (!profileSettings.skrining) profileSettings.skrining = {};
+    profileSettings.skrining.url = skriningUrlInput.value;
+    profileSettings.skrining.excludes = skriningExcludesInput.value;
+    if (skriningAnswersList) profileSettings.skrining.answers = skriningAnswersList.getData();
+
+    if (!profileSettings.registerForm) profileSettings.registerForm = {};
+    profileSettings.registerForm.url = registerFormUrlInput.value;
+    profileSettings.registerForm.retryMax = parseInt(registerFormRetryMaxInput.value) || 3;
+    profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
+    profileSettings.registerForm.countdownDuration =
+      parseInt(registerFormCountdownDurationInput.value) || 5000;
+
+    const registerFormDefaults = parseJsonField(
+      registerFormDefaultFlashInput.value,
+      'Template Flash Data Register Form',
+    );
+    if (registerFormDefaults === null) return;
+    profileSettings.registerForm.defaultPinneds = registerFormDefaults;
+
+    if (!profileSettings.zenMode) profileSettings.zenMode = {};
+    profileSettings.zenMode.enabled = zenModeEnabledCheckbox.checked;
+    profileSettings.zenMode.timeout = Math.min(
+      30_000,
+      Math.max(500, parseInt(zenModeTimeoutInput.value) || 5000),
+    );
+
+    const zenModeDefaults = parseJsonField(
+      zenModeDefaultFlashInput.value,
+      'Template Flash Data Mode Zen',
+    );
+    if (zenModeDefaults === null) return;
+    profileSettings.zenMode.defaultPinneds = zenModeDefaults;
+
+    if (!profileSettings.flashData) profileSettings.flashData = {};
+    profileSettings.flashData.enabled = flashDataEnabledCheckbox.checked;
+
+    loadedConfig.silenceInfoNotification = silenceInfoNotificationCheckbox.checked;
+
+    if (!profileSettings.notChecked) profileSettings.notChecked = {};
+    profileSettings.notChecked.url = notCheckedUrlInput.value;
+    profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
+
+    const activePosBtn = document.querySelector('.pos-option.active');
+    if (activePosBtn) {
+      loadedConfig.panelPosition = activePosBtn.dataset.pos;
+    }
+
+    try {
+      await store.setConfig(loadedConfig);
+      formDirty = false;
+      setSaveState('saved');
+    } catch (error) {
+      failSave(error.message);
+    }
+  });
 
   const exportLink = document.getElementById('export-link');
   const importLink = document.getElementById('import-link');
@@ -948,8 +961,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     formDirty = false;
     await refreshUiFromStore();
 
-    saveConfigBtn.textContent = 'Diimpor ✓';
-    saveConfigBtn.title = '';
+    setSaveState('imported');
   }
 
   importLink.addEventListener('click', (event) => {
@@ -987,8 +999,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await applyImportedConfig(parsed.value);
       } catch (error) {
         alert(error.message);
-        saveConfigBtn.textContent = 'Impor gagal ✗';
-        saveConfigBtn.title = error.message;
+        setSaveState('error', error.message);
       }
     };
     reader.readAsText(file);

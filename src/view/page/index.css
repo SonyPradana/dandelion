@@ -408,6 +408,10 @@ body {
 }
 
 .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   max-width: 320px;
   width: 100%;
   padding: 14px 24px;
@@ -417,16 +421,39 @@ body {
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.12s ease;
   background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: #fff;
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
+}
+
+.btn-primary:not(.saved):not(.error):hover {
   box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary.saved {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.btn-primary.error {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 /* ── Agreement Overlay ── */
