@@ -15,19 +15,19 @@ Script PowerShell meminta elevasi admin sendiri (UAC), lalu menulis `ExtensionIn
 ### Chrome
 
 ```powershell
-irm https://dandelion.web.id/install/chrome.ps1 | iex
+& ([scriptblock]::Create((irm https://dandelion.web.id/install/chrome.ps1)))
 ```
 
 ### Edge
 
 ```powershell
-irm https://dandelion.web.id/install/edge.ps1 | iex
+& ([scriptblock]::Create((irm https://dandelion.web.id/install/edge.ps1)))
 ```
 
 ### Brave
 
 ```powershell
-irm https://dandelion.web.id/install/brave.ps1 | iex
+& ([scriptblock]::Create((irm https://dandelion.web.id/install/brave.ps1)))
 ```
 
 ### Mencopot (Windows)
@@ -35,7 +35,7 @@ irm https://dandelion.web.id/install/brave.ps1 | iex
 Ada dua cara. **Via script** (disarankan) — jalankan dari sesi PowerShell, ganti `chrome` dengan `edge` atau `brave`:
 
 ```powershell
-irm https://dandelion.web.id/uninstall/chrome.ps1 | iex
+& ([scriptblock]::Create((irm https://dandelion.web.id/uninstall/chrome.ps1)))
 ```
 
 Script hanya menghapus entri milik Dandelion; kebijakan lain di registry tidak diubah. Buka ulang browser setelah selesai.

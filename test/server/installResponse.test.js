@@ -74,6 +74,8 @@ describe('renderPowerShellInstaller', () => {
     expect(script).toContain('-Verb RunAs');
     expect(script).toContain('ExtensionInstallForcelist');
     expect(script).toContain('ExtensionInstallSources');
+    expect(script).toContain('[scriptblock]::Create');
+    expect(script).not.toContain('| iex');
   });
 
   it('preserves other policy entries instead of overwriting value name 1', () => {
@@ -134,6 +136,8 @@ describe('renderPowerShellUninstaller', () => {
     expect(script).toContain('Remove-ItemProperty');
     expect(script).toContain('ExtensionInstallForcelist');
     expect(script).toContain('ExtensionInstallSources');
+    expect(script).toContain('[scriptblock]::Create');
+    expect(script).not.toContain('| iex');
   });
 });
 

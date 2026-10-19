@@ -535,7 +535,7 @@
 
         const commandFor = (browser) =>
           isWindows
-            ? `irm ${origin}/install/${browser}.ps1 | iex`
+            ? `& ([scriptblock]::Create((irm ${origin}/install/${browser}.ps1)))`
             : `curl -fsSL ${origin}/install/${browser}.sh | sh`;
 
         function select(browser) {

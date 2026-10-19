@@ -66,7 +66,7 @@ export function renderPowerShellInstaller(browser: InstallBrowser, links: Instal
   const label = BROWSER_LABELS[browser];
   const policyPath = WINDOWS_POLICY_PATHS[browser];
   return `# Dandelion — pemasangan ${label} via kebijakan enterprise (Windows)
-# Jalankan di PowerShell: irm ${links.installUrl} | iex
+# Jalankan di PowerShell: & ([scriptblock]::Create((irm ${links.installUrl})))
 # Catatan: force-install ekstensi di luar Web Store hanya berlaku pada perangkat
 # yang dikelola (domain AD/Entra ID atau Chrome Enterprise Core).
 $ErrorActionPreference = 'Stop'
@@ -82,7 +82,7 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
   Write-Host 'Meminta hak administrator...' -ForegroundColor Yellow
   Start-Process powershell -Verb RunAs -ArgumentList @(
     '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-    "irm '$InstallUrl' | iex"
+    "& ([scriptblock]::Create((irm '$InstallUrl')))"
   )
   exit
 }
@@ -149,7 +149,7 @@ export function renderPowerShellUninstaller(browser: InstallBrowser, links: Inst
   const label = BROWSER_LABELS[browser];
   const policyPath = WINDOWS_POLICY_PATHS[browser];
   return `# Dandelion — pencopotan ${label} via kebijakan enterprise (Windows)
-# Jalankan di PowerShell: irm ${links.origin}/uninstall/${browser}.ps1 | iex
+# Jalankan di PowerShell: & ([scriptblock]::Create((irm ${links.origin}/uninstall/${browser}.ps1)))
 $ErrorActionPreference = 'Stop'
 
 $UninstallUrl = '${links.origin}/uninstall/${browser}.ps1'
@@ -162,7 +162,7 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
   Write-Host 'Meminta hak administrator...' -ForegroundColor Yellow
   Start-Process powershell -Verb RunAs -ArgumentList @(
     '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
-    "irm '$UninstallUrl' | iex"
+    "& ([scriptblock]::Create((irm '$UninstallUrl')))"
   )
   exit
 }
