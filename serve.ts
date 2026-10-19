@@ -328,9 +328,15 @@ function invalidateCache(): void {
   _cache = null;
 }
 
-if (existsSync(ARTIFACTS_DIR)) {
+let _watching = false;
+
+function ensureWatcher(): void {
+  if (_watching || !existsSync(ARTIFACTS_DIR)) return;
   watch(ARTIFACTS_DIR, { persistent: false }, invalidateCache);
+  _watching = true;
 }
+
+ensureWatcher();
 
 function buildArtifacts(origin: string): Artifact[] {
   if (!existsSync(ARTIFACTS_DIR)) return [];
@@ -358,7 +364,11 @@ function buildArtifacts(origin: string): Artifact[] {
 }
 
 function getArtifacts(): Artifact[] {
-  return (_cache ??= buildArtifacts(PUBLIC_URL || BASE_URL));
+  ensureWatcher();
+  if (_cache) return _cache;
+  const artifacts = buildArtifacts(PUBLIC_URL || BASE_URL);
+  if (existsSync(ARTIFACTS_DIR)) _cache = artifacts;
+  return artifacts;
 }
 
 function findArtifact(fileName: string): Artifact | undefined {
