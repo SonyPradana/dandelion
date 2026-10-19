@@ -28,7 +28,8 @@ pnpm verify:firefox    # runs web-ext lint
 | `pnpm build:chrome`    | Build Chrome only → `dist/chrome/`     |
 | `pnpm build:firefox`   | Build Firefox only → `dist/firefox/`   |
 | `pnpm sign:firefox`    | Sign Firefox via AMO (requires `.env`) |
-| `pnpm release:chrome`  | Build + package Chrome → `artifacts/`  |
+| `pnpm release:chrome`  | Build + zip Chrome → `artifacts/`      |
+| `pnpm crx:chrome`      | Sign `dist/chrome` → `artifacts/*.crx` |
 | `pnpm release:firefox` | Build + sign + copy XPI → `artifacts/` |
 | `pnpm release`         | Release both                           |
 | `pnpm verify:firefox`  | `web-ext lint` on `dist/firefox/`      |
@@ -80,7 +81,7 @@ openssl rsa -pubout -in keys/development.pem | openssl base64 -A
 After the value is saved in `.env`, the PEM file is no longer needed for
 regular builds — only `CHROME_EXTENSION_KEY` is read at build time and by the
 update server for extension ID derivation. Signing the CRX
-(`pnpm release:chrome`) is the exception: it reads the private key from
+(`pnpm crx:chrome`) is the exception: it reads the private key from
 `keys/development.pem` (override with `CRX_KEY_PATH`).
 
 **If the PEM and/or `CHROME_EXTENSION_KEY` are both lost**, generate a new key
@@ -103,12 +104,17 @@ The JavaScript bundles are identical for both browsers — only the manifests di
 ### Chrome
 
 ```bash
-pnpm release:chrome
+pnpm release:chrome   # build + zip → artifacts/dandelion-chrome-v<version>.zip
+pnpm crx:chrome       # optional: sign dist/chrome → artifacts/dandelion-chrome-v<version>.crx
 ```
 
-Output: `artifacts/dandelion-chrome-v<version>.zip` and `artifacts/dandelion-chrome-v<version>.crx`
-
-The signed `.crx` powers enterprise (policy) installs — the only path where Chrome ≥117 still allows off-store auto-update — via the update manifest served by `serve.ts`. Unmanaged installs use the `.zip` through `chrome://extensions` (developer mode) → Load unpacked from `dist/chrome/`. See `docs/v1/quick-install.md` for the install/uninstall one-liners.
+Signing is a separate manual step so the private key is only used when you
+intend to publish the CRX. The signed `.crx` powers enterprise (policy)
+installs — the only path where Chrome ≥117 still allows off-store auto-update
+— via the update manifest served by `serve.ts`. Unmanaged installs use the
+`.zip` through `chrome://extensions` (developer mode) → Load unpacked from
+`dist/chrome/`. See `docs/v1/quick-install.md` for the install/uninstall
+one-liners.
 
 ### Firefox
 
