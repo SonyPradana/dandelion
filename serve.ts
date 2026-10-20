@@ -10,6 +10,7 @@ import {
   renderShellUninstaller,
   type InstallBrowser,
 } from './scripts/install-response.js';
+import { cmpVer, selectReleases, type Artifact } from './scripts/artifact-manifest.js';
 
 // ── Routes ──
 //   /                     → Landing page (index.html)
@@ -33,17 +34,6 @@ import {
 //   /doc/prefetch.js      → Doc hover-prefetch fallback (ETag + gzip)
 //   /doc/copy-md.js       → Doc copy-as-Markdown button (ETag + gzip)
 //   /<any public file>    → Static files served from public/
-
-// --- types ---
-
-interface Artifact {
-  fileName: string;
-  browser: string;
-  version: string;
-  url: string;
-  hash: string;
-  size: number;
-}
 
 // --- config ---
 
@@ -160,18 +150,6 @@ function checkRateLimit(ip: string): boolean {
 }
 
 // --- helpers ---
-
-function cmpVer(a: string, b: string): number {
-  const normalize = (v: string) =>
-    v.startsWith('nightly-') ? v.slice(8).replace(/^(\d{4})(\d{2})(\d{2})$/, '$1.$2.$3') : v;
-  const pa = normalize(a).split('.').map(Number);
-  const pb = normalize(b).split('.').map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pa[i] || 0) - (pb[i] || 0);
-    if (d !== 0) return d;
-  }
-  return 0;
-}
 
 function chromeExtensionId(): string | null {
   const key = process.env.CHROME_EXTENSION_KEY;
@@ -456,19 +434,7 @@ async function handleRequest(req: Request): Promise<Response> {
   // ── artifact listing + latest version ──────────────────────────────
   if (pathname === '/manifest.json' || pathname === '/api/versions') {
     const artifacts = getArtifacts();
-    const latest: Record<string, Artifact> = {};
-    const nightly: Record<string, Artifact> = {};
-    for (const a of artifacts) {
-      if (a.version.startsWith('nightly-')) {
-        if (!nightly[a.browser] || cmpVer(a.version, nightly[a.browser].version) > 0) {
-          nightly[a.browser] = a;
-        }
-      } else {
-        if (!latest[a.browser] || cmpVer(a.version, latest[a.browser].version) > 0) {
-          latest[a.browser] = a;
-        }
-      }
-    }
+    const { latest, nightly } = selectReleases(artifacts);
     return new Response(JSON.stringify({ artifacts, latest, nightly }, null, 2), {
       headers: {
         'content-type': 'application/json',
