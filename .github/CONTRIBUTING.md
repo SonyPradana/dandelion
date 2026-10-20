@@ -29,6 +29,7 @@ pnpm verify:firefox    # runs web-ext lint
 | `pnpm build:firefox`   | Build Firefox only → `dist/firefox/`   |
 | `pnpm sign:firefox`    | Sign Firefox via AMO (requires `.env`) |
 | `pnpm release:chrome`  | Build + zip Chrome → `artifacts/`      |
+| `pnpm crx:chrome`      | Sign `dist/chrome` → `artifacts/*.crx` |
 | `pnpm release:firefox` | Build + sign + copy XPI → `artifacts/` |
 | `pnpm release`         | Release both                           |
 | `pnpm verify:firefox`  | `web-ext lint` on `dist/firefox/`      |
@@ -77,9 +78,11 @@ The key lives in `keys/development.pem` (RSA private key). Generate it once:
 openssl rsa -pubout -in keys/development.pem | openssl base64 -A
 ```
 
-After the value is saved in `.env`, the PEM file is no longer needed — only
-`CHROME_EXTENSION_KEY` is read at build time and by the update server for
-extension ID derivation.
+After the value is saved in `.env`, the PEM file is no longer needed for
+regular builds — only `CHROME_EXTENSION_KEY` is read at build time and by the
+update server for extension ID derivation. Signing the CRX
+(`pnpm crx:chrome`) is the exception: it reads the private key from
+`keys/development.pem` (override with `CRX_KEY_PATH`).
 
 **If the PEM and/or `CHROME_EXTENSION_KEY` are both lost**, generate a new key
 pair — the extension ID will change and existing installs become a separate
@@ -101,12 +104,17 @@ The JavaScript bundles are identical for both browsers — only the manifests di
 ### Chrome
 
 ```bash
-pnpm release:chrome
+pnpm release:chrome   # build + zip → artifacts/dandelion-chrome-v<version>.zip
+pnpm crx:chrome       # optional: sign dist/chrome → artifacts/dandelion-chrome-v<version>.crx
 ```
 
-Output: `artifacts/dandelion-chrome-v<version>.zip`
-
-Chrome auto-update is not supported for self-hosted extensions since v117+. Users install via `chrome://extensions` (developer mode) → Load unpacked from `dist/chrome/`. The `.zip` serves as a distribution archive for manual installation.
+Signing is a separate manual step so the private key is only used when you
+intend to publish the CRX. The signed `.crx` powers enterprise (policy)
+installs — the only path where Chrome ≥117 still allows off-store auto-update
+— via the update manifest served by `serve.ts`. Unmanaged installs use the
+`.zip`: extract it, then `chrome://extensions` (developer mode) → Load unpacked
+from the extracted directory. See `docs/v1/quick-install.md` for the Linux
+install/uninstall one-liners.
 
 ### Firefox
 
@@ -122,7 +130,7 @@ The extension must be registered on [AMO](https://addons.mozilla.org/) first.
 
 ## Server (`serve.ts`)
 
-The Bun server hosts the update manifest, artifact downloads (`.zip` / `.xpi`), and the token generator.
+The Bun server hosts the update manifest, artifact downloads (`.zip` / `.xpi` / `.crx`), and the token generator.
 
 ### Setup
 
@@ -150,20 +158,24 @@ For production, see [Deployment](#deployment) below.
 
 ### Endpoints
 
-| Endpoint                | Description                        |
-| ----------------------- | ---------------------------------- |
-| `/`                     | Landing page (GET & HEAD)          |
-| `/health`               | Health check endpoint (GET & HEAD) |
-| `/token-generator.html` | Token generator UI page            |
-| `/update.json`          | Firefox addon auto-update manifest |
-| `/manifest.json`        | Artifact listing + latest version  |
-| `/api/versions`         | Alias for `/manifest.json`         |
-| `/artifacts/<file>`     | Download `.zip` or `.xpi`          |
-| `/<any public file>`    | Static files from `public/`        |
+| Endpoint                  | Description                                    |
+| ------------------------- | ---------------------------------------------- |
+| `/`                       | Landing page (GET & HEAD)                      |
+| `/health`                 | Health check endpoint (GET & HEAD)             |
+| `/token-generator.html`   | Token generator UI page                        |
+| `/update.json`            | Firefox addon auto-update manifest             |
+| `/updates/chrome.xml`     | CRX auto-update manifest (Chrome, Edge, Brave) |
+| `/install/<browser>.sh`   | Linux enterprise installer                     |
+| `/uninstall/<browser>.sh` | Linux enterprise uninstaller                   |
+| `/install/firefox`        | Signed `.xpi` served inline (install prompt)   |
+| `/manifest.json`          | Artifact listing + latest version              |
+| `/api/versions`           | Alias for `/manifest.json`                     |
+| `/artifacts/<file>`       | Download `.zip`, `.xpi`, or `.crx`             |
+| `/<any public file>`      | Static files from `public/`                    |
 
 ### Auto-Update Flow
 
-Firefox declares `gecko.update_url` in its manifest → Firefox polls `/update.json` → downloads new signed `.xpi` if available. Chrome does not support auto-update for self-hosted extensions since v117+.
+Firefox declares `gecko.update_url` in its manifest → Firefox polls `/update.json` → downloads new signed `.xpi` if available. Chromium policy installs auto-update through `/updates/chrome.xml` plus the installer's `ExtensionSettings` (`override_update_url`); extensions loaded manually from an extracted ZIP do not self-update.
 
 ### Production
 

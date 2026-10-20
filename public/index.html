@@ -320,6 +320,20 @@
             >
           </div>
         </div>
+        <div class="card-solo" id="firefox-install-card">
+          <div>
+            <h3>Firefox</h3>
+            <p>Pasang langsung dari Firefox — klik Install, lalu setujui dialog pemasangan.</p>
+          </div>
+          <a
+            class="btn btn-primary"
+            id="firefox-install-link"
+            aria-label="Install Firefox extension"
+            href="/install/firefox"
+            disabled
+            >Install</a
+          >
+        </div>
       </section>
 
       <section id="nightly-section">
@@ -332,6 +346,19 @@
           </div>
           <a class="btn btn-outline" id="chrome-nightly-link" disabled>Download Nightly</a>
         </div>
+      </section>
+
+      <div class="card-solo">
+        <div>
+          <h3>Token Generator</h3>
+          <p>Generate and manage quota tokens</p>
+        </div>
+        <a class="btn btn-outline" href="/token-generator.html">Open</a>
+      </div>
+
+      <section id="changelog-section" style="margin-bottom: 2.5rem">
+        <p class="section-title">Latest Updates</p>
+        <div id="changelog"></div>
       </section>
 
       <section id="endpoints-section">
@@ -349,6 +376,22 @@
             ><span class="entry-desc">Firefox addon auto-update manifest</span>
           </div>
           <div class="entry">
+            <span class="entry-path">/updates/chrome.xml</span
+            ><span class="entry-desc">CRX auto-update manifest (Chrome, Edge, Brave)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/install/&lt;browser&gt;.sh</span
+            ><span class="entry-desc">Enterprise installer (Linux)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/uninstall/&lt;browser&gt;.sh</span
+            ><span class="entry-desc">Enterprise uninstaller (Linux)</span>
+          </div>
+          <div class="entry">
+            <span class="entry-path">/install/firefox</span
+            ><span class="entry-desc">Signed .xpi served inline (install prompt)</span>
+          </div>
+          <div class="entry">
             <span class="entry-path">/manifest.json</span
             ><span class="entry-desc">Version listing of all artifacts</span>
           </div>
@@ -362,7 +405,7 @@
           </div>
           <div class="entry">
             <span class="entry-path">/artifacts/&lt;file&gt;</span
-            ><span class="entry-desc">Download .zip or .xpi</span>
+            ><span class="entry-desc">Download .zip, .xpi, or .crx</span>
           </div>
           <div class="entry">
             <span class="entry-path">/health</span
@@ -377,19 +420,6 @@
             ><span class="entry-desc">Static files from <code>public/</code></span>
           </div>
         </div>
-      </section>
-
-      <div class="card-solo">
-        <div>
-          <h3>Token Generator</h3>
-          <p>Generate and manage quota tokens</p>
-        </div>
-        <a class="btn btn-outline" href="/token-generator.html">Open</a>
-      </div>
-
-      <section id="changelog-section" style="margin-bottom: 2.5rem">
-        <p class="section-title">Latest Updates</p>
-        <div id="changelog"></div>
       </section>
 
       <p class="status" id="status"></p>
@@ -416,9 +446,11 @@
 
           const firefoxEl = document.getElementById('firefox-link');
           const firefoxVer = document.getElementById('firefox-version');
+          const firefoxInstallEl = document.getElementById('firefox-install-link');
           if (latest.firefox) {
             firefoxEl.href = latest.firefox.url;
             firefoxEl.removeAttribute('disabled');
+            firefoxInstallEl.removeAttribute('disabled');
             firefoxVer.textContent = `v${latest.firefox.version}`;
           } else {
             firefoxVer.textContent = 'Not available';
