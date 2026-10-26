@@ -28,8 +28,15 @@ const FORM_DOM_RETRY_DELAY = 3000;
  * The countdown can be dismissed or overridden by manually pressing the button,
  * so the user always retains control over the action.
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {{ autoAssist?: boolean }} [options]
  */
-export async function initializeSkriningForm(flashData = {}, store = globalStore) {
+export async function initializeSkriningForm(
+  flashData = {},
+  store = globalStore,
+  { autoAssist = true } = {},
+) {
+  if (document.getElementById('dandelion-auto-fill')) return;
+
   let isDebugEnabled = false; // Initial state is off
   let dismissCountdown = null;
   let fillCancelled = false;
@@ -98,7 +105,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
 
     const activeConfig = await store.getActiveConfig();
     const zenConfig = activeConfig.zenMode || {};
-    if (zenConfig.enabled !== false) {
+    if (autoAssist && zenConfig.enabled !== false) {
       const timeout = Math.min(30_000, Math.max(500, zenConfig.timeout || 5000));
       const cd = notify.countdown('Zen Mode Asist', '⏳ menunggu...', timeout, {
         keepOpenOnTimeout: true,

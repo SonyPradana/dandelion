@@ -27,6 +27,7 @@ Panel data kilat: menyimpan data sementara di halaman kerja agar bisa dipakai ul
 - Data **kedaluwarsa otomatis** setelah `flashData.maxAge` (default 10 menit) — lewat batas itu, data dibuang.
 - Saat fitur dimatikan, panel tidak muncul dan data tidak disimpan.
 - Data bersifat sementara di perangkat Anda; tanpa data di panel, fitur lain tetap berjalan — hanya kolom yang mengandalkan data ini yang tidak terisi otomatis.
+- Saat pendaftaran berhasil, Register Form menyalin data ke flash data skrining dengan penanda `"skrining mandiri"` (default `true`). Penanda ini hanya dipakai untuk konfirmasi perpindahan ke form skrining. Untuk mematikan hitung mundur, isi `"skrining mandiri": "false"` sebagai string di panel.
 - Isi template hanya dengan data yang Anda ketahui benar, dan jangan bagikan berkas konfigurasi yang sudah terisi.
 
 > Pengaturan: [Config → Mode Zen](/doc/v1/config-zen-mode) (tampilan panel & umur data) dan [Config → Register Form](/doc/v1/config-register-form) (template Register Form)

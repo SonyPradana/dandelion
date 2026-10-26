@@ -19,5 +19,6 @@ Fitur untuk mengisi formulir skrining: pilihan radio, dropdown, isian teks, dan 
 - Dengan **isi ulang (ensureFill)** aktif, pengisian dijalankan kedua kalinya untuk menangkap pertanyaan yang terlewat.
 - Berlaku **1 poin** per isian radio/teks/dropdown yang terisi — daftar bobot di [Penerapan](/doc/v1/penerapan).
 - Kendali tetap di petugas: semua isian bisa diperiksa dan diubah, dan hitung mundur bisa dibatalkan.
+- Saat masuk dari tombol **Isi Skrining** di Register Form, hanya panel awal yang dipasang — pengisian otomatis tidak langsung dimulai.
 
 > Pengaturan lengkap: [Config → Form Skrining](/doc/v1/config-form-skrining)

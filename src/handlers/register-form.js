@@ -7,11 +7,10 @@ import {
   setRegisterFormFlashData,
   getRegisterFormFlashData,
   clearRegisterFormFlashData,
-  setRegisterFormStep,
-  getRegisterFormStep,
   clearRegisterFormStep,
 } from '../utils/registerFormFlashSession.js';
 import { validateRegisterFormFields } from '../utils/registerFormValidator.js';
+import { getFlashData, setFlashData, clearFlashData } from '../utils/flashSession.js';
 import bus from '../utils/hooks';
 import { fillByCheckId } from './register-form/fill-by-check-id.js';
 import { clickCekNik, waitForCekNikResponse } from './register-form/click-check-nik.js';
@@ -24,18 +23,20 @@ import { fillPenyandangDisabilitas } from './register-form/fill-disability.js';
 import { fillPekerjaan } from './register-form/fill-occupation.js';
 import { fillAlamatDomisili } from './register-form/fill-residence-address.js';
 import { submitSection2 } from './register-form/submit-section-2.js';
-import { submitSection3 } from './register-form/submit-section-3.js';
 import {
-  searchAttendance,
-  completeAttendance,
-  completeDoneAttendance,
-  detectAttendancePosition,
-} from './register-form/confirm-attendance.js';
+  submitSection3,
+  findRegistrationSuccessModal,
+  parseTicket,
+} from './register-form/submit-section-3.js';
 import { fillDataWali } from './register-form/fill-data-wali.js';
 import { fillNikWali } from './register-form/fill-nik-wali.js';
+import { initializeSkriningPage } from './initialize-skrining-page.js';
+
+const SKRINING_SOURCE = 'register-form';
 
 let isRegisterFormRunning = false;
 let registerFormAbort = false;
+let cancelActiveRun = null;
 
 /**
  * @param {{ retryMax?: number, retryDelay?: number, countdownDuration?: number }} [registerFormConfig={}]
@@ -57,8 +58,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       return;
     }
 
-    const savedStep = await getRegisterFormStep();
-    const resuming = savedStep != null;
+    const resuming = isRegisterFormResumable();
     if (isRegisterFormFlowOpen() && !resuming) {
       const close = await notify.confirm(
         'Register Form',
@@ -89,13 +89,21 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       });
 
       const opened = await waitForModal();
-      if (!opened) return;
+      if (!opened) {
+        if (registerFormAbort) {
+          registerFormAbort = false;
+          return;
+        }
+        notify.alert('Register Form', 'Modal pendaftaran tidak muncul');
+        document.getElementById('dandelion-flash-data')?.remove();
+        return;
+      }
     }
 
-    const completed = {};
     /** @param {number} ms */
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     const { retryMax = 3, retryDelay = 2000, countdownDuration = 5000 } = registerFormConfig;
+
     /**
      * @param {string} label
      * @param {() => Promise<any>} fn
@@ -113,6 +121,456 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       }
       return null;
     }
+
+    const stateEl = document.createElement('div');
+    stateEl.style.cssText = 'font-size:9px;opacity:0.5;margin-top:2px;';
+    stateEl.textContent = 'Mulai 1/3';
+
+    async function runRegisterForm() {
+      if (isRegisterFormRunning) return;
+      isRegisterFormRunning = true;
+
+      let finished = false;
+      let finishing = null;
+      let recapPanel = null;
+      let recapResolve = null;
+      let countdown = null;
+      let watcher = null;
+      let clickHandler = null;
+      let handingOff = false;
+
+      /** @param {string} [label] */
+      function stopRun(label) {
+        if (finished) return;
+        finished = true;
+        isRegisterFormRunning = false;
+        if (label) stateEl.textContent = label;
+      }
+
+      /**
+       * @param {'done'|'closed'|'skrining'|'cancelled'|'aborted'|'error'} reason
+       * @param {{ closeModal?: boolean }} [options]
+       * @returns {Promise<void>}
+       */
+      function finish(reason = 'done', { closeModal = false } = {}) {
+        if (finished) return finishing ?? Promise.resolve();
+        finished = true;
+        isRegisterFormRunning = false;
+
+        finishing = (async () => {
+          if (watcher) clearInterval(watcher);
+          watcher = null;
+          if (clickHandler) document.removeEventListener('click', clickHandler, true);
+          clickHandler = null;
+          if (countdown) {
+            countdown.dismiss();
+            countdown = null;
+          }
+
+          document.getElementById('dandelion-flash-data')?.remove();
+          actionPanel?.remove();
+          recapPanel?.remove();
+          recapPanel = null;
+          if (closeModal) closeSuccessModalIfOpen();
+          recapResolve?.();
+          recapResolve = null;
+
+          try {
+            await clearRegisterFormFlashData();
+            await clearRegisterFormStep();
+            if (reason !== 'skrining') {
+              const flash = await getFlashData();
+              if (flash?._source === SKRINING_SOURCE) await clearFlashData();
+            }
+          } catch (error) {
+            console.error('[Dandelion] Register Form cleanup failed:', error);
+          }
+        })();
+
+        return finishing;
+      }
+
+      /**
+       * Resolve when the SPA route changes or the target DOM appears.
+       * The handoff only mounts a global initial panel; form readiness is
+       * intentionally not required because automation is not started here.
+       *
+       * @returns {Promise<boolean>}
+       */
+      async function waitForPageChange(previousUrl, timeout = 10_000) {
+        return new Promise((resolve) => {
+          const start = Date.now();
+          const poll = () => {
+            if (window.location.href !== previousUrl) return resolve(true);
+            if (
+              document.getElementById('dandelion-auto-fill') ||
+              document.getElementById('dandelion-zen-mode-toggle') ||
+              document.querySelector('[data-name], [id^="rowfrm"], [id^="row-FRM"]')
+            ) {
+              return resolve(true);
+            }
+            if (Date.now() - start > timeout) return resolve(false);
+            setTimeout(poll, 250);
+          };
+          poll();
+        });
+      }
+
+      /** @returns {HTMLButtonElement|Element|null} */
+      function findSiteSkriningButton() {
+        const modal = findRegistrationSuccessModal();
+        if (!modal) return null;
+        return (
+          Array.from(modal.querySelectorAll('button, a')).find((el) =>
+            /isi skrining/i.test(el.textContent || ''),
+          ) || null
+        );
+      }
+
+      /**
+       * @param {{ handoff: Object, mandiri: boolean, ticket: string|null }} params
+       * @returns {Promise<void>}
+       */
+      async function startHandoff({ handoff, mandiri, ticket }) {
+        if (handingOff || finished) return;
+        handingOff = true;
+        recapPanel?.remove();
+        recapPanel = null;
+
+        try {
+          if (mandiri) {
+            const cd = notify.countdown(
+              'Skrining Mandiri',
+              ticket
+                ? `No. Tiket: ${ticket} — lanjut ke formulir skrining?`
+                : 'Lanjut ke formulir skrining?',
+              countdownDuration,
+              { keepOpenOnTimeout: true },
+            );
+            countdown = cd;
+            const ok = await cd.promise;
+            countdown = null;
+            if (!ok) {
+              await finish('cancelled', { closeModal: true });
+              return;
+            }
+            cd.close();
+          }
+
+          if (finished) return;
+
+          if (!findRegistrationSuccessModal()) {
+            await finish('closed');
+            return;
+          }
+
+          const siteBtn = findSiteSkriningButton();
+          if (!siteBtn) {
+            notify.alert('Register Form', 'Tombol skrining tidak ditemukan');
+            await finish('closed', { closeModal: true });
+            return;
+          }
+
+          const previousUrl = window.location.href;
+          await finish('skrining');
+          siteBtn.click();
+
+          const navigated = await waitForPageChange(previousUrl);
+          if (!navigated) {
+            notify.info('Register Form', 'Halaman skrining tidak terdeteksi', 3000);
+            return;
+          }
+
+          const page = await initializeSkriningPage(handoff, { autoAssist: false });
+          if (!page) notify.info('Register Form', 'Halaman skrining belum dikenali', 3000);
+        } catch (error) {
+          console.error('[Dandelion] Skrining handoff failed:', error);
+          notify.info('Register Form', 'Gagal membuka halaman skrining', 3000);
+          await finish('error', { closeModal: true });
+        }
+      }
+
+      /**
+       * @param {string|null} ticket
+       * @param {Record<string, any>|null} flashData
+       * @returns {Promise<void>}
+       */
+      async function showRecap(ticket, flashData) {
+        const mandiri = isSkriningMandiri(flashData);
+        const handoff = {
+          pinneds: { ...(flashData?.pinneds || {}) },
+          'skrining mandiri': mandiri,
+          _source: SKRINING_SOURCE,
+        };
+        await setFlashData(handoff);
+        await clearRegisterFormFlashData();
+        await clearRegisterFormStep();
+        document.getElementById('dandelion-flash-data')?.remove();
+
+        const recap = notify.action(
+          'Register Form',
+          h(
+            'div',
+            { style: 'display:grid;gap:3px;' },
+            h('div', null, 'Berhasil Daftar'),
+            h(
+              'div',
+              { style: 'opacity:0.8;' },
+              'No. Tiket: ',
+              h(
+                'span',
+                { style: 'user-select:all;-webkit-user-select:all;color:#4ade80;' },
+                ticket || 'Tidak terbaca',
+              ),
+            ),
+          ),
+          [
+            {
+              label: 'Isi Skrining',
+              type: 'success',
+              autoClose: false,
+              onClick: () => {
+                void startHandoff({ handoff, mandiri, ticket });
+              },
+            },
+            {
+              label: 'Tutup',
+              autoClose: false,
+              onClick: () => {
+                void finish('closed', { closeModal: true });
+              },
+            },
+          ],
+          { pinned: true },
+        );
+        recapPanel = recap;
+
+        recap.panel
+          .querySelector('.dandelion-panel-close')
+          ?.addEventListener('click', () => void finish('closed', { closeModal: true }));
+
+        clickHandler = (event) => {
+          if (finished) return;
+          const target = event.target instanceof Element ? event.target.closest('button, a') : null;
+          if (!target || !findRegistrationSuccessModal()?.contains(target)) return;
+
+          const label = target.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
+          if (label.includes('isi skrining')) {
+            event.preventDefault();
+            event.stopPropagation();
+            void startHandoff({ handoff, mandiri, ticket });
+          } else if (label === 'tutup') {
+            void finish('closed');
+          }
+        };
+        document.addEventListener('click', clickHandler, true);
+
+        let missingTicks = 0;
+        watcher = setInterval(() => {
+          if (finished) return;
+          if (handingOff) {
+            if (!findRegistrationSuccessModal()) {
+              clearInterval(watcher);
+              watcher = null;
+              void finish('closed');
+            }
+            return;
+          }
+          if (!isRecapPanelMounted(recapPanel)) {
+            clearInterval(watcher);
+            watcher = null;
+            void finish('closed');
+            return;
+          }
+          if (findRegistrationSuccessModal()) {
+            missingTicks = 0;
+            return;
+          }
+          missingTicks++;
+          if (missingTicks >= 2) {
+            clearInterval(watcher);
+            watcher = null;
+            void finish('closed');
+          }
+        }, 300);
+
+        await new Promise((resolve) => {
+          recapResolve = resolve;
+        });
+      }
+
+      cancelActiveRun = finish;
+
+      try {
+        const step = detectCurrentStep();
+        let flashData = await getRegisterFormFlashData();
+
+        if (step === 'confirmation') {
+          const modal = findRegistrationSuccessModal();
+          if (modal) {
+            if (!flashData?.pinneds || Object.keys(flashData.pinneds).length === 0) {
+              const pending = await getFlashData();
+              if (pending?._source === SKRINING_SOURCE) flashData = pending;
+            }
+            await showRecap(parseTicket(modal), flashData);
+            return;
+          }
+        }
+
+        if (!flashData?.pinneds || Object.keys(flashData.pinneds).length === 0) {
+          notify.info('Register Form', 'Isi flash data panel dulu', 2000);
+          stopRun();
+          return;
+        }
+
+        const entries = Object.entries(flashData.pinneds);
+        const startSection = step === 'section-2' ? 2 : 1;
+        stateEl.textContent = `Mulai ${startSection}/3`;
+
+        if (startSection <= 1) {
+          const pesertaEntries = entries.filter(([id]) => !id.toLowerCase().endsWith(' wali'));
+          const nikEntry = pesertaEntries.find(([id]) => id.toLowerCase() === 'nik');
+          const otherEntries = pesertaEntries.filter(([id]) => id.toLowerCase() !== 'nik');
+          let dataDitemukan = false;
+          let count = 0;
+
+          if (nikEntry && fillByCheckId(nikEntry[0], nikEntry[1])) {
+            count++;
+            const clicked = await clickCekNik();
+            if (clicked) {
+              const result = await waitForCekNikResponse();
+              if (result === 'not-found') {
+                notify.info('Cek NIK', 'Data baru, isi manual', 3000);
+                for (const [id, value] of otherEntries) {
+                  if (fillByCheckId(id, value)) count++;
+                }
+              } else if (result === 'found') {
+                dataDitemukan = await handleDataDitemukanModal();
+                await new Promise((r) => setTimeout(r, 300));
+              }
+            }
+          } else {
+            for (const [id, value] of pesertaEntries) {
+              if (fillByCheckId(id, value)) count++;
+            }
+          }
+
+          const jkEntry = pesertaEntries.find(
+            ([id]) => id.toLowerCase().includes('jenis') && id.toLowerCase().includes('kelamin'),
+          );
+          if (!dataDitemukan && jkEntry && (await fillJenisKelamin(jkEntry[1]))) count++;
+
+          const tlEntry = pesertaEntries.find(
+            ([id]) => id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('lahir'),
+          );
+          if (!dataDitemukan && tlEntry && (await fillTanggalLahir(tlEntry[1]))) count++;
+
+          const tpEntry = pesertaEntries.find(
+            ([id]) =>
+              id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('pemeriksaan'),
+          );
+          fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
+
+          notify.info('Register Form', `Terisi: ${count}/${pesertaEntries.length} field`, 2000);
+
+          const usia = tlEntry ? countAge(tlEntry[1]) : null;
+
+          const noWaliDiv = document.querySelector('#noWali.check');
+          if (noWaliDiv && usia !== null && usia >= 60) {
+            noWaliDiv.click();
+            await new Promise((r) => setTimeout(r, 300));
+          }
+
+          if (usia !== null && usia >= 1 && usia <= 5) {
+            await new Promise((r) => setTimeout(r, 500));
+            await fillDataWali(entries);
+            await new Promise((r) => setTimeout(r, 300));
+            fillNikWali(entries);
+            await new Promise((r) => setTimeout(r, 200));
+            const nikWaliInput = document.getElementById('nik wali');
+            if (nikWaliInput && !nikWaliInput.value) {
+              fillNikWali(entries);
+            }
+          }
+
+          if (registerFormAbort) {
+            await finish('aborted', { closeModal: true });
+            return;
+          }
+
+          const submitted = await submitSection1();
+          if (finished) return;
+          if (submitted === 'blocked') {
+            notify.alert('Register Form', 'Pendaftaran tidak dapat dilanjutkan');
+            await finish('closed', { closeModal: true });
+            return;
+          }
+          if (!submitted) {
+            notify.alert('Register Form', 'Gagal submit section 1');
+            stopRun('Gagal — coba lagi');
+            return;
+          }
+          bus.emit('registerForm:sectionComplete', { phase: 'section-1', section: 1 });
+          stateEl.textContent = 'Mulai 2/3';
+        }
+
+        if (registerFormAbort) {
+          await finish('aborted', { closeModal: true });
+          return;
+        }
+
+        if (startSection <= 2) {
+          const section2Ok = await retry('Section 2', () => fillSection2(entries));
+          if (!section2Ok) {
+            notify.alert('Register Form', 'Gagal mengisi section 2');
+            stopRun('Gagal — coba lagi');
+            return;
+          }
+          if (finished) return;
+          const submitted2 = await submitSection2();
+          if (finished) return;
+          if (!submitted2) {
+            notify.alert('Register Form', 'Gagal submit section 2');
+            stopRun('Gagal — coba lagi');
+            return;
+          }
+          bus.emit('registerForm:sectionComplete', { phase: 'section-2', section: 2 });
+          stateEl.textContent = 'Mulai 3/3';
+        }
+
+        if (registerFormAbort) {
+          await finish('aborted', { closeModal: true });
+          return;
+        }
+
+        const result = await submitSection3();
+        if (finished) return;
+        if (result.status === 'missing') {
+          notify.alert('Register Form', 'Modal Berhasil Daftar tidak muncul');
+          stopRun('Gagal — coba lagi');
+          return;
+        }
+
+        bus.emit('registerForm:sectionComplete', { phase: 'confirmation', section: 3 });
+
+        if (result.status === 'closed') {
+          notify.info('Register Form', 'Pendaftaran selesai', 3000);
+          await finish('closed', { closeModal: true });
+          return;
+        }
+
+        await showRecap(result.ticket, flashData);
+      } catch (error) {
+        console.error('[Dandelion] Register Form failed:', error);
+        notify.alert('Register Form', 'Terjadi kesalahan saat menjalankan alur');
+        await finish('error');
+      } finally {
+        if (!finished) stopRun();
+        if (cancelActiveRun === finish) cancelActiveRun = null;
+        registerFormAbort = false;
+      }
+    }
+
     const actionPanel = notify.action(
       'Register Form',
       'Isi data dengan lengkap dan sesuai',
@@ -121,236 +579,56 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
           label: 'Mulai',
           type: 'success',
           autoClose: false,
-          onClick: async () => {
-            if (isRegisterFormRunning) return;
-            isRegisterFormRunning = true;
-
-            const flashData = await getRegisterFormFlashData();
-            if (!flashData?.pinneds || Object.keys(flashData.pinneds).length === 0) {
-              notify.info('Register Form', 'Isi flash data panel dulu', 2000);
-              isRegisterFormRunning = false;
-              return;
-            }
-            if (registerFormAbort) {
-              isRegisterFormRunning = false;
-              return;
-            }
-
-            const entries = Object.entries(flashData.pinneds);
-            const domStep = detectCurrentStep();
-            const step = savedStep || domStep;
-            let startSection = 1;
-            if (step === 'section-2' || completed[1]) startSection = 2;
-            if (step === 'section-3' || completed[2]) startSection = 3;
-            if (step === 'section-4' || completed[3]) startSection = 4;
-            stateEl.textContent = `Mulai ${startSection}/4`;
-
-            // ── Section 1 ──
-            if (startSection <= 1 && !completed[1]) {
-              const pesertaEntries = entries.filter(([id]) => !id.toLowerCase().endsWith(' wali'));
-              const nikEntry = pesertaEntries.find(([id]) => id.toLowerCase() === 'nik');
-              const otherEntries = pesertaEntries.filter(([id]) => id.toLowerCase() !== 'nik');
-              let dataDitemukan = false;
-              let count = 0;
-
-              if (nikEntry && fillByCheckId(nikEntry[0], nikEntry[1])) {
-                count++;
-                const clicked = await clickCekNik();
-                if (clicked) {
-                  const result = await waitForCekNikResponse();
-                  if (result === 'not-found') {
-                    notify.info('Cek NIK', 'Data baru, isi manual', 3000);
-                    for (const [id, value] of otherEntries) {
-                      if (fillByCheckId(id, value)) count++;
-                    }
-                  } else if (result === 'found') {
-                    dataDitemukan = await handleDataDitemukanModal();
-                    await new Promise((r) => setTimeout(r, 300));
-                  }
-                }
-              } else {
-                for (const [id, value] of pesertaEntries) {
-                  if (fillByCheckId(id, value)) count++;
-                }
-              }
-
-              const jkEntry = pesertaEntries.find(
-                ([id]) =>
-                  id.toLowerCase().includes('jenis') && id.toLowerCase().includes('kelamin'),
-              );
-              if (!dataDitemukan && jkEntry && (await fillJenisKelamin(jkEntry[1]))) count++;
-
-              const tlEntry = pesertaEntries.find(
-                ([id]) =>
-                  id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('lahir'),
-              );
-              if (!dataDitemukan && tlEntry && (await fillTanggalLahir(tlEntry[1]))) count++;
-
-              const tpEntry = pesertaEntries.find(
-                ([id]) =>
-                  id.toLowerCase().includes('tanggal') && id.toLowerCase().includes('pemeriksaan'),
-              );
-              fillTanggalPemeriksaan(tpEntry ? tpEntry[1] : null);
-
-              notify.info('Register Form', `Terisi: ${count}/${pesertaEntries.length} field`, 2000);
-
-              const usia = tlEntry ? countAge(tlEntry[1]) : null;
-
-              const noWaliDiv = document.querySelector('#noWali.check');
-              if (noWaliDiv && usia !== null && usia >= 60) {
-                noWaliDiv.click();
-                await new Promise((r) => setTimeout(r, 300));
-              }
-
-              if (usia !== null && usia >= 1 && usia <= 5) {
-                await new Promise((r) => setTimeout(r, 500));
-                await fillDataWali(entries);
-                await new Promise((r) => setTimeout(r, 300));
-                fillNikWali(entries);
-                await new Promise((r) => setTimeout(r, 200));
-                const nikWaliInput = document.getElementById('nik wali');
-                if (nikWaliInput && !nikWaliInput.value) {
-                  fillNikWali(entries);
-                }
-              }
-
-              if (registerFormAbort) {
-                isRegisterFormRunning = false;
-                return;
-              }
-
-              const submitted = await submitSection1();
-              if (submitted === 'blocked') {
-                await resetRegisterForm();
-                isRegisterFormRunning = false;
-                return;
-              }
-              if (!submitted) {
-                notify.alert('Register Form', 'Gagal submit section 1', 3000);
-                isRegisterFormRunning = false;
-                return;
-              }
-              completed[1] = true;
-              bus.emit('registerForm:sectionComplete', { section: 1 });
-              stateEl.textContent = 'Mulai 2/4';
-            }
-
-            // ── Section 2 ──
-            if (startSection <= 2 && !completed[2]) {
-              if (registerFormAbort) {
-                isRegisterFormRunning = false;
-                return;
-              }
-              const section2Ok = await retry('Section 2', () => fillSection2(entries));
-              if (!section2Ok) {
-                notify.alert('Register Form', 'Gagal mengisi section 2', 3000);
-                isRegisterFormRunning = false;
-                return;
-              }
-              const submitted2 = await submitSection2();
-              if (!submitted2) {
-                notify.alert('Register Form', 'Gagal submit section 2', 3000);
-                isRegisterFormRunning = false;
-                return;
-              }
-              completed[2] = true;
-              bus.emit('registerForm:sectionComplete', { section: 2 });
-              stateEl.textContent = 'Mulai 3/4';
-            }
-
-            // ── Section 3 ──
-            if (startSection <= 3 && !completed[3]) {
-              if (registerFormAbort) {
-                isRegisterFormRunning = false;
-                return;
-              }
-              const submitted3 = await submitSection3();
-              if (!submitted3) {
-                const hasSuccessModal = Array.from(
-                  document.querySelectorAll('.rounded-lg.bg-white.p-4'),
-                ).some((m) => m.textContent.includes('Berhasil Daftar'));
-                if (hasSuccessModal) {
-                  notify.alert('Register Form', 'Gagal di section 3', 3000);
-                  isRegisterFormRunning = false;
-                  return;
-                }
-              }
-              completed[3] = true;
-              await setRegisterFormStep('section-4');
-              bus.emit('registerForm:sectionComplete', { section: 3 });
-              stateEl.textContent = 'Mulai 4/4';
-            }
-
-            // ── Section 4 ──
-            if (registerFormAbort) {
-              isRegisterFormRunning = false;
-              return;
-            }
-            const nik = entries.find(([id]) => id.toLowerCase() === 'nik')?.[1];
-            if (nik) {
-              const pos = detectAttendancePosition();
-              let ticket = null;
-              if (pos === 'done') {
-                ticket = await completeDoneAttendance();
-              } else {
-                const searchResult = await searchAttendance(nik, { skip: pos === 'hadir' });
-                if (searchResult) {
-                  ticket = await completeAttendance(searchResult.ticket, countdownDuration);
-                }
-              }
-              if (ticket) {
-                stateEl.textContent = `Selesai — ${ticket}`;
-                bus.emit('registerForm:sectionComplete', { section: 4 });
-                await resetRegisterForm(null);
-                await notify.alert(
-                  'Register Form',
-                  h(
-                    'span',
-                    {},
-                    'Berhasil menghadirkan ',
-                    h('span', { style: 'user-select: all; -webkit-user-select: all;' }, ticket),
-                  ),
-                );
-                actionPanel.remove();
-              } else {
-                await clearRegisterFormStep();
-                notify.alert('Register Form', 'Gagal konfirmasi hadir', 3000);
-              }
-            } else {
-              notify.info('Register Form', 'Pendaftaran selesai', 3000);
-            }
-
-            isRegisterFormRunning = false;
-          },
+          onClick: runRegisterForm,
         },
       ],
       { pinned: true },
     );
-
-    const stateEl = document.createElement('div');
-    stateEl.style.cssText = 'font-size:9px;opacity:0.5;margin-top:2px;';
-    stateEl.textContent = 'Mulai 1/4';
     actionPanel.panel.appendChild(stateEl);
   });
 
   /**
-   * @param {string} [message]
+   * @param {string|null} [message]
    * @returns {Promise<void>}
    */
   async function resetRegisterForm(message = 'NIK sudah pernah diperiksa, task dibatalkan') {
-    await clearRegisterFormFlashData();
-    await clearRegisterFormStep();
-    const flashPanel = document.getElementById('dandelion-flash-data');
-    if (flashPanel) flashPanel.remove();
-    document.querySelector('[id^="dandelion-action-"]')?.remove();
-    const closeBtn = document.querySelector(
-      'button.absolute.right-4.top-3.cursor-pointer.p-1.btn-transparent',
-    );
-    if (closeBtn) closeBtn.click();
+    if (cancelActiveRun) {
+      await cancelActiveRun('aborted', { closeModal: true });
+    } else {
+      isRegisterFormRunning = false;
+      await clearRegisterFormFlashData();
+      await clearRegisterFormStep();
+      const flashPanel = document.getElementById('dandelion-flash-data');
+      if (flashPanel) flashPanel.remove();
+      document.querySelector('[id^="dandelion-action-"]')?.remove();
+      const flash = await getFlashData();
+      if (flash?._source === SKRINING_SOURCE) await clearFlashData();
+      closeSuccessModalIfOpen();
+    }
     if (message) notify.alert('Register Form', message);
   }
 
   controlPanel.mount(monkeyBtn, 1);
+}
+
+/**
+ * `notify.action()` returns a `{ panel, remove }` handle, not an element.
+ *
+ * @param {{ panel?: Element }|null} recapPanel
+ * @returns {boolean}
+ */
+export function isRecapPanelMounted(recapPanel) {
+  return recapPanel?.panel?.isConnected === true;
+}
+
+/**
+ * @param {Record<string, any>|null} [flashData]
+ * @returns {boolean}
+ */
+export function isSkriningMandiri(flashData) {
+  const raw = flashData?.['skrining mandiri'] ?? flashData?.pinneds?.['skrining mandiri'];
+  if (raw === undefined || raw === null || raw === '') return true;
+  return raw === true || raw === 'true';
 }
 
 /**
@@ -382,40 +660,28 @@ function handleDataDitemukanModal(timeout = 8000) {
 
 /** @returns {boolean} */
 function closeSuccessModalIfOpen() {
-  const modals = document.querySelectorAll('.rounded-lg.bg-white.p-4');
-  for (const m of modals) {
-    if (m.textContent.includes('Berhasil Daftar') || m.textContent.includes('Berhasil Hadir')) {
-      const btn = m.querySelector('button');
-      if (btn && btn.textContent.trim() === 'Tutup') {
-        btn.click();
-      }
-      return true;
-    }
-  }
-  return false;
+  const modal = findRegistrationSuccessModal();
+  if (!modal) return false;
+  const btn = Array.from(modal.querySelectorAll('button')).find(
+    (candidate) => candidate.textContent.trim() === 'Tutup',
+  );
+  if (btn) btn.click();
+  return true;
 }
 
 /** @returns {string} */
 export function detectCurrentStep() {
+  if (findRegistrationSuccessModal()) return 'confirmation';
+
   const greenBars = document.querySelectorAll(String.raw`.stepper .bg-\[\#16B3AC\]`);
-  if (greenBars.length === 3) return 'section-3';
   if (greenBars.length === 2) return 'section-2';
   if (greenBars.length === 1) return 'section-1';
-  const modal = document.querySelector(
-    String.raw`.fixed.top-0.left-0.z-1000.w-full.h-full.flex.justify-center.items-center.backdrop-blur-5`,
-  );
-  if (modal && modal.textContent.includes('Formulir Pendaftaran')) {
-    const hasSubmitBtn = Array.from(modal.querySelectorAll('button')).some((btn) =>
-      ['Pilih', 'Daftarkan dengan NIK'].includes(btn.textContent.trim()),
-    );
-    if (hasSubmitBtn) return 'section-3';
-  }
   return 'unknown';
 }
 
 /** @returns {boolean} */
 export function isRegisterFormResumable() {
-  return ['section-2', 'section-3'].includes(detectCurrentStep());
+  return ['section-2', 'confirmation'].includes(detectCurrentStep());
 }
 
 /**
@@ -489,6 +755,7 @@ async function fillSection2(entries) {
 
 /** @returns {boolean} */
 function isRegisterFormFlowOpen() {
+  if (findRegistrationSuccessModal()) return true;
   if (document.getElementById('dandelion-flash-data')) return true;
   if (document.querySelector('[id^="dandelion-action-"]')) return true;
   return Array.from(document.querySelectorAll('div')).some(
@@ -496,16 +763,24 @@ function isRegisterFormFlowOpen() {
   );
 }
 
-/** @returns {Promise<boolean>} */
-async function waitForModal() {
-  while (true) {
-    if (registerFormAbort) return false;
-    const found = Array.from(document.querySelectorAll('div')).some(
-      (d) => d.textContent?.trim() === 'Cek NIK',
-    );
-    if (found) return true;
-    await new Promise((r) => setTimeout(r, 500));
-  }
+/**
+ * @param {number} [timeout=15_000]
+ * @returns {Promise<boolean>}
+ */
+function waitForModal(timeout = 15_000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    const poll = () => {
+      if (registerFormAbort) return resolve(false);
+      const found = Array.from(document.querySelectorAll('div')).some(
+        (d) => d.textContent?.trim() === 'Cek NIK',
+      );
+      if (found) return resolve(true);
+      if (Date.now() - start > timeout) return resolve(false);
+      setTimeout(poll, 500);
+    };
+    poll();
+  });
 }
 
 /**

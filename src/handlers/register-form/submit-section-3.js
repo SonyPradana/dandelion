@@ -1,93 +1,72 @@
-function waitForFormModal(timeout = 12_000) {
-  return new Promise((resolve) => {
-    const start = Date.now();
-    const poll = () => {
-      const modals = document.querySelectorAll('.fixed.flex.justify-center.items-center');
-      for (const m of modals) {
-        if (m.textContent.includes('Formulir Pendaftaran')) return resolve(m);
-      }
-      if (Date.now() - start > timeout) return resolve(null);
-      setTimeout(poll, 200);
-    };
-    poll();
-  });
-}
-
-function findPilihButton(modal, timeout = 5000) {
-  return new Promise((resolve) => {
-    const start = Date.now();
-    const poll = () => {
-      const btns = modal.querySelectorAll('button');
-      for (const btn of btns) {
-        if (btn.textContent.trim() === 'Pilih') return resolve(btn);
-      }
-      if (Date.now() - start > timeout) return resolve(null);
-      setTimeout(poll, 200);
-    };
-    poll();
-  });
-}
-
-function waitForDaftarEnabled(timeout = 8000) {
-  return new Promise((resolve) => {
-    const start = Date.now();
-    const poll = () => {
-      const modals = document.querySelectorAll('.fixed.flex.justify-center.items-center');
-      for (const m of modals) {
-        const buttons = m.querySelectorAll('button');
-        for (const btn of buttons) {
-          if (btn.textContent.trim() === 'Daftarkan dengan NIK') {
-            return resolve(btn);
-          }
-        }
-      }
-      if (Date.now() - start > timeout) return resolve(null);
-      setTimeout(poll, 200);
-    };
-    poll();
-  });
-}
-
-function findTutupButton(modal) {
-  const btns = modal.querySelectorAll('button');
-  for (const btn of btns) {
-    if (btn.textContent.trim() === 'Tutup') return btn;
+/** @returns {Element|null} */
+export function findRegistrationSuccessModal() {
+  const modals = document.querySelectorAll('.rounded-lg.bg-white.p-4');
+  for (const modal of modals) {
+    if (modal.textContent.includes('Berhasil Daftar')) return modal;
   }
   return null;
 }
 
+/**
+ * @param {Element} modal
+ * @returns {string|null}
+ */
+export function parseTicket(modal) {
+  const labels = modal.querySelectorAll('.font-semibold');
+  for (const label of labels) {
+    if (/^(No\.?\s*Tiket|Nomor Tiket):?$/i.test(label.textContent.trim())) {
+      const ticket = label.nextElementSibling?.textContent?.trim() || null;
+      if (ticket) return ticket;
+    }
+  }
+
+  const walker = document.createTreeWalker(modal, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const match = node.nodeValue?.match(/(?:No\.?\s*Tiket|Nomor Tiket)\s*:?\s*(.*)$/i);
+    if (!match) continue;
+
+    const inline = match[1].trim();
+    if (inline) return inline.split(/\s+/)[0];
+
+    const next = node.parentElement?.nextElementSibling?.textContent?.trim();
+    if (next) return next.split(/\s+/)[0];
+  }
+
+  return null;
+}
+
+/**
+ * Wait for the terminal "Berhasil Daftar" modal and read the ticket.
+ *
+ * @param {number} [timeout=12_000]
+ * @returns {Promise<{ status: 'ok', ticket: string|null, modal: Element } |
+ *   { status: 'closed', ticket: null, modal: null } |
+ *   { status: 'missing', ticket: null, modal: null }>}
+ */
 export async function submitSection3(timeout = 12_000) {
-  const modal = await waitForFormModal(timeout);
-  if (!modal) return false;
-
-  const pilih = await findPilihButton(modal);
-  if (!pilih) return false;
-  pilih.click();
-  await new Promise((r) => setTimeout(r, 300));
-
-  const daftar = await waitForDaftarEnabled(timeout);
-  if (!daftar) return false;
-  daftar.click();
-
-  const start = Date.now();
   let seen = false;
+
   return new Promise((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (findRegistrationSuccessModal()) seen = true;
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    const start = Date.now();
     const poll = () => {
-      const modals = document.querySelectorAll('.rounded-lg.bg-white.p-4');
-      let found = false;
-      for (const m of modals) {
-        if (m.textContent.includes('Berhasil Daftar')) {
-          found = true;
-          seen = true;
-          const tutup = findTutupButton(m);
-          if (tutup) {
-            tutup.click();
-            return resolve(true);
-          }
-        }
+      const modal = findRegistrationSuccessModal();
+      if (modal) {
+        observer.disconnect();
+        return resolve({ status: 'ok', ticket: parseTicket(modal), modal });
       }
-      if (seen && !found) return resolve(true);
-      if (Date.now() - start > timeout) return resolve(false);
+      if (seen) {
+        observer.disconnect();
+        return resolve({ status: 'closed', ticket: null, modal: null });
+      }
+      if (Date.now() - start > timeout) {
+        observer.disconnect();
+        return resolve({ status: 'missing', ticket: null, modal: null });
+      }
       setTimeout(poll, 200);
     };
     poll();

@@ -5,8 +5,6 @@ import {
   setRegisterFormFlashData,
   getRegisterFormFlashData,
   clearRegisterFormFlashData,
-  setRegisterFormStep,
-  getRegisterFormStep,
   clearRegisterFormStep,
 } from '../../src/utils/registerFormFlashSession.js';
 
@@ -150,45 +148,29 @@ describe('registerFormFlashSession', () => {
   });
 });
 
-describe('registerFormStep', () => {
+describe('clearRegisterFormStep', () => {
   beforeEach(() => {
     store.init(new MemoryBackend());
   });
 
-  it('getRegisterFormStep should return null when no step', async () => {
-    expect(await getRegisterFormStep()).toBeNull();
-  });
+  it('should remove the legacy checkpoint key', async () => {
+    await store.storageSet('flash_data_register_form_step', {
+      step: 'section-4',
+      _timestamp: Date.now(),
+    });
 
-  it('setRegisterFormStep should store step', async () => {
-    await setRegisterFormStep('section-4');
-    expect(await getRegisterFormStep()).toBe('section-4');
-  });
-
-  it('getRegisterFormStep should return null for expired step', async () => {
-    await setRegisterFormStep('section-4');
-    expect(await getRegisterFormStep(-1)).toBeNull();
-  });
-
-  it('clearRegisterFormStep should remove step', async () => {
-    await setRegisterFormStep('section-4');
     await clearRegisterFormStep();
-    expect(await getRegisterFormStep()).toBeNull();
+
+    expect(await store.storageGet('flash_data_register_form_step')).toBeNull();
   });
 
-  it('should not interfere with flash data', async () => {
+  it('should not affect flash data', async () => {
     await setRegisterFormFlashData({ nik: '123' });
-    await setRegisterFormStep('section-4');
+    await store.storageSet('flash_data_register_form_step', { step: 'section-4' });
+
+    await clearRegisterFormStep();
+
     const data = await getRegisterFormFlashData();
     expect(data.nik).toBe('123');
-    expect(await getRegisterFormStep()).toBe('section-4');
-  });
-
-  it('clearRegisterFormStep should not affect flash data', async () => {
-    await setRegisterFormFlashData({ nik: '123' });
-    await setRegisterFormStep('section-4');
-    await clearRegisterFormStep();
-    const data = await getRegisterFormFlashData();
-    expect(data.nik).toBe('123');
-    expect(await getRegisterFormStep()).toBeNull();
   });
 });
