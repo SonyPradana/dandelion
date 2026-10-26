@@ -12,6 +12,7 @@ import { initializeShareToken, isShareTokenUrl } from './handlers/shareToken.js'
 
 store.init(browser);
 
+/** Boot the content script after agreement, config, quota, and chain checks. */
 async function main() {
   const agreed = await store.getAgreement();
   if (!agreed) return;
@@ -40,6 +41,7 @@ async function main() {
 
 main();
 
+/** Route the current page to the matching skrining or register-form initializer. */
 async function initialize() {
   const currentURL = window.location.href;
   const config = await store.getActiveConfig();

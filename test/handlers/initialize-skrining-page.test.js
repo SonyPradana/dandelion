@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   initializeSkriningSend: vi.fn(),
   initializeSkrining: vi.fn(),
   initializeNotChecked: vi.fn(),
+  clearFlashData: vi.fn(),
   config: { value: {} },
   features: new Set(),
 }));
@@ -26,6 +27,9 @@ vi.mock('../../src/store.js', () => ({
 }));
 vi.mock('../../src/quota/quota-manager.js', () => ({
   isFeatureEnabled: vi.fn((feature) => mocks.features.has(feature)),
+}));
+vi.mock('../../src/utils/flashSession.js', () => ({
+  clearFlashData: mocks.clearFlashData,
 }));
 
 async function loadRouter() {
@@ -58,6 +62,7 @@ describe('initializeSkriningPage', () => {
       autoAssist: false,
     });
     expect(mocks.initializeSkriningSend).toHaveBeenCalledOnce();
+    expect(mocks.clearFlashData).not.toHaveBeenCalled();
   });
 
   it('forces auto assist off for a register-form handoff', async () => {
@@ -71,6 +76,10 @@ describe('initializeSkriningPage', () => {
     expect(mocks.initializeSkriningForm).toHaveBeenCalledWith(flashData, undefined, {
       autoAssist: false,
     });
+    expect(mocks.clearFlashData).toHaveBeenCalledOnce();
+    expect(mocks.clearFlashData.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mocks.initializeSkriningForm.mock.invocationCallOrder[0],
+    );
   });
 
   it('does not initialize the same URL twice', async () => {

@@ -4,6 +4,7 @@ import { initializeSkrining } from './skrining.js';
 import { initialize as initializeNotChecked } from './skrining-form-not-checked.js';
 import { store } from '../store.js';
 import { isFeatureEnabled } from '../quota/quota-manager.js';
+import { clearFlashData } from '../utils/flashSession.js';
 
 let initializedUrl = null;
 
@@ -36,8 +37,10 @@ export async function initializeSkriningPage(flashData = {}, { autoAssist = true
     url.includes(config.formSkrining.url) &&
     isFeatureEnabled('skriningform')
   ) {
-    const shouldAutoAssist = autoAssist && flashData?._source !== 'register-form';
+    const fromRegisterForm = flashData?._source === 'register-form';
+    const shouldAutoAssist = autoAssist && !fromRegisterForm;
     await initializeSkriningForm(flashData, undefined, { autoAssist: shouldAutoAssist });
+    if (fromRegisterForm) await clearFlashData();
     if (isFeatureEnabled('skrining-send')) initializeSkriningSend();
     initializedUrl = url;
     return 'form-skrining';

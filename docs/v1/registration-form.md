@@ -32,6 +32,7 @@ Saat modal **Berhasil Daftar** muncul, data flash Register Form disalin ke flash
 - Tidak diisi atau bernilai `true` — `countdownDuration` dipakai sebagai konfirmasi sebelum pindah ke form skrining. Jika tidak dibatalkan, hitung mundur berlanjut otomatis. Membatalkan hitung mundur mengakhiri alur dan menutup modal.
 - Bernilai `"false"` (string) — tidak ada hitung mundur; tombol **Isi Skrining** langsung menjadi konfirmasi. Di panel Flash Data, tulis sebagai string karena panel hanya menerima nilai string/angka.
 - Setelah pindah, Dandelion hanya memasang panel awal sesuai halaman tujuan (panel Zen/Zero di halaman daftar, atau panel isi formulir di halaman skrining). Tidak ada pengisian otomatis yang dimulai.
+- Data handoff hanya dipakai sekali: setelah panel skrining pertama dipasang, data flash tersebut dibersihkan.
 
 > Pesan status pada modal situs berasal dari aplikasi situs, bukan penanda `"skrining mandiri"` milik Dandelion.
 
