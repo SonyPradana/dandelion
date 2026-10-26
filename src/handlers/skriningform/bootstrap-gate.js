@@ -139,9 +139,11 @@ export async function selectDateInModal(modal, target) {
 
     const before = `${header.year}-${header.month}`;
     arrow.click();
-    await wait(150);
-    const after = calendarHeader(modal);
-    if (!after || `${after.year}-${after.month}` === before) return false;
+    const after = await waitFor(() => {
+      const next = calendarHeader(modal);
+      return next && `${next.year}-${next.month}` !== before ? next : null;
+    }, 600);
+    if (!after) return false;
   }
 
   const header = calendarHeader(modal);
@@ -156,14 +158,15 @@ export async function selectDateInModal(modal, target) {
 /**
  * @param {Element} modal
  * @param {Record<string, any>} flashData
+ * @param {number} simpanTimeout
  * @returns {Promise<'no-simpan'|'done'>}
  */
-async function confirmDateModal(modal, flashData) {
+async function confirmDateModal(modal, flashData, simpanTimeout) {
   const value = flashData?.pinneds?.['tanggal pemeriksaan'] ?? flashData?.['tanggal pemeriksaan'];
   const date = parseExaminationDate(value);
   if (date) await selectDateInModal(modal, date);
 
-  const simpan = await waitFor(() => findButton('Simpan', modal), 2000);
+  const simpan = await waitFor(() => findButton('Simpan', modal), simpanTimeout);
   if (!simpan) return 'no-simpan';
 
   simpan.click();
@@ -176,22 +179,26 @@ async function confirmDateModal(modal, flashData) {
  * Missing gate/date controls are left for the user to handle manually.
  *
  * @param {Record<string, any>} flashData
+ * @param {{ gateTimeout?: number, modalTimeout?: number, simpanTimeout?: number }} [timeouts]
  * @returns {Promise<'no-gate'|'no-modal'|'no-simpan'|'done'>}
  */
-export async function bootstrapSkriningGate(flashData) {
+export async function bootstrapSkriningGate(
+  flashData,
+  { gateTimeout = 5000, modalTimeout = 5000, simpanTimeout = 2000 } = {},
+) {
   const existingModal = findDateModal();
-  if (existingModal) return confirmDateModal(existingModal, flashData);
+  if (existingModal) return confirmDateModal(existingModal, flashData, simpanTimeout);
 
   const gate = await waitFor(() => {
     const button = findButton('Mulai Pemeriksaan');
     if (button) return button;
     return isFormReady() ? 'ready' : null;
-  }, 5000);
+  }, gateTimeout);
 
   if (!gate || gate === 'ready') return 'no-gate';
   gate.click();
 
-  const modal = await waitFor(findDateModal, 5000);
+  const modal = await waitFor(findDateModal, modalTimeout);
   if (!modal) return 'no-modal';
-  return confirmDateModal(modal, flashData);
+  return confirmDateModal(modal, flashData, simpanTimeout);
 }

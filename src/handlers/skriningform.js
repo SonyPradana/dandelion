@@ -10,7 +10,7 @@ import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
-import { clearFlashData } from '../utils/flashSession';
+import { clearFlashData, REGISTER_FORM_SOURCE } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
 import bus from '../utils/hooks';
@@ -124,7 +124,7 @@ export async function initializeSkriningForm(
   }
 
   if (
-    flashData._source !== 'register-form' &&
+    flashData._source !== REGISTER_FORM_SOURCE &&
     flashData.pinneds &&
     Object.keys(flashData.pinneds).length > 0
   ) {

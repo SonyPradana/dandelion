@@ -1,21 +1,18 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
 import {
   bootstrapSkriningGate,
   parseExaminationDate,
   selectDateInModal,
 } from '../../../src/handlers/skriningform/bootstrap-gate.js';
 
+const modalHtml = readFileSync(resolve('test/__fixtures__/skrining-date-modal.html'), 'utf8');
+
 function makeModal() {
-  const modal = document.createElement('div');
-  modal.className = 'rounded-lg bg-white p-4';
-  modal.innerHTML = `
-    <div>Konfirmasi Tanggal Pemeriksaan</div>
-    <div class="flex justify-between items-center mb-4">
-      <div><button type="button">Okt</button><button type="button">2026</button></div>
-      <div><button type="button"><svg></svg></button><button type="button"><svg></svg></button></div>
-    </div>
-    <button type="button"><span>26</span></button>
-  `;
+  const host = document.createElement('div');
+  host.innerHTML = modalHtml;
+  const modal = host.firstElementChild;
   document.body.appendChild(modal);
   return modal;
 }
@@ -27,6 +24,20 @@ function addButton(label, onClick, root = document.body) {
   button.addEventListener('click', onClick);
   root.appendChild(button);
   return button;
+}
+
+function dayButton(modal, day) {
+  return Array.from(modal.querySelectorAll('button')).find(
+    (button) => button.textContent.trim() === String(day),
+  );
+}
+
+function wireSimpan(modal) {
+  const simpan = Array.from(modal.querySelectorAll('button')).find(
+    (button) => button.textContent.trim() === 'Simpan',
+  );
+  simpan.addEventListener('click', () => modal.remove());
+  return simpan;
 }
 
 describe('parseExaminationDate', () => {
@@ -50,7 +61,7 @@ describe('selectDateInModal', () => {
 
   it('clicks the matching day', async () => {
     const modal = makeModal();
-    const day = modal.querySelector('span')?.closest('button');
+    const day = dayButton(modal, 26);
     const click = vi.fn();
     day?.addEventListener('click', click);
 
@@ -60,10 +71,16 @@ describe('selectDateInModal', () => {
 
   it('does not click a disabled day', async () => {
     const modal = makeModal();
-    const day = modal.querySelector('span')?.closest('button');
+    const day = dayButton(modal, 26);
     day?.classList.add('cursor-not-allowed');
 
     await expect(selectDateInModal(modal, { day: 26, month: 10, year: 2026 })).resolves.toBe(false);
+  });
+
+  it('gives up when the calendar does not move', async () => {
+    const modal = makeModal();
+
+    await expect(selectDateInModal(modal, { day: 1, month: 5, year: 2026 })).resolves.toBe(false);
   });
 });
 
@@ -77,7 +94,7 @@ describe('bootstrapSkriningGate', () => {
     modal.remove();
     const gateClick = vi.fn(() => document.body.appendChild(modal));
     addButton('Mulai Pemeriksaan', gateClick);
-    const simpan = addButton('Simpan', () => modal.remove(), modal);
+    const simpan = wireSimpan(modal);
 
     await expect(bootstrapSkriningGate({})).resolves.toBe('done');
     expect(gateClick).toHaveBeenCalledOnce();
@@ -87,11 +104,11 @@ describe('bootstrapSkriningGate', () => {
   it('selects the flash date before clicking Simpan', async () => {
     const modal = makeModal();
     modal.remove();
-    const day = modal.querySelector('span')?.closest('button');
+    const day = dayButton(modal, 26);
     const dayClick = vi.fn();
     day?.addEventListener('click', dayClick);
     addButton('Mulai Pemeriksaan', () => document.body.appendChild(modal));
-    addButton('Simpan', () => modal.remove(), modal);
+    wireSimpan(modal);
 
     await expect(
       bootstrapSkriningGate({ pinneds: { 'tanggal pemeriksaan': '26-10-2026' } }),
@@ -101,12 +118,12 @@ describe('bootstrapSkriningGate', () => {
 
   it('confirms an already-open modal without a gate', async () => {
     const modal = makeModal();
-    addButton('Simpan', () => modal.remove(), modal);
+    wireSimpan(modal);
 
     await expect(bootstrapSkriningGate({})).resolves.toBe('done');
   });
 
   it('leaves the page alone when the gate is missing', async () => {
-    await expect(bootstrapSkriningGate({})).resolves.toBe('no-gate');
-  }, 10_000);
+    await expect(bootstrapSkriningGate({}, { gateTimeout: 50 })).resolves.toBe('no-gate');
+  });
 });

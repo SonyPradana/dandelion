@@ -30,6 +30,9 @@ vi.mock('../../src/quota/quota-manager.js', () => ({
   isFeatureEnabled: vi.fn((feature) => mocks.features.has(feature)),
 }));
 vi.mock('../../src/utils/flashSession.js', () => ({
+  REGISTER_FORM_SOURCE: 'register-form',
+  isSkriningMandiri: (flashData) =>
+    flashData?.['skrining mandiri'] === true || flashData?.['skrining mandiri'] === 'true',
   clearFlashData: mocks.clearFlashData,
 }));
 vi.mock('../../src/handlers/skriningform/bootstrap-gate.js', () => ({
@@ -121,6 +124,20 @@ describe('initializeSkriningPage', () => {
     });
 
     expect(mocks.bootstrapSkriningGate).not.toHaveBeenCalled();
+  });
+
+  it('does not bootstrap the gate outside the skrining form', async () => {
+    window.history.replaceState({}, '', '/lain');
+    const { initializeSkriningPage } = await loadRouter();
+
+    await initializeSkriningPage({
+      _source: 'register-form',
+      'skrining mandiri': true,
+      pinneds: { nik: '123' },
+    });
+
+    expect(mocks.bootstrapSkriningGate).not.toHaveBeenCalled();
+    expect(mocks.initializeSkriningForm).not.toHaveBeenCalled();
   });
 
   it('does not initialize the same URL twice', async () => {

@@ -3,7 +3,6 @@ import {
   detectCurrentStep,
   isRecapPanelMounted,
   isRegisterFormResumable,
-  isSkriningMandiri,
 } from '../../../src/handlers/register-form.js';
 
 function makeGreenStepper(count) {
@@ -82,25 +81,6 @@ describe('isRegisterFormResumable', () => {
   it('should be true on confirmation', () => {
     makeSuccessModal();
     expect(isRegisterFormResumable()).toBe(true);
-  });
-});
-
-describe('isSkriningMandiri', () => {
-  it('defaults to false', () => {
-    expect(isSkriningMandiri(null)).toBe(false);
-    expect(isSkriningMandiri({})).toBe(false);
-    expect(isSkriningMandiri({ 'skrining mandiri': '' })).toBe(false);
-  });
-
-  it('accepts the top-level flash flag', () => {
-    expect(isSkriningMandiri({ 'skrining mandiri': true })).toBe(true);
-    expect(isSkriningMandiri({ 'skrining mandiri': 'true' })).toBe(true);
-    expect(isSkriningMandiri({ 'skrining mandiri': false })).toBe(false);
-  });
-
-  it('accepts the flag from pinneds', () => {
-    expect(isSkriningMandiri({ pinneds: { 'skrining mandiri': 'true' } })).toBe(true);
-    expect(isSkriningMandiri({ pinneds: { 'skrining mandiri': 'false' } })).toBe(false);
   });
 });
 

@@ -4,7 +4,7 @@ import { initializeSkrining } from './skrining.js';
 import { initialize as initializeNotChecked } from './skrining-form-not-checked.js';
 import { store } from '../store.js';
 import { isFeatureEnabled } from '../quota/quota-manager.js';
-import { clearFlashData } from '../utils/flashSession.js';
+import { clearFlashData, REGISTER_FORM_SOURCE, isSkriningMandiri } from '../utils/flashSession.js';
 import { bootstrapSkriningGate } from './skriningform/bootstrap-gate.js';
 
 let initializedUrl = null;
@@ -20,17 +20,11 @@ let initializedUrl = null;
 export async function initializeSkriningPage(flashData = {}, { autoAssist = true } = {}) {
   const initialUrl = window.location.href;
   if (initializedUrl === initialUrl) {
-    if (flashData?._source === 'register-form') await clearFlashData();
+    if (flashData?._source === REGISTER_FORM_SOURCE) await clearFlashData();
     return 'already';
   }
 
-  const fromRegisterForm = flashData?._source === 'register-form';
-  const redirectAllowed =
-    flashData?.['skrining mandiri'] === true || flashData?.['skrining mandiri'] === 'true';
-  if (fromRegisterForm && redirectAllowed && isFeatureEnabled('skriningform')) {
-    await bootstrapSkriningGate(flashData);
-  }
-
+  const fromRegisterForm = flashData?._source === REGISTER_FORM_SOURCE;
   const url = window.location.href;
   const config = await store.getActiveConfig();
 
@@ -49,6 +43,12 @@ export async function initializeSkriningPage(flashData = {}, { autoAssist = true
     url.includes(config.formSkrining.url) &&
     isFeatureEnabled('skriningform')
   ) {
+    if (fromRegisterForm && isSkriningMandiri(flashData)) {
+      const gate = await bootstrapSkriningGate(flashData);
+      if (gate === 'no-modal' || gate === 'no-simpan') {
+        console.warn(`[Dandelion] Skrining gate needs manual confirmation: ${gate}`);
+      }
+    }
     const shouldAutoAssist = autoAssist && !fromRegisterForm;
     await initializeSkriningForm(flashData, undefined, { autoAssist: shouldAutoAssist });
     if (fromRegisterForm) await clearFlashData();

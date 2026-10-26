@@ -10,7 +10,13 @@ import {
   clearRegisterFormStep,
 } from '../utils/registerFormFlashSession.js';
 import { validateRegisterFormFields } from '../utils/registerFormValidator.js';
-import { getFlashData, setFlashData, clearFlashData } from '../utils/flashSession.js';
+import {
+  getFlashData,
+  setFlashData,
+  clearFlashData,
+  REGISTER_FORM_SOURCE,
+  isSkriningMandiri,
+} from '../utils/flashSession.js';
 import bus from '../utils/hooks';
 import { fillByCheckId } from './register-form/fill-by-check-id.js';
 import { clickCekNik, waitForCekNikResponse } from './register-form/click-check-nik.js';
@@ -32,7 +38,7 @@ import { fillDataWali } from './register-form/fill-data-wali.js';
 import { fillNikWali } from './register-form/fill-nik-wali.js';
 import { initializeSkriningPage } from './initialize-skrining-page.js';
 
-const SKRINING_SOURCE = 'register-form';
+const SKRINING_SOURCE = REGISTER_FORM_SOURCE;
 
 let isRegisterFormRunning = false;
 let registerFormAbort = false;
@@ -311,6 +317,8 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
             _source: SKRINING_SOURCE,
           };
           await setFlashData(handoff);
+          // Suspend until `finish` runs: that keeps `cancelActiveRun` non-null,
+          // so the run can still be aborted while the handoff is in flight.
           const pending = new Promise((resolve) => {
             recapResolve = resolve;
           });
@@ -621,15 +629,6 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
  */
 export function isRecapPanelMounted(recapPanel) {
   return recapPanel?.panel?.isConnected === true;
-}
-
-/**
- * @param {Record<string, any>|null} [flashData]
- * @returns {boolean}
- */
-export function isSkriningMandiri(flashData) {
-  const raw = flashData?.['skrining mandiri'] ?? flashData?.pinneds?.['skrining mandiri'];
-  return raw === true || raw === 'true';
 }
 
 /**
