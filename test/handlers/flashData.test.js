@@ -69,7 +69,7 @@ describe('flashData', () => {
     it('should call showFlashDataPanel when flashData is enabled', async () => {
       const spy = vi.spyOn(store, 'getActiveConfig').mockResolvedValue({
         flashData: { enabled: true },
-        zenMode: { defaultPinneds: { 'LPM|text': '' } },
+        zenMode: { defaultPinneds: { xx1234: '' } },
       });
 
       await showFlashDataPanelIfEnabled();
@@ -80,12 +80,12 @@ describe('flashData', () => {
     it('should pass zenMode.defaultPinneds as initialData', async () => {
       const spy = vi.spyOn(store, 'getActiveConfig').mockResolvedValue({
         flashData: { enabled: true },
-        zenMode: { defaultPinneds: { NIK: '', 'LPM|text': 'coba' } },
+        zenMode: { defaultPinneds: { NIK: '', xx1234: 'coba' } },
       });
 
       await showFlashDataPanelIfEnabled();
       expect(showFlashDataPanel).toHaveBeenCalledWith({
-        initialData: { NIK: '', 'LPM|text': 'coba' },
+        initialData: { NIK: '', xx1234: 'coba' },
       });
       spy.mockRestore();
     });

@@ -80,20 +80,20 @@ describe('flashPanel', () => {
   });
 
   it('should prefill JSON textarea with initialData', () => {
-    showFlashDataPanel({ initialData: { NIK: '', 'LPM|text': 'coba' } });
+    showFlashDataPanel({ initialData: { NIK: '', xx1234: 'coba' } });
     const textarea = document.querySelector('textarea');
     const parsed = JSON.parse(textarea.value);
-    expect(parsed).toEqual({ NIK: '', 'LPM|text': 'coba' });
+    expect(parsed).toEqual({ NIK: '', xx1234: 'coba' });
   });
 
   it('should show initialData keys in KV tab', () => {
-    showFlashDataPanel({ initialData: { NIK: '', 'LPM|text': 'coba' } });
+    showFlashDataPanel({ initialData: { NIK: '', xx1234: 'coba' } });
     const kvBtn = Array.from(document.querySelectorAll('button')).find(
       (b) => b.textContent === 'Tabel KV',
     );
     kvBtn.click();
     const kvKeys = Array.from(document.querySelectorAll('.flash-kv-key')).map((k) => k.value);
-    expect(kvKeys).toEqual(['NIK', 'LPM|text']);
+    expect(kvKeys).toEqual(['NIK', 'xx1234']);
   });
 
   it('should persist initialData when Gunakan is clicked', async () => {

@@ -134,10 +134,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     const respectInput = fs.respectInput === true;
     const ensureFill = fs.ensureFill === true;
 
-    const configPinneds = Object.fromEntries(
-      Object.entries(fs.pinneds || {}).filter(([k]) => !k.includes('|number')),
-    );
-    const pinneds = { ...configPinneds, ...flashData.pinneds };
+    const pinneds = { ...(fs.pinneds || {}), ...flashData.pinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
     const seen = new Set();
 
@@ -218,7 +215,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
 
   /**
    * @param {string[]} config - List of radioInput konfuguration
-   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
+   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['xx1234'])
    */
   function fillRadioButtons(config, skipList = [], respectInput = false, seen = new Set()) {
     const allMatchingLabels = Array.from(
@@ -269,7 +266,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
 
   /**
    * @param {string[]} config - List of radioInput konfuguration
-   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
+   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['xx1234'])
    */
   async function fillDropdowns(config, skipList = [], respectInput = false, seen = new Set()) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));

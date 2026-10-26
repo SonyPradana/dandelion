@@ -93,7 +93,7 @@ export function showFlashDataPanel({
     'width:100%;min-height:80px;padding:6px;border:1px solid rgba(255,255,255,0.15);' +
     'border-radius:4px;background:rgba(0,0,0,0.3);color:white;font-size:10px;' +
     'font-family:inherit;resize:vertical;outline:none;box-sizing:border-box;';
-  jsonTextarea.placeholder = '{\n  "LPM...|number": "123",\n  "LPM...|text": "nilai"\n}';
+  jsonTextarea.placeholder = '{\n  "xx1234": "123",\n  "xx1235": "nilai"\n}';
   jsonTextarea.rows = 4;
 
   jsonContainer.appendChild(jsonTextarea);

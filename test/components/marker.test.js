@@ -76,19 +76,19 @@ describe('marker', () => {
     vi.restoreAllMocks();
 
     document.body.innerHTML = `
-      <div class="sd-question" data-name="abc000030|test000051|xyz00000248|number">
+      <div class="sd-question" data-name="xx1236">
         <div class="sd-question__content">
           <input class="sd-input sd-text" type="number" step="any" />
         </div>
       </div>
     `;
 
-    const el = debugMarker('abc000030|test000051|xyz00000248|number');
+    const el = debugMarker('xx1236');
     const pinToggle = el.querySelector('.dandelion-pin-toggle');
     const excludeToggle = el.querySelector('.dandelion-exclude-toggle');
 
     expect(pinToggle).toBeTruthy();
     expect(excludeToggle).toBeTruthy();
-    expect(el.textContent).toContain('abc000030|test000051|xyz00000248|number');
+    expect(el.textContent).toContain('xx1236');
   });
 });

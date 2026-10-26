@@ -2,35 +2,21 @@ import { isFieldFilled } from './respect-input';
 
 /**
  * Fill pinned fields based on data-name and value mapping.
- * Supports: textarea, text input, and radio buttons.
+ * Supports text inputs, number inputs, radio buttons, and dropdowns.
  *
  * @param {Object} pinneds - Object containing data-name as key and value to fill
  * @param {boolean} [respectInput=false] - Skip if field already has value
  * @returns {Promise<{radio: number, freetext: number, dropdown: number}>}
  * @example
  * pinneds = {
- *   "LPM001-quest|text": "Ya",
- *   "LPM002-quest|freetext": "Tidak ada"
+ *   "xx1234": "Ya",
+ *   "xx1235": "Tidak ada"
  * }
  */
 export async function fillPinnedFields(pinneds, respectInput = false, seen = new Set()) {
   let radio = 0;
   let freetext = 0;
   let dropdown = 0;
-  const filled = new Set();
-
-  const exactKeys = [];
-  const wildcardEntries = [];
-
-  for (const key in pinneds) {
-    if (Object.prototype.hasOwnProperty.call(pinneds, key)) {
-      if (key.includes('*')) {
-        wildcardEntries.push({ parts: key.split('|'), value: pinneds[key] });
-      } else {
-        exactKeys.push(key);
-      }
-    }
-  }
 
   function shouldCount(dataName) {
     if (!dataName) return true;
@@ -39,7 +25,7 @@ export async function fillPinnedFields(pinneds, respectInput = false, seen = new
     return true;
   }
 
-  async function fillField(questionElement, value, respectInput = false) {
+  async function fillField(questionElement, value) {
     const dataName = questionElement.getAttribute('data-name');
     if (respectInput && (isFieldFilled(questionElement) || seen.has(dataName))) return;
 
@@ -64,31 +50,10 @@ export async function fillPinnedFields(pinneds, respectInput = false, seen = new
     }
   }
 
-  for (const key of exactKeys) {
-    const value = pinneds[key];
+  for (const [key, value] of Object.entries(pinneds || {})) {
     const questionElement = document.querySelector(`[data-name="${CSS.escape(key)}"]`);
     if (!questionElement) continue;
-    filled.add(key);
-    await fillField(questionElement, value, respectInput);
-  }
-
-  if (wildcardEntries.length > 0) {
-    const allElements = document.querySelectorAll('[data-name]');
-    for (const el of allElements) {
-      const dn = el.getAttribute('data-name');
-      if (!dn || filled.has(dn)) continue;
-      const nameParts = dn.split('|');
-      for (const { parts, value } of wildcardEntries) {
-        if (
-          nameParts.length === parts.length &&
-          parts.every((p, i) => p === '*' || p === nameParts[i])
-        ) {
-          filled.add(dn);
-          await fillField(el, value, respectInput);
-          break;
-        }
-      }
-    }
+    await fillField(questionElement, value);
   }
 
   return { radio, freetext, dropdown };
