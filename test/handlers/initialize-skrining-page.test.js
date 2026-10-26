@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   initializeSkriningSend: vi.fn(),
   initializeSkrining: vi.fn(),
   initializeNotChecked: vi.fn(),
+  bootstrapSkriningGate: vi.fn(),
   clearFlashData: vi.fn(),
   config: { value: {} },
   features: new Set(),
@@ -31,6 +32,9 @@ vi.mock('../../src/quota/quota-manager.js', () => ({
 vi.mock('../../src/utils/flashSession.js', () => ({
   clearFlashData: mocks.clearFlashData,
 }));
+vi.mock('../../src/handlers/skriningform/bootstrap-gate.js', () => ({
+  bootstrapSkriningGate: mocks.bootstrapSkriningGate,
+}));
 
 async function loadRouter() {
   vi.resetModules();
@@ -47,6 +51,7 @@ describe('initializeSkriningPage', () => {
       'skrining-form-not-checked',
     ]);
     mocks.config.value = {};
+    mocks.bootstrapSkriningGate.mockResolvedValue('done');
   });
 
   it('mounts the skrining form without auto assist', async () => {
@@ -76,10 +81,46 @@ describe('initializeSkriningPage', () => {
     expect(mocks.initializeSkriningForm).toHaveBeenCalledWith(flashData, undefined, {
       autoAssist: false,
     });
+    expect(mocks.bootstrapSkriningGate).not.toHaveBeenCalled();
     expect(mocks.clearFlashData).toHaveBeenCalledOnce();
     expect(mocks.clearFlashData.mock.invocationCallOrder[0]).toBeGreaterThan(
       mocks.initializeSkriningForm.mock.invocationCallOrder[0],
     );
+  });
+
+  it('bootstraps the gate before mounting an allowed handoff', async () => {
+    window.history.replaceState({}, '', '/form-skrining');
+    mocks.config.value = { formSkrining: { url: '/form-skrining' } };
+    const { initializeSkriningPage } = await loadRouter();
+    const flashData = {
+      _source: 'register-form',
+      'skrining mandiri': true,
+      pinneds: { nik: '123' },
+    };
+
+    await initializeSkriningPage(flashData, { autoAssist: false });
+
+    expect(mocks.bootstrapSkriningGate).toHaveBeenCalledWith(flashData);
+    expect(mocks.bootstrapSkriningGate.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.initializeSkriningForm.mock.invocationCallOrder[0],
+    );
+    expect(mocks.initializeSkriningForm).toHaveBeenCalledWith(flashData, undefined, {
+      autoAssist: false,
+    });
+  });
+
+  it('does not bootstrap when redirect is disabled', async () => {
+    window.history.replaceState({}, '', '/form-skrining');
+    mocks.config.value = { formSkrining: { url: '/form-skrining' } };
+    const { initializeSkriningPage } = await loadRouter();
+
+    await initializeSkriningPage({
+      _source: 'register-form',
+      'skrining mandiri': false,
+      pinneds: { nik: '123' },
+    });
+
+    expect(mocks.bootstrapSkriningGate).not.toHaveBeenCalled();
   });
 
   it('does not initialize the same URL twice', async () => {

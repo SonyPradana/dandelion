@@ -12,9 +12,9 @@ Fitur untuk mempercepat pengisian formulir pendaftaran peserta — dari data ide
    - **`Mulai 1/3`** — data identitas peserta, termasuk pemeriksaan data.
    - **`Mulai 2/3`** — data peserta lainnya, lalu tombol **Daftarkan** ditekan.
    - **`Mulai 3/3`** — menunggu modal **Berhasil Daftar**, membaca **No. Tiket**, lalu menampilkan ringkasan.
-4. Di ringkasan tersedia dua pilihan:
-   - **Isi Skrining** — membersihkan state Register Form dan membuka panel awal skrining. Otomasi tidak langsung dimulai.
-   - **Tutup** — membersihkan state Register Form dan menutup modal pendaftaran.
+4. Setelah pendaftaran berhasil:
+   - bila `"skrining mandiri"` bernilai `true`, Dandelion langsung menampilkan hitung mundur dan membantu perpindahan ke skrining;
+   - bila `false` atau kosong, ringkasan menampilkan pilihan **Isi Skrining** (tidak memulai handoff) dan **Tutup**.
 5. Isian tetap bisa diperiksa dan diperbaiki sebelum lanjut ke skrining.
 
 ## Yang Perlu Diketahui
@@ -27,10 +27,10 @@ Fitur untuk mempercepat pengisian formulir pendaftaran peserta — dari data ide
 
 ## Lanjut ke Skrining
 
-Saat modal **Berhasil Daftar** muncul, data flash Register Form disalin ke flash data skrining dengan penanda `"skrining mandiri"` (default `true` bila tidak diisi).
+Saat modal **Berhasil Daftar** muncul, Register Form membaca penanda `"skrining mandiri"`. Nilai default dan kosong dianggap `false`.
 
-- Tidak diisi atau bernilai `true` — `countdownDuration` dipakai sebagai konfirmasi sebelum pindah ke form skrining. Jika tidak dibatalkan, hitung mundur berlanjut otomatis. Membatalkan hitung mundur mengakhiri alur dan menutup modal.
-- Bernilai `"false"` (string) — tidak ada hitung mundur; tombol **Isi Skrining** langsung menjadi konfirmasi. Di panel Flash Data, tulis sebagai string karena panel hanya menerima nilai string/angka.
+- **`true`** — Dandelion menyalin data flash ke skrining, menampilkan hitung mundur, lalu membantu perpindahan: klik tombol lanjut situs, klik **Mulai Pemeriksaan**, dan konfirmasi tanggal pemeriksaan. Jika hitung mundur dibatalkan, alur berhenti dan data handoff tidak dipakai.
+- **`false` atau kosong** — tidak ada penyalinan data flash dan tidak ada hitung mundur. Panel ringkasan tetap muncul; tombol **Isi Skrining** atau **Bantu Isi Skrining Mandiri** tidak memulai handoff. Sesi registrasi dianggap selesai, dan pengguna menentukan langkah berikutnya sendiri.
 - Setelah pindah, Dandelion hanya memasang panel awal sesuai halaman tujuan (panel Zen/Zero di halaman daftar, atau panel isi formulir di halaman skrining). Tidak ada pengisian otomatis yang dimulai.
 - Data handoff hanya dipakai sekali: setelah panel skrining pertama dipasang, data flash tersebut dibersihkan.
 

@@ -86,12 +86,15 @@ describe('isRegisterFormResumable', () => {
 });
 
 describe('isSkriningMandiri', () => {
-  it('defaults to true', () => {
-    expect(isSkriningMandiri(null)).toBe(true);
+  it('defaults to false', () => {
+    expect(isSkriningMandiri(null)).toBe(false);
+    expect(isSkriningMandiri({})).toBe(false);
+    expect(isSkriningMandiri({ 'skrining mandiri': '' })).toBe(false);
   });
 
   it('accepts the top-level flash flag', () => {
     expect(isSkriningMandiri({ 'skrining mandiri': true })).toBe(true);
+    expect(isSkriningMandiri({ 'skrining mandiri': 'true' })).toBe(true);
     expect(isSkriningMandiri({ 'skrining mandiri': false })).toBe(false);
   });
 

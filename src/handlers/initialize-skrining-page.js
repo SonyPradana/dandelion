@@ -5,6 +5,7 @@ import { initialize as initializeNotChecked } from './skrining-form-not-checked.
 import { store } from '../store.js';
 import { isFeatureEnabled } from '../quota/quota-manager.js';
 import { clearFlashData } from '../utils/flashSession.js';
+import { bootstrapSkriningGate } from './skriningform/bootstrap-gate.js';
 
 let initializedUrl = null;
 
@@ -17,9 +18,20 @@ let initializedUrl = null;
  * @returns {Promise<'not-checked'|'form-skrining'|'skrining'|'already'|null>}
  */
 export async function initializeSkriningPage(flashData = {}, { autoAssist = true } = {}) {
-  const url = window.location.href;
-  if (initializedUrl === url) return 'already';
+  const initialUrl = window.location.href;
+  if (initializedUrl === initialUrl) {
+    if (flashData?._source === 'register-form') await clearFlashData();
+    return 'already';
+  }
 
+  const fromRegisterForm = flashData?._source === 'register-form';
+  const redirectAllowed =
+    flashData?.['skrining mandiri'] === true || flashData?.['skrining mandiri'] === 'true';
+  if (fromRegisterForm && redirectAllowed && isFeatureEnabled('skriningform')) {
+    await bootstrapSkriningGate(flashData);
+  }
+
+  const url = window.location.href;
   const config = await store.getActiveConfig();
 
   if (
@@ -37,7 +49,6 @@ export async function initializeSkriningPage(flashData = {}, { autoAssist = true
     url.includes(config.formSkrining.url) &&
     isFeatureEnabled('skriningform')
   ) {
-    const fromRegisterForm = flashData?._source === 'register-form';
     const shouldAutoAssist = autoAssist && !fromRegisterForm;
     await initializeSkriningForm(flashData, undefined, { autoAssist: shouldAutoAssist });
     if (fromRegisterForm) await clearFlashData();

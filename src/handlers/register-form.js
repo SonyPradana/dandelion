@@ -228,34 +228,32 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       }
 
       /**
-       * @param {{ handoff: Object, mandiri: boolean, ticket: string|null }} params
+       * @param {{ handoff: Object, ticket: string|null }} params
        * @returns {Promise<void>}
        */
-      async function startHandoff({ handoff, mandiri, ticket }) {
+      async function startHandoff({ handoff, ticket }) {
         if (handingOff || finished) return;
         handingOff = true;
         recapPanel?.remove();
         recapPanel = null;
 
         try {
-          if (mandiri) {
-            const cd = notify.countdown(
-              'Skrining Mandiri',
-              ticket
-                ? `No. Tiket: ${ticket} — lanjut ke formulir skrining?`
-                : 'Lanjut ke formulir skrining?',
-              countdownDuration,
-              { keepOpenOnTimeout: true },
-            );
-            countdown = cd;
-            const ok = await cd.promise;
-            countdown = null;
-            if (!ok) {
-              await finish('cancelled', { closeModal: true });
-              return;
-            }
-            cd.close();
+          const cd = notify.countdown(
+            'Skrining Mandiri',
+            ticket
+              ? `No. Tiket: ${ticket} — lanjut ke formulir skrining?`
+              : 'Lanjut ke formulir skrining?',
+            countdownDuration,
+            { keepOpenOnTimeout: true },
+          );
+          countdown = cd;
+          const ok = await cd.promise;
+          countdown = null;
+          if (!ok) {
+            await finish('cancelled', { closeModal: true });
+            return;
           }
+          cd.close();
 
           if (finished) return;
 
@@ -277,14 +275,19 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
 
           const navigated = await waitForPageChange(previousUrl);
           if (!navigated) {
+            await clearFlashData();
             notify.info('Register Form', 'Halaman skrining tidak terdeteksi', 3000);
             return;
           }
 
           const page = await initializeSkriningPage(handoff, { autoAssist: false });
-          if (!page) notify.info('Register Form', 'Halaman skrining belum dikenali', 3000);
+          if (!page) {
+            await clearFlashData();
+            notify.info('Register Form', 'Halaman skrining belum dikenali', 3000);
+          }
         } catch (error) {
           console.error('[Dandelion] Skrining handoff failed:', error);
+          await clearFlashData();
           notify.info('Register Form', 'Gagal membuka halaman skrining', 3000);
           await finish('error', { closeModal: true });
         }
@@ -297,15 +300,24 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
        */
       async function showRecap(ticket, flashData) {
         const mandiri = isSkriningMandiri(flashData);
-        const handoff = {
-          pinneds: { ...(flashData?.pinneds || {}) },
-          'skrining mandiri': mandiri,
-          _source: SKRINING_SOURCE,
-        };
-        await setFlashData(handoff);
         await clearRegisterFormFlashData();
         await clearRegisterFormStep();
         document.getElementById('dandelion-flash-data')?.remove();
+
+        if (mandiri) {
+          const handoff = {
+            pinneds: { ...(flashData?.pinneds || {}) },
+            'skrining mandiri': true,
+            _source: SKRINING_SOURCE,
+          };
+          await setFlashData(handoff);
+          const pending = new Promise((resolve) => {
+            recapResolve = resolve;
+          });
+          void startHandoff({ handoff, ticket });
+          await pending;
+          return;
+        }
 
         const recap = notify.action(
           'Register Form',
@@ -330,7 +342,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
               type: 'success',
               autoClose: false,
               onClick: () => {
-                void startHandoff({ handoff, mandiri, ticket });
+                void finish('closed');
               },
             },
             {
@@ -356,9 +368,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
 
           const label = target.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
           if (label.includes('isi skrining')) {
-            event.preventDefault();
-            event.stopPropagation();
-            void startHandoff({ handoff, mandiri, ticket });
+            void finish('closed');
           } else if (label === 'tutup') {
             void finish('closed');
           }
@@ -368,14 +378,6 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
         let missingTicks = 0;
         watcher = setInterval(() => {
           if (finished) return;
-          if (handingOff) {
-            if (!findRegistrationSuccessModal()) {
-              clearInterval(watcher);
-              watcher = null;
-              void finish('closed');
-            }
-            return;
-          }
           if (!isRecapPanelMounted(recapPanel)) {
             clearInterval(watcher);
             watcher = null;
@@ -627,7 +629,6 @@ export function isRecapPanelMounted(recapPanel) {
  */
 export function isSkriningMandiri(flashData) {
   const raw = flashData?.['skrining mandiri'] ?? flashData?.pinneds?.['skrining mandiri'];
-  if (raw === undefined || raw === null || raw === '') return true;
   return raw === true || raw === 'true';
 }
 

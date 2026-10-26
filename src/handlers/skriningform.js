@@ -123,7 +123,11 @@ export async function initializeSkriningForm(
     }
   }
 
-  if (flashData.pinneds && Object.keys(flashData.pinneds).length > 0) {
+  if (
+    flashData._source !== 'register-form' &&
+    flashData.pinneds &&
+    Object.keys(flashData.pinneds).length > 0
+  ) {
     notify.info('Flash Data', 'Flash data active for this session', 2500);
   }
 
