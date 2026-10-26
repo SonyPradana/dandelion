@@ -6,6 +6,7 @@ import { store } from '../store.js';
 import { isFeatureEnabled } from '../quota/quota-manager.js';
 import { clearFlashData, REGISTER_FORM_SOURCE, isSkriningMandiri } from '../utils/flashSession.js';
 import { bootstrapSkriningGate } from './skriningform/bootstrap-gate.js';
+import { notify } from '../components/notification';
 
 let initializedUrl = null;
 
@@ -45,7 +46,13 @@ export async function initializeSkriningPage(flashData = {}, { autoAssist = true
   ) {
     if (fromRegisterForm && isSkriningMandiri(flashData)) {
       const gate = await bootstrapSkriningGate(flashData);
-      if (gate === 'no-modal' || gate === 'no-simpan') {
+      if (gate === 'date-fallback') {
+        notify.info(
+          'Skrining Mandiri',
+          'Tanggal pemeriksaan tidak bisa dipilih — memakai tanggal default',
+          4000,
+        );
+      } else if (gate === 'no-modal' || gate === 'no-simpan') {
         console.warn(`[Dandelion] Skrining gate needs manual confirmation: ${gate}`);
       }
     }

@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   initializeNotChecked: vi.fn(),
   bootstrapSkriningGate: vi.fn(),
   clearFlashData: vi.fn(),
+  notify: { info: vi.fn() },
   config: { value: {} },
   features: new Set(),
 }));
@@ -37,6 +38,9 @@ vi.mock('../../src/utils/flashSession.js', () => ({
 }));
 vi.mock('../../src/handlers/skriningform/bootstrap-gate.js', () => ({
   bootstrapSkriningGate: mocks.bootstrapSkriningGate,
+}));
+vi.mock('../../src/components/notification', () => ({
+  notify: mocks.notify,
 }));
 
 async function loadRouter() {
@@ -124,6 +128,17 @@ describe('initializeSkriningPage', () => {
     });
 
     expect(mocks.bootstrapSkriningGate).not.toHaveBeenCalled();
+  });
+
+  it('tells the user when the flash date cannot be selected', async () => {
+    window.history.replaceState({}, '', '/form-skrining');
+    mocks.config.value = { formSkrining: { url: '/form-skrining' } };
+    mocks.bootstrapSkriningGate.mockResolvedValue('date-fallback');
+    const { initializeSkriningPage } = await loadRouter();
+
+    await initializeSkriningPage({ _source: 'register-form', 'skrining mandiri': true });
+
+    expect(mocks.notify.info).toHaveBeenCalledOnce();
   });
 
   it('does not bootstrap the gate outside the skrining form', async () => {

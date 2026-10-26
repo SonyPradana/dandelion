@@ -29,7 +29,7 @@ Fitur untuk mempercepat pengisian formulir pendaftaran peserta — dari data ide
 
 Saat modal **Berhasil Daftar** muncul, Register Form membaca penanda `"skrining mandiri"`. Nilai default dan kosong dianggap `false`.
 
-- **`true`** — Dandelion menyalin data flash ke skrining, menampilkan hitung mundur, lalu membantu perpindahan: klik tombol lanjut situs, klik **Mulai Pemeriksaan**, dan konfirmasi tanggal pemeriksaan. Jika hitung mundur dibatalkan, alur berhenti dan data handoff tidak dipakai.
+- **`true`** — Dandelion menyalin data flash ke skrining, menampilkan hitung mundur, lalu membantu perpindahan: klik tombol lanjut situs, klik **Mulai Pemeriksaan**, dan konfirmasi tanggal pemeriksaan. Jika `"tanggal pemeriksaan"` tidak bisa dipilih di kalender situs, Dandelion tetap menekan **Simpan** dengan tanggal default dan memberi tahu pengguna. Jika hitung mundur dibatalkan, alur berhenti dan data handoff tidak dipakai.
 - **`false` atau kosong** — tidak ada penyalinan data flash dan tidak ada hitung mundur. Panel ringkasan tetap muncul; tombol **Isi Skrining** atau **Bantu Isi Skrining Mandiri** tidak memulai handoff. Sesi registrasi dianggap selesai, dan pengguna menentukan langkah berikutnya sendiri.
 - Setelah pindah, Dandelion hanya memasang panel awal sesuai halaman tujuan (panel Zen/Zero di halaman daftar, atau panel isi formulir di halaman skrining). Tidak ada pengisian otomatis yang dimulai.
 - Data handoff hanya dipakai sekali: setelah panel skrining pertama dipasang, data flash tersebut dibersihkan.

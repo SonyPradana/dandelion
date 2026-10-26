@@ -159,28 +159,30 @@ export async function selectDateInModal(modal, target) {
  * @param {Element} modal
  * @param {Record<string, any>} flashData
  * @param {number} simpanTimeout
- * @returns {Promise<'no-simpan'|'done'>}
+ * @returns {Promise<'no-simpan'|'date-fallback'|'done'>}
  */
 async function confirmDateModal(modal, flashData, simpanTimeout) {
   const value = flashData?.pinneds?.['tanggal pemeriksaan'] ?? flashData?.['tanggal pemeriksaan'];
   const date = parseExaminationDate(value);
-  if (date) await selectDateInModal(modal, date);
+  const selected = date ? await selectDateInModal(modal, date) : false;
 
   const simpan = await waitFor(() => findButton('Simpan', modal), simpanTimeout);
   if (!simpan) return 'no-simpan';
 
   simpan.click();
   await waitFor(() => !findDateModal(), 5000);
-  return 'done';
+  return date && !selected ? 'date-fallback' : 'done';
 }
 
 /**
  * Click the site's skrining gate and confirm the examination date.
  * Missing gate/date controls are left for the user to handle manually.
+ * An unselectable flash date still confirms with the modal default and is
+ * reported as 'date-fallback' so the caller can tell the user.
  *
  * @param {Record<string, any>} flashData
  * @param {{ gateTimeout?: number, modalTimeout?: number, simpanTimeout?: number }} [timeouts]
- * @returns {Promise<'no-gate'|'no-modal'|'no-simpan'|'done'>}
+ * @returns {Promise<'no-gate'|'no-modal'|'no-simpan'|'date-fallback'|'done'>}
  */
 export async function bootstrapSkriningGate(
   flashData,

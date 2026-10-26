@@ -123,6 +123,17 @@ describe('bootstrapSkriningGate', () => {
     await expect(bootstrapSkriningGate({})).resolves.toBe('done');
   });
 
+  it('reports a fallback when the flash date cannot be selected', async () => {
+    const modal = makeModal();
+    dayButton(modal, 26)?.classList.add('cursor-not-allowed');
+    const simpan = wireSimpan(modal);
+
+    await expect(
+      bootstrapSkriningGate({ pinneds: { 'tanggal pemeriksaan': '26-10-2026' } }),
+    ).resolves.toBe('date-fallback');
+    expect(simpan.isConnected).toBe(false);
+  });
+
   it('leaves the page alone when the gate is missing', async () => {
     await expect(bootstrapSkriningGate({}, { gateTimeout: 50 })).resolves.toBe('no-gate');
   });
