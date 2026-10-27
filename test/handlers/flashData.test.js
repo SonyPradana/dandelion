@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { store } from '../../src/store';
 import { MemoryBackend } from '../__support__/memory-backend';
 import { getFlashDataIfEnabled, showFlashDataPanelIfEnabled } from '../../src/handlers/flashData';
+import { notify } from '../../src/components/notification';
 
 vi.mock('../../src/components/flashPanel', () => ({
   showFlashDataPanel: vi.fn(),
@@ -53,6 +54,20 @@ describe('flashData', () => {
 
       await expect(getFlashDataIfEnabled()).resolves.toEqual(flashData);
       spy.mockRestore();
+    });
+
+    it('should read flash data from the injected store', async () => {
+      const flashData = { pinneds: { foo: 'bar' }, _timestamp: Date.now() };
+      const injectedStore = {
+        getActiveConfig: vi.fn().mockResolvedValue({
+          flashData: { enabled: true, maxAge: 600_000 },
+        }),
+        storageGet: vi.fn().mockResolvedValue(flashData),
+        storageRemove: vi.fn(),
+      };
+
+      await expect(getFlashDataIfEnabled(injectedStore)).resolves.toEqual(flashData);
+      expect(injectedStore.storageGet).toHaveBeenCalledWith('flash_data');
     });
 
     it('should return {} when no flash data exists', async () => {
@@ -140,6 +155,52 @@ describe('flashData', () => {
       await showFlashDataPanelIfEnabled();
       expect(showFlashDataPanel).not.toHaveBeenCalled();
       spy.mockRestore();
+    });
+
+    it('should contain storage read failures and notify the user', async () => {
+      const configSpy = vi.spyOn(store, 'getActiveConfig').mockResolvedValue({
+        flashData: { enabled: true, maxAge: 600_000 },
+      });
+      const storageSpy = vi
+        .spyOn(store, 'storageGet')
+        .mockRejectedValue(new Error('storage read failed'));
+      const infoSpy = vi.spyOn(notify, 'info').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await expect(showFlashDataPanelIfEnabled()).resolves.toBeUndefined();
+
+      expect(showFlashDataPanel).not.toHaveBeenCalled();
+      expect(infoSpy).toHaveBeenCalledWith('Flash Data', 'Data Flash tidak dapat dimuat');
+      configSpy.mockRestore();
+      storageSpy.mockRestore();
+      infoSpy.mockRestore();
+      consoleSpy.mockRestore();
+    });
+
+    it('should contain storage write failures and notify the user', async () => {
+      await store.storageSet('flash_data', {
+        _source: 'register-form',
+        'skrining mandiri': true,
+        pinneds: { NIK: '123', 'skrining mandiri': true },
+        _timestamp: Date.now(),
+      });
+      const configSpy = vi.spyOn(store, 'getActiveConfig').mockResolvedValue({
+        flashData: { enabled: true, maxAge: 600_000 },
+      });
+      const storageSpy = vi
+        .spyOn(store, 'storageSet')
+        .mockRejectedValue(new Error('storage write failed'));
+      const infoSpy = vi.spyOn(notify, 'info').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await expect(showFlashDataPanelIfEnabled()).resolves.toBeUndefined();
+
+      expect(showFlashDataPanel).not.toHaveBeenCalled();
+      expect(infoSpy).toHaveBeenCalledWith('Flash Data', 'Data Flash tidak dapat dimuat');
+      configSpy.mockRestore();
+      storageSpy.mockRestore();
+      infoSpy.mockRestore();
+      consoleSpy.mockRestore();
     });
   });
 });
