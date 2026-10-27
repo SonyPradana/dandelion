@@ -40,6 +40,19 @@ import { initializeSkriningPage } from './initialize-skrining-page.js';
 
 const SKRINING_SOURCE = REGISTER_FORM_SOURCE;
 
+/**
+ * @param {Record<string, any>|null} flashData
+ */
+export function createSkriningHandoff(flashData) {
+  const pinneds = { ...(flashData?.pinneds || {}) };
+  delete pinneds['skrining mandiri'];
+  return {
+    pinneds,
+    'skrining mandiri': true,
+    _source: SKRINING_SOURCE,
+  };
+}
+
 let isRegisterFormRunning = false;
 let registerFormAbort = false;
 let cancelActiveRun = null;
@@ -234,32 +247,34 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       }
 
       /**
-       * @param {{ handoff: Object, ticket: string|null }} params
+       * @param {{ handoff: Object, ticket: string|null, withCountdown?: boolean }} params
        * @returns {Promise<void>}
        */
-      async function startHandoff({ handoff, ticket }) {
+      async function startHandoff({ handoff, ticket, withCountdown = true }) {
         if (handingOff || finished) return;
         handingOff = true;
         recapPanel?.remove();
         recapPanel = null;
 
         try {
-          const cd = notify.countdown(
-            'Skrining Mandiri',
-            ticket
-              ? `No. Tiket: ${ticket} — lanjut ke formulir skrining?`
-              : 'Lanjut ke formulir skrining?',
-            countdownDuration,
-            { keepOpenOnTimeout: true },
-          );
-          countdown = cd;
-          const ok = await cd.promise;
-          countdown = null;
-          if (!ok) {
-            await finish('cancelled', { closeModal: true });
-            return;
+          if (withCountdown) {
+            const cd = notify.countdown(
+              'Skrining Mandiri',
+              ticket
+                ? `No. Tiket: ${ticket} — lanjut ke formulir skrining?`
+                : 'Lanjut ke formulir skrining?',
+              countdownDuration,
+              { keepOpenOnTimeout: true },
+            );
+            countdown = cd;
+            const ok = await cd.promise;
+            countdown = null;
+            if (!ok) {
+              await finish('cancelled', { closeModal: true });
+              return;
+            }
+            cd.close();
           }
-          cd.close();
 
           if (finished) return;
 
@@ -306,16 +321,12 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
        */
       async function showRecap(ticket, flashData) {
         const mandiri = isSkriningMandiri(flashData);
+        const handoff = createSkriningHandoff(flashData);
         await clearRegisterFormFlashData();
         await clearRegisterFormStep();
         document.getElementById('dandelion-flash-data')?.remove();
 
         if (mandiri) {
-          const handoff = {
-            pinneds: { ...(flashData?.pinneds || {}) },
-            'skrining mandiri': true,
-            _source: SKRINING_SOURCE,
-          };
           await setFlashData(handoff);
           // Suspend until `finish` runs: that keeps `cancelActiveRun` non-null,
           // so the run can still be aborted while the handoff is in flight.
@@ -325,6 +336,21 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
           void startHandoff({ handoff, ticket });
           await pending;
           return;
+        }
+
+        let manualHandoffStarted = false;
+        async function startManualHandoff() {
+          if (manualHandoffStarted || finished || handingOff) return;
+          manualHandoffStarted = true;
+          try {
+            await setFlashData(handoff);
+          } catch (error) {
+            console.error('[Dandelion] Skrining handoff failed:', error);
+            notify.info('Register Form', 'Gagal membuka halaman skrining', 3000);
+            await finish('closed', { closeModal: true });
+            return;
+          }
+          await startHandoff({ handoff, ticket, withCountdown: false });
         }
 
         const recap = notify.action(
@@ -350,7 +376,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
               type: 'success',
               autoClose: false,
               onClick: () => {
-                void finish('closed');
+                void startManualHandoff();
               },
             },
             {
@@ -376,7 +402,9 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
 
           const label = target.textContent.replace(/\s+/g, ' ').trim().toLowerCase();
           if (label.includes('isi skrining')) {
-            void finish('closed');
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            void startManualHandoff();
           } else if (label === 'tutup') {
             void finish('closed');
           }

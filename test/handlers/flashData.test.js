@@ -39,6 +39,22 @@ describe('flashData', () => {
       spy.mockRestore();
     });
 
+    it('should return a register-form handoff even when flashData is disabled', async () => {
+      const flashData = {
+        _source: 'register-form',
+        pinneds: { foo: 'bar' },
+        _timestamp: Date.now(),
+      };
+      await store.storageSet('flash_data', flashData);
+
+      const spy = vi.spyOn(store, 'getActiveConfig').mockResolvedValue({
+        flashData: { enabled: false, maxAge: 600_000 },
+      });
+
+      await expect(getFlashDataIfEnabled()).resolves.toEqual(flashData);
+      spy.mockRestore();
+    });
+
     it('should return {} when no flash data exists', async () => {
       const spy = vi.spyOn(store, 'getActiveConfig').mockResolvedValue({
         flashData: { enabled: true },
@@ -86,6 +102,32 @@ describe('flashData', () => {
       await showFlashDataPanelIfEnabled();
       expect(showFlashDataPanel).toHaveBeenCalledWith({
         initialData: { NIK: '', 'LPM|text': 'coba' },
+      });
+      spy.mockRestore();
+    });
+
+    it('should seed the panel from a register-form handoff and keep it as session data', async () => {
+      await store.storageSet('flash_data', {
+        _source: 'register-form',
+        'skrining mandiri': true,
+        pinneds: { NIK: '123', 'skrining mandiri': true },
+        _timestamp: Date.now(),
+      });
+
+      const spy = vi.spyOn(store, 'getActiveConfig').mockResolvedValue({
+        flashData: { enabled: true, maxAge: 600_000 },
+        zenMode: { defaultPinneds: { NIK: '', 'LPM|text': 'coba' } },
+      });
+
+      await showFlashDataPanelIfEnabled();
+
+      expect(showFlashDataPanel).toHaveBeenCalledWith({
+        initialData: { NIK: '123', 'LPM|text': 'coba' },
+        clearOnOpen: false,
+      });
+      expect(await store.storageGet('flash_data')).toEqual({
+        pinneds: { NIK: '123', 'LPM|text': 'coba' },
+        _timestamp: expect.any(Number),
       });
       spy.mockRestore();
     });

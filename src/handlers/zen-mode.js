@@ -60,7 +60,7 @@ export async function startZenAutomation() {
     'Zen Mode',
     `Ditemukan ${pendingIds.length} form aktif. Mulai Zen Mode?`,
   );
-  showFlashDataPanelIfEnabled();
+  await showFlashDataPanelIfEnabled();
 
   const confirmed = await confirmPromise;
 

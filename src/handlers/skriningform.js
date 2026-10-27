@@ -148,7 +148,10 @@ export async function initializeSkriningForm(
     const configPinneds = Object.fromEntries(
       Object.entries(fs.pinneds || {}).filter(([k]) => !k.includes('|number')),
     );
-    const pinneds = { ...configPinneds, ...flashData.pinneds };
+    const handoffPinneds = Object.fromEntries(
+      Object.entries(flashData.pinneds || {}).filter(([k]) => k !== 'skrining mandiri'),
+    );
+    const pinneds = { ...configPinneds, ...handoffPinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
     const seen = new Set();
 

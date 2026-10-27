@@ -105,4 +105,22 @@ describe('flashPanel', () => {
     const data = await store.getFlashData();
     expect(data).toEqual({ pinneds: { NIK: '123' }, _timestamp: expect.any(Number) });
   });
+
+  it('should clear stored data by default when opened', async () => {
+    const data = { pinneds: { keep: '1' }, _timestamp: Date.now() };
+    await store.setFlashData(data);
+
+    showFlashDataPanel();
+
+    expect(await store.getFlashData()).toBeNull();
+  });
+
+  it('should preserve stored data when clearOnOpen is false', async () => {
+    const data = { pinneds: { keep: '1' }, _timestamp: Date.now() };
+    await store.setFlashData(data);
+
+    showFlashDataPanel({ initialData: { NIK: '123' }, clearOnOpen: false });
+
+    expect(await store.getFlashData()).toEqual(data);
+  });
 });

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
+  createSkriningHandoff,
   detectCurrentStep,
   isRecapPanelMounted,
   isRegisterFormResumable,
@@ -97,5 +98,35 @@ describe('isRecapPanelMounted', () => {
 
   it('returns false when the handle is missing', () => {
     expect(isRecapPanelMounted(null)).toBe(false);
+  });
+});
+
+describe('createSkriningHandoff', () => {
+  it('authorizes a manual handoff and copies pinned data', () => {
+    expect(createSkriningHandoff({ pinneds: { nik: '123' }, 'skrining mandiri': false })).toEqual({
+      pinneds: { nik: '123' },
+      'skrining mandiri': true,
+      _source: 'register-form',
+    });
+  });
+
+  it('removes the handoff flag from pinned fields', () => {
+    expect(
+      createSkriningHandoff({
+        pinneds: { nik: '123', 'skrining mandiri': true },
+      }),
+    ).toEqual({
+      pinneds: { nik: '123' },
+      'skrining mandiri': true,
+      _source: 'register-form',
+    });
+  });
+
+  it('handles missing flash data', () => {
+    expect(createSkriningHandoff(null)).toEqual({
+      pinneds: {},
+      'skrining mandiri': true,
+      _source: 'register-form',
+    });
   });
 });

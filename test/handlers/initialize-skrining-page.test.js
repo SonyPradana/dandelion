@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   initializeNotChecked: vi.fn(),
   bootstrapSkriningGate: vi.fn(),
   clearFlashData: vi.fn(),
+  removeControl: vi.fn(),
   notify: { info: vi.fn() },
   config: { value: {} },
   features: new Set(),
@@ -41,6 +42,9 @@ vi.mock('../../src/handlers/skriningform/bootstrap-gate.js', () => ({
 }));
 vi.mock('../../src/components/notification', () => ({
   notify: mocks.notify,
+}));
+vi.mock('../../src/components/controlPanel.js', () => ({
+  controlPanel: { remove: mocks.removeControl },
 }));
 
 async function loadRouter() {
@@ -176,6 +180,26 @@ describe('initializeSkriningPage', () => {
 
     expect(page).toBe('not-checked');
     expect(mocks.initializeNotChecked).toHaveBeenCalledOnce();
+    expect(mocks.removeControl).toHaveBeenCalledWith('dandelion-register-form-btn');
+  });
+
+  it('bootstraps the gate before mounting the not-checked panel', async () => {
+    window.history.replaceState({}, '', '/pemeriksaan');
+    mocks.config.value = { notChecked: { url: '/pemeriksaan' } };
+    const { initializeSkriningPage } = await loadRouter();
+    const flashData = {
+      _source: 'register-form',
+      'skrining mandiri': true,
+      pinneds: { nik: '123' },
+    };
+
+    const page = await initializeSkriningPage(flashData);
+
+    expect(page).toBe('not-checked');
+    expect(mocks.bootstrapSkriningGate).toHaveBeenCalledWith(flashData);
+    expect(mocks.bootstrapSkriningGate.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.initializeNotChecked.mock.invocationCallOrder[0],
+    );
   });
 
   it('returns null when the URL matches nothing', async () => {

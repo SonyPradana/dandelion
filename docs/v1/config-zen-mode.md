@@ -25,6 +25,6 @@ Pengaturan untuk asisten Zen/Zero Mode dan panel flash data yang muncul di halam
 
 <!-- config-section:zen-mode-flash-template -->
 
-- **`zenMode.defaultPinneds`** — isi awal panel Flash Data saat panel dibuka pada Mode Zen / Zero Mode (objek JSON: nama kolom → nilai). Efek: panel langsung terisi template ini, tinggal disesuaikan. Default `{}` (kosong). Contoh: `{"key": ""}`.
+- **`zenMode.defaultPinneds`** — isi awal panel Flash Data saat panel dibuka pada Mode Zen / Zero Mode (objek JSON: nama kolom → nilai). Efek: panel langsung terisi template ini, tinggal disesuaikan. Jika ada handoff Register Form, datanya digabung dan menang atas template. Default `{}` (kosong). Contoh: `{"key": ""}`.
 
 > **Catatan data**: isi template hanya dengan data yang Anda ketahui benar, dan jangan bagikan berkas konfigurasi yang sudah terisi.
