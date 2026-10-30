@@ -20,7 +20,8 @@ Fitur otomasi untuk memproses daftar pemeriksaan baris demi baris pada halaman d
 | **Zen**  | diproses    | dilewati, tidak dihitung                    |
 | **Zero** | diproses    | **dihitung sebagai pekerjaan yang selesai** |
 
-- Pilih mode sesuai ketentuan kerja yang berlaku.
+- Pilih mode sesuai ketentuan kerja yang berlaku. Saat masuk dari **Isi Skrining** di Register Form, Dandelion membantu **Mulai Pemeriksaan** dan konfirmasi tanggal lebih dulu, lalu memasang panel Zen/Zero — otomasi tidak langsung dimulai.
+- Jika panel Flash Data aktif, data handoff Register Form menjadi isi awal panel Zen/Zero dan tetap dipakai form skrining berikutnya.
 - Berlaku **5 poin** per baris yang diproses Zen Mode dan **5 poin** per baris "Tidak Periksa" yang diproses Zero Mode — daftar bobot di [Penerapan](/doc/v1/penerapan).
 - Progres dan kendali (hentikan/lanjut) selalu di tangan petugas.
 

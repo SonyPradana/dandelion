@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { detectCurrentStep, isRegisterFormResumable } from '../../../src/handlers/register-form.js';
+import {
+  createSkriningHandoff,
+  detectCurrentStep,
+  isRecapPanelMounted,
+  isRegisterFormResumable,
+} from '../../../src/handlers/register-form.js';
 
 function makeGreenStepper(count) {
   const stepper = document.createElement('div');
@@ -12,18 +17,12 @@ function makeGreenStepper(count) {
   document.body.appendChild(stepper);
 }
 
-function makeFormModal(buttonLabel) {
+function makeSuccessModal() {
   const modal = document.createElement('div');
-  modal.className =
-    'fixed top-0 left-0 z-1000 w-full h-full flex justify-center items-center backdrop-blur-5';
-  const header = document.createElement('div');
-  header.textContent = 'Formulir Pendaftaran';
-  modal.appendChild(header);
-  if (buttonLabel) {
-    const btn = document.createElement('button');
-    btn.textContent = buttonLabel;
-    modal.appendChild(btn);
-  }
+  modal.className = 'rounded-lg bg-white p-4';
+  const title = document.createElement('div');
+  title.textContent = 'Berhasil Daftar';
+  modal.appendChild(title);
   document.body.appendChild(modal);
   return modal;
 }
@@ -47,27 +46,13 @@ describe('detectCurrentStep', () => {
     expect(detectCurrentStep()).toBe('section-2');
   });
 
-  it('should return section-3 with three green bars', () => {
-    makeGreenStepper(3);
-    expect(detectCurrentStep()).toBe('section-3');
+  it('should return confirmation when the success modal is open', () => {
+    makeGreenStepper(2);
+    makeSuccessModal();
+    expect(detectCurrentStep()).toBe('confirmation');
   });
 
-  it('should return section-3 from open modal with Daftarkan with NIK button', () => {
-    makeFormModal('Daftarkan dengan NIK');
-    expect(detectCurrentStep()).toBe('section-3');
-  });
-
-  it('should return section-3 from open modal with Pilih button', () => {
-    makeFormModal('Pilih');
-    expect(detectCurrentStep()).toBe('section-3');
-  });
-
-  it('should return unknown from open modal without submit button', () => {
-    makeFormModal(null);
-    expect(detectCurrentStep()).toBe('unknown');
-  });
-
-  it('should return unknown when searchNik exists but no stepper/modal', () => {
+  it('should ignore legacy attendance signals', () => {
     const input = document.createElement('input');
     input.id = 'searchNik';
     document.body.appendChild(input);
@@ -94,15 +79,54 @@ describe('isRegisterFormResumable', () => {
     expect(isRegisterFormResumable()).toBe(true);
   });
 
-  it('should be true on section-3', () => {
-    makeGreenStepper(3);
+  it('should be true on confirmation', () => {
+    makeSuccessModal();
     expect(isRegisterFormResumable()).toBe(true);
   });
+});
 
-  it('should be false when searchNik exists (section-4 is not DOM-resumable)', () => {
-    const input = document.createElement('input');
-    input.id = 'searchNik';
-    document.body.appendChild(input);
-    expect(isRegisterFormResumable()).toBe(false);
+describe('isRecapPanelMounted', () => {
+  it('checks the panel element on the notify handle', () => {
+    const panel = document.createElement('div');
+    document.body.appendChild(panel);
+
+    expect(isRecapPanelMounted({ panel, remove: () => {} })).toBe(true);
+
+    panel.remove();
+    expect(isRecapPanelMounted({ panel, remove: () => {} })).toBe(false);
+  });
+
+  it('returns false when the handle is missing', () => {
+    expect(isRecapPanelMounted(null)).toBe(false);
+  });
+});
+
+describe('createSkriningHandoff', () => {
+  it('authorizes a manual handoff and copies pinned data', () => {
+    expect(createSkriningHandoff({ pinneds: { nik: '123' }, 'skrining mandiri': false })).toEqual({
+      pinneds: { nik: '123' },
+      'skrining mandiri': true,
+      _source: 'register-form',
+    });
+  });
+
+  it('removes the handoff flag from pinned fields', () => {
+    expect(
+      createSkriningHandoff({
+        pinneds: { nik: '123', 'skrining mandiri': true },
+      }),
+    ).toEqual({
+      pinneds: { nik: '123' },
+      'skrining mandiri': true,
+      _source: 'register-form',
+    });
+  });
+
+  it('handles missing flash data', () => {
+    expect(createSkriningHandoff(null)).toEqual({
+      pinneds: {},
+      'skrining mandiri': true,
+      _source: 'register-form',
+    });
   });
 });

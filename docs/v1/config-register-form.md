@@ -14,7 +14,7 @@ Pengaturan untuk fitur Registration Form: alur pendaftaran otomatis dengan retry
 
 - **`registerForm.retryMax`** — jumlah percobaan ulang maksimum per langkah bila elemen yang ditunggu belum muncul. Efek: habis percobaan, langkah dihentikan (alur bisa dilanjutkan dari langkah terakhir). Default `3`, rentang 1–10. Contoh: `5`.
 - **`registerForm.retryDelay`** — jeda antar percobaan ulang dalam milidetik. Efek: jeda lebih besar = lebih sabar menunggu halaman lambat, tapi alur jadi lebih lama. Default `2000`, rentang 500–10000 ms. Contoh: `3000`.
-- **`registerForm.countdownDuration`** — hitung mundur dalam milidetik sebelum alur dijalankan. Efek: Anda punya waktu membatalkan sebelum Dandelion mulai mengisi. Default `5000`, rentang 1000–30000 ms. Contoh: `10000`.
+- **`registerForm.countdownDuration`** — hitung mundur dalam milidetik sebagai konfirmasi sebelum pindah ke form skrining setelah pendaftaran berhasil. Hanya dipakai bila penanda `"skrining mandiri"` bernilai `true` (default `false`). Default `5000`, rentang 1000–30000 ms. Contoh: `10000`.
 
 ## Template Flash Data
 

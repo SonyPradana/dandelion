@@ -1,217 +1,136 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { submitSection3 } from '../../../src/handlers/register-form/submit-section-3.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+  submitSection3,
+  findRegistrationSuccessModal,
+  parseTicket,
+} from '../../../src/handlers/register-form/submit-section-3.js';
 
-function makeModal(text, buttons) {
+function makeSuccessModal(content = 'No. Tiket: ABC-123') {
   const outer = document.createElement('div');
-  outer.className = 'fixed flex justify-center items-center';
-
   const inner = document.createElement('div');
   inner.className = 'rounded-lg bg-white p-4';
-
-  const msg = document.createElement('div');
-  msg.textContent = text;
-  inner.appendChild(msg);
-
-  for (const label of buttons) {
-    const btn = document.createElement('button');
-    btn.textContent = label;
-    inner.appendChild(btn);
-  }
-
+  const title = document.createElement('div');
+  title.textContent = 'Berhasil Daftar';
+  const detail = document.createElement('div');
+  detail.textContent = content;
+  const close = document.createElement('button');
+  close.textContent = 'Tutup';
+  inner.append(title, detail, close);
   outer.appendChild(inner);
-  return outer;
+  document.body.appendChild(outer);
+  return inner;
 }
 
 describe('submitSection3', () => {
   beforeEach(() => {
     document.body.replaceChildren();
-    vi.useFakeTimers();
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
+  it('reads an already-open success modal without clicking Tutup', async () => {
+    const modal = makeSuccessModal();
+    const close = modal.querySelector('button');
+    const clickSpy = vi.fn();
+    close.addEventListener('click', clickSpy);
+
+    const result = await submitSection3();
+
+    expect(result.status).toBe('ok');
+    expect(result.ticket).toBe('ABC-123');
+    expect(clickSpy).not.toHaveBeenCalled();
   });
 
-  describe('full success', () => {
-    it('should complete the full flow and return true', async () => {
-      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
-      document.body.appendChild(modal);
+  it('waits for the success modal to appear', async () => {
+    setTimeout(makeSuccessModal, 50);
 
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Formulir Pendaftaran';
-        inner.appendChild(msg);
-        const daftarBtn = document.createElement('button');
-        daftarBtn.textContent = 'Daftarkan dengan NIK';
-        inner.appendChild(daftarBtn);
-      }, 800);
+    const result = await submitSection3(1000);
 
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Berhasil Daftar';
-        inner.appendChild(msg);
-        const tutupBtn = document.createElement('button');
-        tutupBtn.textContent = 'Tutup';
-        inner.appendChild(tutupBtn);
-        const ticketMsg = document.createElement('div');
-        ticketMsg.textContent = 'No. Tiket: 12345';
-        inner.appendChild(ticketMsg);
-      }, 1500);
-
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(3000);
-      expect(await promise).toBe(true);
-    });
+    expect(result.status).toBe('ok');
+    expect(result.ticket).toBe('ABC-123');
   });
 
-  describe('race condition: user clicks Tutup manually', () => {
-    it('should return true when success modal appears and disappears before handler finds Tutup', async () => {
-      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
-      document.body.appendChild(modal);
+  it('returns closed when the modal appears and disappears before polling', async () => {
+    const promise = submitSection3(1000);
 
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Formulir Pendaftaran';
-        inner.appendChild(msg);
-        const daftarBtn = document.createElement('button');
-        daftarBtn.textContent = 'Daftarkan dengan NIK';
-        inner.appendChild(daftarBtn);
-      }, 800);
+    setTimeout(() => {
+      const modal = makeSuccessModal();
+      setTimeout(() => modal.closest('div')?.remove(), 10);
+    }, 10);
 
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Berhasil Daftar';
-        inner.appendChild(msg);
-        // No Tutup button — simulate user seeing modal but handler can't find Tutup
-      }, 1500);
+    const result = await promise;
 
-      setTimeout(() => {
-        // User clicks Tutup manually — modal disappears
-        modal.remove();
-      }, 2500);
-
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(3500);
-      expect(await promise).toBe(true);
-    });
-
-    it('should return true when success modal appears with Tutup but user clicks first', async () => {
-      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
-      document.body.appendChild(modal);
-
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Formulir Pendaftaran';
-        inner.appendChild(msg);
-        const daftarBtn = document.createElement('button');
-        daftarBtn.textContent = 'Daftarkan dengan NIK';
-        inner.appendChild(daftarBtn);
-      }, 800);
-
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Berhasil Daftar';
-        inner.appendChild(msg);
-        const tutupBtn = document.createElement('button');
-        tutupBtn.textContent = 'Tutup';
-        inner.appendChild(tutupBtn);
-      }, 1500);
-
-      setTimeout(() => {
-        // User clicks Tutup manually before handler can
-        modal.remove();
-      }, 1700);
-
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(3000);
-      expect(await promise).toBe(true);
-    });
+    expect(result.status).toBe('closed');
   });
 
-  describe('failure cases', () => {
-    it('should return false when form modal never appears', async () => {
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(13_000);
-      expect(await promise).toBe(false);
-    });
+  it('returns missing when no success modal appears', async () => {
+    const result = await submitSection3(100);
 
-    it('should return false when Pilih button is not found in modal', async () => {
-      const modal = makeModal('Formulir Pendaftaran', ['Batal']);
-      document.body.appendChild(modal);
+    expect(result.status).toBe('missing');
+  });
+});
 
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(7000);
-      expect(await promise).toBe(false);
-    });
+describe('findRegistrationSuccessModal', () => {
+  beforeEach(() => {
+    document.body.replaceChildren();
+  });
 
-    it('should return false when Daftarkan button never appears', async () => {
-      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
-      document.body.appendChild(modal);
+  it('returns null when only other modals exist', () => {
+    const modal = document.createElement('div');
+    modal.className = 'rounded-lg bg-white p-4';
+    modal.textContent = 'Data peserta valid';
+    document.body.appendChild(modal);
 
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(20_000);
-      expect(await promise).toBe(false);
-    });
+    expect(findRegistrationSuccessModal()).toBeNull();
+  });
+});
 
-    it('should return false when success modal never appears', async () => {
-      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
-      document.body.appendChild(modal);
+describe('parseTicket', () => {
+  beforeEach(() => {
+    document.body.replaceChildren();
+  });
 
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Formulir Pendaftaran';
-        inner.appendChild(msg);
-        const daftarBtn = document.createElement('button');
-        daftarBtn.textContent = 'Daftarkan dengan NIK';
-        inner.appendChild(daftarBtn);
-      }, 800);
+  it('reads the No. Tiket text', () => {
+    expect(parseTicket(makeSuccessModal('No. Tiket: XYZ-9'))).toBe('XYZ-9');
+  });
 
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(20_000);
-      expect(await promise).toBe(false);
-    });
+  it('reads a Nomor Tiket label', () => {
+    const modal = makeSuccessModal('');
+    const row = document.createElement('div');
+    const label = document.createElement('div');
+    label.className = 'font-semibold';
+    label.textContent = 'Nomor Tiket:';
+    const value = document.createElement('div');
+    value.textContent = 'LMN-1';
+    row.append(label, value);
+    modal.appendChild(row);
 
-    it('should return false when Tutup button is missing and modal stays visible', async () => {
-      const modal = makeModal('Formulir Pendaftaran', ['Pilih']);
-      document.body.appendChild(modal);
+    expect(parseTicket(modal)).toBe('LMN-1');
+  });
 
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Formulir Pendaftaran';
-        inner.appendChild(msg);
-        const daftarBtn = document.createElement('button');
-        daftarBtn.textContent = 'Daftarkan dengan NIK';
-        inner.appendChild(daftarBtn);
-      }, 800);
+  it('returns null when the ticket is missing', () => {
+    expect(parseTicket(makeSuccessModal(''))).toBeNull();
+  });
 
-      setTimeout(() => {
-        const inner = modal.querySelector('.rounded-lg');
-        inner.replaceChildren();
-        const msg = document.createElement('div');
-        msg.textContent = 'Berhasil Daftar';
-        inner.appendChild(msg);
-        // No Tutup button!
-      }, 1500);
+  it('handles the site success modal markup with nested action buttons', () => {
+    const modal = document.createElement('div');
+    modal.className =
+      'w-[30%] max-h-full relative z-1000 rounded-lg bg-white p-4 shadow-gmail overflow-auto';
+    modal.innerHTML = `
+      <button><svg></svg></button>
+      <div class="p-2">
+        <div class="flex flex-col justify-center items-center gap-3 text-[20px] font-bold mb-7">
+          <div class="pb-2">Berhasil Daftar</div>
+          <div>No. Tiket: K9F-6CM</div>
+          <div class="w-full border-1">Pemeriksaan mandiri belum lengkap</div>
+        </div>
+        <div class="flex justify-center gap-2 font-600 text-base mt-4">
+          <button type="button"><div><div class="tracking-wide">Bantu Isi Skrining Mandiri</div></div></button>
+          <button type="button"><div><div class="tracking-wide">Tutup</div></div></button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
 
-      const promise = submitSection3();
-      await vi.advanceTimersByTimeAsync(20_000);
-      expect(await promise).toBe(false);
-    });
+    expect(findRegistrationSuccessModal()).toBe(modal);
+    expect(parseTicket(modal)).toBe('K9F-6CM');
   });
 });

@@ -1,8 +1,5 @@
-import { initializeSkriningForm } from './handlers/skriningform.js';
-import { initializeSkriningSend } from './handlers/skrining-send.js';
-import { initializeSkrining } from './handlers/skrining.js';
-import { initialize as initializeNotChecked } from './handlers/skrining-form-not-checked.js';
 import { initializeRegisterForm } from './handlers/register-form.js';
+import { initializeSkriningPage } from './handlers/initialize-skrining-page.js';
 import './handlers/skrining-events.js';
 import browser from '@bridge/browser';
 import { store } from './store.js';
@@ -15,6 +12,7 @@ import { initializeShareToken, isShareTokenUrl } from './handlers/shareToken.js'
 
 store.init(browser);
 
+/** Boot the content script after agreement, config, quota, and chain checks. */
 async function main() {
   const agreed = await store.getAgreement();
   if (!agreed) return;
@@ -43,34 +41,16 @@ async function main() {
 
 main();
 
+/** Route the current page to the matching skrining or register-form initializer. */
 async function initialize() {
   const currentURL = window.location.href;
   const config = await store.getActiveConfig();
 
   const flashData = await getFlashDataIfEnabled();
 
+  if (await initializeSkriningPage(flashData || {})) return;
+
   if (
-    config.notChecked?.url &&
-    currentURL.includes(config.notChecked.url) &&
-    (isFeatureEnabled('zen-mode') || isFeatureEnabled('skrining-form-not-checked'))
-  ) {
-    initializeNotChecked();
-  } else if (
-    config.formSkrining?.url &&
-    currentURL.includes(config.formSkrining.url) &&
-    isFeatureEnabled('skriningform')
-  ) {
-    initializeSkriningForm(flashData || {});
-    if (isFeatureEnabled('skrining-send')) {
-      initializeSkriningSend();
-    }
-  } else if (
-    config.skrining?.url &&
-    currentURL.includes(config.skrining.url) &&
-    isFeatureEnabled('skrining')
-  ) {
-    initializeSkrining(config.skrining);
-  } else if (
     config.registerForm?.url &&
     currentURL.includes(config.registerForm.url) &&
     isFeatureEnabled('registerForm')

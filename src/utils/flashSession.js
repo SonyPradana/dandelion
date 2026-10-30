@@ -2,6 +2,21 @@ import { store as globalStore } from '../store.js';
 
 const STORAGE_KEY = 'flash_data';
 
+/** Flash data carried over from the registration form. */
+export const REGISTER_FORM_SOURCE = 'register-form';
+
+/**
+ * Redirect to skrining is allowed only when the flash flag is explicitly true.
+ * Empty or false means the user is on their own.
+ *
+ * @param {Record<string, any>|null} [flashData]
+ * @returns {boolean}
+ */
+export function isSkriningMandiri(flashData) {
+  const raw = flashData?.['skrining mandiri'] ?? flashData?.pinneds?.['skrining mandiri'];
+  return raw === true || raw === 'true';
+}
+
 /**
  * @typedef {Object} FlashData
  * @property {Object.<string, string>} pinneds - Key-value pairs to override

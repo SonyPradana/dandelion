@@ -13,13 +13,14 @@ export function showFlashDataPanel({
   normalizeKey,
   validate,
   initialData,
+  clearOnOpen = true,
 } = {}) {
   const _setData = setData || setFlashData;
   const _clearData = clearData || clearFlashData;
   const existing = document.getElementById(PANEL_ID);
   if (existing) existing.remove();
 
-  _clearData();
+  if (clearOnOpen) _clearData();
 
   const { panel, contentArea, setHeader, remove } = createBasePanel(PANEL_ID);
 
