@@ -10,7 +10,7 @@ import { zenModeButton } from '../components/zenModeButton';
 import { skipButton } from '../components/skipButton';
 import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
-import { clearFlashData } from '../utils/flashSession';
+import { clearFlashData, REGISTER_FORM_SOURCE } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
 import { createProfileComponent } from '../components/profile';
 import bus from '../utils/hooks';
@@ -28,8 +28,15 @@ const FORM_DOM_RETRY_DELAY = 3000;
  * The countdown can be dismissed or overridden by manually pressing the button,
  * so the user always retains control over the action.
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {{ autoAssist?: boolean }} [options]
  */
-export async function initializeSkriningForm(flashData = {}, store = globalStore) {
+export async function initializeSkriningForm(
+  flashData = {},
+  store = globalStore,
+  { autoAssist = true } = {},
+) {
+  if (document.getElementById('dandelion-auto-fill')) return;
+
   let isDebugEnabled = false; // Initial state is off
   let dismissCountdown = null;
   let fillCancelled = false;
@@ -98,7 +105,7 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
 
     const activeConfig = await store.getActiveConfig();
     const zenConfig = activeConfig.zenMode || {};
-    if (zenConfig.enabled !== false) {
+    if (autoAssist && zenConfig.enabled !== false) {
       const timeout = Math.min(30_000, Math.max(500, zenConfig.timeout || 5000));
       const cd = notify.countdown('Zen Mode Asist', '⏳ menunggu...', timeout, {
         keepOpenOnTimeout: true,
@@ -116,7 +123,11 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     }
   }
 
-  if (flashData.pinneds && Object.keys(flashData.pinneds).length > 0) {
+  if (
+    flashData._source !== REGISTER_FORM_SOURCE &&
+    flashData.pinneds &&
+    Object.keys(flashData.pinneds).length > 0
+  ) {
     notify.info('Flash Data', 'Flash data active for this session', 2500);
   }
 
@@ -134,7 +145,10 @@ export async function initializeSkriningForm(flashData = {}, store = globalStore
     const respectInput = fs.respectInput === true;
     const ensureFill = fs.ensureFill === true;
 
-    const pinneds = { ...(fs.pinneds || {}), ...flashData.pinneds };
+    const handoffPinneds = Object.fromEntries(
+      Object.entries(flashData.pinneds || {}).filter(([k]) => k !== 'skrining mandiri'),
+    );
+    const pinneds = { ...(fs.pinneds || {}), ...handoffPinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
     const seen = new Set();
 

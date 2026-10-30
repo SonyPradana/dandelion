@@ -1,7 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { store, DandelionStore } from '../../src/store.js';
 import { MemoryBackend } from '../__support__/memory-backend.js';
-import { setFlashData, getFlashData, clearFlashData } from '../../src/utils/flashSession.js';
+import {
+  setFlashData,
+  getFlashData,
+  clearFlashData,
+  isSkriningMandiri,
+} from '../../src/utils/flashSession.js';
 
 describe('flashSession', () => {
   beforeEach(() => {
@@ -121,5 +126,24 @@ describe('flashSession', () => {
       await clearFlashData();
       expect(await getFlashData()).toBeNull();
     });
+  });
+});
+
+describe('isSkriningMandiri', () => {
+  it('defaults to false', () => {
+    expect(isSkriningMandiri(null)).toBe(false);
+    expect(isSkriningMandiri({})).toBe(false);
+    expect(isSkriningMandiri({ 'skrining mandiri': '' })).toBe(false);
+  });
+
+  it('accepts the top-level flash flag', () => {
+    expect(isSkriningMandiri({ 'skrining mandiri': true })).toBe(true);
+    expect(isSkriningMandiri({ 'skrining mandiri': 'true' })).toBe(true);
+    expect(isSkriningMandiri({ 'skrining mandiri': false })).toBe(false);
+  });
+
+  it('accepts the flag from pinneds', () => {
+    expect(isSkriningMandiri({ pinneds: { 'skrining mandiri': 'true' } })).toBe(true);
+    expect(isSkriningMandiri({ pinneds: { 'skrining mandiri': 'false' } })).toBe(false);
   });
 });

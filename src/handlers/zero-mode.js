@@ -71,7 +71,7 @@ export async function startZeroAutomation() {
       pendingIds.length - skipCount
     } diisi). Mulai Zero Mode?`,
   );
-  showFlashDataPanelIfEnabled();
+  await showFlashDataPanelIfEnabled();
 
   const confirmed = await confirmPromise;
 

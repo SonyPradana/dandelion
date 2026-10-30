@@ -99,6 +99,22 @@ describe('skriningform', () => {
       const debugBtn = document.getElementById('dandelion-debug-toggle');
       expect(debugBtn).toBeTruthy();
     });
+
+    it('should not mount the panel twice', async () => {
+      await initializeSkriningForm();
+      await initializeSkriningForm();
+
+      expect(document.querySelectorAll('#dandelion-auto-fill')).toHaveLength(1);
+    });
+
+    it('should not auto-start Zen assist when autoAssist is false', async () => {
+      isZenModeActive.mockResolvedValueOnce(true);
+
+      await initializeSkriningForm({}, undefined, { autoAssist: false });
+
+      expect(mockNotify.countdown).not.toHaveBeenCalled();
+      expect(document.getElementById('dandelion-zen-mode-toggle')).toBeTruthy();
+    });
   });
 
   describe('radio button filling', () => {
