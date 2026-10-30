@@ -231,8 +231,8 @@ describe('skriningform', () => {
               radioButtonKeywords: '',
               dropdownKeywords: '',
               pinneds: {
-                'abcxyz000123|defuvw000456|ghi000789|text': 'X',
-                'abcxyz000123|defuvw000456|ghi000790|text': 'Y',
+                xx1234: 'X',
+                xx1235: 'Y',
               },
               ensureFill: true,
             },
@@ -275,7 +275,7 @@ describe('skriningform', () => {
 
       await initializeSkriningForm({
         pinneds: {
-          'abcxyz000123|defuvw000456|ghi000789|text': 'Opsi B',
+          xx1234: 'Opsi B',
         },
       });
 
@@ -291,14 +291,37 @@ describe('skriningform', () => {
   });
 
   describe('number input', () => {
-    it('should fill pinned number field when provided', async () => {
+    it('should fill pinned number field from flash data', async () => {
       vi.useFakeTimers();
       await initializeSkriningForm({
         pinneds: {
-          'abcxyz000123|defuvw000456|jkl000791|number': '65',
+          xx1236: '65',
         },
       });
 
+      await clickAutoFill();
+
+      const numberInput = document.querySelector('input[type="number"]');
+      expect(numberInput.value).toBe('65');
+    });
+
+    it('should fill pinned number field from config', async () => {
+      vi.useFakeTimers();
+      await store.setConfig({
+        activeProfile: 'profile1',
+        profiles: {
+          profile1: {
+            name: 'Default Profile',
+            formSkrining: {
+              radioButtonKeywords: '',
+              dropdownKeywords: '',
+              pinneds: { xx1236: '65' },
+            },
+          },
+        },
+      });
+
+      await initializeSkriningForm();
       await clickAutoFill();
 
       const numberInput = document.querySelector('input[type="number"]');
@@ -359,7 +382,7 @@ describe('skriningform', () => {
 
         await initializeSkriningForm({
           pinneds: {
-            'abcxyz000123|defuvw000456|jkl000791|number': '65',
+            xx1236: '65',
           },
         });
         await clickAutoFill();
@@ -389,7 +412,7 @@ describe('skriningform', () => {
 
         await initializeSkriningForm({
           pinneds: {
-            'abcxyz000123|defuvw000456|jkl000791|number': '65',
+            xx1236: '65',
           },
         });
         await clickAutoFill();

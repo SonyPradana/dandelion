@@ -145,13 +145,10 @@ export async function initializeSkriningForm(
     const respectInput = fs.respectInput === true;
     const ensureFill = fs.ensureFill === true;
 
-    const configPinneds = Object.fromEntries(
-      Object.entries(fs.pinneds || {}).filter(([k]) => !k.includes('|number')),
-    );
     const handoffPinneds = Object.fromEntries(
       Object.entries(flashData.pinneds || {}).filter(([k]) => k !== 'skrining mandiri'),
     );
-    const pinneds = { ...configPinneds, ...handoffPinneds };
+    const pinneds = { ...(fs.pinneds || {}), ...handoffPinneds };
     const excludes = [...((fs.excludes && fs.excludes.split(';')) || []), ...Object.keys(pinneds)];
     const seen = new Set();
 
@@ -232,7 +229,7 @@ export async function initializeSkriningForm(
 
   /**
    * @param {string[]} config - List of radioInput konfuguration
-   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
+   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['xx1234'])
    */
   function fillRadioButtons(config, skipList = [], respectInput = false, seen = new Set()) {
     const allMatchingLabels = Array.from(
@@ -283,7 +280,7 @@ export async function initializeSkriningForm(
 
   /**
    * @param {string[]} config - List of radioInput konfuguration
-   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['LPMxxx|FRMxxx|PPMxxx|text'])
+   * @param {string[]} skipList - List of data-name attributes to skip (e.g., ['xx1234'])
    */
   async function fillDropdowns(config, skipList = [], respectInput = false, seen = new Set()) {
     const chevronButtons = Array.from(document.querySelectorAll('.sd-dropdown_chevron-button'));
