@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { store } from '../../src/store.js';
+import { store, DandelionStore } from '../../src/store.js';
 import { MemoryBackend } from '../__support__/memory-backend.js';
 
 let backend = null;
@@ -285,6 +285,84 @@ describe('config', () => {
     await store.setActiveProfile('profile2');
     const active = await store.getActiveConfig();
     expect(active.activeProfile).toBe('profile2');
+  });
+});
+
+describe('updateProfile', () => {
+  it('should serialize overlapping updates and persist every change', async () => {
+    await store.getFullConfig();
+    const seen = [];
+
+    await Promise.all([
+      store.updateProfile('profile1', (profile) => {
+        seen.push(profile.updateCount ?? 0);
+        profile.updateCount = (profile.updateCount ?? 0) + 1;
+      }),
+      store.updateProfile('profile1', (profile) => {
+        seen.push(profile.updateCount ?? 0);
+        profile.updateCount = (profile.updateCount ?? 0) + 1;
+      }),
+    ]);
+
+    expect(seen).toEqual([0, 1]);
+    const persisted = await backend.storage.local.get('profiles');
+    expect(persisted.profiles.profile1.updateCount).toBe(2);
+  });
+
+  it('should reject a missing profile without writing', async () => {
+    await store.getFullConfig();
+    const setSpy = vi.spyOn(store, 'setConfig');
+
+    await expect(store.updateProfile('missing', () => {})).rejects.toThrow('missing');
+    expect(setSpy).not.toHaveBeenCalled();
+  });
+
+  it('should keep working after a rejected update', async () => {
+    await store.getFullConfig();
+
+    await expect(store.updateProfile('missing', () => {})).rejects.toThrow('missing');
+
+    await expect(
+      store.updateProfile('profile1', (profile) => {
+        profile.ok = true;
+        return 'ok';
+      }),
+    ).resolves.toBe('ok');
+
+    const config = await store.getFullConfig();
+    expect(config.profiles.profile1.ok).toBe(true);
+  });
+});
+
+describe('multiple store instances', () => {
+  it('should keep each write in its bound profile across contexts', async () => {
+    const shared = new MemoryBackend({ clone: true });
+    const contextA = new DandelionStore();
+    const contextB = new DandelionStore();
+    contextA.init(shared);
+    contextB.init(shared);
+
+    await contextA.setConfig({
+      activeProfile: 'profile1',
+      profiles: { profile1: { name: 'Satu' }, profile2: { name: 'Dua' } },
+    });
+
+    await contextA.updateProfile('profile1', (profile) => {
+      profile.skrining = { ...(profile.skrining || {}), url: 'from-a' };
+    });
+
+    // A browser context learns about the other write through storage.onChanged.
+    await contextB.refreshConfig();
+    await contextB.updateProfile('profile2', (profile) => {
+      profile.skrining = { ...(profile.skrining || {}), url: 'from-b' };
+    });
+
+    const reader = new DandelionStore();
+    reader.init(shared);
+    const config = await reader.getFullConfig();
+
+    expect(config.profiles.profile1.skrining.url).toBe('from-a');
+    expect(config.profiles.profile2.skrining.url).toBe('from-b');
   });
 });
 
