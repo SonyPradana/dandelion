@@ -247,6 +247,7 @@ export const notify = {
         timer = setInterval(tick, 200);
         timeoutTimer = setTimeout(() => {
           if (resolved) return;
+          progressFill.style.width = '0%';
           _cleanup(keepOpenOnTimeout);
           _resolve(true);
         }, currentDuration);
