@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { store } from '../../src/store.js';
+import { describe, it, expect, vi } from 'vitest';
+import { store, DandelionStore } from '../../src/store.js';
 import { MemoryBackend } from '../__support__/memory-backend.js';
 import {
   getNotCheckedList,
@@ -114,6 +114,73 @@ describe('notChecked', () => {
       const list = await getNotCheckedList();
       expect(Array.isArray(list)).toBe(true);
       expect(list.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('profile binding', () => {
+    const baseConfig = () => ({
+      activeProfile: 'profile1',
+      profiles: {
+        profile1: { name: 'Profile 1', notChecked: { notCheckedList: 'a;b' } },
+        profile2: { name: 'Profile 2', notChecked: {} },
+      },
+    });
+
+    async function localStore() {
+      const local = new DandelionStore();
+      local.init(new MemoryBackend({ clone: true }));
+      await local.setConfig(baseConfig());
+      return local;
+    }
+
+    /**
+     * Returns a fresh clone and flips the active profile on the second read,
+     * simulating a profile switch between the helper's read and write.
+     */
+    function simulateProfileSwitch(local) {
+      const original = local.getFullConfig.bind(local);
+      let calls = 0;
+      local.getFullConfig = async () => {
+        const config = structuredClone(await original());
+        calls += 1;
+        if (calls === 2) config.activeProfile = 'profile2';
+        return config;
+      };
+    }
+
+    it('toggleNotCheckedItem should write to the profile that was active when it started', async () => {
+      const local = await localStore();
+      simulateProfileSwitch(local);
+
+      await toggleNotCheckedItem('x', local);
+
+      expect(await isInNotCheckedList('x', local, 'profile1')).toBe(true);
+      expect(await isInNotCheckedList('x', local, 'profile2')).toBe(false);
+    });
+
+    it('should serialize two concurrent toggles', async () => {
+      const local = await localStore();
+
+      await Promise.all([toggleNotCheckedItem('x', local), toggleNotCheckedItem('y', local)]);
+
+      expect(await isInNotCheckedList('x', local)).toBe(true);
+      expect(await isInNotCheckedList('y', local)).toBe(true);
+    });
+
+    it('should reject when the bound profile disappears mid-operation', async () => {
+      const local = await localStore();
+      const original = local.getFullConfig.bind(local);
+      let calls = 0;
+      local.getFullConfig = async () => {
+        const config = structuredClone(await original());
+        calls += 1;
+        if (calls === 2) delete config.profiles.profile1;
+        return config;
+      };
+      const setSpy = vi.spyOn(local, 'setConfig');
+
+      await expect(toggleNotCheckedItem('x', local)).rejects.toThrow('profile1');
+      expect(setSpy).not.toHaveBeenCalled();
     });
   });
 });

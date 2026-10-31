@@ -16,6 +16,7 @@ class DandelionStore {
   _backend = null;
   _configCache = null;
   _configGeneration = 0;
+  _updateChain = null;
 
   init(backend) {
     this._backend = backend;
@@ -156,6 +157,36 @@ class DandelionStore {
     const config = await this.getFullConfig();
     config.activeProfile = profileKey;
     await this.setConfig(config);
+  }
+
+  /**
+   * Reads one named profile, applies a synchronous mutation, and persists it.
+   * Calls are serialized per store instance, so two overlapping updates cannot
+   * drop each other's changes. The mutation always targets the profile key that
+   * was passed in, even if the active profile changes in between.
+   * @template T
+   * @param {string} profileKey
+   * @param {(profile: Object, config: Object) => T} mutator
+   * @returns {Promise<T>}
+   */
+  async updateProfile(profileKey, mutator) {
+    const run = async () => {
+      const config = await this.getFullConfig();
+      const profile = config.profiles?.[profileKey];
+      if (!profile) {
+        throw new Error(`Profile "${profileKey}" does not exist`);
+      }
+
+      const result = mutator(profile, config);
+      await this.setConfig(config);
+      return result;
+    };
+
+    const previous = this._updateChain ?? Promise.resolve();
+    const next = previous.then(run, run);
+    // Keep the chain usable after a rejected update.
+    this._updateChain = next.catch(() => {});
+    return next;
   }
 
   async onProfileSwitch(profileKey) {

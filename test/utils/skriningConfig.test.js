@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { store } from '../../src/store.js';
+import { describe, it, expect, vi } from 'vitest';
+import { store, DandelionStore } from '../../src/store.js';
 import { MemoryBackend } from '../__support__/memory-backend.js';
 import {
   getAnswers,
@@ -124,6 +124,85 @@ describe('skriningConfig', () => {
       await toggleSkriningExclude('answer8AA');
       const config = await store.getFullConfig();
       expect(config.profiles.profile1.skrining.url).toBe('skrining');
+    });
+  });
+
+  describe('profile binding', () => {
+    const baseConfig = () => ({
+      activeProfile: 'profile1',
+      profiles: {
+        profile1: { name: 'Profile 1', skrining: { url: 'skrining', answers: {}, excludes: '' } },
+        profile2: { name: 'Profile 2', skrining: { url: 'skrining', answers: {}, excludes: '' } },
+      },
+    });
+
+    async function localStore() {
+      const local = new DandelionStore();
+      local.init(new MemoryBackend({ clone: true }));
+      await local.setConfig(baseConfig());
+      return local;
+    }
+
+    /**
+     * Returns a fresh clone and flips the active profile on the second read,
+     * simulating a profile switch between the helper's read and write.
+     */
+    function simulateProfileSwitch(local) {
+      const original = local.getFullConfig.bind(local);
+      let calls = 0;
+      local.getFullConfig = async () => {
+        const config = structuredClone(await original());
+        calls += 1;
+        if (calls === 2) config.activeProfile = 'profile2';
+        return config;
+      };
+    }
+
+    it('addAnswer should write to the profile that was active when it started', async () => {
+      const local = await localStore();
+      simulateProfileSwitch(local);
+
+      await addAnswer('answer8AA', 'B', local);
+
+      expect(await getAnswers(local, 'profile1')).toEqual({ answer8AA: 'B' });
+      expect(await getAnswers(local, 'profile2')).toEqual({});
+    });
+
+    it('toggleSkriningExclude should write to the profile that was active when it started', async () => {
+      const local = await localStore();
+      simulateProfileSwitch(local);
+
+      await toggleSkriningExclude('answer8AA', local);
+
+      expect(await getSkriningExcludes(local, 'profile1')).toEqual(['answer8AA']);
+      expect(await getSkriningExcludes(local, 'profile2')).toEqual([]);
+    });
+
+    it('should serialize two concurrent excludes', async () => {
+      const local = await localStore();
+
+      await Promise.all([
+        toggleSkriningExclude('answer8AA', local),
+        toggleSkriningExclude('answer1BA', local),
+      ]);
+
+      expect(await getSkriningExcludes(local)).toEqual(['answer8AA', 'answer1BA']);
+    });
+
+    it('should reject when the bound profile disappears mid-operation', async () => {
+      const local = await localStore();
+      const original = local.getFullConfig.bind(local);
+      let calls = 0;
+      local.getFullConfig = async () => {
+        const config = structuredClone(await original());
+        calls += 1;
+        if (calls === 2) delete config.profiles.profile1;
+        return config;
+      };
+      const setSpy = vi.spyOn(local, 'setConfig');
+
+      await expect(toggleSkriningExclude('answer8AA', local)).rejects.toThrow('profile1');
+      expect(setSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -30,12 +30,21 @@ function createStore(skrining = {}) {
     profiles: { profile1: { name: 'Satu', skrining }, profile2: { name: 'Dua' } },
   };
 
-  return {
+  const store = {
     getFullConfig: vi.fn().mockResolvedValue(fullConfig),
     getActiveConfig: vi.fn().mockResolvedValue(fullConfig.profiles.profile1),
-    setConfig: vi.fn(),
+    setConfig: vi.fn().mockResolvedValue(undefined),
+    updateProfile: vi.fn(async (profileKey, mutator) => {
+      const profile = fullConfig.profiles[profileKey];
+      if (!profile) throw new Error(`Profile "${profileKey}" does not exist`);
+      const result = mutator(profile, fullConfig);
+      await store.setConfig(fullConfig);
+      return result;
+    }),
     onProfileSwitch: vi.fn().mockResolvedValue(undefined),
   };
+
+  return store;
 }
 
 async function mount(config = {}) {
