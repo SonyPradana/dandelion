@@ -16,12 +16,7 @@ body {
   display: flex;
   flex-direction: column;
   background: #f3f4f6;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: #111;
   overflow: hidden;
 }
