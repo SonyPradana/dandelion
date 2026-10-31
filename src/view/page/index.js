@@ -193,10 +193,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   let formDirty = false;
   let formActiveProfile = null;
 
-  document.getElementById('config-body').addEventListener('input', (event) => {
-    if (!event.isTrusted) return;
+  function markFormDirty() {
     formDirty = true;
     if (saveState !== 'idle') setSaveState('idle');
+  }
+
+  document.getElementById('config-body').addEventListener('input', (event) => {
+    if (!event.isTrusted) return;
+    markFormDirty();
   });
 
   const radioButtonKeywordsList = new KeywordList(
@@ -319,6 +323,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
@@ -333,6 +338,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.skrining?.answers || {},
       (newAnswers) => {
         if (loadedConfig) {
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].skrining) {
             loadedConfig.profiles[selectedProfile].skrining = {};
