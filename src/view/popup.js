@@ -189,6 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
+          formDirty = true;
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
@@ -248,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   if (saveConfigBtn) {
-    saveConfigBtn.addEventListener('click', () => {
+    saveConfigBtn.addEventListener('click', async () => {
       if (!loadedConfig) return;
       const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
       if (!loadedConfig.profiles[selectedProfile]) {
@@ -281,10 +282,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.notChecked.url = notCheckedUrlInput.value;
       profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
 
-      store.setConfig(loadedConfig);
-      formDirty = false;
+      try {
+        await store.setConfig(loadedConfig);
+        formDirty = false;
+        saveConfigBtn.textContent = 'Tersimpan!';
+      } catch (error) {
+        console.error('Failed to save config:', error);
+        saveConfigBtn.textContent = 'Gagal menyimpan';
+      }
 
-      saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
         saveConfigBtn.textContent = 'Simpan';
       }, 1500);
