@@ -18,6 +18,7 @@ import {
 import { init, getStatus } from '../quota/quota-manager.js';
 import { parseConfig, validateConfig } from '../utils/configValidator.js';
 import { migrateConfig } from '../configuration.js';
+import { cloneConfig, resolveConfigChange } from './configSync.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
@@ -68,7 +69,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (area !== 'local') return;
     const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
     if (configKeys.some((key) => changes[key])) {
-      loadedConfig = await store.refreshConfig();
+      const incoming = await store.refreshConfig();
+      // A browser-action popup closes when it loses focus, so no other context
+      // can write config while this editor is open. Keep local edits if that
+      // ever changes; the full page editor owns the interactive conflict flow.
+      const action = resolveConfigChange({ dirty: formDirty, local: loadedConfig, incoming });
+      if (action !== 'apply') return;
+      loadedConfig = cloneConfig(incoming);
       refreshUiFromStore();
     }
   });
@@ -181,9 +188,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   store.getFullConfig().then((config) => {
-    loadedConfig = config;
+    loadedConfig = cloneConfig(config);
 
-    const activeProfileSettings = config.profiles[config.activeProfile];
+    const activeProfileSettings = loadedConfig.profiles[loadedConfig.activeProfile];
     pinnedValuesList = new KeyValueList(
       'form-skrining-pinned-values',
       activeProfileSettings.formSkrining?.pinneds || {},
@@ -214,12 +221,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       },
     );
 
-    updateFormForProfile(config.activeProfile);
+    updateFormForProfile(loadedConfig.activeProfile);
 
     profileManager = new ProfileManager(
       'profile-manager-container',
-      config.profiles,
-      config.activeProfile,
+      loadedConfig.profiles,
+      loadedConfig.activeProfile,
       {
         onSwitch: (newActiveProfile) => {
           if (
@@ -343,8 +350,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    await store.setConfig(migrateConfig(importedConfig));
-    loadedConfig = await store.refreshConfig();
+    const wasDirty = formDirty;
+    formDirty = false;
+    try {
+      await store.setConfig(migrateConfig(importedConfig));
+    } catch (error) {
+      formDirty = wasDirty;
+      throw error;
+    }
+    loadedConfig = cloneConfig(await store.refreshConfig());
     formDirty = false;
     refreshUiFromStore();
 

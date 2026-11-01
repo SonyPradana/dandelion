@@ -82,6 +82,15 @@ export const notify = {
       btnContainer.style.display = 'flex';
       btnContainer.style.gap = '5px';
 
+      const closeControl = panel.querySelector('.dandelion-panel-close');
+      if (closeControl) {
+        // Closing the panel is a dismissal, not a hanging promise.
+        closeControl.onclick = () => {
+          remove();
+          resolve(false);
+        };
+      }
+
       const cancelBtn = createPanelButton('Batal');
       cancelBtn.onclick = () => {
         remove();

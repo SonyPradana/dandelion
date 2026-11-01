@@ -31,6 +31,8 @@ import { migrateConfig } from '../../configuration.js';
 import { parseRoute, buildSearch } from './router.js';
 import { SEARCH_INDEX } from './search-index.js';
 import { initSearch } from './search.js';
+import { cloneConfig, resolveConfigChange } from '../configSync.js';
+import { notify } from '../../components/notification';
 
 let activePopup = null;
 
@@ -64,8 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
     if (configKeys.some((key) => changes[key])) {
-      loadedConfig = await store.refreshConfig();
-      refreshUiFromStore();
+      await handleConfigStorageChange(await store.refreshConfig());
     }
   });
 
@@ -198,6 +199,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (saveState !== 'idle') setSaveState('idle');
   }
 
+  /**
+   * Applies a config write from another context only when the editor has
+   * nothing pending. A dirty editor keeps its copy; save runs the conflict
+   * check against fresh storage so edits are never replaced silently.
+   * @param {Object} incoming Fresh config from storage.
+   */
+  async function handleConfigStorageChange(incoming) {
+    if (!loadedConfig) return;
+
+    const action = resolveConfigChange({ dirty: formDirty, local: loadedConfig, incoming });
+    if (action !== 'apply') return;
+
+    loadedConfig = cloneConfig(incoming);
+    await refreshUiFromStore();
+  }
+
   document.getElementById('config-body').addEventListener('input', (event) => {
     if (!event.isTrusted) return;
     markFormDirty();
@@ -315,9 +332,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   store.getFullConfig().then((config) => {
-    loadedConfig = config;
+    loadedConfig = cloneConfig(config);
 
-    const activeProfileSettings = config.profiles[config.activeProfile];
+    const activeProfileSettings = loadedConfig.profiles[loadedConfig.activeProfile];
     pinnedValuesList = new KeyValueList(
       'form-skrining-pinned-values',
       activeProfileSettings.formSkrining?.pinneds || {},
@@ -348,12 +365,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       },
     );
 
-    updateFormForProfile(config.activeProfile);
+    updateFormForProfile(loadedConfig.activeProfile);
 
     profileManager = new ProfileManager(
       'profile-manager-container',
-      config.profiles,
-      config.activeProfile,
+      loadedConfig.profiles,
+      loadedConfig.activeProfile,
       {
         onSwitch: (newActiveProfile) => {
           if (
@@ -381,7 +398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       },
     );
 
-    const panelPosition = config.panelPosition || 'top-right';
+    const panelPosition = loadedConfig.panelPosition || 'top-right';
     const posBtns = document.querySelectorAll('.pos-option');
     const activePosBtn = document.querySelector(`.pos-option[data-pos="${panelPosition}"]`);
     if (activePosBtn) activePosBtn.classList.add('active');
@@ -393,7 +410,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
-    silenceInfoNotificationCheckbox.checked = config.silenceInfoNotification ?? false;
+    silenceInfoNotificationCheckbox.checked = loadedConfig.silenceInfoNotification ?? false;
   });
 
   let saving = false;
@@ -492,6 +509,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     saving = true;
     try {
+      if (formDirty) {
+        const fresh = await store.refreshConfig();
+        const action = resolveConfigChange({ dirty: true, local: loadedConfig, incoming: fresh });
+        if (action === 'conflict') {
+          const overwrite = await notify.confirm(
+            'Konfigurasi berubah di tab lain',
+            'Pilih Ya untuk menimpa perubahan dari tab lain dengan edit di halaman ini. Pilih Batal untuk memuat data terbaru dan membuang edit di halaman ini.',
+          );
+          if (!overwrite) {
+            loadedConfig = cloneConfig(fresh);
+            formDirty = false;
+            await refreshUiFromStore();
+            return;
+          }
+        }
+      }
+
       await store.setConfig(loadedConfig);
       formDirty = false;
       setSaveState('saved');
@@ -982,8 +1016,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    await store.setConfig(migrateConfig(importedConfig));
-    loadedConfig = await store.refreshConfig();
+    const wasDirty = formDirty;
+    formDirty = false;
+    try {
+      await store.setConfig(migrateConfig(importedConfig));
+    } catch (error) {
+      formDirty = wasDirty;
+      throw error;
+    }
+    loadedConfig = cloneConfig(await store.refreshConfig());
     formDirty = false;
     await refreshUiFromStore();
 

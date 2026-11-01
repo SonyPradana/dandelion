@@ -72,6 +72,13 @@ describe('notify', () => {
       batalBtn.click();
       await expect(promise).resolves.toBe(false);
     });
+
+    it('should resolve false when the panel is closed', async () => {
+      const { notify } = await import('../../../src/components/notification/index');
+      const promise = notify.confirm('Test', 'Msg');
+      document.querySelector('[id^="dandelion-confirm-"] .dandelion-panel-close').click();
+      await expect(promise).resolves.toBe(false);
+    });
   });
 
   describe('action', () => {
