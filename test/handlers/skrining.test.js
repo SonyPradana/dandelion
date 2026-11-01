@@ -44,6 +44,7 @@ function createStore(skrining = {}) {
     onProfileSwitch: vi.fn().mockResolvedValue(undefined),
   };
 
+  store.fullConfig = fullConfig;
   return store;
 }
 
@@ -72,7 +73,7 @@ describe('skrining', () => {
 
     const nativeAdd = document.addEventListener.bind(document);
     vi.spyOn(document, 'addEventListener').mockImplementation((type, cb, opts) => {
-      if (type === 'click') listeners.push([type, cb, opts]);
+      if (type === 'click' || type === 'change') listeners.push([type, cb, opts]);
       return nativeAdd(type, cb, opts);
     });
   });
@@ -252,6 +253,112 @@ describe('skrining', () => {
       click('dandelion-debug-toggle');
 
       expect(document.querySelectorAll('.dandelion-debug-marker')).toHaveLength(0);
+    });
+  });
+
+  describe('live marker state', () => {
+    const marker = (num) =>
+      document.getElementById(`question${num}A`).querySelector('.dandelion-debug-marker');
+    const pinToggle = (num) => marker(num).querySelector('.dandelion-pin-toggle');
+    const excludeToggle = (num) => marker(num).querySelector('.dandelion-exclude-toggle');
+
+    it('should stop filling an excluded question without a reload', async () => {
+      const store = await mount();
+      await toggleMarkers();
+
+      excludeToggle(8).click();
+      await vi.waitFor(() => expect(store.setConfig).toHaveBeenCalled());
+
+      click('dandelion-skrining-manual');
+
+      expect(document.getElementById('answer8AA').checked).toBe(false);
+      expect(document.getElementById('answer8AB').checked).toBe(false);
+    });
+
+    it('should fill a question again after it is included', async () => {
+      const store = await mount({ excludes: 'answer8AA' });
+      await toggleMarkers();
+
+      click('dandelion-skrining-manual');
+      expect(document.getElementById('answer8AB').checked).toBe(false);
+
+      excludeToggle(8).click();
+      await vi.waitFor(() => expect(store.setConfig).toHaveBeenCalled());
+
+      click('dandelion-skrining-manual');
+      expect(document.getElementById('answer8AB').checked).toBe(true);
+    });
+
+    it('should use a newly pinned answer on the next trigger', async () => {
+      const store = await mount();
+      await toggleMarkers();
+
+      document.getElementById('answer8AA').click();
+      pinToggle(8).click();
+      await vi.waitFor(() => expect(store.setConfig).toHaveBeenCalled());
+
+      click('dandelion-skrining-manual');
+
+      expect(document.getElementById('answer8AA').checked).toBe(true);
+      expect(document.getElementById('answer8AB').checked).toBe(false);
+    });
+
+    it('should clear the radio it filled when unpinning', async () => {
+      await mount();
+      await toggleMarkers();
+
+      click('dandelion-skrining-manual');
+      expect(document.getElementById('answer8AB').checked).toBe(true);
+
+      pinToggle(8).click();
+      await vi.waitFor(() => expect(pinToggle(8).classList.contains('active')).toBe(true));
+
+      pinToggle(8).click();
+      await vi.waitFor(() => expect(document.getElementById('answer8AB').checked).toBe(false));
+
+      expect(document.getElementById('answer8AA').checked).toBe(false);
+    });
+
+    it('should keep a radio the user picked after the fill', async () => {
+      await mount();
+      await toggleMarkers();
+
+      click('dandelion-skrining-manual');
+      document.getElementById('answer8AA').click();
+
+      pinToggle(8).click();
+      await vi.waitFor(() => expect(pinToggle(8).classList.contains('active')).toBe(true));
+
+      pinToggle(8).click();
+      await vi.waitFor(() => expect(pinToggle(8).classList.contains('active')).toBe(false));
+
+      expect(document.getElementById('answer8AA').checked).toBe(true);
+    });
+
+    it('should keep the live state unchanged when a toggle fails', async () => {
+      const store = await mount();
+      await toggleMarkers();
+
+      store.updateProfile.mockRejectedValueOnce(new Error('write failed'));
+
+      excludeToggle(8).click();
+      await vi.waitFor(() => expect(excludeToggle(8).textContent).toBe('⚠️'));
+
+      click('dandelion-skrining-manual');
+
+      expect(document.getElementById('answer8AB').checked).toBe(true);
+    });
+
+    it('should write the toggle to the profile captured at mount', async () => {
+      const store = await mount();
+      store.fullConfig.activeProfile = 'profile2';
+      await toggleMarkers();
+
+      excludeToggle(8).click();
+      await vi.waitFor(() => expect(store.setConfig).toHaveBeenCalled());
+
+      expect(store.fullConfig.profiles.profile1.skrining.excludes).toBe('answer8AA');
+      expect(store.fullConfig.profiles.profile2.skrining?.excludes).toBeUndefined();
     });
   });
 
