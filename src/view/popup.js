@@ -64,6 +64,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   let profileManager = null;
   let formDirty = false;
   let formActiveProfile = null;
+  let editVersion = 0;
+
+  function markFormDirty() {
+    formDirty = true;
+    editVersion += 1;
+  }
 
   browser.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
@@ -81,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   configWrapper.addEventListener('input', (event) => {
-    if (event.isTrusted) formDirty = true;
+    if (event.isTrusted) markFormDirty();
   });
 
   // Initialize KeywordList components
@@ -196,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
-          formDirty = true;
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
@@ -211,7 +217,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.skrining?.answers || {},
       (newAnswers) => {
         if (loadedConfig) {
-          formDirty = true;
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].skrining) {
             loadedConfig.profiles[selectedProfile].skrining = {};
@@ -289,9 +295,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.notChecked.url = notCheckedUrlInput.value;
       profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
 
+      const saveVersion = editVersion;
       try {
         await store.setConfig(loadedConfig);
-        formDirty = false;
+        if (editVersion === saveVersion) formDirty = false;
         saveConfigBtn.textContent = 'Tersimpan!';
       } catch (error) {
         console.error('Failed to save config:', error);
