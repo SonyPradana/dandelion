@@ -192,9 +192,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   let profileManager = null;
   let formDirty = false;
   let formActiveProfile = null;
+  let editVersion = 0;
 
   function markFormDirty() {
     formDirty = true;
+    editVersion += 1;
     if (saveState !== 'idle') setSaveState('idle');
   }
 
@@ -491,9 +493,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     saving = true;
+    const saveVersion = editVersion;
     try {
       await store.setConfig(loadedConfig);
-      formDirty = false;
+      if (editVersion === saveVersion) formDirty = false;
       setSaveState('saved');
     } catch (error) {
       failSave(error.message);
