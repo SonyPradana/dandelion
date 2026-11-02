@@ -33,15 +33,18 @@ export function configsEqual(a, b) {
  *
  * - `apply`: nothing is being edited, so the fresh config can replace the
  *   editor state.
- * - `ignore`: the editor is dirty but storage still matches its copy (for
- *   example the echo of its own save), so there is nothing to resolve.
- * - `conflict`: the editor is dirty and storage moved, so the user has to
- *   choose between reloading and overwriting.
- * @param {{dirty: boolean, local: unknown, incoming: unknown}} state
+ * - `ignore`: the editor is dirty but storage still matches the config it last
+ *   synchronized with, so there is no external change to resolve.
+ * - `conflict`: the editor is dirty and storage moved since the last
+ *   synchronization, so the user has to choose between reloading and
+ *   overwriting.
+ * @param {{dirty: boolean, baseline: unknown, incoming: unknown}} state
+ *   `baseline` is the config as last read from or written to storage, not the
+ *   edited working copy.
  * @returns {'apply' | 'ignore' | 'conflict'}
  */
-export function resolveConfigChange({ dirty, local, incoming }) {
+export function resolveConfigChange({ dirty, baseline, incoming }) {
   if (!dirty) return 'apply';
-  if (configsEqual(local, incoming)) return 'ignore';
+  if (configsEqual(baseline, incoming)) return 'ignore';
   return 'conflict';
 }

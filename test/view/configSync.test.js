@@ -53,7 +53,7 @@ describe('configSync', () => {
   describe('resolveConfigChange', () => {
     it('should apply when the editor is clean', () => {
       expect(
-        resolveConfigChange({ dirty: false, local: baseConfig(), incoming: baseConfig() }),
+        resolveConfigChange({ dirty: false, baseline: baseConfig(), incoming: baseConfig() }),
       ).toBe('apply');
     });
 
@@ -61,25 +61,35 @@ describe('configSync', () => {
       const incoming = baseConfig();
       incoming.profiles.profile1.name = 'Baru';
 
-      expect(resolveConfigChange({ dirty: false, local: baseConfig(), incoming })).toBe('apply');
+      expect(resolveConfigChange({ dirty: false, baseline: baseConfig(), incoming })).toBe('apply');
     });
 
     it('should ignore the echo of its own save while the editor is dirty', () => {
-      const local = baseConfig();
-      local.profiles.profile1.name = 'Lokal';
+      const baseline = baseConfig();
 
-      expect(resolveConfigChange({ dirty: true, local, incoming: cloneConfig(local) })).toBe(
+      expect(resolveConfigChange({ dirty: true, baseline, incoming: cloneConfig(baseline) })).toBe(
         'ignore',
       );
     });
 
-    it('should flag a conflict when storage moved under a dirty editor', () => {
-      const local = baseConfig();
+    it('should not treat ordinary local edits as a conflict', () => {
+      const baseline = baseConfig();
+      const local = cloneConfig(baseline);
       local.profiles.profile1.name = 'Lokal';
+
+      // Storage still matches the last sync; only the working copy changed.
+      expect(resolveConfigChange({ dirty: true, baseline, incoming: cloneConfig(baseline) })).toBe(
+        'ignore',
+      );
+      expect(local.profiles.profile1.name).toBe('Lokal');
+    });
+
+    it('should flag a conflict when storage moved under a dirty editor', () => {
+      const baseline = baseConfig();
       const incoming = baseConfig();
       incoming.profiles.profile1.name = 'Tab lain';
 
-      expect(resolveConfigChange({ dirty: true, local, incoming })).toBe('conflict');
+      expect(resolveConfigChange({ dirty: true, baseline, incoming })).toBe('conflict');
     });
   });
 });

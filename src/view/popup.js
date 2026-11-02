@@ -65,10 +65,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   let formDirty = false;
   let formActiveProfile = null;
   let editVersion = 0;
+  /** @type {Object|null} Config as last read from or written to storage. */
+  let syncedConfig = null;
 
   function markFormDirty() {
     formDirty = true;
     editVersion += 1;
+  }
+
+  async function persistConfig() {
+    const snapshot = cloneConfig(loadedConfig);
+    await store.setConfig(snapshot);
+    syncedConfig = snapshot;
   }
 
   window.addEventListener('beforeunload', (event) => {
@@ -86,9 +94,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       // A browser-action popup closes when it loses focus, so no other context
       // can write config while this editor is open. Keep local edits if that
       // ever changes; the full page editor owns the interactive conflict flow.
-      const action = resolveConfigChange({ dirty: formDirty, local: loadedConfig, incoming });
+      const action = resolveConfigChange({
+        dirty: formDirty,
+        baseline: syncedConfig,
+        incoming,
+      });
       if (action !== 'apply') return;
       loadedConfig = cloneConfig(incoming);
+      syncedConfig = cloneConfig(incoming);
       refreshUiFromStore();
     }
   });
@@ -203,6 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   store.getFullConfig().then((config) => {
     loadedConfig = cloneConfig(config);
+    syncedConfig = cloneConfig(config);
 
     const activeProfileSettings = loadedConfig.profiles[loadedConfig.activeProfile];
     pinnedValuesList = new KeyValueList(
@@ -260,10 +274,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           loadedConfig.activeProfile = newActiveProfile;
           updateFormForProfile(newActiveProfile);
           formDirty = false;
-          store.setConfig(loadedConfig);
+          persistConfig().catch((error) => console.error('Failed to save config:', error));
         },
         onChange: () => {
-          store.setConfig(loadedConfig);
+          persistConfig().catch((error) => console.error('Failed to save config:', error));
         },
       },
     );
@@ -305,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const saveVersion = editVersion;
       try {
-        await store.setConfig(loadedConfig);
+        await persistConfig();
         const savedClean = editVersion === saveVersion;
         if (savedClean) formDirty = false;
         saveConfigBtn.textContent = savedClean ? 'Tersimpan!' : 'Simpan';
@@ -375,6 +389,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       throw error;
     }
     loadedConfig = cloneConfig(await store.refreshConfig());
+    syncedConfig = cloneConfig(loadedConfig);
     formDirty = false;
     refreshUiFromStore();
 
