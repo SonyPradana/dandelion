@@ -334,6 +334,34 @@ describe('updateProfile', () => {
     const config = await store.getFullConfig();
     expect(config.profiles.profile1.ok).toBe(true);
   });
+
+  it('should not publish a mutator change that throws', async () => {
+    const before = structuredClone(await store.getFullConfig());
+
+    await expect(
+      store.updateProfile('profile1', (profile) => {
+        profile.name = 'Berubah';
+        throw new Error('nope');
+      }),
+    ).rejects.toThrow('nope');
+
+    expect(await store.getFullConfig()).toEqual(before);
+  });
+
+  it('should serialize profile activation with profile updates', async () => {
+    await store.getFullConfig();
+
+    await Promise.all([
+      store.setActiveProfile('profile2'),
+      store.updateProfile('profile1', (profile) => {
+        profile.skrining = { ...(profile.skrining || {}), url: 'upd' };
+      }),
+    ]);
+
+    const config = await store.getFullConfig();
+    expect(config.activeProfile).toBe('profile2');
+    expect(config.profiles.profile1.skrining.url).toBe('upd');
+  });
 });
 
 describe('multiple store instances', () => {
@@ -396,6 +424,30 @@ describe('multiple store instances', () => {
 
     expect(config.profiles.profile1.skrining.url).toBe('from-a');
     expect(config.profiles.profile2.skrining.url).toBe('from-b');
+  });
+
+  it('should serialize writes through the web lock when available', async () => {
+    const request = vi.fn((_name, run) => run());
+    vi.stubGlobal('navigator', { locks: { request } });
+
+    try {
+      const shared = new MemoryBackend({ clone: true });
+      const context = new DandelionStore();
+      context.init(shared);
+
+      await context.setConfig({
+        activeProfile: 'profile1',
+        profiles: { profile1: { name: 'Satu' } },
+      });
+
+      await context.updateProfile('profile1', (profile) => {
+        profile.skrining = { ...(profile.skrining || {}), url: 'locked' };
+      });
+
+      expect(request).toHaveBeenCalledWith('dandelion-config-write', expect.any(Function));
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 
