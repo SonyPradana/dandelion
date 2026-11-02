@@ -70,6 +70,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     editVersion += 1;
   }
 
+  window.addEventListener('beforeunload', (event) => {
+    if (!formDirty) return;
+    // Best effort: browsers may not show this dialog for an extension popup.
+    event.preventDefault();
+    event.returnValue = '';
+  });
+
   browser.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
     const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
@@ -89,6 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'not-checked-list-container',
     'not-checked-list-add-input',
     'not-checked-list-add',
+    markFormDirty,
   );
 
   window.keywordLists = { notCheckedList };
@@ -291,8 +299,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const saveVersion = editVersion;
       try {
         await store.setConfig(loadedConfig);
-        if (editVersion === saveVersion) formDirty = false;
-        saveConfigBtn.textContent = 'Tersimpan!';
+        const savedClean = editVersion === saveVersion;
+        if (savedClean) formDirty = false;
+        saveConfigBtn.textContent = savedClean ? 'Tersimpan!' : 'Simpan';
       } catch (error) {
         console.error('Failed to save config:', error);
         saveConfigBtn.textContent = 'Gagal menyimpan';
