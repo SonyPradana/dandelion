@@ -295,18 +295,20 @@ describe('updateProfile', () => {
 
     await Promise.all([
       store.updateProfile('profile1', (profile) => {
-        seen.push(profile.updateCount ?? 0);
-        profile.updateCount = (profile.updateCount ?? 0) + 1;
+        const current = profile.skrining?.answers?.count ?? 0;
+        seen.push(current);
+        profile.skrining = { ...(profile.skrining || {}), answers: { count: current + 1 } };
       }),
       store.updateProfile('profile1', (profile) => {
-        seen.push(profile.updateCount ?? 0);
-        profile.updateCount = (profile.updateCount ?? 0) + 1;
+        const current = profile.skrining?.answers?.count ?? 0;
+        seen.push(current);
+        profile.skrining = { ...(profile.skrining || {}), answers: { count: current + 1 } };
       }),
     ]);
 
     expect(seen).toEqual([0, 1]);
     const persisted = await backend.storage.local.get('profiles');
-    expect(persisted.profiles.profile1.updateCount).toBe(2);
+    expect(persisted.profiles.profile1.skrining.answers.count).toBe(2);
   });
 
   it('should reject a missing profile without writing', async () => {
@@ -353,6 +355,37 @@ describe('multiple store instances', () => {
 
     // A browser context learns about the other write through storage.onChanged.
     await contextB.refreshConfig();
+    await contextB.updateProfile('profile2', (profile) => {
+      profile.skrining = { ...(profile.skrining || {}), url: 'from-b' };
+    });
+
+    const reader = new DandelionStore();
+    reader.init(shared);
+    const config = await reader.getFullConfig();
+
+    expect(config.profiles.profile1.skrining.url).toBe('from-a');
+    expect(config.profiles.profile2.skrining.url).toBe('from-b');
+  });
+
+  it('should refresh before writing instead of clobbering a newer external change', async () => {
+    const shared = new MemoryBackend({ clone: true });
+    const contextA = new DandelionStore();
+    const contextB = new DandelionStore();
+    contextA.init(shared);
+    contextB.init(shared);
+
+    await contextA.setConfig({
+      activeProfile: 'profile1',
+      profiles: { profile1: { name: 'Satu' }, profile2: { name: 'Dua' } },
+    });
+
+    // contextB caches the config before contextA writes.
+    await contextB.getFullConfig();
+
+    await contextA.updateProfile('profile1', (profile) => {
+      profile.skrining = { ...(profile.skrining || {}), url: 'from-a' };
+    });
+
     await contextB.updateProfile('profile2', (profile) => {
       profile.skrining = { ...(profile.skrining || {}), url: 'from-b' };
     });

@@ -164,6 +164,8 @@ class DandelionStore {
    * Calls are serialized per store instance, so two overlapping updates cannot
    * drop each other's changes. The mutation always targets the profile key that
    * was passed in, even if the active profile changes in between.
+   * Storage is re-read first so a newer write from another context is not
+   * clobbered by a stale cache.
    * @template T
    * @param {string} profileKey
    * @param {(profile: Object, config: Object) => T} mutator
@@ -171,7 +173,7 @@ class DandelionStore {
    */
   async updateProfile(profileKey, mutator) {
     const run = async () => {
-      const config = await this.getFullConfig();
+      const config = await this.refreshConfig();
       const profile = config.profiles?.[profileKey];
       if (!profile) {
         throw new Error(`Profile "${profileKey}" does not exist`);
