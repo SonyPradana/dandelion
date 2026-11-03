@@ -51,7 +51,11 @@ export async function toggleExclude(dataName, store = globalStore, profileKey = 
   return await store.updateProfile(key, (profile) => {
     if (!profile.formSkrining) profile.formSkrining = {};
 
-    const excludesList = (profile.formSkrining.excludes || '').split(';').filter(Boolean);
+    // Dedupe: KeywordList allows duplicate entries, and leaving a second copy
+    // behind would keep the item excluded after toggling it off.
+    const excludesList = [
+      ...new Set((profile.formSkrining.excludes || '').split(';').filter(Boolean)),
+    ];
     const index = excludesList.indexOf(dataName);
 
     if (index > -1) {

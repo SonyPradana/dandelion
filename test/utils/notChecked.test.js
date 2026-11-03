@@ -67,6 +67,14 @@ describe('notChecked', () => {
     expect(await isInNotCheckedList('x')).toBe(true);
   });
 
+  it('toggleNotCheckedItem should drop every duplicate when removing', async () => {
+    await setupConfig('a;a;b');
+    const result = await toggleNotCheckedItem('a');
+    expect(result).toBe(false);
+    expect(await isInNotCheckedList('a')).toBe(false);
+    expect(await isInNotCheckedList('b')).toBe(true);
+  });
+
   describe('error handling', () => {
     it('isInNotCheckedList should handle whitespace gracefully', async () => {
       await setupConfig('a;b');

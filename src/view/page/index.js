@@ -224,7 +224,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           'Konfigurasi berubah di tab lain',
           'Pilih Ya untuk menimpa perubahan dari tab lain dengan edit di halaman ini. Pilih Batal untuk memuat data terbaru dan membuang edit di halaman ini.',
         );
-        if (!overwrite) {
+        if (overwrite === undefined) return false;
+        if (overwrite === false) {
           loadedConfig = cloneConfig(fresh);
           syncedConfig = cloneConfig(fresh);
           formDirty = false;

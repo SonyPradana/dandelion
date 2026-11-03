@@ -79,11 +79,10 @@ async function handleSave() {
   }
 
   try {
-    // Replace the whole config under the store lock so a concurrent profile
-    // update from another context is not silently dropped.
-    await store.updateConfig((config) => {
-      Object.assign(config, parsed.value);
-    });
+    // Replace the whole config under the store lock. The lock only serializes
+    // writes; it does not merge, and stale top-level keys must be removed from
+    // storage too, so replaceConfig deletes what the editor dropped.
+    await store.replaceConfig(parsed.value);
   } catch (error) {
     setInvalid(true);
     showToast(`Gagal menyimpan: ${error.message}`, 'error');

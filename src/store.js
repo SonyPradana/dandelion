@@ -1,6 +1,9 @@
 import { migrateConfig } from './configuration';
 
 const TERMS_KEY = 'dandelion_terms';
+// Top-level keys that make up the config document. replaceConfig only ever
+// removes these, so auth tokens, cache, and productivity data stay intact.
+const CONFIG_KEYS = ['activeProfile', 'panelPosition', 'silenceInfoNotification', 'profiles'];
 const STORAGE_KEYS = {
   TERMS: 'dandelion_terms',
   FLASH_DATA: 'flash_data',
@@ -173,6 +176,27 @@ class DandelionStore {
       const result = mutator(config);
       await this.setConfig(config);
       return result;
+    });
+  }
+
+  /**
+   * Replaces the whole config under the write lock and removes top-level config
+   * keys that the new config no longer has, so storage ends up matching it.
+   * Use this for the raw config editor, where deleting a key must delete it from
+   * storage rather than leave the old value behind. Keys outside the config
+   * schema (auth tokens, cache, productivity data) are never touched.
+   * @param {Object} next
+   * @returns {Promise<void>}
+   */
+  async replaceConfig(next) {
+    const config = structuredClone(next);
+    return this._queueWrite(async () => {
+      await this.refreshConfig();
+      const staleKeys = CONFIG_KEYS.filter((key) => !(key in config));
+      await this.setConfig(config);
+      if (staleKeys.length > 0) {
+        await this._browser.storage.local.remove(staleKeys);
+      }
     });
   }
 
