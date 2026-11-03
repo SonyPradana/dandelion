@@ -214,6 +214,9 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @returns {Promise<boolean>} Whether the local config was written.
    */
   function persistConfig() {
+    // Snapshot at call time so an edit made while the queued save is waiting
+    // cannot leak into this write and be reported as saved.
+    const snapshot = cloneConfig(loadedConfig);
     const run = async () => {
       const fresh = await store.refreshConfig();
       if (!configsEqual(syncedConfig, fresh)) {
@@ -230,13 +233,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
+      // Write the snapshot taken at call time, and capture the config the store
+      // actually persisted: updateConfig re-reads fresh storage first, so
+      // cloning loadedConfig after the await would keep a stale baseline.
+      let written = null;
       await store.updateConfig((config) => {
-        config.profiles = cloneConfig(loadedConfig.profiles);
-        config.activeProfile = loadedConfig.activeProfile;
-        config.panelPosition = loadedConfig.panelPosition;
-        config.silenceInfoNotification = loadedConfig.silenceInfoNotification;
+        config.profiles = snapshot.profiles;
+        config.activeProfile = snapshot.activeProfile;
+        config.panelPosition = snapshot.panelPosition;
+        config.silenceInfoNotification = snapshot.silenceInfoNotification;
+        written = cloneConfig(config);
       });
-      syncedConfig = cloneConfig(loadedConfig);
+      syncedConfig = written;
       return true;
     };
 
@@ -461,7 +469,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           // Switching is a navigation step, so keep everything another context
           // already stored and apply only the new profile selection.
+          const switchVersion = editVersion;
           const fresh = await store.refreshConfig();
+          // An edit made while the read was in flight must not be replaced by
+          // the stored copy, so keep the local form and let the switch be retried.
+          if (editVersion !== switchVersion) {
+            profileManager.setData(
+              loadedConfig.profiles,
+              formActiveProfile || loadedConfig.activeProfile,
+            );
+            return;
+          }
           loadedConfig = cloneConfig(fresh);
           syncedConfig = cloneConfig(fresh);
           loadedConfig.activeProfile = newActiveProfile;

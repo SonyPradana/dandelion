@@ -18,7 +18,7 @@ import {
 import { init, getStatus } from '../quota/quota-manager.js';
 import { parseConfig, validateConfig } from '../utils/configValidator.js';
 import { migrateConfig } from '../configuration.js';
-import { cloneConfig, resolveConfigChange } from './configSync.js';
+import { cloneConfig, configsEqual, resolveConfigChange } from './configSync.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
@@ -74,15 +74,52 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Persists the local config through the store's lock so a stale copy cannot
-   * overwrite a write made by another context.
+   * Persists the local config through the store's lock and only copies the
+   * profiles this editor actually changed. A profile written by another
+   * context while the popup was open is therefore kept instead of replaced by
+   * the stale snapshot loaded at open time.
    * @returns {Promise<void>}
    */
-  function persistConfig() {
-    return store.updateConfig((config) => {
-      config.profiles = structuredClone(loadedConfig.profiles);
-      config.activeProfile = loadedConfig.activeProfile;
+  async function persistConfig() {
+    const syncedProfiles = syncedConfig?.profiles || {};
+    const localProfiles = loadedConfig.profiles || {};
+    const changedKeys = new Set();
+
+    for (const [key, profile] of Object.entries(localProfiles)) {
+      if (!configsEqual(syncedProfiles[key], profile)) changedKeys.add(key);
+    }
+    for (const key of Object.keys(syncedProfiles)) {
+      if (!localProfiles[key]) changedKeys.add(key);
+    }
+
+    // Only push the selection when this editor changed it.
+    const selectionChanged =
+      !syncedConfig || loadedConfig.activeProfile !== syncedConfig.activeProfile;
+
+    let written = null;
+    await store.updateConfig((config) => {
+      config.profiles ||= {};
+      for (const key of changedKeys) {
+        if (localProfiles[key]) {
+          config.profiles[key] = cloneConfig(localProfiles[key]);
+        } else {
+          delete config.profiles[key];
+        }
+      }
+      if (selectionChanged) config.activeProfile = loadedConfig.activeProfile;
+      written = cloneConfig(config);
     });
+
+    syncedConfig = written;
+
+    // Absorb profiles another context wrote, so the next save does not see
+    // them as local changes and push the stale copy back.
+    for (const [key, profile] of Object.entries(written.profiles || {})) {
+      if (!changedKeys.has(key)) loadedConfig.profiles[key] = cloneConfig(profile);
+    }
+    for (const key of Object.keys(loadedConfig.profiles || {})) {
+      if (!written.profiles?.[key] && !changedKeys.has(key)) delete loadedConfig.profiles[key];
+    }
   }
 
   window.addEventListener('beforeunload', (event) => {
@@ -113,7 +150,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   configWrapper.addEventListener('input', (event) => {
-    if (event.isTrusted) markFormDirty();
+    if (!event.isTrusted) return;
+    // ProfileManager handles its own add/rename saves via its change callback.
+    if (event.target.closest?.('.pm-add-input, .pm-rename-input')) return;
+    markFormDirty();
   });
 
   // Initialize KeywordList components
