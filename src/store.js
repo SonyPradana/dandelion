@@ -16,7 +16,6 @@ class DandelionStore {
   _backend = null;
   _configCache = null;
   _configGeneration = 0;
-  _updateChain = null;
 
   init(backend) {
     this._backend = backend;
@@ -154,10 +153,26 @@ class DandelionStore {
   }
 
   async setActiveProfile(profileKey) {
+    await this.updateConfig((config) => {
+      config.activeProfile = profileKey;
+    });
+  }
+
+  /**
+   * Locks, re-reads storage, applies a synchronous mutation to a detached
+   * copy, and persists it. Use this for whole-config edits (profile add,
+   * rename, remove, duplicate, import) so a stale read cannot overwrite a
+   * write made by another context.
+   * @template T
+   * @param {(config: Object) => T} mutator
+   * @returns {Promise<T>}
+   */
+  async updateConfig(mutator) {
     return this._queueWrite(async () => {
       const config = structuredClone(await this.refreshConfig());
-      config.activeProfile = profileKey;
+      const result = mutator(config);
       await this.setConfig(config);
+      return result;
     });
   }
 

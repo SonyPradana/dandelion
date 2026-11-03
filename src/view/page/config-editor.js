@@ -79,7 +79,11 @@ async function handleSave() {
   }
 
   try {
-    await store.setConfig(parsed.value);
+    // Replace the whole config under the store lock so a concurrent profile
+    // update from another context is not silently dropped.
+    await store.updateConfig((config) => {
+      Object.assign(config, parsed.value);
+    });
   } catch (error) {
     setInvalid(true);
     showToast(`Gagal menyimpan: ${error.message}`, 'error');
