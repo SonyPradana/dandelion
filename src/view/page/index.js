@@ -208,8 +208,9 @@ document.addEventListener('DOMContentLoaded', async () => {
    * Writes the local config after checking that storage has not moved since
    * the last synchronization. On a conflict the user either overwrites the
    * other context or reloads the stored config and discards local edits.
-   * Calls are queued so each refresh, conflict check, and write finishes
-   * before the next one starts.
+   * The write itself runs under the store's lock, so a race between the check
+   * and the write still re-reads the freshest config. Calls are queued so each
+   * check and write finishes before the next one starts.
    * @returns {Promise<boolean>} Whether the local config was written.
    */
   function persistConfig() {
@@ -229,11 +230,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Write a detached snapshot so edits made while storage is writing are
-      // not marked as synced and the profile manager keeps its reference.
-      const snapshot = cloneConfig(loadedConfig);
-      await store.setConfig(snapshot);
-      syncedConfig = snapshot;
+      await store.updateConfig((config) => {
+        config.profiles = cloneConfig(loadedConfig.profiles);
+        config.activeProfile = loadedConfig.activeProfile;
+        config.panelPosition = loadedConfig.panelPosition;
+        config.silenceInfoNotification = loadedConfig.silenceInfoNotification;
+      });
+      syncedConfig = cloneConfig(loadedConfig);
       return true;
     };
 
@@ -1091,14 +1094,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    const wasDirty = formDirty;
-    formDirty = false;
-    try {
-      await store.setConfig(migrateConfig(importedConfig));
-    } catch (error) {
-      formDirty = wasDirty;
-      throw error;
-    }
+    await store.updateConfig((config) => {
+      Object.assign(config, migrateConfig(importedConfig));
+    });
     loadedConfig = cloneConfig(await store.refreshConfig());
     syncedConfig = cloneConfig(loadedConfig);
     formDirty = false;

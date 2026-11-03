@@ -153,9 +153,88 @@ class DandelionStore {
   }
 
   async setActiveProfile(profileKey) {
-    const config = await this.getFullConfig();
-    config.activeProfile = profileKey;
-    await this.setConfig(config);
+    await this.updateConfig((config) => {
+      config.activeProfile = profileKey;
+    });
+  }
+
+  /**
+   * Locks, re-reads storage, applies a synchronous mutation to a detached
+   * copy, and persists it. Use this for whole-config edits (profile add,
+   * rename, remove, duplicate, import) so a stale read cannot overwrite a
+   * write made by another context.
+   * @template T
+   * @param {(config: Object) => T} mutator
+   * @returns {Promise<T>}
+   */
+  async updateConfig(mutator) {
+    return this._queueWrite(async () => {
+      const config = structuredClone(await this.refreshConfig());
+      const result = mutator(config);
+      await this.setConfig(config);
+      return result;
+    });
+  }
+
+  /**
+   * Reads one named profile, applies a synchronous mutation, and persists it.
+   * Calls are serialized per store instance, and across extension pages through
+   * Web Locks when the platform provides it, so overlapping updates cannot
+   * drop each other's changes. The mutation always targets the profile key that
+   * was passed in, even if the active profile changes in between.
+   * Storage is re-read first so a newer write from another context is not
+   * clobbered by a stale cache.
+   * @template T
+   * @param {string} profileKey
+   * @param {(profile: Object, config: Object) => T} mutator
+   * @returns {Promise<T>}
+   */
+  async updateProfile(profileKey, mutator) {
+    const run = async () => {
+      // Mutate a detached copy so a throwing mutator cannot corrupt the cache.
+      const config = structuredClone(await this.refreshConfig());
+      const profile = config.profiles?.[profileKey];
+      if (!profile) {
+        throw new Error(`Profile "${profileKey}" does not exist`);
+      }
+
+      const result = mutator(profile, config);
+      await this.setConfig(config);
+      return result;
+    };
+
+    return this._queueWrite(run);
+  }
+
+  /**
+   * Queues a read-modify-write on this instance, then runs it under the
+   * cross-context write lock.
+   * @template T
+   * @param {() => Promise<T>} run
+   * @returns {Promise<T>}
+   */
+  _queueWrite(run) {
+    const previous = this._updateChain ?? Promise.resolve();
+    const next = previous.then(
+      () => this._withWriteLock(run),
+      () => this._withWriteLock(run),
+    );
+    // Keep the chain usable after a rejected update.
+    this._updateChain = next.catch(() => {});
+    return next;
+  }
+
+  /**
+   * Serializes a read-modify-write across extension pages. Falls back to
+   * running directly where Web Locks is unavailable (older engines, tests).
+   * @template T
+   * @param {() => Promise<T>} run
+   * @returns {Promise<T>}
+   */
+  _withWriteLock(run) {
+    // shortcut: no cross-tab lock without Web Locks; upgrade if non-secure pages run this store.
+    if (typeof navigator === 'undefined' || !navigator.locks) return run();
+    return navigator.locks.request('dandelion-config-write', run);
   }
 
   async onProfileSwitch(profileKey) {

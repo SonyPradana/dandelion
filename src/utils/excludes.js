@@ -1,71 +1,67 @@
 import { store as globalStore } from '../store.js';
 
 /**
- * Retrieves the current active profile's excludes list as an array.
+ * Resolves the profile key for one operation. The key is read once, so a
+ * profile switch between the read and the write cannot move the write.
+ * @param {import('../store.js').DandelionStore} store
+ * @param {string|null} [profileKey]
+ * @returns {Promise<string>}
+ */
+async function resolveProfileKey(store, profileKey) {
+  if (profileKey) return profileKey;
+  const config = await store.getFullConfig();
+  return config.activeProfile;
+}
+
+/**
+ * Retrieves one profile's excludes list as an array.
+ * @param {import('../store.js').DandelionStore} store
+ * @param {string|null} [profileKey]
  * @returns {Promise<string[]>} A promise that resolves to an array of excluded data-names.
- * @param {import('../store.js').DandelionStore} [store]
  */
-async function getExcludesForActiveProfile(store = globalStore) {
-  const fullConfig = await store.getFullConfig();
-  const activeProfileName = fullConfig.activeProfile;
-  const excludesString = fullConfig.profiles[activeProfileName]?.formSkrining?.excludes || '';
-
-  return excludesString.split(';').filter(Boolean);
+async function getExcludesForProfile(store, profileKey) {
+  const key = await resolveProfileKey(store, profileKey);
+  const config = await store.getFullConfig();
+  return (config.profiles?.[key]?.formSkrining?.excludes || '').split(';').filter(Boolean);
 }
 
 /**
- * Saves the provided excludes array back to the active profile's configuration.
- * @param {string[]} excludesArray - The array of data-names to save as excludes.
- * @returns {Promise<void>}
- * @param {import('../store.js').DandelionStore} [store]
- */
-async function saveExcludesForActiveProfile(excludesArray, store = globalStore) {
-  const fullConfig = await store.getFullConfig();
-  const activeProfileName = fullConfig.activeProfile;
-
-  if (!fullConfig.profiles[activeProfileName]) {
-    fullConfig.profiles[activeProfileName] = {};
-  }
-  if (!fullConfig.profiles[activeProfileName].formSkrining) {
-    fullConfig.profiles[activeProfileName].formSkrining = {};
-  }
-
-  fullConfig.profiles[activeProfileName].formSkrining.excludes = excludesArray.join(';');
-  await store.setConfig(fullConfig);
-}
-
-/**
- * Checks if a specific data-name is currently excluded in the active profile.
+ * Checks if a specific data-name is currently excluded in one profile.
  * @param {string} dataName - The data-name to check.
- * @returns {Promise<boolean>} True if excluded, false otherwise.
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
+ * @returns {Promise<boolean>} True if excluded, false otherwise.
  */
-export async function isExcluded(dataName, store = globalStore) {
-  const excludesList = await getExcludesForActiveProfile(store);
+export async function isExcluded(dataName, store = globalStore, profileKey = null) {
+  const excludesList = await getExcludesForProfile(store, profileKey);
 
   return excludesList.includes(dataName);
 }
 
 /**
- * Toggles the exclusion status of a data-name in the active profile.
+ * Toggles the exclusion status of a data-name in one profile.
  * @param {string} dataName - The data-name to toggle.
- * @returns {Promise<boolean>} True if the data-name is now excluded, false if it's now included.
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
+ * @returns {Promise<boolean>} True if the data-name is now excluded, false if it's now included.
  */
-export async function toggleExclude(dataName, store = globalStore) {
-  const excludesList = await getExcludesForActiveProfile(store);
-  const index = excludesList.indexOf(dataName);
+export async function toggleExclude(dataName, store = globalStore, profileKey = null) {
+  const key = await resolveProfileKey(store, profileKey);
 
-  // It exists, so remove it
-  if (index > -1) {
-    excludesList.splice(index, 1);
-    await saveExcludesForActiveProfile(excludesList, store);
+  return await store.updateProfile(key, (profile) => {
+    if (!profile.formSkrining) profile.formSkrining = {};
 
-    return false;
-  } else {
+    const excludesList = (profile.formSkrining.excludes || '').split(';').filter(Boolean);
+    const index = excludesList.indexOf(dataName);
+
+    if (index > -1) {
+      excludesList.splice(index, 1);
+      profile.formSkrining.excludes = excludesList.join(';');
+      return false;
+    }
+
     excludesList.push(dataName);
-    await saveExcludesForActiveProfile(excludesList, store);
-
+    profile.formSkrining.excludes = excludesList.join(';');
     return true;
-  }
+  });
 }

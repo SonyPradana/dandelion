@@ -1,32 +1,46 @@
 import { store as globalStore } from '../store.js';
 
 /**
- * Reads the skrining answers object from the active profile.
- * @param {import('../store.js').DandelionStore} [store]
- * @returns {Promise<Object>}
+ * Resolves the profile key for one operation. Reading `activeProfile` once at
+ * the start keeps the read and the write bound to the same profile even when a
+ * profile switch lands in between.
+ * @param {import('../store.js').DandelionStore} store
+ * @param {string|null} [profileKey]
+ * @returns {Promise<string>}
  */
-export async function getAnswers(store = globalStore) {
-  const config = await store.getActiveConfig();
-  const answers = config.skrining?.answers;
-  return typeof answers === 'object' && answers !== null ? answers : {};
+async function resolveProfileKey(store, profileKey) {
+  if (profileKey) return profileKey;
+  const config = await store.getFullConfig();
+  return config.activeProfile;
 }
 
 /**
- * Replaces the whole skrining answers object in the active profile.
+ * Reads the skrining answers object from one profile.
+ * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
+ * @returns {Promise<Object>}
+ */
+export async function getAnswers(store = globalStore, profileKey = null) {
+  const key = await resolveProfileKey(store, profileKey);
+  const config = await store.getFullConfig();
+  const answers = config.profiles?.[key]?.skrining?.answers;
+  return typeof answers === 'object' && answers !== null ? { ...answers } : {};
+}
+
+/**
+ * Replaces the whole skrining answers object in one profile.
  * @param {Object} answers
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
  * @returns {Promise<void>}
  */
-export async function saveAnswers(answers, store = globalStore) {
-  const config = await store.getFullConfig();
-  const profile = config.profiles?.[config.activeProfile];
+export async function saveAnswers(answers, store = globalStore, profileKey = null) {
+  const key = await resolveProfileKey(store, profileKey);
 
-  if (profile) {
+  await store.updateProfile(key, (profile) => {
     if (!profile.skrining) profile.skrining = {};
-    profile.skrining.answers = answers;
-  }
-
-  await store.setConfig(config);
+    profile.skrining.answers = { ...answers };
+  });
 }
 
 /**
@@ -34,72 +48,84 @@ export async function saveAnswers(answers, store = globalStore) {
  * @param {string} key - Radio id of the first option, e.g. answer8AA
  * @param {string} value - Radio value, e.g. B
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
  * @returns {Promise<void>}
  */
-export async function addAnswer(key, value, store = globalStore) {
-  const answers = await getAnswers(store);
-  answers[key] = value;
-  await saveAnswers(answers, store);
+export async function addAnswer(key, value, store = globalStore, profileKey = null) {
+  const resolved = await resolveProfileKey(store, profileKey);
+
+  await store.updateProfile(resolved, (profile) => {
+    if (!profile.skrining) profile.skrining = {};
+    const answers = profile.skrining.answers;
+    const next = typeof answers === 'object' && answers !== null ? answers : {};
+    next[key] = value;
+    profile.skrining.answers = next;
+  });
 }
 
 /**
  * Removes one stored radio answer.
  * @param {string} key
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
  * @returns {Promise<void>}
  */
-export async function removeAnswer(key, store = globalStore) {
-  const answers = await getAnswers(store);
-  delete answers[key];
-  await saveAnswers(answers, store);
+export async function removeAnswer(key, store = globalStore, profileKey = null) {
+  const resolved = await resolveProfileKey(store, profileKey);
+
+  await store.updateProfile(resolved, (profile) => {
+    const answers = profile.skrining?.answers;
+    if (typeof answers !== 'object' || answers === null) return;
+    delete answers[key];
+  });
 }
 
 /**
  * Checks whether a question already has a stored answer.
  * @param {string} key
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
  * @returns {Promise<boolean>}
  */
-export async function isAnswerPinned(key, store = globalStore) {
-  const answers = await getAnswers(store);
+export async function isAnswerPinned(key, store = globalStore, profileKey = null) {
+  const answers = await getAnswers(store, profileKey);
   return Object.hasOwn(answers, key);
 }
 
 /**
- * Reads the skrining excludes list of the active profile as an array.
+ * Reads the skrining excludes list of one profile as an array.
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
  * @returns {Promise<string[]>}
  */
-export async function getSkriningExcludes(store = globalStore) {
-  const config = await store.getActiveConfig();
-  return (config.skrining?.excludes || '').split(';').filter(Boolean);
+export async function getSkriningExcludes(store = globalStore, profileKey = null) {
+  const key = await resolveProfileKey(store, profileKey);
+  const config = await store.getFullConfig();
+  return (config.profiles?.[key]?.skrining?.excludes || '').split(';').filter(Boolean);
 }
 
 /**
  * Adds or removes one question id from the skrining excludes list.
  * @param {string} key - Radio id of the first option, e.g. answer8AA
  * @param {import('../store.js').DandelionStore} [store]
+ * @param {string|null} [profileKey]
  * @returns {Promise<boolean>} True when now excluded, false when now included.
  */
-export async function toggleSkriningExclude(key, store = globalStore) {
-  const excludes = [...new Set(await getSkriningExcludes(store))];
-  const index = excludes.indexOf(key);
+export async function toggleSkriningExclude(key, store = globalStore, profileKey = null) {
+  const resolved = await resolveProfileKey(store, profileKey);
 
-  if (index > -1) {
-    excludes.splice(index, 1);
-  } else {
-    excludes.push(key);
-  }
-
-  const config = await store.getFullConfig();
-  const profile = config.profiles?.[config.activeProfile];
-
-  if (profile) {
+  return await store.updateProfile(resolved, (profile) => {
     if (!profile.skrining) profile.skrining = {};
+    const excludes = [...new Set((profile.skrining.excludes || '').split(';').filter(Boolean))];
+    const index = excludes.indexOf(key);
+
+    if (index > -1) {
+      excludes.splice(index, 1);
+    } else {
+      excludes.push(key);
+    }
+
     profile.skrining.excludes = excludes.join(';');
-  }
-
-  await store.setConfig(config);
-
-  return index === -1;
+    return index === -1;
+  });
 }

@@ -73,10 +73,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     editVersion += 1;
   }
 
-  async function persistConfig() {
-    const snapshot = cloneConfig(loadedConfig);
-    await store.setConfig(snapshot);
-    syncedConfig = snapshot;
+  /**
+   * Persists the local config through the store's lock so a stale copy cannot
+   * overwrite a write made by another context.
+   * @returns {Promise<void>}
+   */
+  function persistConfig() {
+    return store.updateConfig((config) => {
+      config.profiles = structuredClone(loadedConfig.profiles);
+      config.activeProfile = loadedConfig.activeProfile;
+    });
   }
 
   window.addEventListener('beforeunload', (event) => {
@@ -380,14 +386,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    const wasDirty = formDirty;
-    formDirty = false;
-    try {
-      await store.setConfig(migrateConfig(importedConfig));
-    } catch (error) {
-      formDirty = wasDirty;
-      throw error;
-    }
+    await store.updateConfig((config) => {
+      Object.assign(config, migrateConfig(importedConfig));
+    });
     loadedConfig = cloneConfig(await store.refreshConfig());
     syncedConfig = cloneConfig(loadedConfig);
     formDirty = false;
