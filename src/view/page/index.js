@@ -192,11 +192,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   let profileManager = null;
   let formDirty = false;
   let formActiveProfile = null;
+  let editVersion = 0;
+
+  function markFormDirty() {
+    formDirty = true;
+    editVersion += 1;
+    if (saveState !== 'idle') setSaveState('idle');
+  }
+
+  window.addEventListener('beforeunload', (event) => {
+    if (!formDirty) return;
+    // Browsers show their own text; a custom message is ignored.
+    event.preventDefault();
+    event.returnValue = '';
+  });
 
   document.getElementById('config-body').addEventListener('input', (event) => {
     if (!event.isTrusted) return;
-    formDirty = true;
-    if (saveState !== 'idle') setSaveState('idle');
+    if (event.target.closest?.('.pm-add-input, .pm-rename-input')) return;
+    markFormDirty();
   });
 
   const radioButtonKeywordsList = new KeywordList(
@@ -204,6 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'form-skrining-radio-keywords-list',
     'form-skrining-radio-keywords-add-input',
     'form-skrining-radio-keywords-add',
+    markFormDirty,
   );
 
   const dropdownKeywordsList = new KeywordList(
@@ -211,6 +226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'form-skrining-dropdown-keywords-list',
     'form-skrining-dropdown-keywords-add-input',
     'form-skrining-dropdown-keywords-add',
+    markFormDirty,
   );
 
   const notCheckedList = new KeywordList(
@@ -218,6 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'not-checked-list-container',
     'not-checked-list-add-input',
     'not-checked-list-add',
+    markFormDirty,
   );
 
   const skriningExcludesList = new KeywordList(
@@ -225,6 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'skrining-excludes-list',
     'skrining-excludes-add-input',
     'skrining-excludes-add',
+    markFormDirty,
   );
 
   window.keywordLists = {
@@ -319,6 +337,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
@@ -333,6 +352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.skrining?.answers || {},
       (newAnswers) => {
         if (loadedConfig) {
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].skrining) {
             loadedConfig.profiles[selectedProfile].skrining = {};
@@ -382,8 +402,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     posBtns.forEach((btn) => {
       btn.addEventListener('click', () => {
+        if (btn.classList.contains('active')) return;
         posBtns.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
+        markFormDirty();
       });
     });
 
@@ -485,10 +507,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     saving = true;
+    const saveVersion = editVersion;
     try {
       await store.setConfig(loadedConfig);
-      formDirty = false;
-      setSaveState('saved');
+      if (editVersion === saveVersion) {
+        formDirty = false;
+        setSaveState('saved');
+      } else {
+        setSaveState('idle');
+      }
     } catch (error) {
       failSave(error.message);
     } finally {

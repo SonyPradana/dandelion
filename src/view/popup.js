@@ -63,6 +63,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   let profileManager = null;
   let formDirty = false;
   let formActiveProfile = null;
+  let editVersion = 0;
+
+  function markFormDirty() {
+    formDirty = true;
+    editVersion += 1;
+  }
+
+  window.addEventListener('beforeunload', (event) => {
+    if (!formDirty) return;
+    // Browsers may not show this dialog for an extension popup.
+    event.preventDefault();
+    event.returnValue = '';
+  });
 
   browser.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
@@ -74,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   configWrapper.addEventListener('input', (event) => {
-    if (event.isTrusted) formDirty = true;
+    if (event.isTrusted) markFormDirty();
   });
 
   // Initialize KeywordList components
@@ -83,6 +96,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     'not-checked-list-container',
     'not-checked-list-add-input',
     'not-checked-list-add',
+    markFormDirty,
   );
 
   window.keywordLists = { notCheckedList };
@@ -189,6 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.formSkrining?.pinneds || {},
       (newPinneds) => {
         if (loadedConfig) {
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].formSkrining) {
             loadedConfig.profiles[selectedProfile].formSkrining = {};
@@ -203,7 +218,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       activeProfileSettings.skrining?.answers || {},
       (newAnswers) => {
         if (loadedConfig) {
-          formDirty = true;
+          markFormDirty();
           const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
           if (!loadedConfig.profiles[selectedProfile].skrining) {
             loadedConfig.profiles[selectedProfile].skrining = {};
@@ -248,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   if (saveConfigBtn) {
-    saveConfigBtn.addEventListener('click', () => {
+    saveConfigBtn.addEventListener('click', async () => {
       if (!loadedConfig) return;
       const selectedProfile = formActiveProfile || loadedConfig.activeProfile;
       if (!loadedConfig.profiles[selectedProfile]) {
@@ -281,10 +296,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.notChecked.url = notCheckedUrlInput.value;
       profileSettings.notChecked.notCheckedList = notCheckedListInput.value;
 
-      store.setConfig(loadedConfig);
-      formDirty = false;
+      const saveVersion = editVersion;
+      try {
+        await store.setConfig(loadedConfig);
+        const savedClean = editVersion === saveVersion;
+        if (savedClean) formDirty = false;
+        saveConfigBtn.textContent = savedClean ? 'Tersimpan!' : 'Simpan';
+      } catch (error) {
+        console.error('Failed to save config:', error);
+        saveConfigBtn.textContent = 'Gagal menyimpan';
+      }
 
-      saveConfigBtn.textContent = 'Tersimpan!';
       setTimeout(() => {
         saveConfigBtn.textContent = 'Simpan';
       }, 1500);

@@ -27,9 +27,10 @@ export class KeywordList {
    * @param {string} listElementId - ID of the container element for the keyword list
    * @param {string} inputElementId - ID of the input field for adding new keywords
    * @param {string} addButtonId - ID of the button to add new keywords
+   * @param {(value: string) => void} [onChange] - Called after add, remove, or reorder.
    * @throws {Error} If any of the required DOM elements are not found
    */
-  constructor(sourceTextboxId, listElementId, inputElementId, addButtonId) {
+  constructor(sourceTextboxId, listElementId, inputElementId, addButtonId, onChange) {
     /** @type {HTMLInputElement} */
     this.sourceTextbox = document.getElementById(sourceTextboxId);
 
@@ -41,6 +42,9 @@ export class KeywordList {
 
     /** @type {HTMLButtonElement} */
     this.addButton = document.getElementById(addButtonId);
+
+    /** @type {((value: string) => void)|undefined} */
+    this.onChange = onChange;
 
     /** @type {string[]} */
     this.items = [];
@@ -101,9 +105,11 @@ export class KeywordList {
    * @returns {void}
    */
   updateTextbox() {
-    this.sourceTextbox.value = this.items.join(';');
+    const value = this.items.join(';');
+    this.sourceTextbox.value = value;
     // Trigger input event so other listeners can react
     this.sourceTextbox.dispatchEvent(new Event('input', { bubbles: true }));
+    this.onChange?.(value);
   }
 
   /**
