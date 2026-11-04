@@ -26,10 +26,7 @@ export async function savePinnedItems(items, store = globalStore) {
 }
 
 /**
- * Mutates the active profile's pinned items inside the store's write lock, so
- * the current pins are read and written in one step and a concurrent update is
- * not overwritten. The profile key is read once, before the write is queued, so
- * a profile switch in between cannot move the write. A missing profile rejects.
+ * Reads and mutates the active profile's pinned items under the write lock.
  * @param {(items: Object) => void} mutate
  * @param {import('../store.js').DandelionStore} store
  * @returns {Promise<void>}
