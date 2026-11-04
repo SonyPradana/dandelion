@@ -197,6 +197,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   /** @type {Object|null} Config as last read from or written to storage. */
   let syncedConfig = null;
   let writeQueue = Promise.resolve();
+  /** Thrown inside the write lock when storage moved after the prompt opened. */
+  const STALE_WRITE = new Error('config changed under the write lock');
 
   function markFormDirty() {
     formDirty = true;
@@ -212,33 +214,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Snapshot now so an edit during the queued save is not written or marked saved.
     const snapshot = cloneConfig(loadedConfig);
     const run = async () => {
-      const fresh = await store.refreshConfig();
-      if (!configsEqual(syncedConfig, fresh)) {
-        const overwrite = await notify.confirm(
-          'Konfigurasi berubah di tab lain',
-          'Pilih Ya untuk menimpa perubahan dari tab lain dengan edit di halaman ini. Pilih Batal untuk memuat data terbaru dan membuang edit di halaman ini.',
-        );
-        if (overwrite === undefined) return false;
-        if (overwrite === false) {
-          loadedConfig = cloneConfig(fresh);
-          syncedConfig = cloneConfig(fresh);
-          formDirty = false;
-          await refreshUiFromStore();
-          return false;
+      for (;;) {
+        const fresh = await store.refreshConfig();
+        if (!configsEqual(syncedConfig, fresh)) {
+          const overwrite = await notify.confirm(
+            'Konfigurasi berubah di tab lain',
+            'Pilih Ya untuk menimpa perubahan dari tab lain dengan edit di halaman ini. Pilih Batal untuk memuat data terbaru dan membuang edit di halaman ini.',
+          );
+          if (overwrite === undefined) return false;
+          if (overwrite === false) {
+            const latest = await store.refreshConfig();
+            loadedConfig = cloneConfig(latest);
+            syncedConfig = cloneConfig(latest);
+            formDirty = false;
+            await refreshUiFromStore();
+            return false;
+          }
         }
-      }
 
-      // Capture the config the store actually persisted, as the synced baseline.
-      let written = null;
-      await store.updateConfig((config) => {
-        config.profiles = snapshot.profiles;
-        config.activeProfile = snapshot.activeProfile;
-        config.panelPosition = snapshot.panelPosition;
-        config.silenceInfoNotification = snapshot.silenceInfoNotification;
-        written = cloneConfig(config);
-      });
-      syncedConfig = written;
-      return true;
+        // Capture the config the store actually persisted, as the synced baseline.
+        let written = null;
+        try {
+          await store.updateConfig((config) => {
+            // Another tab may have written while the prompt was open.
+            if (!configsEqual(config, fresh)) throw STALE_WRITE;
+            config.profiles = snapshot.profiles;
+            config.activeProfile = snapshot.activeProfile;
+            config.panelPosition = snapshot.panelPosition;
+            config.silenceInfoNotification = snapshot.silenceInfoNotification;
+            written = cloneConfig(config);
+          });
+        } catch (error) {
+          if (error === STALE_WRITE) continue;
+          throw error;
+        }
+        syncedConfig = written;
+        return true;
+      }
     };
 
     const result = writeQueue.then(run, run);
