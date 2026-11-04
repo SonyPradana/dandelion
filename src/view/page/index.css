@@ -19,7 +19,7 @@ body {
   display: flex;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 /* ── Topbar ── */
@@ -77,10 +77,7 @@ body {
 
 /* ── Sidebar ── */
 .sidebar {
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  height: 100%;
+  align-self: stretch;
   width: 48px;
   flex-shrink: 0;
   background: #fff;
@@ -189,6 +186,7 @@ body {
 .main {
   flex: 1;
   min-width: 0;
+  overflow-y: auto;
 }
 
 .main-wrap {
