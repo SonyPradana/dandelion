@@ -70,6 +70,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     editVersion += 1;
   }
 
+  /**
+   * Persists the local config under the store lock.
+   * @returns {Promise<void>}
+   */
+  function persistConfig() {
+    return store.updateConfig((config) => {
+      config.profiles = structuredClone(loadedConfig.profiles);
+      config.activeProfile = loadedConfig.activeProfile;
+    });
+  }
+
   window.addEventListener('beforeunload', (event) => {
     if (!formDirty) return;
     // Browsers may not show this dialog for an extension popup.
@@ -253,10 +264,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           loadedConfig.activeProfile = newActiveProfile;
           updateFormForProfile(newActiveProfile);
           formDirty = false;
-          store.setConfig(loadedConfig);
+          persistConfig().catch((error) => console.error('Failed to save config:', error));
         },
         onChange: () => {
-          store.setConfig(loadedConfig);
+          persistConfig().catch((error) => console.error('Failed to save config:', error));
         },
       },
     );
@@ -298,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const saveVersion = editVersion;
       try {
-        await store.setConfig(loadedConfig);
+        await persistConfig();
         const savedClean = editVersion === saveVersion;
         if (savedClean) formDirty = false;
         saveConfigBtn.textContent = savedClean ? 'Tersimpan!' : 'Simpan';
@@ -359,7 +370,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    await store.setConfig(migrateConfig(importedConfig));
+    await store.updateConfig((config) => {
+      Object.assign(config, migrateConfig(importedConfig));
+    });
     loadedConfig = await store.refreshConfig();
     formDirty = false;
     refreshUiFromStore();

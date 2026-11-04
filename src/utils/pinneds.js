@@ -18,17 +18,16 @@ export async function getPinnedItems(store = globalStore) {
  * @param {import('../store.js').DandelionStore} [store]
  */
 export async function savePinnedItems(items, store = globalStore) {
-  const config = await store.getFullConfig();
-  const activeProfile = config.activeProfile;
+  await store.updateConfig((config) => {
+    const activeProfile = config.activeProfile;
 
-  if (config.profiles && config.profiles[activeProfile]) {
-    if (!config.profiles[activeProfile].formSkrining) {
-      config.profiles[activeProfile].formSkrining = {};
+    if (config.profiles && config.profiles[activeProfile]) {
+      if (!config.profiles[activeProfile].formSkrining) {
+        config.profiles[activeProfile].formSkrining = {};
+      }
+      config.profiles[activeProfile].formSkrining.pinneds = items;
     }
-    config.profiles[activeProfile].formSkrining.pinneds = items;
-  }
-
-  await store.setConfig(config);
+  });
 }
 
 /**

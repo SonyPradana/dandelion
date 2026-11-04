@@ -153,9 +153,74 @@ class DandelionStore {
   }
 
   async setActiveProfile(profileKey) {
-    const config = await this.getFullConfig();
-    config.activeProfile = profileKey;
-    await this.setConfig(config);
+    await this.updateConfig((config) => {
+      config.activeProfile = profileKey;
+    });
+  }
+
+  /**
+   * Mutates and persists the whole config under the write lock.
+   * @param {(config: Object) => void} mutator
+   * @returns {Promise<void>}
+   */
+  async updateConfig(mutator) {
+    return this._queueWrite(async () => {
+      const config = structuredClone(await this.refreshConfig());
+      const result = mutator(config);
+      await this.setConfig(config);
+      return result;
+    });
+  }
+
+  /**
+   * Mutates and persists one profile under the write lock.
+   * @param {string} profileKey
+   * @param {(profile: Object, config: Object) => void} mutator
+   * @returns {Promise<void>}
+   */
+  async updateProfile(profileKey, mutator) {
+    const run = async () => {
+      // Mutate a detached copy so a throwing mutator cannot corrupt the cache.
+      const config = structuredClone(await this.refreshConfig());
+      const profile = config.profiles?.[profileKey];
+      if (!profile) {
+        throw new Error(`Profile "${profileKey}" does not exist`);
+      }
+
+      const result = mutator(profile, config);
+      await this.setConfig(config);
+      return result;
+    };
+
+    return this._queueWrite(run);
+  }
+
+  /**
+   * Queues a read-modify-write on this instance, then runs it under the
+   * cross-context write lock.
+   * @param {() => Promise<unknown>} run
+   * @returns {Promise<unknown>}
+   */
+  _queueWrite(run) {
+    const previous = this._updateChain ?? Promise.resolve();
+    const next = previous.then(
+      () => this._withWriteLock(run),
+      () => this._withWriteLock(run),
+    );
+    // Keep the chain usable after a rejected update.
+    this._updateChain = next.catch(() => {});
+    return next;
+  }
+
+  /**
+   * Runs a read-modify-write under the cross-context write lock. Runs directly
+   * where Web Locks is unavailable (older engines, tests).
+   * @param {() => Promise<unknown>} run
+   * @returns {Promise<unknown>}
+   */
+  _withWriteLock(run) {
+    if (typeof navigator === 'undefined' || !navigator.locks) return run();
+    return navigator.locks.request('dandelion-config-write', run);
   }
 
   async onProfileSwitch(profileKey) {

@@ -200,6 +200,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (saveState !== 'idle') setSaveState('idle');
   }
 
+  /**
+   * Persists the local config under the store lock.
+   * @returns {Promise<boolean>} Whether the local config was written.
+   */
+  function persistConfig() {
+    return store.updateConfig((config) => {
+      config.profiles = structuredClone(loadedConfig.profiles);
+      config.activeProfile = loadedConfig.activeProfile;
+      config.panelPosition = loadedConfig.panelPosition;
+      config.silenceInfoNotification = loadedConfig.silenceInfoNotification;
+    });
+  }
+
   window.addEventListener('beforeunload', (event) => {
     if (!formDirty) return;
     // Browsers show their own text; a custom message is ignored.
@@ -387,10 +400,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           loadedConfig.activeProfile = newActiveProfile;
           updateFormForProfile(newActiveProfile);
           formDirty = false;
-          store.setConfig(loadedConfig);
+          persistConfig().catch((error) => notify.alert('Gagal menyimpan', error.message));
         },
         onChange: () => {
-          store.setConfig(loadedConfig);
+          // Profile add/rename/remove is a config edit.
+          persistConfig().catch((error) => notify.alert('Gagal menyimpan', error.message));
         },
       },
     );
@@ -509,7 +523,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     saving = true;
     const saveVersion = editVersion;
     try {
-      await store.setConfig(loadedConfig);
+      await persistConfig();
       if (editVersion === saveVersion) {
         formDirty = false;
         setSaveState('saved');
@@ -1003,7 +1017,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function applyImportedConfig(importedConfig) {
-    await store.setConfig(migrateConfig(importedConfig));
+    await store.updateConfig((config) => {
+      Object.assign(config, migrateConfig(importedConfig));
+    });
     loadedConfig = await store.refreshConfig();
     formDirty = false;
     await refreshUiFromStore();
