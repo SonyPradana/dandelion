@@ -79,8 +79,8 @@ async function handleSave() {
   }
 
   try {
-    // Replace the whole config under the store lock so a concurrent profile
-    // update from another context is not silently dropped.
+    // Write under the store lock so a concurrent profile update from another
+    // context is not silently dropped.
     await store.updateConfig((config) => {
       Object.assign(config, parsed.value);
     });

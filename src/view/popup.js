@@ -71,8 +71,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Persists the local config through the store's lock so a stale copy cannot
-   * overwrite a write made by another context.
+   * Persists the local config under the store lock.
    * @returns {Promise<void>}
    */
   function persistConfig() {

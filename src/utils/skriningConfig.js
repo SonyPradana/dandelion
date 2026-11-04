@@ -1,9 +1,7 @@
 import { store as globalStore } from '../store.js';
 
 /**
- * Resolves the profile key for one operation. Reading `activeProfile` once at
- * the start keeps the read and the write bound to the same profile even when a
- * profile switch lands in between.
+ * Resolves the profile key for one operation.
  * @param {import('../store.js').DandelionStore} store
  * @param {string|null} [profileKey]
  * @returns {Promise<string>}
