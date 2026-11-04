@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.addEventListener('beforeunload', (event) => {
     if (!formDirty) return;
-    // Best effort: browsers may not show this dialog for an extension popup.
+    // Browsers may not show this dialog for an extension popup.
     event.preventDefault();
     event.returnValue = '';
   });

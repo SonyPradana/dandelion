@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.addEventListener('beforeunload', (event) => {
     if (!formDirty) return;
-    // The browser shows its own generic confirmation; a custom message is ignored.
+    // Browsers show their own text; a custom message is ignored.
     event.preventDefault();
     event.returnValue = '';
   });
