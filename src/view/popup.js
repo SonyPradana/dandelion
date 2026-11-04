@@ -18,6 +18,7 @@ import {
 import { init, getStatus } from '../quota/quota-manager.js';
 import { parseConfig, validateConfig } from '../utils/configValidator.js';
 import { migrateConfig } from '../configuration.js';
+import { cloneConfig, configsEqual, resolveConfigChange } from './configSync.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const agreement = document.getElementById('agreement');
@@ -64,6 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   let formDirty = false;
   let formActiveProfile = null;
   let editVersion = 0;
+  /** @type {Object|null} Config as last read from or written to storage. */
+  let syncedConfig = null;
 
   function markFormDirty() {
     formDirty = true;
@@ -71,14 +74,49 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Persists the local config under the store lock.
+   * Persists only the profiles this editor changed, under the store lock.
    * @returns {Promise<void>}
    */
-  function persistConfig() {
-    return store.updateConfig((config) => {
-      config.profiles = structuredClone(loadedConfig.profiles);
-      config.activeProfile = loadedConfig.activeProfile;
+  async function persistConfig() {
+    const syncedProfiles = syncedConfig?.profiles || {};
+    const localProfiles = loadedConfig.profiles || {};
+    const changedKeys = new Set();
+
+    for (const [key, profile] of Object.entries(localProfiles)) {
+      if (!configsEqual(syncedProfiles[key], profile)) changedKeys.add(key);
+    }
+    for (const key of Object.keys(syncedProfiles)) {
+      if (!localProfiles[key]) changedKeys.add(key);
+    }
+
+    // Only push the selection when this editor changed it.
+    const selectionChanged =
+      !syncedConfig || loadedConfig.activeProfile !== syncedConfig.activeProfile;
+
+    let written = null;
+    await store.updateConfig((config) => {
+      config.profiles ||= {};
+      for (const key of changedKeys) {
+        if (localProfiles[key]) {
+          config.profiles[key] = cloneConfig(localProfiles[key]);
+        } else {
+          delete config.profiles[key];
+        }
+      }
+      if (selectionChanged) config.activeProfile = loadedConfig.activeProfile;
+      written = cloneConfig(config);
     });
+
+    syncedConfig = written;
+
+    // Absorb profiles another context wrote, so the next save does not push
+    // the stale copy back.
+    for (const [key, profile] of Object.entries(written.profiles || {})) {
+      if (!changedKeys.has(key)) loadedConfig.profiles[key] = cloneConfig(profile);
+    }
+    for (const key of Object.keys(loadedConfig.profiles || {})) {
+      if (!written.profiles?.[key] && !changedKeys.has(key)) delete loadedConfig.profiles[key];
+    }
   }
 
   window.addEventListener('beforeunload', (event) => {
@@ -92,13 +130,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (area !== 'local') return;
     const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
     if (configKeys.some((key) => changes[key])) {
-      loadedConfig = await store.refreshConfig();
+      const incoming = await store.refreshConfig();
+      // The popup closes on blur, so no other context writes while it is open.
+      const action = resolveConfigChange({
+        dirty: formDirty,
+        baseline: syncedConfig,
+        incoming,
+      });
+      if (action !== 'apply') return;
+      loadedConfig = cloneConfig(incoming);
+      syncedConfig = cloneConfig(incoming);
       refreshUiFromStore();
     }
   });
 
   configWrapper.addEventListener('input', (event) => {
-    if (event.isTrusted) markFormDirty();
+    if (!event.isTrusted) return;
+    // ProfileManager handles its own add/rename saves via its change callback.
+    if (event.target.closest?.('.pm-add-input, .pm-rename-input')) return;
+    markFormDirty();
   });
 
   // Initialize KeywordList components
@@ -206,9 +256,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   store.getFullConfig().then((config) => {
-    loadedConfig = config;
+    loadedConfig = cloneConfig(config);
+    syncedConfig = cloneConfig(config);
 
-    const activeProfileSettings = config.profiles[config.activeProfile];
+    const activeProfileSettings = loadedConfig.profiles[loadedConfig.activeProfile];
     pinnedValuesList = new KeyValueList(
       'form-skrining-pinned-values',
       activeProfileSettings.formSkrining?.pinneds || {},
@@ -239,12 +290,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       },
     );
 
-    updateFormForProfile(config.activeProfile);
+    updateFormForProfile(loadedConfig.activeProfile);
 
     profileManager = new ProfileManager(
       'profile-manager-container',
-      config.profiles,
-      config.activeProfile,
+      loadedConfig.profiles,
+      loadedConfig.activeProfile,
       {
         onSwitch: (newActiveProfile) => {
           if (
@@ -373,7 +424,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await store.updateConfig((config) => {
       Object.assign(config, migrateConfig(importedConfig));
     });
-    loadedConfig = await store.refreshConfig();
+    loadedConfig = cloneConfig(await store.refreshConfig());
+    syncedConfig = cloneConfig(loadedConfig);
     formDirty = false;
     refreshUiFromStore();
 

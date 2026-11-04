@@ -82,6 +82,15 @@ export const notify = {
       btnContainer.style.display = 'flex';
       btnContainer.style.gap = '5px';
 
+      const closeControl = panel.querySelector('.dandelion-panel-close');
+      if (closeControl) {
+        // Closing the panel dismisses it; callers can tell that apart from Batal.
+        closeControl.onclick = () => {
+          remove();
+          resolve(undefined);
+        };
+      }
+
       const cancelBtn = createPanelButton('Batal');
       cancelBtn.onclick = () => {
         remove();

@@ -451,6 +451,37 @@ describe('multiple store instances', () => {
   });
 });
 
+describe('replaceConfig', () => {
+  it('should persist the new config and delete config keys it no longer has', async () => {
+    await store.setConfig({
+      activeProfile: 'profile1',
+      panelPosition: 'top-right',
+      profiles: { profile1: { name: 'Satu' } },
+    });
+
+    await store.replaceConfig({
+      activeProfile: 'profile1',
+      profiles: { profile1: { name: 'Satu' } },
+    });
+
+    const stored = await backend.storage.local.get(null);
+    expect(stored.panelPosition).toBeUndefined();
+    expect(stored.profiles.profile1.name).toBe('Satu');
+  });
+
+  it('should not delete keys outside the config document', async () => {
+    await store.setDeviceId('device-1');
+    await store.setConfig({
+      activeProfile: 'profile1',
+      profiles: { profile1: { name: 'Satu' } },
+    });
+
+    await store.replaceConfig({ activeProfile: 'profile1', profiles: {} });
+
+    expect(await store.getDeviceId()).toBe('device-1');
+  });
+});
+
 describe('agreement', () => {
   it('should return false by default', async () => {
     expect(await store.getAgreement()).toBe(false);

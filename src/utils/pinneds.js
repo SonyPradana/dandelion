@@ -18,15 +18,28 @@ export async function getPinnedItems(store = globalStore) {
  * @param {import('../store.js').DandelionStore} [store]
  */
 export async function savePinnedItems(items, store = globalStore) {
-  await store.updateConfig((config) => {
-    const activeProfile = config.activeProfile;
+  const config = await store.getFullConfig();
+  await store.updateProfile(config.activeProfile, (profile) => {
+    if (!profile.formSkrining) profile.formSkrining = {};
+    profile.formSkrining.pinneds = items;
+  });
+}
 
-    if (config.profiles && config.profiles[activeProfile]) {
-      if (!config.profiles[activeProfile].formSkrining) {
-        config.profiles[activeProfile].formSkrining = {};
-      }
-      config.profiles[activeProfile].formSkrining.pinneds = items;
+/**
+ * Reads and mutates the active profile's pinned items under the write lock.
+ * @param {(items: Object) => void} mutate
+ * @param {import('../store.js').DandelionStore} store
+ * @returns {Promise<void>}
+ */
+async function mutatePinnedItems(mutate, store) {
+  const config = await store.getFullConfig();
+  await store.updateProfile(config.activeProfile, (profile) => {
+    if (!profile.formSkrining) profile.formSkrining = {};
+    const pinneds = profile.formSkrining.pinneds;
+    if (typeof pinneds !== 'object' || pinneds === null) {
+      profile.formSkrining.pinneds = {};
     }
+    mutate(profile.formSkrining.pinneds);
   });
 }
 
@@ -38,9 +51,9 @@ export async function savePinnedItems(items, store = globalStore) {
  * @param {import('../store.js').DandelionStore} [store]
  */
 export async function addPinnedItem(key, value, store = globalStore) {
-  const items = await getPinnedItems(store);
-  items[key] = value;
-  await savePinnedItems(items, store);
+  await mutatePinnedItems((items) => {
+    items[key] = value;
+  }, store);
 }
 
 /**
@@ -50,9 +63,9 @@ export async function addPinnedItem(key, value, store = globalStore) {
  * @param {import('../store.js').DandelionStore} [store]
  */
 export async function removePinnedItem(key, store = globalStore) {
-  const items = await getPinnedItems(store);
-  delete items[key];
-  await savePinnedItems(items, store);
+  await mutatePinnedItems((items) => {
+    delete items[key];
+  }, store);
 }
 
 /**

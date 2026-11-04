@@ -51,7 +51,9 @@ export async function toggleNotCheckedItem(id, store = globalStore, profileKey =
   return await store.updateProfile(key, (profile) => {
     if (!profile.notChecked) profile.notChecked = {};
 
-    const list = (profile.notChecked.notCheckedList || '').split(';').filter(Boolean);
+    // Dedupe: KeywordList allows duplicate entries, and leaving a second copy
+    // behind would keep the item marked as not-checked after toggling it off.
+    const list = [...new Set((profile.notChecked.notCheckedList || '').split(';').filter(Boolean))];
     const index = list.indexOf(id);
 
     if (index > -1) {

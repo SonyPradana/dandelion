@@ -58,6 +58,14 @@ describe('excludes', () => {
     expect(await isExcluded('x')).toBe(true);
   });
 
+  it('toggleExclude should drop every duplicate when removing', async () => {
+    await setupConfig('a;a;b');
+    const result = await toggleExclude('a');
+    expect(result).toBe(false);
+    expect(await isExcluded('a')).toBe(false);
+    expect(await isExcluded('b')).toBe(true);
+  });
+
   describe('error handling', () => {
     it('isExcluded should handle whitespace in item names', async () => {
       const result = await isExcluded('  a  ');

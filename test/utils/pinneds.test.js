@@ -148,4 +148,18 @@ describe('pinneds', () => {
       expect(typeof items.complex).toBe('object');
     });
   });
+
+  describe('missing active profile', () => {
+    it('addPinnedItem should reject instead of writing unchanged config', async () => {
+      store.init(new MemoryBackend());
+      await store.setConfig({ activeProfile: 'ghost', profiles: {} });
+      await expect(addPinnedItem('key', 'value')).rejects.toThrow('does not exist');
+    });
+
+    it('removePinnedItem should reject instead of writing unchanged config', async () => {
+      store.init(new MemoryBackend());
+      await store.setConfig({ activeProfile: 'ghost', profiles: {} });
+      await expect(removePinnedItem('key')).rejects.toThrow('does not exist');
+    });
+  });
 });

@@ -31,6 +31,8 @@ import { migrateConfig } from '../../configuration.js';
 import { parseRoute, buildSearch } from './router.js';
 import { SEARCH_INDEX } from './search-index.js';
 import { initSearch } from './search.js';
+import { cloneConfig, configsEqual, resolveConfigChange } from '../configSync.js';
+import { notify } from '../../components/notification';
 
 let activePopup = null;
 
@@ -64,8 +66,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
     if (configKeys.some((key) => changes[key])) {
-      loadedConfig = await store.refreshConfig();
-      refreshUiFromStore();
+      await handleConfigStorageChange(await store.refreshConfig());
     }
   });
 
@@ -193,6 +194,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   let formDirty = false;
   let formActiveProfile = null;
   let editVersion = 0;
+  /** @type {Object|null} Config as last read from or written to storage. */
+  let syncedConfig = null;
+  let writeQueue = Promise.resolve();
+  /** Thrown inside the write lock when storage moved after the prompt opened. */
+  const STALE_WRITE = new Error('config changed under the write lock');
 
   function markFormDirty() {
     formDirty = true;
@@ -205,12 +211,73 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @returns {Promise<boolean>} Whether the local config was written.
    */
   function persistConfig() {
-    return store.updateConfig((config) => {
-      config.profiles = structuredClone(loadedConfig.profiles);
-      config.activeProfile = loadedConfig.activeProfile;
-      config.panelPosition = loadedConfig.panelPosition;
-      config.silenceInfoNotification = loadedConfig.silenceInfoNotification;
+    // Snapshot now so an edit during the queued save is not written or marked saved.
+    const snapshot = cloneConfig(loadedConfig);
+    const run = async () => {
+      for (;;) {
+        const fresh = await store.refreshConfig();
+        if (!configsEqual(syncedConfig, fresh)) {
+          const overwrite = await notify.confirm(
+            'Konfigurasi berubah di tab lain',
+            'Pilih Ya untuk menimpa perubahan dari tab lain dengan edit di halaman ini. Pilih Batal untuk memuat data terbaru dan membuang edit di halaman ini.',
+          );
+          if (overwrite === undefined) return false;
+          if (overwrite === false) {
+            const latest = await store.refreshConfig();
+            loadedConfig = cloneConfig(latest);
+            syncedConfig = cloneConfig(latest);
+            formDirty = false;
+            await refreshUiFromStore();
+            return false;
+          }
+        }
+
+        // Capture the config the store actually persisted, as the synced baseline.
+        let written = null;
+        try {
+          await store.updateConfig((config) => {
+            // Another tab may have written while the prompt was open.
+            if (!configsEqual(config, fresh)) throw STALE_WRITE;
+            config.profiles = snapshot.profiles;
+            config.activeProfile = snapshot.activeProfile;
+            config.panelPosition = snapshot.panelPosition;
+            config.silenceInfoNotification = snapshot.silenceInfoNotification;
+            written = cloneConfig(config);
+          });
+        } catch (error) {
+          if (error === STALE_WRITE) continue;
+          throw error;
+        }
+        syncedConfig = written;
+        return true;
+      }
+    };
+
+    const result = writeQueue.then(run, run);
+    writeQueue = result.then(
+      () => {},
+      () => {},
+    );
+    return result;
+  }
+
+  /**
+   * Applies a config write from another context when the editor is clean.
+   * @param {Object} incoming Fresh config from storage.
+   */
+  async function handleConfigStorageChange(incoming) {
+    if (!loadedConfig) return;
+
+    const action = resolveConfigChange({
+      dirty: formDirty,
+      baseline: syncedConfig,
+      incoming,
     });
+    if (action !== 'apply') return;
+
+    loadedConfig = cloneConfig(incoming);
+    syncedConfig = cloneConfig(incoming);
+    await refreshUiFromStore();
   }
 
   window.addEventListener('beforeunload', (event) => {
@@ -342,9 +409,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   store.getFullConfig().then((config) => {
-    loadedConfig = config;
+    loadedConfig = cloneConfig(config);
+    syncedConfig = cloneConfig(config);
 
-    const activeProfileSettings = config.profiles[config.activeProfile];
+    const activeProfileSettings = loadedConfig.profiles[loadedConfig.activeProfile];
     pinnedValuesList = new KeyValueList(
       'form-skrining-pinned-values',
       activeProfileSettings.formSkrining?.pinneds || {},
@@ -375,14 +443,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       },
     );
 
-    updateFormForProfile(config.activeProfile);
+    updateFormForProfile(loadedConfig.activeProfile);
 
     profileManager = new ProfileManager(
       'profile-manager-container',
-      config.profiles,
-      config.activeProfile,
+      loadedConfig.profiles,
+      loadedConfig.activeProfile,
       {
-        onSwitch: (newActiveProfile) => {
+        onSwitch: async (newActiveProfile) => {
+          // Let a queued profile change reach storage before reading it back.
+          await writeQueue;
+
           if (
             formDirty &&
             !confirm(
@@ -397,10 +468,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
             return;
           }
+
+          // Keep what another context stored; apply only the new selection.
+          const switchVersion = editVersion;
+          const fresh = await store.refreshConfig();
+          // An edit during the read wins; keep the local form and abort the switch.
+          if (editVersion !== switchVersion) {
+            profileManager.setData(
+              loadedConfig.profiles,
+              formActiveProfile || loadedConfig.activeProfile,
+            );
+            return;
+          }
+          loadedConfig = cloneConfig(fresh);
+          syncedConfig = cloneConfig(fresh);
           loadedConfig.activeProfile = newActiveProfile;
-          updateFormForProfile(newActiveProfile);
           formDirty = false;
-          persistConfig().catch((error) => notify.alert('Gagal menyimpan', error.message));
+          profileManager.setData(loadedConfig.profiles, newActiveProfile);
+          updateFormForProfile(newActiveProfile);
+
+          try {
+            await persistConfig();
+          } catch (error) {
+            notify.alert('Gagal menyimpan', error.message);
+          }
         },
         onChange: () => {
           // Profile add/rename/remove is a config edit.
@@ -409,7 +500,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       },
     );
 
-    const panelPosition = config.panelPosition || 'top-right';
+    const panelPosition = loadedConfig.panelPosition || 'top-right';
     const posBtns = document.querySelectorAll('.pos-option');
     const activePosBtn = document.querySelector(`.pos-option[data-pos="${panelPosition}"]`);
     if (activePosBtn) activePosBtn.classList.add('active');
@@ -423,7 +514,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
 
-    silenceInfoNotificationCheckbox.checked = config.silenceInfoNotification ?? false;
+    silenceInfoNotificationCheckbox.checked = loadedConfig.silenceInfoNotification ?? false;
   });
 
   let saving = false;
@@ -523,7 +614,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     saving = true;
     const saveVersion = editVersion;
     try {
-      await persistConfig();
+      const saved = await persistConfig();
+      if (!saved) return;
       if (editVersion === saveVersion) {
         formDirty = false;
         setSaveState('saved');
@@ -1020,7 +1112,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await store.updateConfig((config) => {
       Object.assign(config, migrateConfig(importedConfig));
     });
-    loadedConfig = await store.refreshConfig();
+    loadedConfig = cloneConfig(await store.refreshConfig());
+    syncedConfig = cloneConfig(loadedConfig);
     formDirty = false;
     await refreshUiFromStore();
 
