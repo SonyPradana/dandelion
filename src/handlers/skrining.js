@@ -47,8 +47,8 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
   }
 
   /**
-   * Unchecks the radio this handler filled for a group, and only that radio.
-   * A choice the user made in the meantime is left untouched.
+   * Unchecks the radio this handler filled for a group, leaving a user's choice
+   * alone.
    * @param {string} key
    */
   function releaseGroup(key) {
