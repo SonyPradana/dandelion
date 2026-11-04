@@ -84,8 +84,7 @@ export const notify = {
 
       const closeControl = panel.querySelector('.dandelion-panel-close');
       if (closeControl) {
-        // Closing the panel is a dismissal, not a hanging promise, and must be
-        // distinguishable from an explicit Batal so callers can keep local edits.
+        // Closing the panel dismisses it; callers can tell that apart from Batal.
         closeControl.onclick = () => {
           remove();
           resolve(undefined);

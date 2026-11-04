@@ -27,10 +27,7 @@ export class KeywordList {
    * @param {string} listElementId - ID of the container element for the keyword list
    * @param {string} inputElementId - ID of the input field for adding new keywords
    * @param {string} addButtonId - ID of the button to add new keywords
-   * @param {(value: string) => void} [onChange] - Called after a list change
-   *   (add, remove, reorder) writes the new value to the source textbox.
-   *   Listeners that need trusted events cannot rely on the synthetic input
-   *   event, so they should use this callback instead.
+   * @param {(value: string) => void} [onChange] - Called after add, remove, or reorder.
    * @throws {Error} If any of the required DOM elements are not found
    */
   constructor(sourceTextboxId, listElementId, inputElementId, addButtonId, onChange) {

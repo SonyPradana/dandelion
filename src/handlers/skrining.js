@@ -6,10 +6,9 @@ import { createProfileComponent } from '../components/profile';
 import { debugButton } from '../components/debugButton';
 import { debugMarker } from '../components/marker';
 import {
-  getAnswers,
-  saveAnswers,
+  addAnswer,
+  removeAnswer,
   isAnswerPinned,
-  getSkriningExcludes,
   toggleSkriningExclude,
 } from '../utils/skriningConfig';
 import { store as globalStore } from '../store';
@@ -18,9 +17,12 @@ const MANUAL_TRIGGER_ID = 'dandelion-skrining-manual';
 const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
 
 export async function initializeSkrining(skriningConfig = {}, store = globalStore) {
-  const answers = skriningConfig.answers || {};
+  const fullConfig = await store.getFullConfig();
+  const profileKey = fullConfig.activeProfile;
+  const answers = { ...(skriningConfig.answers || {}) };
   const excludes = new Set((skriningConfig.excludes || '').split(';').filter(Boolean));
   const radioClickedSet = new Set();
+  const radioOwnerByGroup = new Map();
   let throttleTimeout = null;
   let observer = null;
 
@@ -42,6 +44,20 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
     }
 
     return groups;
+  }
+
+  /**
+   * Unchecks the radio this handler filled for a group, leaving a user's choice
+   * alone.
+   * @param {string} key
+   */
+  function releaseGroup(key) {
+    const owner = radioOwnerByGroup.get(key);
+    radioOwnerByGroup.delete(key);
+    if (!owner) return;
+
+    if (owner.checked) owner.checked = false;
+    radioClickedSet.delete(owner.id || `${owner.name}_${owner.value}`);
   }
 
   /**
@@ -76,6 +92,7 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
         if (!radio.checked && !radioClickedSet.has(radioKey)) {
           radio.click();
           radioClickedSet.add(radioKey);
+          radioOwnerByGroup.set(group.key, radio);
           count++;
         }
       }
@@ -101,6 +118,7 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
 
       target.click();
       radioClickedSet.add(target.id || `${target.name}_${target.value}`);
+      radioOwnerByGroup.set(group.key, target);
       count++;
     }
 
@@ -190,6 +208,7 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
     if (event.target.id === 'btnBacktoHome1') {
       stopObserver();
       radioClickedSet.clear();
+      radioOwnerByGroup.clear();
     }
 
     // Start button
@@ -203,6 +222,18 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
     }
   });
 
+  // A real user choice takes the group over from this handler.
+  document.addEventListener('change', (event) => {
+    if (!event.isTrusted) return;
+
+    const target = event.target;
+    if (!target || target.type !== 'radio') return;
+
+    for (const [key, owner] of radioOwnerByGroup) {
+      if (owner.name === target.name) radioOwnerByGroup.delete(key);
+    }
+  });
+
   /**
    * Adds or removes a pin toggle for the question, storing the currently
    * selected radio value.
@@ -211,12 +242,12 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
    * @returns {Promise<boolean>} New pinned state.
    */
   async function togglePin(key, value) {
-    const pinned = await isAnswerPinned(key, store);
+    const pinned = await isAnswerPinned(key, store, profileKey);
 
     if (pinned) {
-      const answers = await getAnswers(store);
+      await removeAnswer(key, store, profileKey);
       delete answers[key];
-      await saveAnswers(answers, store);
+      releaseGroup(key);
       return false;
     }
 
@@ -225,10 +256,26 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
       return false;
     }
 
-    const answers = await getAnswers(store);
+    await addAnswer(key, value, store, profileKey);
     answers[key] = value;
-    await saveAnswers(answers, store);
     return true;
+  }
+
+  /**
+   * Toggles one question's exclude state and keeps the live copy in sync.
+   * @param {string} key
+   * @returns {Promise<boolean>} True when now excluded.
+   */
+  async function toggleExclude(key) {
+    const nowExcluded = await toggleSkriningExclude(key, store, profileKey);
+
+    if (nowExcluded) {
+      excludes.add(key);
+    } else {
+      excludes.delete(key);
+    }
+
+    return nowExcluded;
   }
 
   /**
@@ -240,8 +287,6 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
       return;
     }
 
-    const storedAnswers = await getAnswers(store);
-    const excluded = new Set(await getSkriningExcludes(store));
     const groups = groupRadios(document.querySelectorAll('input[type="radio"]'));
 
     for (const group of groups.values()) {
@@ -254,11 +299,11 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
       host.appendChild(
         debugMarker(group.key, {
           excludeToggle: {
-            initialExcluded: excluded.has(group.key),
-            onToggle: (id) => toggleSkriningExclude(id, store),
+            initialExcluded: excludes.has(group.key),
+            onToggle: (id) => toggleExclude(id),
           },
           pinToggle: {
-            initialPinned: Object.hasOwn(storedAnswers, group.key),
+            initialPinned: Object.hasOwn(answers, group.key),
             getValue,
             onToggle: (id, value) => togglePin(id, value),
           },
@@ -280,7 +325,7 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
   });
   controlPanel.mount(debugToggle, 2);
 
-  const { profiles, activeProfile } = await store.getFullConfig();
+  const { profiles, activeProfile } = fullConfig;
   const profileIndicator = createProfileComponent({
     profiles,
     activeProfile,

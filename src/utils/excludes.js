@@ -1,8 +1,7 @@
 import { store as globalStore } from '../store.js';
 
 /**
- * Resolves the profile key for one operation. The key is read once, so a
- * profile switch between the read and the write cannot move the write.
+ * Resolves the profile key for one operation.
  * @param {import('../store.js').DandelionStore} store
  * @param {string|null} [profileKey]
  * @returns {Promise<string>}
@@ -17,7 +16,7 @@ async function resolveProfileKey(store, profileKey) {
  * Retrieves one profile's excludes list as an array.
  * @param {import('../store.js').DandelionStore} store
  * @param {string|null} [profileKey]
- * @returns {Promise<string[]>} A promise that resolves to an array of excluded data-names.
+ * @returns {Promise<string[]>} Array of excluded data-names.
  */
 async function getExcludesForProfile(store, profileKey) {
   const key = await resolveProfileKey(store, profileKey);
@@ -30,7 +29,7 @@ async function getExcludesForProfile(store, profileKey) {
  * @param {string} dataName - The data-name to check.
  * @param {import('../store.js').DandelionStore} [store]
  * @param {string|null} [profileKey]
- * @returns {Promise<boolean>} True if excluded, false otherwise.
+ * @returns {Promise<boolean>} True if excluded.
  */
 export async function isExcluded(dataName, store = globalStore, profileKey = null) {
   const excludesList = await getExcludesForProfile(store, profileKey);
@@ -43,27 +42,24 @@ export async function isExcluded(dataName, store = globalStore, profileKey = nul
  * @param {string} dataName - The data-name to toggle.
  * @param {import('../store.js').DandelionStore} [store]
  * @param {string|null} [profileKey]
- * @returns {Promise<boolean>} True if the data-name is now excluded, false if it's now included.
+ * @returns {Promise<boolean>} True if the data-name is now excluded.
  */
 export async function toggleExclude(dataName, store = globalStore, profileKey = null) {
   const key = await resolveProfileKey(store, profileKey);
 
   return await store.updateProfile(key, (profile) => {
     if (!profile.formSkrining) profile.formSkrining = {};
-
     // Dedupe: KeywordList allows duplicate entries, and leaving a second copy
     // behind would keep the item excluded after toggling it off.
     const excludesList = [
       ...new Set((profile.formSkrining.excludes || '').split(';').filter(Boolean)),
     ];
     const index = excludesList.indexOf(dataName);
-
     if (index > -1) {
       excludesList.splice(index, 1);
       profile.formSkrining.excludes = excludesList.join(';');
       return false;
     }
-
     excludesList.push(dataName);
     profile.formSkrining.excludes = excludesList.join(';');
     return true;

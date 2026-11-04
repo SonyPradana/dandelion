@@ -79,9 +79,7 @@ async function handleSave() {
   }
 
   try {
-    // Replace the whole config under the store lock. The lock only serializes
-    // writes; it does not merge, and stale top-level keys must be removed from
-    // storage too, so replaceConfig deletes what the editor dropped.
+    // replaceConfig also deletes config keys the editor dropped.
     await store.replaceConfig(parsed.value);
   } catch (error) {
     setInvalid(true);

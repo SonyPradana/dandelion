@@ -205,17 +205,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Writes the local config after checking that storage has not moved since
-   * the last synchronization. On a conflict the user either overwrites the
-   * other context or reloads the stored config and discards local edits.
-   * The write itself runs under the store's lock, so a race between the check
-   * and the write still re-reads the freshest config. Calls are queued so each
-   * check and write finishes before the next one starts.
+   * Persists the local config under the store lock.
    * @returns {Promise<boolean>} Whether the local config was written.
    */
   function persistConfig() {
-    // Snapshot at call time so an edit made while the queued save is waiting
-    // cannot leak into this write and be reported as saved.
+    // Snapshot now so an edit during the queued save is not written or marked saved.
     const snapshot = cloneConfig(loadedConfig);
     const run = async () => {
       const fresh = await store.refreshConfig();
@@ -234,9 +228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Write the snapshot taken at call time, and capture the config the store
-      // actually persisted: updateConfig re-reads fresh storage first, so
-      // cloning loadedConfig after the await would keep a stale baseline.
+      // Capture the config the store actually persisted, as the synced baseline.
       let written = null;
       await store.updateConfig((config) => {
         config.profiles = snapshot.profiles;
@@ -258,9 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Applies a config write from another context only when the editor has
-   * nothing pending. A dirty editor keeps its copy; save runs the conflict
-   * check against fresh storage so edits are never replaced silently.
+   * Applies a config write from another context when the editor is clean.
    * @param {Object} incoming Fresh config from storage.
    */
   async function handleConfigStorageChange(incoming) {
@@ -280,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.addEventListener('beforeunload', (event) => {
     if (!formDirty) return;
-    // The browser shows its own generic confirmation; a custom message is ignored.
+    // Browsers show their own text; a custom message is ignored.
     event.preventDefault();
     event.returnValue = '';
   });
@@ -449,8 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       loadedConfig.activeProfile,
       {
         onSwitch: async (newActiveProfile) => {
-          // Let a queued profile change (for example a removal) reach storage
-          // before reading the fresh config back.
+          // Let a queued profile change reach storage before reading it back.
           await writeQueue;
 
           if (
@@ -468,12 +457,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
           }
 
-          // Switching is a navigation step, so keep everything another context
-          // already stored and apply only the new profile selection.
+          // Keep what another context stored; apply only the new selection.
           const switchVersion = editVersion;
           const fresh = await store.refreshConfig();
-          // An edit made while the read was in flight must not be replaced by
-          // the stored copy, so keep the local form and let the switch be retried.
+          // An edit during the read wins; keep the local form and abort the switch.
           if (editVersion !== switchVersion) {
             profileManager.setData(
               loadedConfig.profiles,
@@ -495,11 +482,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         },
         onChange: () => {
-          // Profile add/rename/remove is a config edit; persistConfig queues it
-          // so a remove followed by a switch cannot resurrect the old profile.
-          persistConfig().catch((error) => {
-            notify.alert('Gagal menyimpan', error.message);
-          });
+          // Profile add/rename/remove is a config edit.
+          persistConfig().catch((error) => notify.alert('Gagal menyimpan', error.message));
         },
       },
     );

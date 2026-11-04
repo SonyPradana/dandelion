@@ -74,10 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Persists the local config through the store's lock and only copies the
-   * profiles this editor actually changed. A profile written by another
-   * context while the popup was open is therefore kept instead of replaced by
-   * the stale snapshot loaded at open time.
+   * Persists only the profiles this editor changed, under the store lock.
    * @returns {Promise<void>}
    */
   async function persistConfig() {
@@ -112,8 +109,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     syncedConfig = written;
 
-    // Absorb profiles another context wrote, so the next save does not see
-    // them as local changes and push the stale copy back.
+    // Absorb profiles another context wrote, so the next save does not push
+    // the stale copy back.
     for (const [key, profile] of Object.entries(written.profiles || {})) {
       if (!changedKeys.has(key)) loadedConfig.profiles[key] = cloneConfig(profile);
     }
@@ -124,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   window.addEventListener('beforeunload', (event) => {
     if (!formDirty) return;
-    // Best effort: browsers may not show this dialog for an extension popup.
+    // Browsers may not show this dialog for an extension popup.
     event.preventDefault();
     event.returnValue = '';
   });
@@ -134,9 +131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const configKeys = ['profiles', 'activeProfile', 'panelPosition', 'silenceInfoNotification'];
     if (configKeys.some((key) => changes[key])) {
       const incoming = await store.refreshConfig();
-      // A browser-action popup closes when it loses focus, so no other context
-      // can write config while this editor is open. Keep local edits if that
-      // ever changes; the full page editor owns the interactive conflict flow.
+      // The popup closes on blur, so no other context writes while it is open.
       const action = resolveConfigChange({
         dirty: formDirty,
         baseline: syncedConfig,
