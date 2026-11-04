@@ -1,8 +1,7 @@
 import { store as globalStore } from '../store.js';
 
 /**
- * Resolves the profile key for one operation. The key is read once, so a
- * profile switch between the read and the write cannot move the write.
+ * Resolves the profile key for one operation.
  * @param {import('../store.js').DandelionStore} store
  * @param {string|null} [profileKey]
  * @returns {Promise<string>}
@@ -17,7 +16,7 @@ async function resolveProfileKey(store, profileKey) {
  * Retrieves the "Not Checked" master list for one profile.
  * @param {import('../store.js').DandelionStore} [store]
  * @param {string|null} [profileKey]
- * @returns {Promise<string[]>} A promise that resolves to an array of row IDs.
+ * @returns {Promise<string[]>} Array of row IDs.
  */
 export async function getNotCheckedList(store = globalStore, profileKey = null) {
   const key = await resolveProfileKey(store, profileKey);
@@ -32,7 +31,7 @@ export async function getNotCheckedList(store = globalStore, profileKey = null) 
  * @param {string} id - The row ID to check.
  * @param {import('../store.js').DandelionStore} [store]
  * @param {string|null} [profileKey]
- * @returns {Promise<boolean>} Resolves to true if the ID is in the list.
+ * @returns {Promise<boolean>} True if the ID is in the list.
  */
 export async function isInNotCheckedList(id, store = globalStore, profileKey = null) {
   const list = await getNotCheckedList(store, profileKey);
@@ -44,7 +43,7 @@ export async function isInNotCheckedList(id, store = globalStore, profileKey = n
  * @param {string} id - The row ID to toggle.
  * @param {import('../store.js').DandelionStore} [store]
  * @param {string|null} [profileKey]
- * @returns {Promise<boolean>} Resolves to the new presence state (true if added).
+ * @returns {Promise<boolean>} True if the ID was added.
  */
 export async function toggleNotCheckedItem(id, store = globalStore, profileKey = null) {
   const key = await resolveProfileKey(store, profileKey);

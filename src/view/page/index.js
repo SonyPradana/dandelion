@@ -201,9 +201,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   /**
-   * Persists the local config through the store's lock, so a stale copy cannot
-   * overwrite a write made by another context. On a conflict the user either
-   * overwrites the other context or reloads the stored config.
+   * Persists the local config under the store lock.
    * @returns {Promise<boolean>} Whether the local config was written.
    */
   function persistConfig() {
@@ -405,8 +403,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           persistConfig().catch((error) => notify.alert('Gagal menyimpan', error.message));
         },
         onChange: () => {
-          // Profile add/rename/remove is a config edit; write it through the
-          // store lock so it cannot clobber another context's change.
+          // Profile add/rename/remove is a config edit.
           persistConfig().catch((error) => notify.alert('Gagal menyimpan', error.message));
         },
       },
