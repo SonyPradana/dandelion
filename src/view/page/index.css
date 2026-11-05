@@ -919,12 +919,13 @@ body {
 /* ── Compact sidebar (icon-only) ── */
 @media (max-width: 767px) {
   .sidebar {
-    width: 44px;
+    width: 54px;
     padding: 0.5rem 0.25rem;
   }
 
   .tab-btn {
     justify-content: center;
+    min-height: 44px;
     padding: 0.5rem 0;
   }
 }
