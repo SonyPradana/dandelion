@@ -1,25 +1,31 @@
 /* ── Reset body from popup.css ── */
+html,
+body {
+  height: 100%;
+}
+
 body {
   background: #f3f4f6;
   padding: 0;
   display: block;
   align-items: unset;
   justify-content: unset;
-  min-height: 100vh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ── App shell ── */
 #config-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
 }
 
 #config-body {
   display: flex;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 /* ── Topbar ── */
@@ -77,10 +83,7 @@ body {
 
 /* ── Sidebar ── */
 .sidebar {
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  height: 100%;
+  align-self: stretch;
   width: 48px;
   flex-shrink: 0;
   background: #fff;
@@ -89,7 +92,8 @@ body {
   flex-direction: column;
   gap: 2px;
   padding: 0.75rem 0.5rem;
-  overflow-y: auto;
+  overflow: hidden auto;
+  scrollbar-width: thin;
 }
 
 @media (min-width: 768px) {
@@ -189,6 +193,7 @@ body {
 .main {
   flex: 1;
   min-width: 0;
+  overflow-y: auto;
 }
 
 .main-wrap {
@@ -911,20 +916,24 @@ body {
   }
 }
 
-/* ── Mobile ── */
-@media (max-width: 639px) {
-  .topbar {
-    padding: 0.625rem 1rem;
-  }
-
+/* ── Compact sidebar (icon-only) ── */
+@media (max-width: 767px) {
   .sidebar {
-    width: 44px;
+    width: 54px;
     padding: 0.5rem 0.25rem;
   }
 
   .tab-btn {
-    padding: 0.5rem;
     justify-content: center;
+    min-height: 44px;
+    padding: 0.5rem 0;
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 639px) {
+  .topbar {
+    padding: 0.625rem 1rem;
   }
 
   .main-wrap {
