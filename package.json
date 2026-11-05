@@ -9,7 +9,7 @@
   "author": "SonyPradana",
   "type": "module",
   "scripts": {
-    "test": "vitest run",
+    "test": "vitest run --reporter=dot",
     "test:watch": "vitest",
     "lint": "oxlint . --deny-warnings",
     "lint:fix": "oxlint . --fix",
