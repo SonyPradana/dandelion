@@ -1,18 +1,23 @@
 /* ── Reset body from popup.css ── */
+html,
+body {
+  height: 100%;
+}
+
 body {
   background: #f3f4f6;
   padding: 0;
   display: block;
   align-items: unset;
   justify-content: unset;
-  min-height: 100vh;
+  overflow: hidden;
 }
 
 /* ── App shell ── */
 #config-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
 }
 
 #config-body {
