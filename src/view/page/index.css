@@ -91,7 +91,8 @@ body {
   flex-direction: column;
   gap: 2px;
   padding: 0.75rem 0.5rem;
-  overflow-y: auto;
+  overflow: hidden auto;
+  scrollbar-width: thin;
 }
 
 @media (min-width: 768px) {
@@ -914,20 +915,23 @@ body {
   }
 }
 
-/* ── Mobile ── */
-@media (max-width: 639px) {
-  .topbar {
-    padding: 0.625rem 1rem;
-  }
-
+/* ── Compact sidebar (icon-only) ── */
+@media (max-width: 767px) {
   .sidebar {
     width: 44px;
     padding: 0.5rem 0.25rem;
   }
 
   .tab-btn {
-    padding: 0.5rem;
     justify-content: center;
+    padding: 0.5rem 0;
+  }
+}
+
+/* ── Mobile ── */
+@media (max-width: 639px) {
+  .topbar {
+    padding: 0.625rem 1rem;
   }
 
   .main-wrap {
