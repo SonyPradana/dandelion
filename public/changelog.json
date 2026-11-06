@@ -1,5 +1,18 @@
 [
   {
+    "date": "6 November 2026",
+    "version": "1.9",
+    "details": [
+      "Halaman pengaturan kini punya kolom pencarian dan tautan langsung ke bagian tertentu",
+      "Tampilan halaman pengaturan diperbarui — ikon lebih jelas, tombol simpan hanya muncul saat dibutuhkan, dan status simpan lebih mudah dibaca",
+      "Formulir pendaftaran kini menampilkan ringkasan di akhir dan bisa lanjut langsung ke skrining",
+      "Peringatan kini muncul jika ada perubahan pengaturan yang belum disimpan, termasuk saat pengaturan diubah dari tab lain",
+      "Dokumentasi penggunaan kini tersedia lengkap secara online",
+      "Perbaikan: menu samping halaman pengaturan tidak lagi ikut bergulir dan tetap nyaman dipakai di jendela sempit",
+      "Perbaikan: status pilihan skrining tetap sesuai setelah diubah"
+    ]
+  },
+  {
     "date": "5 Oktober 2026",
     "version": "1.8",
     "details": [

@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-11-06
+
+### Added
+
+- Config page deep links: the active tab and section are kept in the URL (#143).
+- Header search across config sections with keyboard navigation and deep links (#144).
+- Static documentation site served at `/doc` (#145).
+- Self-hosted enterprise install: CRX3 packaging, Linux policy scripts, and a Chrome update feed (#147).
+- Registration form recap panel with an opt-in skrining handoff (#150).
+
+### Changed
+
+- Config page: search moved to the top bar, emoji replaced with Lucide icons, and the save button is shown only on editable tabs with a colour-coded status (#148).
+- Skrining pinned fields now match exact `data-name` values; the pipe-delimited wildcard and `|number` filter are removed (#151).
+- Dependency and security updates, including web-ext 10.8.0, vitest 5 and happy-dom 21 (#146, #152, #153).
+
+### Fixed
+
+- Mark the config editor dirty for value-list, keyword and position edits, and keep edits made during a save dirty (#154).
+- Serialize profile and config writes across tabs with a Web Locks lock, re-reading inside the lock, so profile switches no longer move a write to another profile (#155).
+- Keep skrining marker and exclude state live after toggling, and uncheck the radio a removed pin had filled (#156).
+- Detect config conflicts against the last synced baseline and ask before overwriting or reloading (#157).
+- Keep a single scroll container on the config page and fit the compact sidebar in narrow windows with 44px touch targets (#158).
+- Report the Chrome ZIP instead of the CRX as the latest manual download (#149).
+
 ## [1.8.0] - 2026-10-05
 
 ### Added

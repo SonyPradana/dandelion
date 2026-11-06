@@ -1,3 +1,53 @@
+# 1.9.0
+
+Released 2026-11-06 · upgrade from `1.8.0` · developer-facing
+
+## What changed
+
+| Area          | Change                               | Config impact                                               |
+| ------------- | ------------------------------------ | ----------------------------------------------------------- |
+| Config page   | Search, deep links, new layout       | none                                                        |
+| Skrining form | Pinned keys match exact `data-name`  | remove `\|text`, `\|freetext`, `\|number` and `*` wildcards |
+| Register form | Recap and opt-in skrining handoff    | none                                                        |
+| Store         | Profile and config writes serialized | none                                                        |
+
+## Pinned keys are exact `data-name` matches (#151)
+
+### Schema
+
+```diff
+ "pinneds": {
+-  "LPM001-quest|text": "Ya",
+-  "LPM002-quest|freetext": "Tidak ada",
+-  "LPM003-*": "Tidak"
++  "LPM001-quest": "Ya",
++  "LPM002-quest": "Tidak ada"
+ }
+```
+
+### Rules
+
+- Keys are looked up as `[data-name="<key>"]`; there is no segment wildcard.
+- The `|number` filter is gone; field type now comes from the DOM.
+- Old configs stay valid, but keys with a pipe or `*` never match, so edit them by hand.
+
+## Config page deep links (#143, #144)
+
+- `?tab=<tab-id>&section=<section-id>` restores the active tab and section, and updates as you navigate.
+- Header search jumps to any section and writes the same URL.
+
+## No config migration needed
+
+`migrateConfig()` is unchanged; this release adds and removes no config keys.
+
+## Upgrade checklist
+
+1. `pnpm install && pnpm lint && pnpm format:check && pnpm test`
+2. `pnpm build`, then confirm `dist/*/manifest.json` reports `1.9.0`
+3. `pnpm verify:firefox`
+4. Terms get re-prompted: `src/configuration.js:77` compares `dandelion_terms.version` against the manifest version
+5. Strip pipe suffixes and `*` wildcards from `pinneds` keys in any hand-maintained config JSON
+
 # 1.8.0
 
 Released 2026-10-05 · upgrade from `1.7.2` · developer-facing
