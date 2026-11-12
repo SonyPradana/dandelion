@@ -76,7 +76,15 @@ body {
   text-overflow: ellipsis;
 }
 
+.brand-text .version {
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: #8a8f98;
+  white-space: nowrap;
+}
+
 .sidebar-footer {
+  display: none;
   flex-shrink: 0;
   padding-top: 0.5rem;
   margin-top: 0.25rem;
@@ -108,7 +116,7 @@ body {
 
 @media (min-width: 768px) {
   .sidebar {
-    width: 180px;
+    width: 240px;
     padding: 1rem;
   }
 }
@@ -951,6 +959,10 @@ body {
   .brand-icon {
     width: 24px;
     height: 24px;
+  }
+
+  .sidebar-footer {
+    display: block;
   }
 
   .sidebar-footer .version {

@@ -40,10 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
-  const versionEl = document.querySelector('.sidebar .version');
-  if (versionEl) {
-    versionEl.textContent = `v${browser.runtime.getManifest().version}`;
-  }
+  document.querySelectorAll('.sidebar .version').forEach((el) => {
+    el.textContent = `v${browser.runtime.getManifest().version}`;
+  });
 
   browser.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
