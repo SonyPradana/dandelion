@@ -170,32 +170,16 @@
     </svg>
 
     <div id="config-container">
-      <header class="topbar">
-        <div class="topbar-brand">
+      <nav class="sidebar">
+        <div class="sidebar-brand">
           <img src="../../icons/icon48.png" alt="" class="brand-icon" />
           <div class="brand-text">
             <h1>Konfigurasi Dandelion</h1>
             <span class="version"></span>
           </div>
         </div>
-        <div class="config-search">
-          <input
-            type="search"
-            id="config-search-input"
-            placeholder="Cari pengaturan…"
-            autocomplete="off"
-            role="combobox"
-            aria-expanded="false"
-            aria-controls="config-search-list"
-            aria-label="Cari pengaturan"
-          />
-          <ul id="config-search-list" class="config-search-list hidden" role="listbox"></ul>
-          <div id="config-search-status" class="config-search-status" role="status"></div>
-        </div>
-      </header>
 
-      <div id="config-body">
-        <nav class="sidebar">
+        <div class="sidebar-nav">
           <div class="tab-group">
             <button class="tab-btn active" data-tab="profile">
               <svg class="tab-icon" aria-hidden="true"><use href="#icon-user" /></svg>
@@ -261,7 +245,30 @@
               <span class="tab-label">Persetujuan</span>
             </button>
           </div>
-        </nav>
+        </div>
+
+        <div class="sidebar-footer">
+          <span class="version"></span>
+        </div>
+      </nav>
+
+      <div id="config-body">
+        <header class="topbar">
+          <div class="config-search">
+            <input
+              type="search"
+              id="config-search-input"
+              placeholder="Cari pengaturan…"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="config-search-list"
+              aria-label="Cari pengaturan"
+            />
+            <ul id="config-search-list" class="config-search-list hidden" role="listbox"></ul>
+            <div id="config-search-status" class="config-search-status" role="status"></div>
+          </div>
+        </header>
 
         <div class="main">
           <div class="main-wrap">

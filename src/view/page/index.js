@@ -40,10 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
-  const versionEl = document.querySelector('.topbar .version');
-  if (versionEl) {
-    versionEl.textContent = `version ${browser.runtime.getManifest().version}`;
-  }
+  document.querySelectorAll('.sidebar .version').forEach((el) => {
+    el.textContent = `v${browser.runtime.getManifest().version}`;
+  });
 
   browser.storage.onChanged.addListener(async (changes, area) => {
     if (area !== 'local') return;
@@ -146,7 +145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const candidates = document.querySelectorAll(`#tab-${currentTab} [data-section]`);
     const el = [...candidates].find((node) => node.dataset.section === section);
     if (!el) return false;
-    el.scrollIntoView({ block: 'start' });
+    const main = el.closest('.main');
+    const offset = el.getBoundingClientRect().top - main.getBoundingClientRect().top;
+    const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    main.scrollTo({ top: main.scrollTop + offset - margin });
     if (highlight) {
       el.classList.add('section-highlight');
       if (highlightTimer) clearTimeout(highlightTimer);
