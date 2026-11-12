@@ -37,7 +37,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  min-height: 56px;
+  min-height: 64px;
   padding: 0 1.25rem;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
@@ -935,13 +935,16 @@ body {
 @media (max-width: 899px) {
   .topbar {
     gap: 0.5rem;
-    min-height: 0;
     padding: 0.625rem 1.25rem;
   }
 }
 
 /* ── Compact sidebar (icon-only) ── */
 @media (max-width: 767px) {
+  .topbar {
+    min-height: 0;
+  }
+
   .sidebar {
     width: 54px;
     padding: 0.5rem 0.25rem;
