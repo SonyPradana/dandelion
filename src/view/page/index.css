@@ -17,13 +17,14 @@ body {
 /* ── App shell ── */
 #config-container {
   display: flex;
-  flex-direction: column;
   height: 100%;
 }
 
 #config-body {
   display: flex;
+  flex-direction: column;
   flex: 1;
+  min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
@@ -32,9 +33,9 @@ body {
 .topbar {
   flex-shrink: 0;
   z-index: 60;
-  display: grid;
-  grid-template-columns: 1fr minmax(240px, 420px) 1fr;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 1rem;
   min-height: 56px;
   padding: 0 1.25rem;
@@ -42,13 +43,15 @@ body {
   border-bottom: 1px solid #e5e7eb;
 }
 
-.topbar-brand {
+.sidebar-brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
-  overflow: hidden;
-  justify-self: start;
+  flex-shrink: 0;
+  padding: 0.25rem 0 0.75rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .brand-text {
@@ -64,8 +67,8 @@ body {
   flex-shrink: 0;
 }
 
-.topbar h1 {
-  font-size: 0.95rem;
+.sidebar-brand h1 {
+  font-size: 0.9rem;
   font-weight: 700;
   color: #111;
   white-space: nowrap;
@@ -73,27 +76,34 @@ body {
   text-overflow: ellipsis;
 }
 
-.topbar .version {
+.sidebar-footer {
   flex-shrink: 0;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.sidebar-footer .version {
+  display: block;
+  text-align: center;
   font-size: 0.65rem;
   font-weight: 500;
   color: #8a8f98;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Sidebar ── */
 .sidebar {
-  align-self: stretch;
   width: 48px;
   flex-shrink: 0;
   background: #fff;
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  gap: 2px;
   padding: 0.75rem 0.5rem;
-  overflow: hidden auto;
-  scrollbar-width: thin;
+  overflow: hidden;
 }
 
 @media (min-width: 768px) {
@@ -101,6 +111,16 @@ body {
     width: 180px;
     padding: 1rem;
   }
+}
+
+.sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 .tab-group {
@@ -205,7 +225,8 @@ body {
 /* ── Config Search ── */
 .config-search {
   position: relative;
-  justify-self: stretch;
+  width: 100%;
+  max-width: 420px;
 }
 
 #config-search-input {
@@ -905,14 +926,9 @@ body {
 /* ── Responsive topbar ── */
 @media (max-width: 899px) {
   .topbar {
-    grid-template-columns: 1fr;
     gap: 0.5rem;
     min-height: 0;
     padding: 0.625rem 1.25rem;
-  }
-
-  .config-search {
-    grid-column: 1 / -1;
   }
 }
 
@@ -921,6 +937,25 @@ body {
   .sidebar {
     width: 54px;
     padding: 0.5rem 0.25rem;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    padding: 0.25rem 0 0.5rem;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .brand-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .sidebar-footer .version {
+    font-size: 0.55rem;
+    letter-spacing: -0.02em;
   }
 
   .tab-btn {

@@ -40,9 +40,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   store.init(browser);
   await init();
 
-  const versionEl = document.querySelector('.topbar .version');
+  const versionEl = document.querySelector('.sidebar .version');
   if (versionEl) {
-    versionEl.textContent = `version ${browser.runtime.getManifest().version}`;
+    versionEl.textContent = `v${browser.runtime.getManifest().version}`;
   }
 
   browser.storage.onChanged.addListener(async (changes, area) => {
