@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
+  closeRegisterModalIfOpen,
   createSkriningHandoff,
   detectCurrentStep,
   isRecapPanelMounted,
@@ -98,6 +99,29 @@ describe('isRecapPanelMounted', () => {
 
   it('returns false when the handle is missing', () => {
     expect(isRecapPanelMounted(null)).toBe(false);
+  });
+});
+
+describe('closeRegisterModalIfOpen', () => {
+  beforeEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('clicks the site registration modal close control', () => {
+    const button = document.createElement('button');
+    button.className = 'absolute right-4 top-3 cursor-pointer p-1 btn-transparent';
+    let clicked = 0;
+    button.addEventListener('click', () => {
+      clicked++;
+    });
+    document.body.appendChild(button);
+
+    expect(closeRegisterModalIfOpen()).toBe(true);
+    expect(clicked).toBe(1);
+  });
+
+  it('returns false when the close control is missing', () => {
+    expect(closeRegisterModalIfOpen()).toBe(false);
   });
 });
 

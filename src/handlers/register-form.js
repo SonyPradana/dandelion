@@ -190,7 +190,10 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
           actionPanel?.remove();
           recapPanel?.remove();
           recapPanel = null;
-          if (closeModal) closeSuccessModalIfOpen();
+          if (closeModal) {
+            closeSuccessModalIfOpen();
+            closeRegisterModalIfOpen();
+          }
           recapResolve?.();
           recapResolve = null;
 
@@ -634,6 +637,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       await cancelActiveRun('aborted', { closeModal: true });
     } else {
       isRegisterFormRunning = false;
+      closeRegisterModalIfOpen();
       await clearRegisterFormFlashData();
       await clearRegisterFormStep();
       const flashPanel = document.getElementById('dandelion-flash-data');
@@ -684,6 +688,20 @@ function handleDataDitemukanModal(timeout = 8000) {
     };
     poll();
   });
+}
+
+/**
+ * Close the site registration form modal via its close control.
+ *
+ * @returns {boolean}
+ */
+export function closeRegisterModalIfOpen() {
+  const closeBtn = document.querySelector(
+    'button.absolute.right-4.top-3.cursor-pointer.p-1.btn-transparent',
+  );
+  if (!closeBtn) return false;
+  closeBtn.click();
+  return true;
 }
 
 /** @returns {boolean} */
