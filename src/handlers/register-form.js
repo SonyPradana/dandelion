@@ -637,6 +637,7 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       await cancelActiveRun('aborted', { closeModal: true });
     } else {
       isRegisterFormRunning = false;
+      closeRegisterModalIfOpen();
       await clearRegisterFormFlashData();
       await clearRegisterFormStep();
       const flashPanel = document.getElementById('dandelion-flash-data');
@@ -646,7 +647,6 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
       if (flash?._source === SKRINING_SOURCE) await clearFlashData();
       closeSuccessModalIfOpen();
     }
-    closeRegisterModalIfOpen();
     if (message) notify.alert('Register Form', message);
   }
 
