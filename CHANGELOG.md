@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.1] - 2026-11-13
+
+### Fixed
+
+- Close the registration site modal when clearing state, so a blocked registration does not leave the form open (#160).
+
+### Changed
+
+- Move the config page brand into the full-height sidebar with the extension version, and keep the topbar in place when jumping to a section (#161).
+
 ## [1.9.0] - 2026-11-06
 
 ### Added
