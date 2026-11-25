@@ -223,7 +223,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const registerFormCountdownDurationInput = document.getElementById(
     'register-form-countdown-duration',
   );
-  const registerFormRespectInputCheckbox = document.getElementById('register-form-respect-input');
 
   function updateFormForProfile(selectedProfile) {
     if (!loadedConfig) return;
@@ -254,7 +253,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerFormRetryMaxInput.value = rf.retryMax ?? 3;
     registerFormRetryDelayInput.value = rf.retryDelay ?? 2000;
     registerFormCountdownDurationInput.value = rf.countdownDuration ?? 5000;
-    registerFormRespectInputCheckbox.checked = rf.respectInput !== false;
   }
 
   store.getFullConfig().then((config) => {
@@ -355,7 +353,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
       profileSettings.registerForm.countdownDuration =
         parseInt(registerFormCountdownDurationInput.value) || 5000;
-      profileSettings.registerForm.respectInput = registerFormRespectInputCheckbox.checked;
 
       if (!profileSettings.notChecked) profileSettings.notChecked = {};
       profileSettings.notChecked.url = notCheckedUrlInput.value;

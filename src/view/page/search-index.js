@@ -140,11 +140,11 @@ export const SEARCH_INDEX = [
   },
   {
     tab: 'register-form',
-    section: 'register-form-address',
-    label: 'Hormati Alamat Domisili',
+    section: 'register-form-respect-input',
+    label: 'Hormati Isian yang Sudah Sama',
     tabLabel: 'Register Form',
-    keywords: ['alamat', 'domisili', 'lokasi', 'hormati', 'skip', 'lewati', 'sama'],
-    description: 'Alamat yang sudah sama tidak diisi ulang; alamat berbeda tetap diisi',
+    keywords: ['isian', 'nilai', 'hormati', 'skip', 'lewati', 'sama', 'alamat', 'domisili'],
+    description: 'Isian yang sudah sama tidak diisi ulang; saat ini berlaku untuk alamat domisili',
   },
   {
     tab: 'register-form',
