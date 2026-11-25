@@ -20,7 +20,7 @@ Pengaturan untuk fitur Registration Form: alur pendaftaran otomatis dengan retry
 
 <!-- config-section:register-form-respect-input -->
 
-- **`registerForm.respectInput`** — isian yang sudah sama tidak diisi ulang, sedangkan nilai yang berbeda tetap ditimpa. Saat ini berlaku untuk **Alamat Domisili**: bila alamat yang tampil sudah sama dengan gabungan `Provinsi, Kabupaten, Kecamatan, Kelurahan` (dipisah `", "`, contoh `Jawa Tengah, Kab. Semarang, Ungaran Barat, Lerep`), pengisian alamat dilewati sehingga tidak perlu memanggil server lagi. Default `true`; `false` = alamat selalu diisi ulang.
+- **`registerForm.respectInput`** — isian yang sudah sama tidak diisi ulang, sedangkan nilai yang berbeda tetap ditimpa. Saat ini berlaku untuk **Alamat Domisili**: bila alamat yang tampil sudah sama dengan gabungan `Provinsi, Kabupaten, Kecamatan, Kelurahan` (dipisah `", "`, contoh `Provinsi Contoh, Kab. Contoh, Kec. Contoh, Kel. Contoh`), pengisian alamat dilewati sehingga tidak perlu memanggil server lagi. Default `true`; `false` = alamat selalu diisi ulang.
 
 ## Template Flash Data
 
