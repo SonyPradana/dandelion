@@ -139,6 +139,84 @@ describe('fillAlamatDomisili', () => {
     });
   });
 
+  describe('respectInput', () => {
+    const target = 'Jawa Tengah, Kab. Semarang, Ungaran Barat, Keji';
+
+    function setCurrentAddress(text) {
+      document.querySelector('[class*="cursor-pointer"]').textContent = text;
+    }
+
+    it('should skip when the current address already matches', async () => {
+      setCurrentAddress(target);
+      const trigger = document.querySelector('[class*="cursor-pointer"]');
+      const clickSpy = vi.spyOn(trigger, 'click');
+
+      const result = await fillAlamatDomisili(
+        'Jawa Tengah',
+        'Kab. Semarang',
+        'Ungaran Barat',
+        'Keji',
+        { respectInput: true },
+      );
+
+      expect(result).toBe(true);
+      expect(clickSpy).not.toHaveBeenCalled();
+    });
+
+    it('should ignore case and extra spacing when comparing', async () => {
+      setCurrentAddress('  jawa   tengah ,  KAB. SEMARANG,  Ungaran Barat , keji ');
+      const trigger = document.querySelector('[class*="cursor-pointer"]');
+      const clickSpy = vi.spyOn(trigger, 'click');
+
+      const result = await fillAlamatDomisili(
+        'Jawa Tengah',
+        'Kab. Semarang',
+        'Ungaran Barat',
+        'Keji',
+        { respectInput: true },
+      );
+
+      expect(result).toBe(true);
+      expect(clickSpy).not.toHaveBeenCalled();
+    });
+
+    it('should still fill when the current address differs', async () => {
+      setCurrentAddress('Jawa Tengah, Kab. Semarang, Ungaran Barat, Lerep');
+
+      const l1 = makeModal('Daftar Provinsi', ['Jawa Tengah']);
+      document.body.appendChild(l1);
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kabupaten/Kota', ['Kab. Semarang']).childNodes);
+      }, 50);
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kecamatan', ['Ungaran Barat']).childNodes);
+      }, 150);
+      setTimeout(() => {
+        l1.replaceChildren(...makeModal('Daftar Kelurahan', ['Keji']).childNodes);
+      }, 250);
+
+      const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji', {
+        respectInput: true,
+      });
+      await vi.advanceTimersByTimeAsync(500);
+      expect(await promise).toBe(true);
+    });
+
+    it('should always fill when respectInput is disabled', async () => {
+      setCurrentAddress(target);
+      const trigger = document.querySelector('[class*="cursor-pointer"]');
+      const clickSpy = vi.spyOn(trigger, 'click');
+
+      const promise = fillAlamatDomisili('Jawa Tengah', 'Kab. Semarang', 'Ungaran Barat', 'Keji', {
+        respectInput: false,
+      });
+      await vi.advanceTimersByTimeAsync(11_000);
+
+      expect(await promise).toBe(false);
+      expect(clickSpy).toHaveBeenCalled();
+    });
+  });
+
   describe('failure cases', () => {
     it('should return false when label not found', async () => {
       document.body.replaceChildren(document.createElement('div'));

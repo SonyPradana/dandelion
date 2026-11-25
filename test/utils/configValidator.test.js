@@ -155,10 +155,12 @@ describe('validateConfig', () => {
   it('should flag non-boolean flags', () => {
     const bad = structuredClone(validConfig);
     bad.profiles.profile1.zenMode.enabled = 'yes';
+    bad.profiles.profile1.registerForm.respectInput = 'yes';
     bad.silenceInfoNotification = 'no';
     const result = validateConfig(bad);
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.includes('zenMode.enabled'))).toBe(true);
+    expect(result.errors.some((e) => e.includes('registerForm.respectInput'))).toBe(true);
     expect(result.errors.some((e) => e.includes('silenceInfoNotification'))).toBe(true);
   });
 

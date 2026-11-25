@@ -140,6 +140,14 @@ export const SEARCH_INDEX = [
   },
   {
     tab: 'register-form',
+    section: 'register-form-address',
+    label: 'Hormati Alamat Domisili',
+    tabLabel: 'Register Form',
+    keywords: ['alamat', 'domisili', 'lokasi', 'hormati', 'skip', 'lewati', 'sama'],
+    description: 'Alamat yang sudah sama tidak diisi ulang; alamat berbeda tetap diisi',
+  },
+  {
+    tab: 'register-form',
     section: 'register-form-flash',
     label: 'Template Flash Data (JSON)',
     tabLabel: 'Register Form',

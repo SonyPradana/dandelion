@@ -27,6 +27,7 @@ const DEFAULT_CONFIG = {
         retryMax: 3,
         retryDelay: 2000,
         countdownDuration: 5000,
+        respectInput: true,
         defaultPinneds: {},
       },
       skrining: { url: '', answers: {}, excludes: '' },
@@ -55,6 +56,7 @@ const DEFAULT_CONFIG = {
         retryMax: 3,
         retryDelay: 2000,
         countdownDuration: 5000,
+        respectInput: true,
         defaultPinneds: {},
       },
       skrining: { url: '', answers: {}, excludes: '' },
@@ -135,6 +137,7 @@ export function migrateConfig(raw) {
           retryMax: 3,
           retryDelay: 2000,
           countdownDuration: 5000,
+          respectInput: true,
           defaultPinneds: {},
         },
         zenMode: {

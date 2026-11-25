@@ -16,6 +16,12 @@ Pengaturan untuk fitur Registration Form: alur pendaftaran otomatis dengan retry
 - **`registerForm.retryDelay`** — jeda antar percobaan ulang dalam milidetik. Efek: jeda lebih besar = lebih sabar menunggu halaman lambat, tapi alur jadi lebih lama. Default `2000`, rentang 500–10000 ms. Contoh: `3000`.
 - **`registerForm.countdownDuration`** — hitung mundur dalam milidetik sebagai konfirmasi sebelum pindah ke form skrining setelah pendaftaran berhasil. Hanya dipakai bila penanda `"skrining mandiri"` bernilai `true` (default `false`). Default `5000`, rentang 1000–30000 ms. Contoh: `10000`.
 
+## Hormati Alamat Domisili
+
+<!-- config-section:register-form-address -->
+
+- **`registerForm.respectInput`** — bila alamat domisili yang tampil sudah sama dengan gabungan `Provinsi, Kabupaten, Kecamatan, Kelurahan` (dipisah `", "`, contoh `Jawa Tengah, Kab. Semarang, Ungaran Barat, Lerep`), pengisian alamat dilewati sehingga tidak perlu memanggil server lagi. Bila berbeda, alamat tetap diisi. Default `true`; `false` = alamat selalu diisi ulang.
+
 ## Template Flash Data
 
 <!-- config-section:register-form-flash -->

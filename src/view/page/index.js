@@ -353,6 +353,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const registerFormCountdownDurationInput = document.getElementById(
     'register-form-countdown-duration',
   );
+  const registerFormRespectInputCheckbox = document.getElementById('register-form-respect-input');
   const registerFormDefaultFlashInput = document.getElementById('register-form-default-flash');
   const zenModeEnabledCheckbox = document.getElementById('zen-mode-enabled');
   const zenModeTimeoutInput = document.getElementById('zen-mode-timeout');
@@ -399,6 +400,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     registerFormRetryMaxInput.value = rf.retryMax ?? 3;
     registerFormRetryDelayInput.value = rf.retryDelay ?? 2000;
     registerFormCountdownDurationInput.value = rf.countdownDuration ?? 5000;
+    registerFormRespectInputCheckbox.checked = rf.respectInput !== false;
     registerFormDefaultFlashInput.value = JSON.stringify(rf.defaultPinneds || {}, null, 2);
 
     const zm = profileSettings.zenMode || {};
@@ -589,6 +591,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     profileSettings.registerForm.retryDelay = parseInt(registerFormRetryDelayInput.value) || 2000;
     profileSettings.registerForm.countdownDuration =
       parseInt(registerFormCountdownDurationInput.value) || 5000;
+    profileSettings.registerForm.respectInput = registerFormRespectInputCheckbox.checked;
     profileSettings.registerForm.defaultPinneds = registerFormDefaults;
 
     if (!profileSettings.zenMode) profileSettings.zenMode = {};

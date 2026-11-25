@@ -24,6 +24,7 @@ const PROFILE_BOOLEAN_FIELDS = [
   'formSkrining.scrollToButton',
   'formSkrining.respectInput',
   'formSkrining.ensureFill',
+  'registerForm.respectInput',
   'zenMode.enabled',
   'flashData.enabled',
 ];
