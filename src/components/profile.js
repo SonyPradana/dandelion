@@ -115,3 +115,97 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
 
   return container;
 }
+
+/**
+ * Creates a click-triggered profile switcher.
+ * @param {Object} options - Same options as `createProfileComponent`.
+ * @returns {{ trigger: HTMLButtonElement, dropdown: HTMLDivElement, open: () => void, close: () => void }}
+ */
+export function createProfileSwitcher(options = {}) {
+  const dropdown = createProfileComponent(options);
+
+  const profileName =
+    options.profiles?.[options.activeProfile]?.name || options.activeProfile || 'Profil';
+
+  const label = document.createElement('span');
+  label.textContent = profileName;
+  label.style.cssText = `
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  `;
+
+  const chevron = document.createElement('span');
+  chevron.textContent = '⌄';
+  chevron.setAttribute('aria-hidden', 'true');
+  chevron.style.cssText = `
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    transform: translateY(-4px);
+  `;
+
+  const trigger = document.createElement('button');
+  trigger.id = 'dandelion-profile-toggle';
+  trigger.type = 'button';
+  trigger.title = `Ganti Profil: ${profileName}`;
+  trigger.setAttribute('aria-label', `Ganti Profil: ${profileName}`);
+  trigger.setAttribute('aria-haspopup', 'true');
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.append(label, chevron);
+  trigger.style.cssText = `
+    padding: 0.3rem 0.25rem;
+    background: transparent;
+    color: #52525b;
+    border: 0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 180px;
+    pointer-events: auto;
+    transition: color 0.2s ease-in-out;
+  `;
+
+  trigger.addEventListener('mouseenter', () => {
+    trigger.style.color = '#171717';
+  });
+  trigger.addEventListener('mouseleave', () => {
+    trigger.style.color = '#52525b';
+  });
+
+  let isOpen = false;
+
+  function onOutsideClick(event) {
+    if (dropdown.contains(event.target) || trigger.contains(event.target)) return;
+    close();
+  }
+
+  function open() {
+    if (isOpen) return;
+    isOpen = true;
+    dropdown.setVisibility(true);
+    trigger.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onOutsideClick);
+  }
+
+  function close() {
+    if (!isOpen) return;
+    isOpen = false;
+    dropdown.setVisibility(false);
+    trigger.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onOutsideClick);
+  }
+
+  trigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (isOpen) close();
+    else open();
+  });
+
+  return { trigger, dropdown, open, close };
+}

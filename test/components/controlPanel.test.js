@@ -118,6 +118,41 @@ describe('controlPanel', () => {
     expect(() => controlPanel.setPosition('invalid')).toThrow('Invalid position');
   });
 
+  it('should stack slot 4 downward on top panels and upward on bottom panels', () => {
+    controlPanel.setPosition('top-right');
+    controlPanel.init();
+    expect(controlPanel.slots[4].style.flexDirection).toBe('column');
+
+    controlPanel.setPosition('bottom-left');
+    expect(controlPanel.slots[4].style.flexDirection).toBe('column-reverse');
+
+    controlPanel.setPosition('top-right');
+  });
+
+  it('should center the slot 4 trigger against slot 1', () => {
+    controlPanel.setPosition('top-right');
+    controlPanel.init();
+    const trigger = document.createElement('button');
+    trigger.id = 'dandelion-profile-toggle';
+    controlPanel.mount(trigger, 4);
+
+    Object.defineProperty(controlPanel.slots[1], 'offsetHeight', {
+      configurable: true,
+      value: 60,
+    });
+    Object.defineProperty(trigger, 'offsetHeight', { configurable: true, value: 20 });
+
+    controlPanel.alignSlot4();
+    expect(trigger.style.marginTop).toBe('20px');
+    expect(trigger.style.marginBottom).toBe('');
+
+    controlPanel.setPosition('bottom-right');
+    expect(trigger.style.marginTop).toBe('');
+    expect(trigger.style.marginBottom).toBe('20px');
+
+    controlPanel.setPosition('top-right');
+  });
+
   it('init with non-default position should use position from earlier setPosition', () => {
     controlPanel.setPosition('top-left');
     controlPanel.init();

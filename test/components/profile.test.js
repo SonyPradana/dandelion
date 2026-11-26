@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createProfileComponent } from '../../src/components/profile';
+import { createProfileComponent, createProfileSwitcher } from '../../src/components/profile';
 
 describe('profile', () => {
   beforeEach(() => {
@@ -104,5 +104,68 @@ describe('profile', () => {
   it('should handle empty profiles gracefully', () => {
     const el = createProfileComponent({ profiles: {}, activeProfile: 'p1' });
     expect(el.children.length).toBe(0);
+  });
+});
+
+describe('createProfileSwitcher', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('should show the active profile name with a dropdown icon', () => {
+    const { trigger, dropdown } = createProfileSwitcher({
+      profiles: { p1: { name: 'One' } },
+      activeProfile: 'p1',
+    });
+
+    expect(trigger.id).toBe('dandelion-profile-toggle');
+    expect(trigger.textContent).toBe('One⌄');
+    expect(trigger.getAttribute('aria-label')).toBe('Ganti Profil: One');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(dropdown.id).toBe('dandelion-profile-switcher');
+    expect(dropdown.style.opacity).toBe('0');
+  });
+
+  it('should open and close the dropdown when the trigger is clicked', () => {
+    const { trigger, dropdown } = createProfileSwitcher({
+      profiles: { p1: { name: 'One' } },
+      activeProfile: 'p1',
+    });
+    document.body.append(trigger, dropdown);
+
+    trigger.click();
+    expect(dropdown.style.opacity).toBe('1');
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+
+    trigger.click();
+    expect(dropdown.style.opacity).toBe('0');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('should close the dropdown when clicking outside', () => {
+    const { trigger, dropdown } = createProfileSwitcher({
+      profiles: { p1: { name: 'One' } },
+      activeProfile: 'p1',
+    });
+    document.body.append(trigger, dropdown);
+
+    trigger.click();
+    document.body.click();
+
+    expect(dropdown.style.opacity).toBe('0');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('should stay open when clicking inside the dropdown', () => {
+    const { trigger, dropdown } = createProfileSwitcher({
+      profiles: { p1: { name: 'One' } },
+      activeProfile: 'p1',
+    });
+    document.body.append(trigger, dropdown);
+
+    trigger.click();
+    dropdown.click();
+
+    expect(dropdown.style.opacity).toBe('1');
   });
 });

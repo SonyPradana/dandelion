@@ -99,6 +99,51 @@ describe('skrining-form-not-checked', () => {
       expect(panel).toBeTruthy();
     });
 
+    it('should mount a single click-triggered profile control', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      const trigger = document.getElementById('dandelion-profile-toggle');
+      const dropdown = document.getElementById('dandelion-profile-switcher');
+
+      expect(trigger).toBeTruthy();
+      expect(trigger.textContent).toBe('Default Profile⌄');
+      expect(trigger.parentElement).toBe(controlPanel.slots[4]);
+      expect(dropdown).toBeTruthy();
+      expect(controlPanel.slots[4].contains(dropdown)).toBe(true);
+
+      trigger.click();
+      expect(dropdown.style.opacity).toBe('1');
+      document.body.click();
+      expect(dropdown.style.opacity).toBe('0');
+    });
+
+    it('should not recreate the profile control on every poll', async () => {
+      document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(2000);
+
+      expect(document.querySelectorAll('#dandelion-profile-toggle')).toHaveLength(1);
+      expect(document.querySelectorAll('#dandelion-profile-switcher')).toHaveLength(1);
+    });
+
+    it('should remove the profile control outside a processing page', async () => {
+      document.body.innerHTML = '<div>Tidak ada status</div>';
+
+      initialize();
+
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(document.getElementById('dandelion-profile-toggle')).toBeFalsy();
+      expect(document.getElementById('dandelion-profile-switcher')).toBeFalsy();
+    });
+
     it('should NOT mount the removed auto-uncheck button', async () => {
       document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
 

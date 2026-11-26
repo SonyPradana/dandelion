@@ -7,7 +7,7 @@ Fitur untuk mengisi formulir skrining: pilihan radio, dropdown, isian teks, dan 
 ## Cara Pakai
 
 1. Siapkan konfigurasi di [Config → Form Skrining](/doc/v1/config-form-skrining): pola alamat, kata kunci jawaban, dan jawaban tetap per pertanyaan.
-2. Buka formulir skrining — tombol **🙈** muncul di halaman.
+2. Buka formulir skrining — tombol **🙈** muncul di halaman, dengan nama profil aktif + ikon **⌄** di sampingnya untuk berganti profil.
 3. Klik tombol itu: hitung mundur **Zen Mode Asist** berjalan sebentar (bisa dibatalkan kapan saja), lalu pengisian dimulai.
 4. Tunggu sampai selesai. Bila `scrollToButton` aktif (default), halaman bergulir ke bawah supaya tinggal diperiksa.
 5. Setelah formulir terisi, tombol **✉️ kirim** muncul — klik bila isian sudah benar.

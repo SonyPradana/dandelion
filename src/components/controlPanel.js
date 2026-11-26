@@ -86,6 +86,7 @@ class ControlPanel {
 
     if (this.slots[1]) {
       this.slots[1].style.gridRow = cfg.gridRows[0];
+      this.slots[1].style.flexDirection = 'column';
       this.slots[1].style.alignItems = cfg.slotAlign;
     }
     if (this.slots[2]) {
@@ -101,11 +102,31 @@ class ControlPanel {
       this.slots[4].style.bottom = cfg.slot4Vertical === 'bottom' ? '0' : '';
       this.slots[4].style.right = cfg.slot4Side === 'right' ? `calc(100% + ${PANEL_GAP}px)` : '';
       this.slots[4].style.left = cfg.slot4Side === 'left' ? `calc(100% + ${PANEL_GAP}px)` : '';
+      this.slots[4].style.flexDirection = cfg.slot4Vertical === 'top' ? 'column' : 'column-reverse';
     }
 
     const zeroRow = document.getElementById('dandelion-zero-row');
     if (zeroRow) {
       zeroRow.style.flexDirection = this.isDockedLeft ? 'row-reverse' : 'row';
+    }
+
+    this.alignSlot4();
+  }
+
+  alignSlot4() {
+    const slot1 = this.slots[1];
+    const slot4 = this.slots[4];
+    const trigger = slot4?.querySelector('#dandelion-profile-toggle');
+    if (!slot1 || !slot4 || !trigger) return;
+
+    trigger.style.marginTop = '';
+    trigger.style.marginBottom = '';
+
+    const offset = Math.max(0, (slot1.offsetHeight - trigger.offsetHeight) / 2);
+    if (this.posConfig.slot4Vertical === 'top') {
+      trigger.style.marginTop = `${offset}px`;
+    } else {
+      trigger.style.marginBottom = `${offset}px`;
     }
   }
 
@@ -171,7 +192,7 @@ class ControlPanel {
       ${cfg.slot4Side}: calc(100% + ${PANEL_GAP}px);
       pointer-events: none;
       display: flex;
-      flex-direction: column;
+      flex-direction: ${cfg.slot4Vertical === 'top' ? 'column' : 'column-reverse'};
       align-items: ${cfg.slotAlign};
       gap: ${PANEL_GAP}px;
     `;
@@ -216,6 +237,8 @@ class ControlPanel {
       } else {
         slot.appendChild(element);
       }
+
+      if (slotId === 1 || slotId === 4) this.alignSlot4();
     }
   }
 

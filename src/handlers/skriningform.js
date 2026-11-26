@@ -12,7 +12,7 @@ import { waitForElement } from './inspection/not-checked-utils';
 import { isZenModeActive, clearZenMode, skipQueue } from '../utils/zenMode';
 import { clearFlashData, REGISTER_FORM_SOURCE } from '../utils/flashSession';
 import { controlPanel } from '../components/controlPanel';
-import { createProfileComponent } from '../components/profile';
+import { createProfileSwitcher } from '../components/profile';
 import bus from '../utils/hooks';
 import { notify } from '../components/notification';
 
@@ -43,28 +43,12 @@ export async function initializeSkriningForm(
 
   const tombol = button('dandelion-auto-fill');
   const fullConfig = await store.getFullConfig();
-  const profileIndicator = createProfileComponent({
+  const { trigger: profileTrigger, dropdown: profileDropdown } = createProfileSwitcher({
     profiles: fullConfig.profiles,
     activeProfile: fullConfig.activeProfile,
     onSwitch: (pKey) => store.onProfileSwitch(pKey),
   });
   const debugToggle = debugButton();
-
-  if (tombol) {
-    let hideTimeout = null;
-    const showProfile = () => {
-      if (hideTimeout) clearTimeout(hideTimeout);
-      profileIndicator.setVisibility(true);
-    };
-    const hideProfile = () => {
-      hideTimeout = setTimeout(() => profileIndicator.setVisibility(false), 300);
-    };
-
-    tombol.addEventListener('mouseenter', showProfile);
-    tombol.addEventListener('mouseleave', hideProfile);
-    profileIndicator.addEventListener('mouseenter', showProfile);
-    profileIndicator.addEventListener('mouseleave', hideProfile);
-  }
 
   debugToggle.addEventListener('click', () => {
     isDebugEnabled = !isDebugEnabled;
@@ -224,7 +208,8 @@ export async function initializeSkriningForm(
   if (tombol) {
     tombol.addEventListener('click', performFormFill);
     controlPanel.mount(tombol, 1);
-    controlPanel.mount(profileIndicator, 4);
+    controlPanel.mount(profileTrigger, 4);
+    controlPanel.mount(profileDropdown, 4);
   }
 
   /**

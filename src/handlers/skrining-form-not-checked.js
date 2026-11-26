@@ -10,7 +10,7 @@ import { isZenModeActive, isZenRunning, clearZenMode } from '../utils/zenMode';
 import { startZenAutomation, initializeZenMode } from './zen-mode';
 import { startZeroAutomation, initializeZeroMode, isZeroRunning } from './zero-mode';
 import { controlPanel } from '../components/controlPanel';
-import { createProfileComponent } from '../components/profile';
+import { createProfileSwitcher } from '../components/profile';
 import { isPageInProcessingState, getQueueStats } from './inspection/not-checked-utils';
 
 /**
@@ -19,6 +19,7 @@ import { isPageInProcessingState, getQueueStats } from './inspection/not-checked
  */
 
 const ROW_MARKER_CLASS = 'dandelion-row-marker';
+let profileSwitcher = null;
 
 /**
  * Initializes the Not-Checked handler and starts the page state monitor.
@@ -61,14 +62,20 @@ function startStateMonitor() {
 async function ensureButtonsMounted(isProcessing) {
   let debugBtn = document.getElementById('dandelion-debug-toggle');
   let zenBtn = document.getElementById('dandelion-zen-mode-toggle');
-  let profileIndicator = document.getElementById('dandelion-profile-indicator');
+  let profileTrigger = document.getElementById('dandelion-profile-toggle');
+  let profileDropdown = document.getElementById('dandelion-profile-switcher');
   let zeroBtn = document.getElementById('dandelion-zero-toggle');
 
   if (!isProcessing) {
+    if (profileSwitcher) {
+      profileSwitcher.close();
+      profileSwitcher = null;
+    }
     if (zeroBtn) controlPanel.remove(zeroBtn);
     if (debugBtn) controlPanel.remove(debugBtn);
     if (zenBtn) controlPanel.remove(zenBtn);
-    if (profileIndicator) controlPanel.remove(profileIndicator);
+    if (profileTrigger) controlPanel.remove(profileTrigger);
+    if (profileDropdown) controlPanel.remove(profileDropdown);
 
     const zenActive = await isZenModeActive();
     if (!zenActive) removeStatusPanel();
@@ -79,25 +86,19 @@ async function ensureButtonsMounted(isProcessing) {
 
   const zenEnabled = isFeatureEnabled('zen-mode');
 
-  if (!profileIndicator) {
+  if (!profileTrigger || !profileDropdown) {
+    if (profileSwitcher) profileSwitcher.close();
+    if (profileTrigger) controlPanel.remove(profileTrigger);
+    if (profileDropdown) controlPanel.remove(profileDropdown);
+
     const cfg = await store.getFullConfig();
-    profileIndicator = createProfileComponent({
+    profileSwitcher = createProfileSwitcher({
       profiles: cfg.profiles,
       activeProfile: cfg.activeProfile,
       onSwitch: (pKey) => store.onProfileSwitch(pKey),
     });
-
-    let hideTimeout = null;
-    const showProfile = () => {
-      if (hideTimeout) clearTimeout(hideTimeout);
-      profileIndicator.setVisibility(true);
-    };
-    const hideProfile = () => {
-      hideTimeout = setTimeout(() => profileIndicator.setVisibility(false), 300);
-    };
-
-    profileIndicator.addEventListener('mouseenter', showProfile);
-    profileIndicator.addEventListener('mouseleave', hideProfile);
+    profileTrigger = profileSwitcher.trigger;
+    profileDropdown = profileSwitcher.dropdown;
   }
 
   if (zenEnabled && !zeroBtn) {
@@ -117,7 +118,8 @@ async function ensureButtonsMounted(isProcessing) {
     controlPanel.mount(zeroBtn, 1);
   }
 
-  controlPanel.mount(profileIndicator, 4);
+  controlPanel.mount(profileTrigger, 4);
+  controlPanel.mount(profileDropdown, 4);
 
   if (zenEnabled && !zenBtn) {
     zenBtn = zenModeButton(zenActive);
