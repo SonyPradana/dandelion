@@ -409,7 +409,7 @@ describe('skrining', () => {
       mockNotify.confirm.mockResolvedValue(false);
       const store = await mount();
 
-      document.querySelectorAll('#dandelion-profile-switcher > div')[1].click();
+      document.querySelectorAll('#dandelion-profile-switcher > button')[1].click();
       await vi.waitFor(() => expect(mockNotify.confirm).toHaveBeenCalled());
 
       expect(mockNotify.confirm).toHaveBeenCalledWith(
@@ -423,7 +423,7 @@ describe('skrining', () => {
       mockNotify.confirm.mockResolvedValue(true);
       const store = await mount();
 
-      document.querySelectorAll('#dandelion-profile-switcher > div')[1].click();
+      document.querySelectorAll('#dandelion-profile-switcher > button')[1].click();
       await vi.waitFor(() => expect(store.onProfileSwitch).toHaveBeenCalled());
 
       expect(store.onProfileSwitch).toHaveBeenCalledWith('profile2');

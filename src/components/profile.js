@@ -27,15 +27,18 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
     transform: translateY(-10px) scale(0.95);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
+    visibility: hidden;
     min-width: 140px;
     gap: 4px;
     z-index: 10001;
   `;
+  container.inert = true;
 
   const profileKeys = Object.keys(profiles || {});
 
   profileKeys.forEach((pKey) => {
-    const btn = document.createElement('div');
+    const btn = document.createElement('button');
+    btn.type = 'button';
     const profileData = profiles[pKey];
     const displayName = profileData.name || pKey.replace('profile', 'Profile ');
     const isActive = activeProfile === pKey;
@@ -55,12 +58,15 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
       font-weight: ${isActive ? '700' : '500'};
       color: ${isActive ? '#171717' : 'rgba(23, 23, 23, 0.5)'};
       background: ${isActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent'};
+      border: 0;
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
       gap: 10px;
+      text-align: left;
+      width: 100%;
       white-space: nowrap;
     `;
 
@@ -106,10 +112,14 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
       container.style.opacity = '1';
       container.style.transform = 'translateY(0) scale(1)';
       container.style.pointerEvents = 'auto';
+      container.style.visibility = 'visible';
+      container.inert = false;
     } else {
       container.style.opacity = '0';
       container.style.transform = 'translateY(-10px) scale(0.95)';
       container.style.pointerEvents = 'none';
+      container.style.visibility = 'hidden';
+      container.inert = true;
     }
   };
 

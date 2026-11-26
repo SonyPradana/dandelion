@@ -121,16 +121,28 @@ describe('skrining-form-not-checked', () => {
       expect(dropdown.style.opacity).toBe('0');
     });
 
-    it('should not recreate the profile control on every poll', async () => {
+    it('should preserve the profile control and its open state across polls', async () => {
       document.body.innerHTML = '<div>Sedang Pemeriksaan</div>';
 
       initialize();
 
       await vi.advanceTimersByTimeAsync(0);
+
+      const trigger = document.getElementById('dandelion-profile-toggle');
+      const dropdown = document.getElementById('dandelion-profile-switcher');
+
+      trigger.click();
+      expect(dropdown.style.opacity).toBe('1');
+
       await vi.advanceTimersByTimeAsync(2000);
 
-      expect(document.querySelectorAll('#dandelion-profile-toggle')).toHaveLength(1);
-      expect(document.querySelectorAll('#dandelion-profile-switcher')).toHaveLength(1);
+      expect(document.getElementById('dandelion-profile-toggle')).toBe(trigger);
+      expect(document.getElementById('dandelion-profile-switcher')).toBe(dropdown);
+      expect(trigger.isConnected).toBe(true);
+      expect(dropdown.isConnected).toBe(true);
+      expect(dropdown.style.opacity).toBe('1');
+
+      document.body.click();
     });
 
     it('should remove the profile control outside a processing page', async () => {

@@ -11,11 +11,15 @@ describe('profile', () => {
     expect(el.id).toBe('dandelion-profile-switcher');
   });
 
-  it('should create a button for each profile', () => {
+  it('should create a native button for each profile', () => {
     const profiles = { p1: { name: 'One' }, p2: { name: 'Two' } };
     const el = createProfileComponent({ profiles, activeProfile: 'p1' });
     expect(el.children.length).toBe(2);
+    expect(el.children[0].tagName).toBe('BUTTON');
+    expect(el.children[0].type).toBe('button');
     expect(el.children[0].textContent).toContain('One');
+    expect(el.children[1].tagName).toBe('BUTTON');
+    expect(el.children[1].type).toBe('button');
     expect(el.children[1].textContent).toContain('Two');
   });
 
@@ -86,14 +90,20 @@ describe('profile', () => {
     el.setVisibility(true);
     expect(el.style.opacity).toBe('1');
     expect(el.style.pointerEvents).toBe('auto');
+    expect(el.style.visibility).toBe('visible');
+    expect(el.inert).toBe(false);
   });
 
-  it('setVisibility(false) should hide the container', () => {
+  it('setVisibility(false) should hide the container from focus', () => {
     const el = createProfileComponent({ profiles: {}, activeProfile: '' });
+    expect(el.style.visibility).toBe('hidden');
+    expect(el.inert).toBe(true);
     el.setVisibility(true);
     el.setVisibility(false);
     expect(el.style.opacity).toBe('0');
     expect(el.style.pointerEvents).toBe('none');
+    expect(el.style.visibility).toBe('hidden');
+    expect(el.inert).toBe(true);
   });
 
   it('should handle missing profiles gracefully', () => {
