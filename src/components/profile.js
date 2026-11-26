@@ -157,7 +157,8 @@ export function createProfileSwitcher(options = {}) {
   trigger.style.cssText = `
     padding: 0.3rem 0.25rem;
     background: transparent;
-    color: #52525b;
+    color: #3f3f46;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
     border: 0;
     border-radius: 6px;
     font-family: inherit;
@@ -175,7 +176,7 @@ export function createProfileSwitcher(options = {}) {
     trigger.style.color = '#171717';
   });
   trigger.addEventListener('mouseleave', () => {
-    trigger.style.color = '#52525b';
+    trigger.style.color = '#3f3f46';
   });
 
   let isOpen = false;
