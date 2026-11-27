@@ -31,7 +31,30 @@ function wait(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-export async function fillAlamatDomisili(provinsi, kabupaten, kecamatan, kelurahan) {
+function normalizeText(value) {
+  return String(value ?? '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*,\s*/g, ', ')
+    .trim()
+    .toLowerCase();
+}
+
+function readCurrentValue(trigger) {
+  if (typeof trigger.value === 'string') return trigger.value;
+
+  const input = trigger.querySelector?.('input, textarea');
+  if (input) return input.value;
+
+  return trigger.textContent || '';
+}
+
+export async function fillAlamatDomisili(
+  provinsi,
+  kabupaten,
+  kecamatan,
+  kelurahan,
+  { respectInput = true } = {},
+) {
   const labels = document.querySelectorAll('div.mb-1.font-semibold');
   let container = null;
   for (const label of labels) {
@@ -44,6 +67,12 @@ export async function fillAlamatDomisili(provinsi, kabupaten, kecamatan, kelurah
 
   const trigger = container.querySelector('[class*="cursor-pointer"]');
   if (!trigger) return false;
+
+  const expected = normalizeText([provinsi, kabupaten, kecamatan, kelurahan].join(', '));
+  if (respectInput && expected && normalizeText(readCurrentValue(trigger)) === expected) {
+    return true;
+  }
+
   trigger.click();
 
   const levels = [

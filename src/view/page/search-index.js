@@ -140,6 +140,14 @@ export const SEARCH_INDEX = [
   },
   {
     tab: 'register-form',
+    section: 'register-form-respect-input',
+    label: 'Hormati Isian yang Sudah Sama',
+    tabLabel: 'Register Form',
+    keywords: ['isian', 'nilai', 'hormati', 'skip', 'lewati', 'sama', 'alamat', 'domisili'],
+    description: 'Isian yang sudah sama tidak diisi ulang; saat ini berlaku untuk alamat domisili',
+  },
+  {
+    tab: 'register-form',
     section: 'register-form-flash',
     label: 'Template Flash Data (JSON)',
     tabLabel: 'Register Form',

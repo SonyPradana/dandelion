@@ -60,6 +60,7 @@ export class ProfileManager {
         retryMax: 3,
         retryDelay: 2000,
         countdownDuration: 5000,
+        respectInput: true,
         defaultPinneds: {},
       },
       zenMode: { domTimeout: 5000, enabled: false, timeout: 5000, defaultPinneds: {} },

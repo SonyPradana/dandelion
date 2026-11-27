@@ -561,7 +561,9 @@ export async function initializeRegisterForm(registerFormConfig = {}) {
         }
 
         if (startSection <= 2) {
-          const section2Ok = await retry('Section 2', () => fillSection2(entries));
+          const section2Ok = await retry('Section 2', () =>
+            fillSection2(entries, registerFormConfig),
+          );
           if (!section2Ok) {
             notify.alert('Register Form', 'Gagal mengisi section 2');
             stopRun('Gagal — coba lagi');
@@ -750,9 +752,10 @@ function waitForPanel2(timeout = 7000) {
 
 /**
  * @param {Array<[string, string]>} entries
+ * @param {{ respectInput?: boolean }} [registerFormConfig={}]
  * @returns {Promise<boolean>}
  */
-async function fillSection2(entries) {
+async function fillSection2(entries, registerFormConfig = {}) {
   const ready = await waitForPanel2();
   if (!ready) return false;
 
@@ -791,7 +794,9 @@ async function fillSection2(entries) {
   const kel = getVal('Kelurahan');
   let alamatOk = true;
   if (prov && kab && kec && kel) {
-    alamatOk = await fillAlamatDomisili(prov, kab, kec, kel);
+    alamatOk = await fillAlamatDomisili(prov, kab, kec, kel, {
+      respectInput: registerFormConfig.respectInput !== false,
+    });
     if (alamatOk) count++;
   }
 
