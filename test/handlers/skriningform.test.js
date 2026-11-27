@@ -100,6 +100,36 @@ describe('skriningform', () => {
       expect(debugBtn).toBeTruthy();
     });
 
+    it('should create a click-triggered profile name', async () => {
+      await initializeSkriningForm();
+
+      const btn = document.getElementById('dandelion-profile-toggle');
+      const dropdown = document.getElementById('dandelion-profile-switcher');
+
+      expect(btn).toBeTruthy();
+      expect(btn.textContent).toBe('Default Profile⌄');
+      expect(dropdown).toBeTruthy();
+      const slot4 = document.getElementById('dandelion-control-panel-slot-4');
+      expect(slot4.contains(btn)).toBe(true);
+      expect(slot4.contains(dropdown)).toBe(true);
+
+      btn.click();
+      expect(dropdown.style.opacity).toBe('1');
+
+      btn.click();
+      expect(dropdown.style.opacity).toBe('0');
+    });
+
+    it('should not open the profile dropdown when hovering the monkey button', async () => {
+      await initializeSkriningForm();
+
+      const monkey = document.getElementById('dandelion-auto-fill');
+      const dropdown = document.getElementById('dandelion-profile-switcher');
+
+      monkey.dispatchEvent(new Event('mouseenter'));
+      expect(dropdown.style.opacity).toBe('0');
+    });
+
     it('should not mount the panel twice', async () => {
       await initializeSkriningForm();
       await initializeSkriningForm();

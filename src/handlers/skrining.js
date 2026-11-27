@@ -2,7 +2,7 @@ import bus from '../utils/hooks';
 import { button } from '../components/button';
 import { controlPanel } from '../components/controlPanel';
 import { notify } from '../components/notification';
-import { createProfileComponent } from '../components/profile';
+import { createProfileSwitcher } from '../components/profile';
 import { debugButton } from '../components/debugButton';
 import { debugMarker } from '../components/marker';
 import {
@@ -326,7 +326,7 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
   controlPanel.mount(debugToggle, 2);
 
   const { profiles, activeProfile } = fullConfig;
-  const profileIndicator = createProfileComponent({
+  const { trigger: profileTrigger, dropdown: profileDropdown } = createProfileSwitcher({
     profiles,
     activeProfile,
     onSwitch: async (pKey) => {
@@ -340,21 +340,6 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
     },
   });
 
-  if (manualTrigger) {
-    let hideTimeout = null;
-    const showProfile = () => {
-      if (hideTimeout) clearTimeout(hideTimeout);
-      profileIndicator.setVisibility(true);
-    };
-    const hideProfile = () => {
-      hideTimeout = setTimeout(() => profileIndicator.setVisibility(false), 300);
-    };
-
-    manualTrigger.addEventListener('mouseenter', showProfile);
-    manualTrigger.addEventListener('mouseleave', hideProfile);
-    profileIndicator.addEventListener('mouseenter', showProfile);
-    profileIndicator.addEventListener('mouseleave', hideProfile);
-  }
-
-  controlPanel.mount(profileIndicator, 4);
+  controlPanel.mount(profileTrigger, 4);
+  controlPanel.mount(profileDropdown, 4);
 }

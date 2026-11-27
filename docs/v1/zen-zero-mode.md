@@ -7,7 +7,7 @@ Fitur otomasi untuk memproses daftar pemeriksaan baris demi baris pada halaman d
 ## Cara Pakai
 
 1. Aktifkan asisten di [Config → Mode Zen](/doc/v1/config-zen-mode) (`zenMode.enabled`) dan isi pola alamat halaman daftar di [Config → Pemeriksaan](/doc/v1/config-not-checked) (`notChecked.url`).
-2. Buka halaman daftar — panel kontrol muncul dengan dua tombol: **⚡** (Zen Mode) dan **Zero** (Zero Mode).
+2. Buka halaman daftar — panel kontrol muncul dengan dua tombol: **⚡** (Zen Mode) dan **Zero** (Zero Mode), plus nama profil aktif dengan ikon **⌄** untuk berganti profil.
 3. Tandai baris yang mau dilewati lewat penanda baris Dandelion, atau siapkan daftarnya lebih dulu lewat `notChecked.notCheckedList`.
 4. Klik mode yang diinginkan: proses berjalan **baris demi baris** dan menandai baris yang sudah diproses.
 5. Antrean bisa **dihentikan dan dilanjutkan** kapan saja — posisi antrean tersimpan, termasuk setelah halaman dimuat ulang.

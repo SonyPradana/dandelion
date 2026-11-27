@@ -9,7 +9,8 @@ Fitur untuk mengisi pilihan jawaban (radio) di halaman skrining sesuai jawaban y
 1. Siapkan konfigurasi di [Config → Skrining](/doc/v1/config-skrining): pola alamat halaman dan jawaban per pertanyaan (`skrining.answers`).
 2. Buka halaman skrining — pengisian berjalan **mengikuti saat Anda berpindah halaman** (tiap kali maju ke halaman berikutnya).
 3. Untuk mengisi **satu kali saja** tanpa mengikuti alur, klik tombol **🙈** yang muncul di halaman; pengisian berlaku untuk halaman yang sedang terbuka lalu berhenti.
-4. Periksa hasilnya — semua isian masih bisa diubah manual sebelum dikirim.
+4. Nama profil aktif dengan ikon **⌄** di samping tombol **🙈** membuka pilihan profil; klik salah satu untuk berganti profil.
+5. Periksa hasilnya — semua isian masih bisa diubah manual sebelum dikirim.
 
 ## Yang Perlu Diketahui
 

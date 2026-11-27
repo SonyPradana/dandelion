@@ -27,15 +27,18 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
     transform: translateY(-10px) scale(0.95);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
+    visibility: hidden;
     min-width: 140px;
     gap: 4px;
     z-index: 10001;
   `;
+  container.inert = true;
 
   const profileKeys = Object.keys(profiles || {});
 
   profileKeys.forEach((pKey) => {
-    const btn = document.createElement('div');
+    const btn = document.createElement('button');
+    btn.type = 'button';
     const profileData = profiles[pKey];
     const displayName = profileData.name || pKey.replace('profile', 'Profile ');
     const isActive = activeProfile === pKey;
@@ -55,12 +58,15 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
       font-weight: ${isActive ? '700' : '500'};
       color: ${isActive ? '#171717' : 'rgba(23, 23, 23, 0.5)'};
       background: ${isActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent'};
+      border: 0;
       border-radius: 10px;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
       gap: 10px;
+      text-align: left;
+      width: 100%;
       white-space: nowrap;
     `;
 
@@ -106,12 +112,111 @@ export function createProfileComponent({ profiles, activeProfile, onSwitch } = {
       container.style.opacity = '1';
       container.style.transform = 'translateY(0) scale(1)';
       container.style.pointerEvents = 'auto';
+      container.style.visibility = 'visible';
+      container.inert = false;
     } else {
       container.style.opacity = '0';
       container.style.transform = 'translateY(-10px) scale(0.95)';
       container.style.pointerEvents = 'none';
+      container.style.visibility = 'hidden';
+      container.inert = true;
     }
   };
 
   return container;
+}
+
+/**
+ * Creates a click-triggered profile switcher.
+ * @param {Object} options - Same options as `createProfileComponent`.
+ * @returns {{ trigger: HTMLButtonElement, dropdown: HTMLDivElement, open: () => void, close: () => void }}
+ */
+export function createProfileSwitcher(options = {}) {
+  const dropdown = createProfileComponent(options);
+
+  const profileName =
+    options.profiles?.[options.activeProfile]?.name || options.activeProfile || 'Profil';
+
+  const label = document.createElement('span');
+  label.textContent = profileName;
+  label.style.cssText = `
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  `;
+
+  const chevron = document.createElement('span');
+  chevron.textContent = '⌄';
+  chevron.setAttribute('aria-hidden', 'true');
+  chevron.style.cssText = `
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    transform: translateY(-4px);
+  `;
+
+  const trigger = document.createElement('button');
+  trigger.id = 'dandelion-profile-toggle';
+  trigger.type = 'button';
+  trigger.title = `Ganti Profil: ${profileName}`;
+  trigger.setAttribute('aria-label', `Ganti Profil: ${profileName}`);
+  trigger.setAttribute('aria-haspopup', 'true');
+  trigger.setAttribute('aria-expanded', 'false');
+  trigger.append(label, chevron);
+  trigger.style.cssText = `
+    padding: 0.3rem 0.25rem;
+    background: transparent;
+    color: #3f3f46;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.85);
+    border: 0;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 180px;
+    pointer-events: auto;
+    transition: color 0.2s ease-in-out;
+  `;
+
+  trigger.addEventListener('mouseenter', () => {
+    trigger.style.color = '#171717';
+  });
+  trigger.addEventListener('mouseleave', () => {
+    trigger.style.color = '#3f3f46';
+  });
+
+  let isOpen = false;
+
+  function onOutsideClick(event) {
+    if (dropdown.contains(event.target) || trigger.contains(event.target)) return;
+    close();
+  }
+
+  function open() {
+    if (isOpen) return;
+    isOpen = true;
+    dropdown.setVisibility(true);
+    trigger.setAttribute('aria-expanded', 'true');
+    document.addEventListener('click', onOutsideClick);
+  }
+
+  function close() {
+    if (!isOpen) return;
+    isOpen = false;
+    dropdown.setVisibility(false);
+    trigger.setAttribute('aria-expanded', 'false');
+    document.removeEventListener('click', onOutsideClick);
+  }
+
+  trigger.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (isOpen) close();
+    else open();
+  });
+
+  return { trigger, dropdown, open, close };
 }

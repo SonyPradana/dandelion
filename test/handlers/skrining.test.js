@@ -371,11 +371,45 @@ describe('skrining', () => {
       expect(controlPanel.slots[4].contains(el)).toBe(true);
     });
 
+    it('should mount the profile trigger into slot 4', async () => {
+      await mount();
+
+      const btn = document.getElementById('dandelion-profile-toggle');
+      expect(btn).toBeTruthy();
+      expect(btn.textContent).toBe('Satu⌄');
+      expect(btn.parentElement).toBe(controlPanel.slots[4]);
+    });
+
+    it('should open on click and close when clicking outside', async () => {
+      await mount();
+
+      const btn = document.getElementById('dandelion-profile-toggle');
+      const el = document.getElementById('dandelion-profile-switcher');
+
+      btn.click();
+      expect(el.style.opacity).toBe('1');
+      expect(btn.getAttribute('aria-expanded')).toBe('true');
+
+      document.body.click();
+      expect(el.style.opacity).toBe('0');
+      expect(btn.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('should not open when hovering the monkey button', async () => {
+      await mount();
+
+      const el = document.getElementById('dandelion-profile-switcher');
+      const monkey = document.getElementById('dandelion-skrining-manual');
+
+      monkey.dispatchEvent(new Event('mouseenter'));
+      expect(el.style.opacity).toBe('0');
+    });
+
     it('should confirm before switching and abort when declined', async () => {
       mockNotify.confirm.mockResolvedValue(false);
       const store = await mount();
 
-      document.querySelectorAll('#dandelion-profile-switcher > div')[1].click();
+      document.querySelectorAll('#dandelion-profile-switcher > button')[1].click();
       await vi.waitFor(() => expect(mockNotify.confirm).toHaveBeenCalled());
 
       expect(mockNotify.confirm).toHaveBeenCalledWith(
@@ -389,7 +423,7 @@ describe('skrining', () => {
       mockNotify.confirm.mockResolvedValue(true);
       const store = await mount();
 
-      document.querySelectorAll('#dandelion-profile-switcher > div')[1].click();
+      document.querySelectorAll('#dandelion-profile-switcher > button')[1].click();
       await vi.waitFor(() => expect(store.onProfileSwitch).toHaveBeenCalled());
 
       expect(store.onProfileSwitch).toHaveBeenCalledWith('profile2');
