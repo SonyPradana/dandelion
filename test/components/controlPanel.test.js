@@ -80,6 +80,26 @@ describe('controlPanel', () => {
     expect(slot1.children.length).toBe(2);
   });
 
+  it('clear should empty slots but keep slot 4 and overlays', () => {
+    controlPanel.setPosition('top-right');
+    controlPanel.init();
+
+    const trigger = document.createElement('button');
+    trigger.id = 'dandelion-profile-toggle';
+    controlPanel.mount(trigger, 4);
+    const debug = document.createElement('button');
+    controlPanel.mount(debug, 2);
+    const overlay = document.createElement('button');
+    controlPanel.panel.appendChild(overlay);
+
+    controlPanel.clear();
+
+    expect(controlPanel.slots[2].children.length).toBe(0);
+    expect(controlPanel.slots[4].children.length).toBe(0);
+    expect(controlPanel.slots[1].contains(controlPanel.slots[4])).toBe(true);
+    expect(controlPanel.panel.contains(overlay)).toBe(true);
+  });
+
   it('remove should detach element from slot', () => {
     controlPanel.init();
     const el = document.createElement('div');

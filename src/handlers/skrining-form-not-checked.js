@@ -20,6 +20,7 @@ import { isPageInProcessingState, getQueueStats } from './inspection/not-checked
 
 const ROW_MARKER_CLASS = 'dandelion-row-marker';
 let profileSwitcher = null;
+let monitorGeneration = 0;
 
 /**
  * Initializes the Not-Checked handler and starts the page state monitor.
@@ -36,10 +37,11 @@ export function initialize() {
  * Periodically monitors the page state to manage button visibility and resume pending tasks.
  */
 function startStateMonitor() {
+  const generation = ++monitorGeneration;
   let isPolling = false;
 
   async function poll() {
-    if (isPolling) return;
+    if (isPolling || generation !== monitorGeneration) return;
     isPolling = true;
 
     try {
@@ -48,7 +50,7 @@ function startStateMonitor() {
       await ensureButtonsMounted(isProcessing);
     } finally {
       isPolling = false;
-      setTimeout(poll, 2000);
+      if (generation === monitorGeneration) setTimeout(poll, 2000);
     }
   }
 

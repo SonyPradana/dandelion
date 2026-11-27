@@ -242,6 +242,14 @@ class ControlPanel {
     }
   }
 
+  /** Empties the handler slots while keeping the panel, slot 4, and overlays. */
+  clear() {
+    if (!this.panel) return;
+    this.slots[4]?.replaceChildren();
+    [1, 2, 3].forEach((id) => this.slots[id]?.replaceChildren());
+    if (this.slots[1] && this.slots[4]) this.slots[1].appendChild(this.slots[4]);
+  }
+
   remove(elementOrId) {
     const element =
       typeof elementOrId === 'string' ? document.getElementById(elementOrId) : elementOrId;

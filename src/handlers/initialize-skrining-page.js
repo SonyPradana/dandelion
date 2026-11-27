@@ -37,9 +37,12 @@ function removeRegisterFormButton() {
  * @param {{ autoAssist?: boolean }} [options]
  * @returns {Promise<'not-checked'|'form-skrining'|'skrining'|'already'|null>}
  */
-export async function initializeSkriningPage(flashData = {}, { autoAssist = true } = {}) {
+export async function initializeSkriningPage(
+  flashData = {},
+  { autoAssist = true, force = false } = {},
+) {
   const initialUrl = window.location.href;
-  if (initializedUrl === initialUrl) {
+  if (!force && initializedUrl === initialUrl) {
     if (flashData?._source === REGISTER_FORM_SOURCE) await clearFlashData();
     return 'already';
   }

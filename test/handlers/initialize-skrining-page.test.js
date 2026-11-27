@@ -171,6 +171,18 @@ describe('initializeSkriningPage', () => {
     expect(mocks.initializeSkriningForm).toHaveBeenCalledOnce();
   });
 
+  it('re-initializes the same URL when forced', async () => {
+    window.history.replaceState({}, '', '/form-skrining');
+    mocks.config.value = { formSkrining: { url: '/form-skrining' } };
+    const { initializeSkriningPage } = await loadRouter();
+
+    await initializeSkriningPage();
+    const second = await initializeSkriningPage({}, { autoAssist: false, force: true });
+
+    expect(second).toBe('form-skrining');
+    expect(mocks.initializeSkriningForm).toHaveBeenCalledTimes(2);
+  });
+
   it('mounts the not-checked panel on the list page', async () => {
     window.history.replaceState({}, '', '/pemeriksaan');
     mocks.config.value = { notChecked: { url: '/pemeriksaan' } };
