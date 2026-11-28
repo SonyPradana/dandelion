@@ -21,16 +21,18 @@ import { clearFlashData } from '../utils/flashSession';
 import { store } from '../store.js';
 
 let isZeroAutomationActive = false;
+let pollGeneration = 0;
 
 /**
  * Initializes Zero Mode logic for the list page.
  * Resumes a pending Zero run after page reloads.
  */
 export function initializeZeroMode() {
+  const generation = ++pollGeneration;
   let isPolling = false;
 
   async function poll() {
-    if (isPolling) return;
+    if (isPolling || generation !== pollGeneration) return;
     isPolling = true;
 
     try {
@@ -38,7 +40,7 @@ export function initializeZeroMode() {
       if (state.active && state.mode === 'zero' && !isZeroAutomationActive) {
         resumeZeroAutomation();
       }
-      setTimeout(poll, state.active ? 500 : 10_000);
+      if (generation === pollGeneration) setTimeout(poll, state.active ? 500 : 10_000);
     } finally {
       isPolling = false;
     }

@@ -20,15 +20,17 @@ import { clearFlashData } from '../utils/flashSession';
 import { isInNotCheckedList } from '../utils/notChecked';
 
 let isAutomationActive = false;
+let pollGeneration = 0;
 
 /**
  * Initializes Zen Mode logic for the list page.
  */
 export function initializeZenMode() {
+  const generation = ++pollGeneration;
   let isPolling = false;
 
   async function poll() {
-    if (isPolling) return;
+    if (isPolling || generation !== pollGeneration) return;
     isPolling = true;
 
     try {
@@ -36,7 +38,7 @@ export function initializeZenMode() {
       if (state.active && !isAutomationActive && state.mode !== 'zero') {
         resumeZenAutomation();
       }
-      setTimeout(poll, state.active ? 500 : 10_000);
+      if (generation === pollGeneration) setTimeout(poll, state.active ? 500 : 10_000);
     } finally {
       isPolling = false;
     }

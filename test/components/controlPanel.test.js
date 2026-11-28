@@ -80,6 +80,26 @@ describe('controlPanel', () => {
     expect(slot1.children.length).toBe(2);
   });
 
+  it('clear should empty slots but keep slot 4 and overlays', () => {
+    controlPanel.setPosition('top-right');
+    controlPanel.init();
+
+    const trigger = document.createElement('button');
+    trigger.id = 'dandelion-profile-toggle';
+    controlPanel.mount(trigger, 4);
+    const debug = document.createElement('button');
+    controlPanel.mount(debug, 2);
+    const overlay = document.createElement('button');
+    controlPanel.panel.appendChild(overlay);
+
+    controlPanel.clear();
+
+    expect(controlPanel.slots[2].children.length).toBe(0);
+    expect(controlPanel.slots[4].children.length).toBe(0);
+    expect(controlPanel.slots[1].contains(controlPanel.slots[4])).toBe(true);
+    expect(controlPanel.panel.contains(overlay)).toBe(true);
+  });
+
   it('remove should detach element from slot', () => {
     controlPanel.init();
     const el = document.createElement('div');
@@ -112,6 +132,26 @@ describe('controlPanel', () => {
     const panel = document.getElementById('dandelion-control-panel');
     expect(panel.style.bottom).toBe('0.75rem');
     expect(panel.style.left).toBe('0.75rem');
+  });
+
+  it('applyPosition should place the refresh button on the outer corner', () => {
+    controlPanel.setPosition('top-right');
+    controlPanel.init();
+    const refresh = document.createElement('button');
+    refresh.id = 'dandelion-refresh-handler';
+    controlPanel.panel.appendChild(refresh);
+
+    controlPanel.applyPosition();
+    expect(refresh.style.top).toBe('-6px');
+    expect(refresh.style.right).toBe('-6px');
+    expect(refresh.style.bottom).toBe('');
+    expect(refresh.style.left).toBe('');
+
+    controlPanel.setPosition('bottom-left');
+    expect(refresh.style.top).toBe('');
+    expect(refresh.style.right).toBe('');
+    expect(refresh.style.bottom).toBe('-6px');
+    expect(refresh.style.left).toBe('-6px');
   });
 
   it('setPosition should throw for invalid position', () => {

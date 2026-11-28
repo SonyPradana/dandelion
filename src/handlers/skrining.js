@@ -15,6 +15,7 @@ import { store as globalStore } from '../store';
 
 const MANUAL_TRIGGER_ID = 'dandelion-skrining-manual';
 const DEBUG_MARKER_CLASS = 'dandelion-debug-marker';
+let teardownListeners = null;
 
 export async function initializeSkrining(skriningConfig = {}, store = globalStore) {
   const fullConfig = await store.getFullConfig();
@@ -201,7 +202,9 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
     }
   }
 
-  document.addEventListener('click', (event) => {
+  teardownListeners?.();
+
+  const onClick = (event) => {
     if (!event.target) return;
 
     // Stop button
@@ -220,10 +223,10 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
     if (event.target.id === MANUAL_TRIGGER_ID) {
       runManualTrigger();
     }
-  });
+  };
 
   // A real user choice takes the group over from this handler.
-  document.addEventListener('change', (event) => {
+  const onChange = (event) => {
     if (!event.isTrusted) return;
 
     const target = event.target;
@@ -232,7 +235,15 @@ export async function initializeSkrining(skriningConfig = {}, store = globalStor
     for (const [key, owner] of radioOwnerByGroup) {
       if (owner.name === target.name) radioOwnerByGroup.delete(key);
     }
-  });
+  };
+
+  document.addEventListener('click', onClick);
+  document.addEventListener('change', onChange);
+  teardownListeners = () => {
+    document.removeEventListener('click', onClick);
+    document.removeEventListener('change', onChange);
+    stopObserver();
+  };
 
   /**
    * Adds or removes a pin toggle for the question, storing the currently

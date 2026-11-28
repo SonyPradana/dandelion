@@ -9,6 +9,7 @@ import { init as quotaInit, isFeatureEnabled, isLimitReached } from './quota/quo
 import { controlPanel } from './components/controlPanel.js';
 import { notify } from './components/notification';
 import { initializeShareToken, isShareTokenUrl } from './handlers/shareToken.js';
+import { refreshButton } from './components/refreshButton.js';
 
 store.init(browser);
 
@@ -36,19 +37,47 @@ async function main() {
 
   if ((await isDailyLimitReached()) || (await isLimitReached())) return;
 
+  mountRefreshButton();
   initialize();
 }
 
 main();
 
+/** Mount the refresh control over the panel and rebuild handlers on click. */
+function mountRefreshButton() {
+  controlPanel.init();
+  const btn = refreshButton();
+  controlPanel.panel.appendChild(btn);
+  controlPanel.applyPosition();
+
+  let refreshing = false;
+  btn.addEventListener('click', async () => {
+    if (refreshing) return;
+    refreshing = true;
+    try {
+      const config = await store.refreshConfig();
+      controlPanel.setPosition(config.panelPosition || 'top-right');
+      controlPanel.clear();
+      document
+        .querySelectorAll('.dandelion-debug-marker, .dandelion-row-marker')
+        .forEach((el) => el.remove());
+      await initialize({ refresh: true });
+    } finally {
+      refreshing = false;
+    }
+  });
+}
+
 /** Route the current page to the matching skrining or register-form initializer. */
-async function initialize() {
+async function initialize({ refresh = false } = {}) {
   const currentURL = window.location.href;
   const config = await store.getActiveConfig();
 
-  const flashData = await getFlashDataIfEnabled();
+  const flashData = refresh ? {} : await getFlashDataIfEnabled();
 
-  if (await initializeSkriningPage(flashData || {})) return;
+  if (await initializeSkriningPage(flashData || {}, { autoAssist: !refresh, force: refresh })) {
+    return;
+  }
 
   if (
     config.registerForm?.url &&
