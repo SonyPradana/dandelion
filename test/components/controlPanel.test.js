@@ -134,6 +134,26 @@ describe('controlPanel', () => {
     expect(panel.style.left).toBe('0.75rem');
   });
 
+  it('applyPosition should place the refresh button on the outer corner', () => {
+    controlPanel.setPosition('top-right');
+    controlPanel.init();
+    const refresh = document.createElement('button');
+    refresh.id = 'dandelion-refresh-handler';
+    controlPanel.panel.appendChild(refresh);
+
+    controlPanel.applyPosition();
+    expect(refresh.style.top).toBe('-6px');
+    expect(refresh.style.right).toBe('-6px');
+    expect(refresh.style.bottom).toBe('');
+    expect(refresh.style.left).toBe('');
+
+    controlPanel.setPosition('bottom-left');
+    expect(refresh.style.top).toBe('');
+    expect(refresh.style.right).toBe('');
+    expect(refresh.style.bottom).toBe('-6px');
+    expect(refresh.style.left).toBe('-6px');
+  });
+
   it('setPosition should throw for invalid position', () => {
     expect(() => controlPanel.setPosition('invalid')).toThrow('Invalid position');
   });

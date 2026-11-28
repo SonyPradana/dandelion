@@ -11,6 +11,8 @@ const POSITIONS = {
     slot4Side: 'right',
     slot4Vertical: 'top',
     slot2Dir: 'row-reverse',
+    refreshSide: 'right',
+    refreshVertical: 'top',
   },
   'bottom-right': {
     panelPos: 'bottom: 0.75rem; right: 0.75rem;',
@@ -21,6 +23,8 @@ const POSITIONS = {
     slot4Side: 'right',
     slot4Vertical: 'bottom',
     slot2Dir: 'row-reverse',
+    refreshSide: 'right',
+    refreshVertical: 'bottom',
   },
   'top-left': {
     panelPos: 'top: 0.75rem; left: 0.75rem;',
@@ -31,6 +35,8 @@ const POSITIONS = {
     slot4Side: 'left',
     slot4Vertical: 'top',
     slot2Dir: 'row',
+    refreshSide: 'left',
+    refreshVertical: 'top',
   },
   'bottom-left': {
     panelPos: 'bottom: 0.75rem; left: 0.75rem;',
@@ -41,6 +47,8 @@ const POSITIONS = {
     slot4Side: 'left',
     slot4Vertical: 'bottom',
     slot2Dir: 'row',
+    refreshSide: 'left',
+    refreshVertical: 'bottom',
   },
 };
 
@@ -103,6 +111,14 @@ class ControlPanel {
       this.slots[4].style.right = cfg.slot4Side === 'right' ? `calc(100% + ${PANEL_GAP}px)` : '';
       this.slots[4].style.left = cfg.slot4Side === 'left' ? `calc(100% + ${PANEL_GAP}px)` : '';
       this.slots[4].style.flexDirection = cfg.slot4Vertical === 'top' ? 'column' : 'column-reverse';
+    }
+
+    const refresh = this.panel?.querySelector('#dandelion-refresh-handler');
+    if (refresh) {
+      refresh.style.top = cfg.refreshVertical === 'top' ? '-6px' : '';
+      refresh.style.bottom = cfg.refreshVertical === 'bottom' ? '-6px' : '';
+      refresh.style.right = cfg.refreshSide === 'right' ? '-6px' : '';
+      refresh.style.left = cfg.refreshSide === 'left' ? '-6px' : '';
     }
 
     const zeroRow = document.getElementById('dandelion-zero-row');

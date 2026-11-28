@@ -48,6 +48,7 @@ function mountRefreshButton() {
   controlPanel.init();
   const btn = refreshButton();
   controlPanel.panel.appendChild(btn);
+  controlPanel.applyPosition();
 
   let refreshing = false;
   btn.addEventListener('click', async () => {
