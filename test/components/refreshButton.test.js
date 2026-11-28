@@ -11,5 +11,9 @@ describe('refreshButton', () => {
     expect(btn.getAttribute('aria-label')).toBe('Refresh Handler');
     expect(btn.style.position).toBe('absolute');
     expect(btn.style.pointerEvents).toBe('auto');
+
+    const style = document.getElementById('dandelion-refresh-style');
+    expect(style.textContent).toContain('opacity: 0.15');
+    expect(style.textContent).toContain('#dandelion-refresh-handler:hover');
   });
 });

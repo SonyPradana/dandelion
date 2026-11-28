@@ -3,6 +3,23 @@
  * @returns {HTMLButtonElement}
  */
 export function refreshButton() {
+  const styleId = 'dandelion-refresh-style';
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      #dandelion-refresh-handler {
+        opacity: 0.15;
+        transition: opacity 0.2s ease-in-out;
+      }
+      #dandelion-refresh-handler:hover,
+      #dandelion-refresh-handler:focus-visible {
+        opacity: 1;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   const btn = document.createElement('button');
   btn.id = 'dandelion-refresh-handler';
   btn.type = 'button';
@@ -26,7 +43,6 @@ export function refreshButton() {
     border-radius: 50%;
     font-size: 11px;
     line-height: 1;
-    opacity: 0.6;
     cursor: pointer;
     pointer-events: auto;
   `;
