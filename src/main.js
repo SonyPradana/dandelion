@@ -55,6 +55,8 @@ function mountRefreshButton() {
     if (refreshing) return;
     refreshing = true;
     try {
+      const config = await store.refreshConfig();
+      controlPanel.setPosition(config.panelPosition || 'top-right');
       controlPanel.clear();
       document
         .querySelectorAll('.dandelion-debug-marker, .dandelion-row-marker')
